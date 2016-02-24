@@ -8,8 +8,6 @@
     using System.Linq;
     using System.Web;
 
-    using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.ApplicationInsights.Web.Implementation;
     using Microsoft.ApplicationInsights.Web.TestFramework;
@@ -23,18 +21,18 @@
     {
         private const long AllKeywords = -1;
 
-        private PrivateObject module;
+        private static PrivateObject module;
 
-        [TestInitialize]
-        public void Initialize()
+        [ClassInitialize]
+        public static void Initialize(TestContext context)
         {
-            this.module = HttpModuleHelper.CreateTestModule();
+            module = HttpModuleHelper.CreateTestModule();
         }
 
-        [TestCleanup]
-        public void Cleanup()
+        [ClassCleanup]
+        public static void Cleanup()
         {
-            ((IHttpModule)this.module.Target).Dispose();
+            ((IHttpModule)module.Target).Dispose();
         }
 
         [TestMethod]
@@ -44,11 +42,28 @@
             {
                 listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
 
-                this.module.Invoke("OnBeginRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module.Invoke("OnBeginRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
 
                 var firstEvent = listener.Messages.FirstOrDefault();
                 Assert.IsNotNull(firstEvent);
                 Assert.AreEqual(1, firstEvent.EventId);
+            }
+        }
+
+        [TestMethod]
+        public void OnBeginGeneratesEventsOnlyFromOneModuleInstance()
+        {
+            var module2 = HttpModuleHelper.CreateTestModule();
+
+            using (var listener = new TestEventListener())
+            {
+                listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
+
+                module.Invoke("OnBeginRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module2.Invoke("OnBeginRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+
+                var count = listener.Messages.Count();
+                Assert.AreEqual(1, count);
             }
         }
 
@@ -59,7 +74,7 @@
             {
                 listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
 
-                this.module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
 
                 var messages = listener.Messages.OrderBy(_ => _.EventId).ToList();
                 Assert.AreEqual(2, messages[0].EventId);
@@ -73,10 +88,44 @@
             {
                 listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
 
-                this.module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
 
                 var messages = listener.Messages.OrderBy(_ => _.EventId).ToList();
                 Assert.AreEqual(3, messages[1].EventId);
+            }
+        }
+
+        [TestMethod]
+        public void OnEndGeneratesEndEventsOnlyFromOneModuleInstance()
+        {
+            var module2 = HttpModuleHelper.CreateTestModule();
+
+            using (var listener = new TestEventListener())
+            {
+                listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
+
+                module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module2.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+
+                var count = listener.Messages.Count(item => item.EventId == 2);
+                Assert.AreEqual(1, count);
+            }
+        }
+
+        [TestMethod]
+        public void OnEndGeneratesErrorEventsOnlyFromOneModuleInstance()
+        {
+            var module2 = HttpModuleHelper.CreateTestModule();
+
+            using (var listener = new TestEventListener())
+            {
+                listener.EnableEvents(WebEventsPublisher.Log, EventLevel.LogAlways, (EventKeywords)AllKeywords);
+
+                module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+                module2.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { HttpModuleHelper.GetFakeHttpApplication(), null }, CultureInfo.InvariantCulture);
+
+                var count = listener.Messages.Count(item => item.EventId == 3);
+                Assert.AreEqual(1, count);
             }
         }
     }

@@ -3,9 +3,8 @@
     using System;
     using System.Threading;
     using System.Web;
-    
+
     using Microsoft.ApplicationInsights.Extensibility;
-    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Web.Implementation;
     
@@ -14,9 +13,10 @@
     /// </summary>
     public sealed class ApplicationInsightsHttpModule : IHttpModule
     {
-        /// <summary>
-        /// Indicates if module initialized successfully.
-        /// </summary>
+        private static int mutex;
+
+        private readonly WebEventsPublisher publisher;
+
         private bool isEnabled = true;
 
         /// <summary>
@@ -28,6 +28,13 @@
             {
                 // The call initializes TelemetryConfiguration that will create and Intialize modules
                 TelemetryConfiguration configuration = TelemetryConfiguration.Active;
+
+                // Initialize publisher only in the first instance of the module
+                var result = Interlocked.Increment(ref mutex);
+                if (result == 1)
+                {
+                    this.publisher = WebEventsPublisher.Log;
+                }
             }
             catch (Exception exc)
             {
@@ -67,20 +74,20 @@
 
         private void OnBeginRequest(object sender, EventArgs eventArgs)
         {
-            if (this.isEnabled)
+            if (this.isEnabled && this.publisher != null)
             {
                 this.TraceCallback("OnBegin", (HttpApplication)sender);
-                WebEventsPublisher.Log.OnBegin();    
+                this.publisher.OnBegin();    
             }
         }
 
         private void OnEndRequest(object sender, EventArgs eventArgs)
         {
-            if (this.isEnabled)
+            if (this.isEnabled && this.publisher != null)
             {
                 this.TraceCallback("OnEndRequest", (HttpApplication)sender);
-                WebEventsPublisher.Log.OnError();
-                WebEventsPublisher.Log.OnEnd();
+                this.publisher.OnError();
+                this.publisher.OnEnd();
             }
         }
 
