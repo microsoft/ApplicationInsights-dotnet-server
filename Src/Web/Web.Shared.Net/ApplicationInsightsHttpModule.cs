@@ -13,10 +13,6 @@
     /// </summary>
     public sealed class ApplicationInsightsHttpModule : IHttpModule
     {
-        private static int mutex;
-
-        private readonly WebEventsPublisher publisher;
-
         private bool isEnabled = true;
 
         /// <summary>
@@ -28,13 +24,6 @@
             {
                 // The call initializes TelemetryConfiguration that will create and Intialize modules
                 TelemetryConfiguration configuration = TelemetryConfiguration.Active;
-
-                // Initialize publisher only in the first instance of the module
-                var result = Interlocked.Increment(ref mutex);
-                if (result == 1)
-                {
-                    this.publisher = WebEventsPublisher.Log;
-                }
             }
             catch (Exception exc)
             {
@@ -66,28 +55,29 @@
         }
 
         /// <summary>
-        /// Required IDisposable implementation.
+        /// IDisposable implementation.
         /// </summary>
         public void Dispose()
         {
+            WebEventsPublisher.Log.Release(this);
         }
 
         private void OnBeginRequest(object sender, EventArgs eventArgs)
         {
-            if (this.isEnabled && this.publisher != null)
+            if (this.isEnabled)
             {
                 this.TraceCallback("OnBegin", (HttpApplication)sender);
-                this.publisher.OnBegin();    
+                WebEventsPublisher.Log.Write(this, 1);
             }
         }
 
         private void OnEndRequest(object sender, EventArgs eventArgs)
         {
-            if (this.isEnabled && this.publisher != null)
+            if (this.isEnabled)
             {
                 this.TraceCallback("OnEndRequest", (HttpApplication)sender);
-                this.publisher.OnError();
-                this.publisher.OnEnd();
+                WebEventsPublisher.Log.Write(this, 2);
+                WebEventsPublisher.Log.Write(this, 3);
             }
         }
 
