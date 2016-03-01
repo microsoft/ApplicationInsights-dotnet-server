@@ -35,7 +35,6 @@
         public void WritePublishesMultipleEvents()
         {
             // Check that publishing works not only when we locked the object but later when object is the same
-
             using (var listener = new TestEventListener())
             {
                 const long AllKeyword = -1;
