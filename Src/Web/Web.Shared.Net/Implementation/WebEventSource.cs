@@ -297,6 +297,18 @@
                 this.ApplicationName);
         }
 
+        [Event(
+            32,
+            Message = "PublisherLockedByType {0}.",
+            Level = EventLevel.Verbose)]
+        public void PublisherLockedByType(string type, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                32,
+                type ?? string.Empty,
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {

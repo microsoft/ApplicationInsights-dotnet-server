@@ -3,9 +3,8 @@
     using System;
     using System.Threading;
     using System.Web;
-    
+
     using Microsoft.ApplicationInsights.Extensibility;
-    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Web.Implementation;
     
@@ -14,9 +13,6 @@
     /// </summary>
     public sealed class ApplicationInsightsHttpModule : IHttpModule
     {
-        /// <summary>
-        /// Indicates if module initialized successfully.
-        /// </summary>
         private bool isEnabled = true;
 
         /// <summary>
@@ -59,10 +55,11 @@
         }
 
         /// <summary>
-        /// Required IDisposable implementation.
+        /// IDisposable implementation.
         /// </summary>
         public void Dispose()
         {
+            WebEventsPublisher.Log.Release(this);
         }
 
         private void OnBeginRequest(object sender, EventArgs eventArgs)
@@ -70,7 +67,7 @@
             if (this.isEnabled)
             {
                 this.TraceCallback("OnBegin", (HttpApplication)sender);
-                WebEventsPublisher.Log.OnBegin();    
+                WebEventsPublisher.Log.Write(this, 1);
             }
         }
 
@@ -79,8 +76,8 @@
             if (this.isEnabled)
             {
                 this.TraceCallback("OnEndRequest", (HttpApplication)sender);
-                WebEventsPublisher.Log.OnError();
-                WebEventsPublisher.Log.OnEnd();
+                WebEventsPublisher.Log.Write(this, 2);
+                WebEventsPublisher.Log.Write(this, 3);
             }
         }
 

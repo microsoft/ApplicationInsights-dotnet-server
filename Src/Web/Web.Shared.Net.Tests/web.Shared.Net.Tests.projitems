@@ -20,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpContextExtensionTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\HttpRequestExtensionsTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebEventSourceTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebEventsPublisherTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebEventsSubscriberTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ClientIpHeaderTelemetryModuleTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExceptionTrackingTelemetryModuleTests.cs" />
