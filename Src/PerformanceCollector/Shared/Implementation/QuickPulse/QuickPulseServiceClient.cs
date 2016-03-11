@@ -26,7 +26,7 @@
 
         private readonly DataContractJsonSerializer serializerDataPoint = new DataContractJsonSerializer(typeof(MonitoringDataPoint));
 
-        private readonly DataContractJsonSerializer serializerDataPointArray = new DataContractJsonSerializer(typeof(MonitoringDataPoint[]));
+        private readonly DataContractJsonSerializer serializerBatch = new DataContractJsonSerializer(typeof(MonitoringBatch));
 
         public QuickPulseServiceClient(Uri serviceUri, string instanceName, string version, TimeSpan? timeout = null)
         {
@@ -51,14 +51,14 @@
             return ProcessResponse(response);
         }
         
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey)
+        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Clock timeProvider)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "post?ikey={0}", Uri.EscapeUriString(instrumentationKey));
             HttpWebResponse response = this.SendRequest(
                 WebRequestMethods.Http.Post,
                 path,
                 false,
-                stream => this.WriteSamples(samples, instrumentationKey, stream));
+                stream => this.WriteSamples(samples, instrumentationKey, stream, timeProvider));
 
             if (response == null)
             {
@@ -97,7 +97,7 @@
             this.serializerDataPoint.WriteObject(stream, dataPoint);
         }
 
-        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream)
+        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream, Clock timeProvider)
         {
             var monitoringPoints = new List<MonitoringDataPoint>();
 
@@ -175,7 +175,8 @@
                 monitoringPoints.Add(dataPoint);
             }
 
-            this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
+            var monitoringBatch = new MonitoringBatch() { Timestamp = timeProvider.UtcNow.UtcDateTime, DataPoints = monitoringPoints.ToArray() };
+            this.serializerBatch.WriteObject(stream, monitoringBatch);
         }
 
         private HttpWebResponse SendRequest(string httpVerb, string path, bool enableRetry, Action<Stream> onWriteBody)
