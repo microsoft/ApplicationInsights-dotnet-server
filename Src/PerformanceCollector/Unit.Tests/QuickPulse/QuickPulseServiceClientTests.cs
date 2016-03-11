@@ -20,7 +20,15 @@
         private const int Port = 49152 + 11;
         private readonly Uri serviceEndpoint = new Uri(string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}", Port));
 
-        private readonly List<MonitoringDataPoint> samples = new List<MonitoringDataPoint>();
+        private readonly List<MonitoringBatch> sampleBatches = new List<MonitoringBatch>();
+
+        private List<MonitoringDataPoint> Samples
+        {
+            get
+            {
+                return this.sampleBatches.SelectMany(b => b.DataPoints).ToList();
+            }
+        } 
 
         private Action<HttpListenerResponse> pingResponse;
         private Action<HttpListenerResponse> submitResponse;
@@ -46,7 +54,7 @@
             this.lastPingTimestamp = null;
             this.lastPingInstance = string.Empty;
             this.lastVersion = string.Empty;
-            this.samples.Clear();
+            this.sampleBatches.Clear();
             this.emulateTimeout = false;
 
             this.pingResponse = response =>
@@ -117,17 +125,54 @@
                     new Dictionary<string, Tuple<PerformanceCounterData, float>>());
 
             // ACT
-            bool? sendMore = serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty);
+            bool? sendMore = serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
             Assert.AreEqual(true, sendMore);
-            Assert.AreEqual(3, this.samples.Count);
-            Assert.AreEqual(5, this.samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
-            Assert.AreEqual(10, this.samples[1].Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Calls Succeeded/Sec").Value);
-            Assert.AreEqual(15, this.samples[2].Metrics.Single(m => m.Name == @"\ApplicationInsights\Exceptions/Sec").Value);
-    }
+            Assert.AreEqual(3, this.Samples.Count);
+            Assert.AreEqual(5, this.Samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
+            Assert.AreEqual(10, this.Samples[1].Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Calls Succeeded/Sec").Value);
+            Assert.AreEqual(15, this.Samples[2].Metrics.Single(m => m.Name == @"\ApplicationInsights\Exceptions/Sec").Value);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientTimestampsSampleBatchCorrectly()
+        {
+            // ARRANGE
+            var dummy = new Dictionary<string, Tuple<PerformanceCounterData, float>>();
+            var timeProvider = new ClockMock();
+
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty);
+            var sample1 =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
+                    dummy);
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+            var sample2 =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
+                    dummy);
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+            var sample3 =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
+                    dummy);
+
+            // ACT
+            timeProvider.FastForward(TimeSpan.FromSeconds(5));
+            serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty, timeProvider);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(1, this.sampleBatches.Count);
+            Assert.IsTrue((timeProvider.UtcNow - this.sampleBatches.Single().Timestamp).Duration() < TimeSpan.FromMilliseconds(1));
+            Assert.IsTrue(this.Samples.All(s => s.Timestamp < timeProvider.UtcNow));
+        }
 
         [TestMethod]
         public void QuickPulseServiceClientRoundsSampleValuesWhenSubmittingToService()
@@ -141,12 +186,12 @@
                     new Dictionary<string, Tuple<PerformanceCounterData, float>>());
             
             // ACT
-            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty);
+            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(0.3333, this.samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
+            Assert.AreEqual(0.3333, this.Samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
         }
 
         [TestMethod]
@@ -177,13 +222,13 @@
                     new Dictionary<string, Tuple<PerformanceCounterData, float>>());
 
             // ACT
-            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty);
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(3, this.samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Request Duration").Weight);
-            Assert.AreEqual(4, this.samples[1].Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Call Duration").Weight);
+            Assert.AreEqual(3, this.Samples[0].Metrics.Single(m => m.Name == @"\ApplicationInsights\Request Duration").Weight);
+            Assert.AreEqual(4, this.Samples[1].Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Call Duration").Weight);
         }
 
         [TestMethod]
@@ -258,7 +303,7 @@
 
             // ACT
             this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", true.ToString()); };
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
@@ -274,7 +319,7 @@
 
             // ACT
             this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", false.ToString()); };
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
@@ -290,7 +335,7 @@
 
             // ACT
             this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", "bla"); };
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
@@ -306,7 +351,7 @@
 
             // ACT
             this.submitResponse = r => { };
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
@@ -338,7 +383,7 @@
             this.emulateTimeout = true;
 
             // ACT
-            serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
+            serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
@@ -358,13 +403,13 @@
                 new Dictionary<string, Tuple<PerformanceCounterData, float>>());
 
             // ACT
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(instanceName, this.samples[0].Instance);
+            Assert.AreEqual(1, this.Samples.Count);
+            Assert.AreEqual(instanceName, this.Samples[0].Instance);
         }
 
         [TestMethod]
@@ -397,13 +442,13 @@
                 new Dictionary<string, Tuple<PerformanceCounterData, float>>());
 
             // ACT
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(version, this.samples[0].Version);
+            Assert.AreEqual(1, this.Samples.Count);
+            Assert.AreEqual(version, this.Samples[0].Version);
         }
 
         [TestMethod]
@@ -418,13 +463,13 @@
                 new Dictionary<string, Tuple<PerformanceCounterData, float>>());
 
             // ACT
-            serviceClient.SubmitSamples(new[] { sample }, ikey);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, new Clock());
 
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(ikey, this.samples[0].InstrumentationKey);
+            Assert.AreEqual(1, this.Samples.Count);
+            Assert.AreEqual(ikey, this.Samples[0].InstrumentationKey);
         }
 
         public void Dispose()
@@ -437,7 +482,7 @@
         private void ProcessRequest(HttpListener listener)
         {
             var serializerDataPoint = new DataContractJsonSerializer(typeof(MonitoringDataPoint));
-            var serializerDataPointArray = new DataContractJsonSerializer(typeof(MonitoringDataPoint[]));
+            var serializerBatch = new DataContractJsonSerializer(typeof(MonitoringBatch));
 
             while (listener.IsListening)
             {
@@ -462,9 +507,9 @@
 
                     this.submitResponse(context.Response);
                     
-                    var dataPoints = serializerDataPointArray.ReadObject(context.Request.InputStream) as MonitoringDataPoint[];
+                    var batch = (MonitoringBatch)serializerBatch.ReadObject(context.Request.InputStream);
 
-                    this.samples.AddRange(dataPoints);
+                    this.sampleBatches.Add(batch);
                 }
 
                 if (!this.emulateTimeout)

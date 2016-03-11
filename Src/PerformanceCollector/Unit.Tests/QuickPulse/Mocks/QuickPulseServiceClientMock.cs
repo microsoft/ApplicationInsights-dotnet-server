@@ -6,11 +6,10 @@
     using System.Threading;
 
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
+    using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
     internal class QuickPulseServiceClientMock : IQuickPulseServiceClient
     {
-        private List<QuickPulseDataSample> samples = new List<QuickPulseDataSample>();
-
         private readonly object countersLock = new object();
 
         public volatile bool CountersEnabled = true;
@@ -23,9 +22,18 @@
 
         public bool? ReturnValueFromSubmitSample { private get; set; }
 
-        public int? LastSampleBatchSize { get; private set; }
+        public int? LastSampleBatchSize
+        {
+            get
+            {
+                lock (this.countersLock)
+                {
+                    return this.batches.Any() ? (int?)this.batches.Last().Item2.Count : null;
+                }
+            }
+        }
 
-        private List<int> batches = new List<int>();
+        private List<Tuple<DateTimeOffset, List<QuickPulseDataSample>>> batches = new List<Tuple<DateTimeOffset, List<QuickPulseDataSample>>>();
 
         public DateTimeOffset? LastPingTimestamp { get; private set; }
 
@@ -39,7 +47,7 @@
             {
                 lock (this.countersLock)
                 {
-                    return this.samples.ToList();
+                    return this.batches.SelectMany(b => b.Item2).ToList();
                 }
             }
         }
@@ -51,11 +59,9 @@
             lock (this.countersLock)
             {
                 this.PingCount = 0;
-                this.LastSampleBatchSize = null;
                 this.LastPingTimestamp = null;
                 this.LastPingInstance = string.Empty;
-
-                this.samples.Clear();
+                this.batches.Clear();
             }
         }
 
@@ -81,7 +87,7 @@
             }
         }
 
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey)
+        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Clock timeProvider)
         {
             lock (this.ResponseLock)
             {
@@ -89,9 +95,7 @@
                 {
                     lock (this.countersLock)
                     {
-                        this.batches.Add(samples.Count());
-                        this.LastSampleBatchSize = samples.Count();
-                        this.samples.AddRange(samples);
+                        this.batches.Add(Tuple.Create(timeProvider.UtcNow, samples.ToList()));
                     }
                 }
 
