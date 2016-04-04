@@ -242,7 +242,7 @@
             var dataSample = new QuickPulseDataSample(accumulator, this.dummyDictionary);
 
             // ASSERT
-            Assert.AreEqual(0.0, dataSample.AIRequestDurationAveInMs);
+            Assert.AreEqual(double.NaN, dataSample.AIRequestDurationAveInMs);
         }
 
         [TestMethod]
@@ -261,7 +261,7 @@
             var dataSample = new QuickPulseDataSample(accumulator, this.dummyDictionary);
 
             // ASSERT
-            Assert.AreEqual(0.0, dataSample.AIDependencyCallDurationAveInMs);
+            Assert.AreEqual(double.NaN, dataSample.AIDependencyCallDurationAveInMs);
         }
 
         #endregion
