@@ -34,12 +34,12 @@
                     {
                         Assert.AreEqual(configuration.InstrumentationKey, telemetry.Context.InstrumentationKey);
 
-                        Assert.IsInstanceOfType(telemetry, typeof(PerformanceCounterTelemetry));
+                        Assert.IsInstanceOfType(telemetry, typeof(MetricTelemetry));
 
-                        var perfTelemetry = telemetry as PerformanceCounterTelemetry;
+                        var perfTelemetry = telemetry as MetricTelemetry;
                         
                         Assert.AreEqual(
-                            (float)(perfTelemetry.CategoryName.GetHashCode() + perfTelemetry.InstanceName.GetHashCode() + perfTelemetry.CounterName.GetHashCode()),
+                            (float)(perfTelemetry.Name.GetHashCode()),
                             perfTelemetry.Value);
                     }
                     catch (AssertFailedException e)

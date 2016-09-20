@@ -156,28 +156,20 @@
 
         private static ITelemetry CreateTelemetry(PerformanceCounter pc, string reportAs, bool isCustomCounter, float value)
         {
-            if (isCustomCounter)
-            {
-                // string.Format(CultureInfo.InvariantCulture, @"\{0}\{1}", pc.CategoryName, pc.CounterName),
-                var metricName = !string.IsNullOrWhiteSpace(reportAs)
-                                     ? reportAs
-                                     : string.Format(
-                                         CultureInfo.InvariantCulture,
-                                         "{0} - {1}",
-                                         pc.CategoryName,
-                                         pc.CounterName);
-                
-                var metricTelemetry = new MetricTelemetry(metricName, value);
+            var metricName = !string.IsNullOrWhiteSpace(reportAs)
+                                 ? reportAs
+                                 : string.Format(
+                                     CultureInfo.InvariantCulture,
+                                     @"\{0}\{1}",
+                                     pc.CategoryName,
+                                     pc.CounterName);
 
-                metricTelemetry.Properties.Add("CounterInstanceName", pc.InstanceName);
-                metricTelemetry.Properties.Add("CustomPerfCounter", "true");
+            var metricTelemetry = new MetricTelemetry(metricName, value);
 
-                return metricTelemetry;
-            }
-            else
-            {
-                return new PerformanceCounterTelemetry(pc.CategoryName, pc.CounterName, pc.InstanceName, value);
-            }
+            metricTelemetry.Properties.Add("CounterInstanceName", pc.InstanceName);
+            metricTelemetry.Properties.Add("CustomPerfCounter", "true");
+
+            return metricTelemetry;
         }
 
         private static bool IsRunningUnderIisExpress()
@@ -294,7 +286,7 @@
                 string error;
                 var errors = new List<string>();
                 
-                this.defaultCounters.ForEach(pcName => this.RegisterCounter(pcName, string.Empty, win32Instances, clrInstances, false, out error));
+                this.defaultCounters.ForEach(pcName => this.RegisterCounter(pcName, string.Empty, win32Instances, clrInstances, true, out error));
 
                 foreach (PerformanceCounterCollectionRequest req in this.Counters)
                 {
