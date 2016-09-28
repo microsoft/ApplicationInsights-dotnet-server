@@ -26,7 +26,7 @@
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[$coresdkversion$]" />
         <dependency id="Microsoft.ApplicationInsights.DependencyCollector" version="$version$" />
-        <dependency id="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" version="[$coresdkversion$]" />
+        <dependency id="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" version="$coresdkversion$" />
         <dependency id="Microsoft.ApplicationInsights.PerfCounterCollector" version="$version$" />
       </group>
     </dependencies>
