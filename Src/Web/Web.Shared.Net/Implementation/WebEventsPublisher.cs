@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.Web.Implementation
+﻿using System;
+
+namespace Microsoft.ApplicationInsights.Web.Implementation
 {
 #if NET40
     using Microsoft.Diagnostics.Tracing;
@@ -11,6 +13,7 @@
     /// Class provides methods to post event about Web event like begin or end of the request.
     /// </summary>
     [EventSource(Name = "Microsoft-ApplicationInsights-WebEventsPublisher")]
+    [Obsolete]
     public sealed class WebEventsPublisher : EventSource
     {
         /// <summary>

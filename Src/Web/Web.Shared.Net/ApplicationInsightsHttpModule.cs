@@ -4,6 +4,7 @@
     using System.Web;
     
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Web.Implementation;
     
@@ -17,6 +18,10 @@
         /// </summary>
         private bool isEnabled = true;
 
+        private readonly RequestTrackingTelemetryModule requestModule;
+        private readonly ExceptionTrackingTelemetryModule exceptionModule;
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplicationInsightsHttpModule"/> class.
         /// </summary>
@@ -26,6 +31,21 @@
             {
                 // The call initializes TelemetryConfiguration that will create and Intialize modules
                 TelemetryConfiguration configuration = TelemetryConfiguration.Active;
+
+                foreach (var module in TelemetryModules.Instance.Modules)
+                {
+                    if (module is RequestTrackingTelemetryModule)
+                    {
+                        this.requestModule = (RequestTrackingTelemetryModule) module;
+                    }
+                    else
+                    {
+                        if (module is ExceptionTrackingTelemetryModule)
+                        {
+                            this.exceptionModule = (ExceptionTrackingTelemetryModule)module;
+                        }
+                    }
+                }
             }
             catch (Exception exc)
             {
@@ -67,7 +87,16 @@
         {
             if (this.isEnabled)
             {
-                this.TraceCallback("OnBegin", (HttpApplication)sender);
+                HttpApplication httpApplication = (HttpApplication)sender;
+
+                this.TraceCallback("OnBegin", httpApplication);
+
+                if (this.requestModule != null)
+                {
+                    this.requestModule.OnBeginRequest(httpApplication.Context);
+                }
+
+                // Kept for backcompat. Should be removed in 2.3 SDK
                 WebEventsPublisher.Log.OnBegin();    
             }
         }
@@ -81,6 +110,17 @@
 
                 if (this.IsFirstRequest(httpApplication))
                 {
+                    if (this.exceptionModule != null)
+                    {
+                        this.exceptionModule.OnError(httpApplication.Context);
+                    }
+
+                    if (this.requestModule != null)
+                    {
+                        this.requestModule.OnEndRequest(httpApplication.Context);
+                    }
+
+                    // Kept for backcompat. Should be removed in 2.3 SDK
                     WebEventsPublisher.Log.OnError();
                     WebEventsPublisher.Log.OnEnd();
                 }
