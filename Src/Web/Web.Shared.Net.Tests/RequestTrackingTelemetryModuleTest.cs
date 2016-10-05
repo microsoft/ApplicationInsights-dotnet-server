@@ -163,7 +163,7 @@
         public void OnEndTracksRequest()
         {
             var sendItems = new List<ITelemetry>();
-            var stubTelemetryChannel = new StubTelemetryChannel {OnSend = item => sendItems.Add(item)};
+            var stubTelemetryChannel = new StubTelemetryChannel { OnSend = item => sendItems.Add(item) };
             var configuration = new TelemetryConfiguration
             {
                 InstrumentationKey = Guid.NewGuid().ToString(),
@@ -260,7 +260,7 @@
         [TestMethod]
         public void SdkVersionHasCorrectFormat()
         {
-            string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof (RequestTrackingTelemetryModule), prefix: "web:");
+            string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof(RequestTrackingTelemetryModule), prefix: "web:");
 
             var context = HttpModuleHelper.GetFakeHttpContext();
 

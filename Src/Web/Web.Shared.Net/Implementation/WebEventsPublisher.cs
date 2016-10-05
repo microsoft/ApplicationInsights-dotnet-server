@@ -1,7 +1,6 @@
-﻿using System;
-
-namespace Microsoft.ApplicationInsights.Web.Implementation
+﻿namespace Microsoft.ApplicationInsights.Web.Implementation
 {
+    using System;
 #if NET40
     using Microsoft.Diagnostics.Tracing;
 #endif

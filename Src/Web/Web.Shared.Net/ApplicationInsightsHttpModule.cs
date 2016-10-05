@@ -7,20 +7,21 @@
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Web.Implementation;
-    
+
+#pragma warning disable 0612
+
     /// <summary>
     /// Platform agnostic module for web application instrumentation.
     /// </summary>
     public sealed class ApplicationInsightsHttpModule : IHttpModule
     {
+        private readonly RequestTrackingTelemetryModule requestModule;
+        private readonly ExceptionTrackingTelemetryModule exceptionModule;
+
         /// <summary>
         /// Indicates if module initialized successfully.
         /// </summary>
         private bool isEnabled = true;
-
-        private readonly RequestTrackingTelemetryModule requestModule;
-        private readonly ExceptionTrackingTelemetryModule exceptionModule;
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApplicationInsightsHttpModule"/> class.
@@ -36,7 +37,7 @@
                 {
                     if (module is RequestTrackingTelemetryModule)
                     {
-                        this.requestModule = (RequestTrackingTelemetryModule) module;
+                        this.requestModule = (RequestTrackingTelemetryModule)module;
                     }
                     else
                     {
