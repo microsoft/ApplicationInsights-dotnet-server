@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService
 {
     using System;
-    using System.Collections.Generic;
     using System.Runtime.Serialization;
 
     [DataContract]
