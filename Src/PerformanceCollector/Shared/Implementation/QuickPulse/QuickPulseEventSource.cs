@@ -70,6 +70,12 @@
         {
             this.WriteEvent(11, e ?? string.Empty, counter ?? string.Empty, this.ApplicationName);
         }
+
+        [Event(20, Level = EventLevel.Verbose, Message = @"QuickPulse has failed to read process information. Error message: {0}")]
+        public void ProcessesReadingFailedEvent(string e, string applicationName = "dummy")
+        {
+            this.WriteEvent(20, e ?? string.Empty, this.ApplicationName);
+        }
         #endregion
 
         #region Data sending - success

@@ -194,7 +194,11 @@
                                         Timestamp = sample.EndTimestamp.UtcDateTime,
                                         IsWebApp = this.isWebApp,
                                         Metrics = metricPoints.ToArray(),
-                                        Documents = documents
+                                        Documents = documents,
+                                        TopCpuProcesses =
+                                            sample.TopCpuData.Select(
+                                                p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 })
+                                            .ToArray()
                                     };
 
                 monitoringPoints.Add(dataPoint);

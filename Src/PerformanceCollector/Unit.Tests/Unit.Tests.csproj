@@ -73,6 +73,12 @@
   <ItemGroup>
     <Compile Include="Mocks\PerformanceCollectorMock.cs" />
     <Compile Include="PerformanceCollectorTestBase.cs" />
+    <Compile Include="QuickPulse\Mocks\CategorySampleMock.cs" />
+    <Compile Include="QuickPulse\Mocks\QuickPulseProcessProviderMock.cs" />
+    <Compile Include="QuickPulse\Mocks\QuickPulsePerfLibMock.cs" />
+    <Compile Include="QuickPulse\Mocks\QuickPulseTopCpuCollectorMock.cs" />
+    <Compile Include="QuickPulse\QuickPulseProcessProviderTests.cs" />
+    <Compile Include="QuickPulse\QuickPulseTopCpuCollectorTests.cs" />
     <Compile Include="WebAppPerformanceCollectorTests.cs" />
     <Compile Include="PerformanceCounterUtilityTests.cs" />
     <Compile Include="PerformanceCollectorModuleTests.cs" />

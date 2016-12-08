@@ -109,17 +109,20 @@
             var sample1 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { AIRequestSuccessCount = 5, StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             var sample2 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { AIDependencyCallSuccessCount = 10, StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             var sample3 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { AIExceptionCount = 15, StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             bool? sendMore = serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty);
@@ -139,25 +142,29 @@
         {
             // ARRANGE
             var dummy = new Dictionary<string, Tuple<PerformanceCounterData, double>>();
+            var dummy2 = Enumerable.Empty<Tuple<string, int>>();
             var timeProvider = new ClockMock();
 
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, timeProvider, false);
             var sample1 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
-                    dummy);
+                    dummy,
+                    dummy2);
 
             timeProvider.FastForward(TimeSpan.FromSeconds(1));
             var sample2 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
-                    dummy);
+                    dummy,
+                    dummy2);
 
             timeProvider.FastForward(TimeSpan.FromSeconds(1));
             var sample3 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow.AddSeconds(-1), EndTimestamp = timeProvider.UtcNow },
-                    dummy);
+                    dummy,
+                    dummy2);
 
             // ACT
             timeProvider.FastForward(TimeSpan.FromSeconds(5));
@@ -182,7 +189,8 @@
             var sample1 =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator { AIRequestSuccessCount = 1, StartTimestamp = now, EndTimestamp = now.AddSeconds(3) },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample1 }, string.Empty);
@@ -207,7 +215,8 @@
                             StartTimestamp = now,
                             EndTimestamp = now.AddSeconds(1)
                         },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             var sample2 =
                 new QuickPulseDataSample(
@@ -218,7 +227,8 @@
                             StartTimestamp = now,
                             EndTimestamp = now.AddSeconds(1)
                         },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty);
@@ -252,7 +262,8 @@
                                         new ExceptionTelemetryDocument() { Exception = "Exception1", Properties = properties.ToArray() }
                                     })
                         },
-                    new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>());
             
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, string.Empty);
@@ -477,7 +488,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, instanceName, instanceName, instanceName, string.Empty, new Clock(), false);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, string.Empty);
@@ -515,7 +527,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, streamId, string.Empty, string.Empty, new Clock(), false);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, string.Empty);
@@ -553,7 +566,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, machineName, string.Empty, new Clock(), false);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, string.Empty);
@@ -592,7 +606,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, version, new Clock(), false);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, string.Empty);
@@ -614,7 +629,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, ikey);
@@ -635,7 +651,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), true);
             var sample = new QuickPulseDataSample(
                 new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>());
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>());
 
             // ACT
             serviceClient.SubmitSamples(new[] { sample }, ikey);
@@ -645,6 +662,34 @@
 
             Assert.AreEqual(1, this.samples.Count);
             Assert.IsTrue(this.samples[0].Item2.IsWebApp);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientSubmitsTopCpuProcessesToService()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var ikey = "some ikey";
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), true);
+            var cpuData = new[] { Tuple.Create("Process1", 1), Tuple.Create("Process2", 2) };
+
+            var sample = new QuickPulseDataSample(
+                new QuickPulseDataAccumulator { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                cpuData);
+
+            // ACT
+            serviceClient.SubmitSamples(new[] { sample }, ikey);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(1, this.samples.Count);
+            Assert.AreEqual(2, this.samples[0].Item2.TopCpuProcesses.Count());
+            Assert.AreEqual("Process1", this.samples[0].Item2.TopCpuProcesses[0].ProcessName);
+            Assert.AreEqual(1, this.samples[0].Item2.TopCpuProcesses[0].CpuPercentage);
+            Assert.AreEqual("Process2", this.samples[0].Item2.TopCpuProcesses[1].ProcessName);
+            Assert.AreEqual(2, this.samples[0].Item2.TopCpuProcesses[1].CpuPercentage);
         }
 
         public void Dispose()

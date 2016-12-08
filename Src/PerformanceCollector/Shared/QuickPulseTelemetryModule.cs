@@ -13,6 +13,7 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -23,6 +24,8 @@
     public sealed class QuickPulseTelemetryModule : ITelemetryModule, IDisposable
     {
         private const int MaxSampleStorageSize = 10;
+
+        private const int TopCpuCount = 5;
 
         private readonly object lockObject = new object();
 
@@ -62,6 +65,8 @@
 
         private IPerformanceCollector performanceCollector = null;
 
+        private IQuickPulseTopCpuCollector topCpuCollector = null;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryModule"/> class.
         /// </summary>
@@ -76,12 +81,14 @@
         /// <param name="dataAccumulatorManager">Data hub to sink QuickPulse data to.</param>
         /// <param name="serviceClient">QPS service client.</param>
         /// <param name="performanceCollector">Performance counter collector.</param>
+        /// <param name="topCpuCollector">Top N CPU collector.</param>
         /// <param name="timings">Timings for the module.</param>
         internal QuickPulseTelemetryModule(
             QuickPulseCollectionTimeSlotManager collectionTimeSlotManager,
             QuickPulseDataAccumulatorManager dataAccumulatorManager,
             IQuickPulseServiceClient serviceClient,
             IPerformanceCollector performanceCollector,
+            IQuickPulseTopCpuCollector topCpuCollector,
             QuickPulseTimings timings)
             : this()
         {
@@ -89,6 +96,7 @@
             this.dataAccumulatorManager = dataAccumulatorManager;
             this.serviceClient = serviceClient;
             this.performanceCollector = performanceCollector;
+            this.topCpuCollector = topCpuCollector;
             this.timings = timings;
         }
 
@@ -103,6 +111,12 @@
         /// </summary>
         /// <remarks>Loaded from configuration.</remarks>
         public bool DisableFullTelemetryItems { get; set; }
+
+        /// <summary>
+        /// Gets the flag indicating whether top CPU processes collection is disabled.
+        /// </summary>
+        /// <remarks>Loaded from configuration.</remarks>
+        public bool DisableTopCpuProcesses { get; set; }
 
         /// <summary>
         /// Disposes resources allocated by this type.
@@ -128,9 +142,10 @@
                         QuickPulseEventSource.Log.ModuleIsBeingInitializedEvent(
                             string.Format(
                                 CultureInfo.InvariantCulture,
-                                "QuickPulseServiceEndpoint: '{0}', DisableFullTelemetryItems: '{1}'",
+                                "QuickPulseServiceEndpoint: '{0}', DisableFullTelemetryItems: '{1}', DisableTopCpuProcesses: '{2}' ",
                                 this.QuickPulseServiceEndpoint,
-                                this.DisableFullTelemetryItems));
+                                this.DisableFullTelemetryItems,
+                                this.DisableTopCpuProcesses));
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Validating configuration...");
                         this.ValidateConfiguration(configuration);
@@ -142,6 +157,8 @@
                         this.performanceCollector = this.performanceCollector ?? 
                             (PerformanceCounterUtility.IsWebAppRunningInAzure() ? (IPerformanceCollector)new WebAppPerformanceCollector() : (IPerformanceCollector)new StandardPerformanceCollector());
                         this.timeProvider = this.timeProvider ?? new Clock();
+                        this.topCpuCollector = this.topCpuCollector
+                                               ?? new QuickPulseTopCpuCollector(this.timeProvider, new QuickPulseProcessProvider(PerfLib.GetPerfLib()));
                         this.timings = timings ?? QuickPulseTimings.Default;
 
                         this.InitializeServiceClient(configuration);
@@ -387,6 +404,8 @@
                 {
                     if (threadState.IsStopRequested)
                     {
+                        this.topCpuCollector.Close();
+
                         return;
                     }
 
@@ -439,14 +458,20 @@
                 this.performanceCollector.Collect((counterName, e) => QuickPulseEventSource.Log.CounterReadingFailedEvent(e.ToString(), counterName))
                 .ToList();
 
-            return this.CreateDataSample(completeAccumulator, perfData);
+            // For top N CPU, we have to get data from the provider
+            IEnumerable<Tuple<string, int>> topCpuData = this.DisableTopCpuProcesses
+                                                             ? Enumerable.Empty<Tuple<string, int>>()
+                                                             : this.topCpuCollector.GetTopProcessesByCpu(TopCpuCount);
+
+            return this.CreateDataSample(completeAccumulator, perfData, topCpuData);
         }
 
         private QuickPulseDataSample CreateDataSample(
             QuickPulseDataAccumulator accumulator,
-            IEnumerable<Tuple<PerformanceCounterData, double>> perfData)
+            IEnumerable<Tuple<PerformanceCounterData, double>> perfData,
+            IEnumerable<Tuple<string, int>> topCpuData)
         {
-            return new QuickPulseDataSample(accumulator, perfData.ToDictionary(tuple => tuple.Item1.ReportAs, tuple => tuple));
+            return new QuickPulseDataSample(accumulator, perfData.ToDictionary(tuple => tuple.Item1.ReportAs, tuple => tuple), topCpuData);
         }
 
         #region Callbacks from the state manager

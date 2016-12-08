@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.Serialization;
 
     [DataContract]
@@ -9,7 +10,10 @@
     [KnownType(typeof(ExceptionTelemetryDocument))]
     internal struct MonitoringDataPoint
     {
-        public const int CurrentInvariantVersion = 2;
+        /*
+         * 3 - adding TopCpuProcesses
+        */
+        public const int CurrentInvariantVersion = 3;
 
         [DataMember]
         public string Version { get; set; }
@@ -40,5 +44,8 @@
 
         [DataMember]
         public ITelemetryDocument[] Documents { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public ProcessCpuData[] TopCpuProcesses { get; set; }
     }
 }
