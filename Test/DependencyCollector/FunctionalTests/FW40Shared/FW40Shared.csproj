@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0D33FC46-A70C-4AFB-8D52-2C0DFCCF1DEC}</ProjectGuid>
+    <ProjectGuid>{0D33FC46-A70C-4AFB-8D52.3.0-beta1-build07958DFCCF1DEC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>FW40Shared</RootNamespace>
