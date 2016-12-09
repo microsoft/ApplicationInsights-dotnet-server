@@ -207,7 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\FW40Shared\FW40Shared.csproj">
-      <Project>{0d33fc46-a70c-4afb-8d52.3.0-beta1-build07958dfccf1dec}</Project>
+      <Project>{0D33FC46-A70C-4AFB-8D52-2C0DFCCF1DEC}</Project>
       <Name>FW40Shared</Name>
     </ProjectReference>
   </ItemGroup>
