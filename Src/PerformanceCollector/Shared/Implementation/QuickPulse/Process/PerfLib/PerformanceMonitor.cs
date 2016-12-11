@@ -49,8 +49,7 @@
             {
                 try
                 {
-                    byte[] data = (byte[])this.perfDataKey.GetValue(categoryIndex);
-                    return data;
+                    return (byte[])this.perfDataKey.GetValue(categoryIndex);
                 }
                 catch (IOException e)
                 {

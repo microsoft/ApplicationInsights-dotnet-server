@@ -56,9 +56,11 @@
                         && !string.Equals(pv.Key, IdleInstanceName, StringComparison.Ordinal))
                         .Select(pv => new QuickPulseProcess(pv.Key, TimeSpan.FromTicks(pv.Value)));
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 totalTime = null;
+
+                QuickPulseEventSource.Log.ProcessesReadingFailedEvent(e.ToString());
 
                 return new QuickPulseProcess[] { };
             }
