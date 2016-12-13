@@ -56,12 +56,12 @@
 
             this.pingResponse = response =>
                 {
-                    response.AddHeader("x-ms-qps-subscribed", true.ToString());
+                    response.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
                 };
 
             this.submitResponse = response =>
                 {
-                    response.AddHeader("x-ms-qps-subscribed", true.ToString());
+                    response.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
                 };
 
             string uriPrefix = string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}/", Port);
@@ -301,7 +301,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.pingResponse = r => { r.AddHeader("x-ms-qps-subscribed", true.ToString()); };
+            this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString()); };
             bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow);
 
             // ASSERT
@@ -317,7 +317,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.pingResponse = r => { r.AddHeader("x-ms-qps-subscribed", false.ToString()); };
+            this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString()); };
             bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow);
 
             // ASSERT
@@ -333,7 +333,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.pingResponse = r => { r.AddHeader("x-ms-qps-subscribed", "bla"); };
+            this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, "bla"); };
             bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow);
 
             // ASSERT
@@ -365,7 +365,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", true.ToString()); };
+            this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString()); };
             bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
 
             // ASSERT
@@ -381,7 +381,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", false.ToString()); };
+            this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString()); };
             bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
 
             // ASSERT
@@ -397,7 +397,7 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
 
             // ACT
-            this.submitResponse = r => { r.AddHeader("x-ms-qps-subscribed", "bla"); };
+            this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, "bla"); };
             bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty);
 
             // ASSERT
@@ -757,7 +757,7 @@
                     this.pingResponse(context.Response);
 
                     var dataPoint = (MonitoringDataPoint)serializerDataPoint.ReadObject(context.Request.InputStream);
-                    var transmissionTime = long.Parse(context.Request.Headers["x-ms-qps-transmission-time"], CultureInfo.InvariantCulture);
+                    var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
 
                     this.pings.Add(Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), dataPoint));
 
@@ -772,7 +772,7 @@
                     this.submitResponse(context.Response);
 
                     var dataPoints = serializerDataPointArray.ReadObject(context.Request.InputStream) as MonitoringDataPoint[];
-                    var transmissionTime = long.Parse(context.Request.Headers["x-ms-qps-transmission-time"], CultureInfo.InvariantCulture);
+                    var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
 
                     this.samples.AddRange(dataPoints.Select(dp => Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), dp)));
                 }
