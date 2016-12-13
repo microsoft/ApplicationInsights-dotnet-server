@@ -46,5 +46,8 @@
 
         [DataMember(EmitDefaultValue = false)]
         public ProcessCpuData[] TopCpuProcesses { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public bool TopCpuDataAccessDenied { get; set; }
     }
 }

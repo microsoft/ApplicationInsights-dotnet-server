@@ -183,6 +183,9 @@
                 ITelemetryDocument[] documents = sample.TelemetryDocuments.ToArray();
                 Array.Reverse(documents);
 
+                ProcessCpuData[] topCpuProcesses =
+                    sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 }).ToArray();
+
                 var dataPoint = new MonitoringDataPoint
                                     {
                                         Version = this.version,
@@ -195,10 +198,8 @@
                                         IsWebApp = this.isWebApp,
                                         Metrics = metricPoints.ToArray(),
                                         Documents = documents,
-                                        TopCpuProcesses =
-                                            sample.TopCpuData.Select(
-                                                p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 })
-                                            .ToArray()
+                                        TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
+                                        TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied
                                     };
 
                 monitoringPoints.Add(dataPoint);

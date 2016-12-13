@@ -6,6 +6,7 @@
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Security;
     using System.Text;
     using System.Threading;
 
@@ -145,7 +146,7 @@
         public void QuickPulseTopCpuCollectorHandlesExceptionFromProcessProvider()
         {
             // ARRANGE
-            var processProvider = new QuickPulseProcessProviderMock() { AlwaysThrow = true };
+            var processProvider = new QuickPulseProcessProviderMock() { AlwaysThrow = new Exception() };
             var timeProvider = new ClockMock();
             var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
 
@@ -189,6 +190,132 @@
             // ASSERT
             Assert.AreEqual(5, itemCount1);
             Assert.AreEqual(1, itemCount3);
+        }
+
+        [TestMethod]
+        public void QuickPulseTopCpuCollectorSetsInitializationStatusCorrectlyWhenUnknownExceptionIsThrown()
+        {
+            // ARRANGE
+            var processProvider = new QuickPulseProcessProviderMock { AlwaysThrow = new Exception() };
+            var timeProvider = new ClockMock();
+            var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
+            
+            // ACT
+            collector.Initialize();
+            
+            // ASSERT
+            Assert.IsTrue(collector.InitializationFailed);
+            Assert.IsFalse(collector.AccessDenied);
+        }
+
+        [TestMethod]
+        public void QuickPulseTopCpuCollectorSetsInitializationStatusCorrectlyWhenUnauthorizedExceptionIsThrown()
+        {
+            // ARRANGE
+            var processProvider = new QuickPulseProcessProviderMock { AlwaysThrow = new UnauthorizedAccessException() };
+            var timeProvider = new ClockMock();
+            var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
+
+            // ACT
+            collector.Initialize();
+
+            // ASSERT
+            Assert.IsTrue(collector.InitializationFailed);
+            Assert.IsTrue(collector.AccessDenied);
+        }
+
+        [TestMethod]
+        public void QuickPulseTopCpuCollectorSetsInitializationStatusCorrectlyWhenSecurityExceptionIsThrown()
+        {
+            // ARRANGE
+            var processProvider = new QuickPulseProcessProviderMock { AlwaysThrow = new SecurityException() };
+            var timeProvider = new ClockMock();
+            var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
+
+            // ACT
+            collector.Initialize();
+
+            // ASSERT
+            Assert.IsTrue(collector.InitializationFailed);
+            Assert.IsTrue(collector.AccessDenied);
+        }
+
+        [TestMethod]
+        public void QuickPulseTopCpuCollectorReturnsNothingIfInitializationFailed()
+        {
+            // ARRANGE
+            var processProvider = new QuickPulseProcessProviderMock { AlwaysThrow = new Exception() };
+            processProvider.Processes = new List<QuickPulseProcess>()
+                                            {
+                                                new QuickPulseProcess("Process1", TimeSpan.FromSeconds(1))
+                                            };
+            var timeProvider = new ClockMock();
+            var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
+
+            // ACT
+            collector.Initialize();
+            collector.GetTopProcessesByCpu(5);
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+
+            var result = collector.GetTopProcessesByCpu(5);
+
+            // ASSERT
+            Assert.IsTrue(collector.InitializationFailed);
+            Assert.IsFalse(result.Any());
+        }
+
+        [TestMethod]
+        public void QuickPulseTopCpuCollectorRetriesAfterIntervalWhenAccessDenied()
+        {
+            // ARRANGE
+            var processProvider = new QuickPulseProcessProviderMock();
+            processProvider.Processes = new List<QuickPulseProcess>()
+                                            {
+                                                new QuickPulseProcess("Process1", TimeSpan.FromSeconds(1))
+                                            };
+            var timeProvider = new ClockMock();
+            var collector = new QuickPulseTopCpuCollector(timeProvider, processProvider);
+
+            // ACT
+            collector.Initialize();
+            collector.GetTopProcessesByCpu(5);
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+
+            var resultWhenEverythingIsFine = collector.GetTopProcessesByCpu(5);
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+            processProvider.AlwaysThrow = new UnauthorizedAccessException();
+            var resultWhileAccessDenied = collector.GetTopProcessesByCpu(5);
+            bool flagWhileAccessDenied = collector.AccessDenied;
+
+            // 60 second retry interval
+            timeProvider.FastForward(TimeSpan.FromSeconds(59));
+            processProvider.AlwaysThrow = null;
+            var resultWhenEverythingIsFineAgainButNotEnoughTimePassedToRetry = collector.GetTopProcessesByCpu(5);
+            bool flagWhenAccessIsOkButNotEnoughTimePassed = collector.AccessDenied;
+
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+            processProvider.AlwaysThrow = null;
+            var resultWhenRetryIntervalHasPassed = collector.GetTopProcessesByCpu(5);
+            bool flagWhenRetryIntervalHasPassed = collector.AccessDenied;
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(1));
+            processProvider.AlwaysThrow = null;
+            var resultWhenEverythingIsBackToNormalForGood = collector.GetTopProcessesByCpu(5);
+            bool flagWhenEverythingIsBackToNormalForGood = collector.AccessDenied;
+
+
+            // ASSERT
+            Assert.IsTrue(resultWhenEverythingIsFine.Any());
+            Assert.IsFalse(resultWhileAccessDenied.Any());
+            Assert.IsTrue(flagWhileAccessDenied);
+            Assert.IsFalse(resultWhenEverythingIsFineAgainButNotEnoughTimePassedToRetry.Any());
+            Assert.IsTrue(flagWhenAccessIsOkButNotEnoughTimePassed);
+            Assert.IsTrue(resultWhenRetryIntervalHasPassed.Any());
+            Assert.IsFalse(flagWhenRetryIntervalHasPassed);
+            Assert.IsTrue(resultWhenEverythingIsBackToNormalForGood.Any());
+            Assert.IsFalse(flagWhenEverythingIsBackToNormalForGood);
         }
     }
 }

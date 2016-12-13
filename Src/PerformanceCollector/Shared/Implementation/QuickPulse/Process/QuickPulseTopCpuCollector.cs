@@ -3,7 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security;
 
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
     /// <summary>
@@ -11,6 +13,8 @@
     /// </summary>
     internal sealed class QuickPulseTopCpuCollector : IQuickPulseTopCpuCollector
     {
+        private readonly TimeSpan accessDeniedRetryInterval = TimeSpan.FromMinutes(1);
+
         private readonly Clock timeProvider;
 
         private readonly IQuickPulseProcessProvider processProvider;
@@ -22,20 +26,41 @@
 
         private TimeSpan? prevOverallTime;
 
+        private DateTimeOffset lastReadAttempt = DateTimeOffset.MinValue;
+
         public QuickPulseTopCpuCollector(Clock timeProvider, IQuickPulseProcessProvider processProvider)
         {
             this.timeProvider = timeProvider;
             this.processProvider = processProvider;
+
+            this.InitializationFailed = false;
+            this.AccessDenied = false;
         }
+
+        public bool InitializationFailed { get; private set; }
+
+        public bool AccessDenied { get; private set; }
 
         public IEnumerable<Tuple<string, int>> GetTopProcessesByCpu(int topN)
         {
             try
             {
+                DateTimeOffset now = this.timeProvider.UtcNow;
+
+                if (this.InitializationFailed)
+                {
+                    return Enumerable.Empty<Tuple<string, int>>();
+                }
+
+                if (this.AccessDenied && now - this.lastReadAttempt < this.accessDeniedRetryInterval)
+                {
+                    return Enumerable.Empty<Tuple<string, int>>();
+                }
+
                 var procData = new List<Tuple<string, double>>();
                 var encounteredProcs = new HashSet<string>();
-
-                DateTimeOffset now = this.timeProvider.UtcNow;
+                
+                this.lastReadAttempt = now;
 
                 TimeSpan? totalTime;
                 foreach (var process in this.processProvider.GetProcesses(out totalTime))
@@ -71,14 +96,43 @@
                 this.prevObservationTime = now;
                 this.prevOverallTime = totalTime;
 
+                this.AccessDenied = false;
+
                 // TODO: implement partial sort instead of full sort below
                 return procData.OrderByDescending(p => p.Item2).Select(p => Tuple.Create(p.Item1, (int)(p.Item2 * 100))).Take(topN);
             }
             catch (Exception e)
             {
-                QuickPulseEventSource.Log.ProcessesReadingFailedEvent(e.ToString());
+                QuickPulseEventSource.Log.ProcessesReadingFailedEvent(e.ToInvariantString());
+
+                if (e is UnauthorizedAccessException || e is SecurityException)
+                {
+                    this.AccessDenied = true;
+                }
 
                 return Enumerable.Empty<Tuple<string, int>>();
+            }
+        }
+
+        public void Initialize()
+        {
+            this.InitializationFailed = false;
+            this.AccessDenied = false;
+            
+            try
+            {
+                this.processProvider.Initialize();
+            }
+            catch (Exception e)
+            {
+                QuickPulseEventSource.Log.ProcessesReadingFailedEvent(e.ToInvariantString());
+
+                this.InitializationFailed = true;
+
+                if (e is UnauthorizedAccessException || e is SecurityException)
+                {
+                    this.AccessDenied = true;
+                }
             }
         }
 

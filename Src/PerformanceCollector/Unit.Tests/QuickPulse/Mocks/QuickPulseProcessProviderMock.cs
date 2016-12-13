@@ -9,21 +9,33 @@
     {
         public List<QuickPulseProcess> Processes { get; set; }
 
-        public bool AlwaysThrow { get; set; } = false;
+        public Exception AlwaysThrow { get; set; } = null;
 
         public TimeSpan? OverallTimeValue { get; set; } = null;
 
+        public void Initialize()
+        {
+            if (this.AlwaysThrow != null)
+            {
+                throw this.AlwaysThrow;
+            }
+        }
+
         public void Close()
         {
+            if (this.AlwaysThrow != null)
+            {
+                throw this.AlwaysThrow;
+            }
         }
 
         public IEnumerable<QuickPulseProcess> GetProcesses(out TimeSpan? totalTime)
         {
             totalTime = this.OverallTimeValue;
 
-            if (this.AlwaysThrow)
+            if (this.AlwaysThrow != null)
             {
-                throw new Exception("Mock is configured to always throw");
+                throw this.AlwaysThrow;
             }
 
             return this.Processes;

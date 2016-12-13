@@ -9,6 +9,8 @@
     {
         CategorySample GetCategorySample(int categoryIndex, int counterIndex);
 
+        void Initialize();
+
         void Close();
     }
 }

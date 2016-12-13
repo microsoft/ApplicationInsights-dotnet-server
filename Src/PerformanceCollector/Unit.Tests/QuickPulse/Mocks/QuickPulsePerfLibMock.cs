@@ -12,6 +12,10 @@
             return this.CategorySample;
         }
 
+        public void Initialize()
+        {
+        }
+
         public void Close()
         {
         }

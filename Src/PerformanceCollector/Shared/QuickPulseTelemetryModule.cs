@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Security;
     using System.Threading;
 
     using Microsoft.ApplicationInsights.DataContracts;
@@ -398,13 +399,15 @@
             var stopwatch = new Stopwatch();
             var threadState = (QuickPulseThreadState)state;
 
+            this.InitializeCollectionThread();
+
             while (true)
             {
                 try
                 {
                     if (threadState.IsStopRequested)
                     {
-                        this.topCpuCollector.Close();
+                        this.CloseCollectionThread();
 
                         return;
                     }
@@ -423,6 +426,33 @@
                 DateTimeOffset nextTick = this.collectionTimeSlotManager.GetNextCollectionTimeSlot(this.timeProvider.UtcNow);
                 TimeSpan timeLeftUntilNextTick = nextTick - this.timeProvider.UtcNow;
                 Thread.Sleep(timeLeftUntilNextTick > TimeSpan.Zero ? timeLeftUntilNextTick : TimeSpan.Zero);
+            }
+        }
+        
+
+        private void InitializeCollectionThread()
+        {
+            try
+            {
+                this.topCpuCollector.Initialize();
+            }
+            catch (Exception e)
+            {
+                // whatever happened, don't bring the thread down
+                QuickPulseEventSource.Log.UnknownErrorEvent(e.ToInvariantString());
+            }
+        }
+
+        private void CloseCollectionThread()
+        {
+            try
+            {
+                this.topCpuCollector.Close();
+            }
+            catch (Exception e)
+            {
+                // whatever happened, don't bring the thread down
+                QuickPulseEventSource.Log.UnknownErrorEvent(e.ToInvariantString());
             }
         }
 
@@ -463,15 +493,20 @@
                                                              ? Enumerable.Empty<Tuple<string, int>>()
                                                              : this.topCpuCollector.GetTopProcessesByCpu(TopCpuCount);
 
-            return this.CreateDataSample(completeAccumulator, perfData, topCpuData);
+            return this.CreateDataSample(completeAccumulator, perfData, topCpuData, this.topCpuCollector.AccessDenied);
         }
 
         private QuickPulseDataSample CreateDataSample(
             QuickPulseDataAccumulator accumulator,
             IEnumerable<Tuple<PerformanceCounterData, double>> perfData,
-            IEnumerable<Tuple<string, int>> topCpuData)
+            IEnumerable<Tuple<string, int>> topCpuData,
+            bool topCpuDataAccessDenied)
         {
-            return new QuickPulseDataSample(accumulator, perfData.ToDictionary(tuple => tuple.Item1.ReportAs, tuple => tuple), topCpuData);
+            return new QuickPulseDataSample(
+                accumulator,
+                perfData.ToDictionary(tuple => tuple.Item1.ReportAs, tuple => tuple),
+                topCpuData,
+                topCpuDataAccessDenied);
         }
 
         #region Callbacks from the state manager

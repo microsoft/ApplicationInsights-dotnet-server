@@ -100,13 +100,9 @@
             {
                 this.perfDataKey = Registry.PerformanceData;
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException e)
             {
-                throw new Win32Exception(NativeMethods.ERROR_ACCESS_DENIED);
-            }
-            catch (IOException e)
-            {
-                throw new Win32Exception(Marshal.GetHRForException(e));
+                throw new UnauthorizedAccessException("Access denied opening the performance key", e);
             }
         }
     }

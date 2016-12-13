@@ -8,6 +8,8 @@
     /// </summary>
     internal interface IQuickPulseProcessProvider
     {
+        void Initialize();
+
         void Close();
 
         IEnumerable<QuickPulseProcess> GetProcesses(out TimeSpan? totalTime);

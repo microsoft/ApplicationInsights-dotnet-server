@@ -8,7 +8,13 @@
     /// </summary>
     internal interface IQuickPulseTopCpuCollector
     {
+        bool InitializationFailed { get; }
+
+        bool AccessDenied { get; }
+
         IEnumerable<Tuple<string, int>> GetTopProcessesByCpu(int topN);
+
+        void Initialize();
 
         void Close();
     }

@@ -11,7 +11,7 @@
     /// </summary>
     internal class QuickPulseDataSample
     {
-        public QuickPulseDataSample(QuickPulseDataAccumulator accumulator, IDictionary<string, Tuple<PerformanceCounterData, double>> perfData, IEnumerable<Tuple<string, int>> topCpuData)
+        public QuickPulseDataSample(QuickPulseDataAccumulator accumulator, IDictionary<string, Tuple<PerformanceCounterData, double>> perfData, IEnumerable<Tuple<string, int>> topCpuData, bool topCpuDataAccessDenied)
         {
             if (accumulator == null)
             {
@@ -72,6 +72,8 @@
             this.TopCpuData = topCpuData.ToArray();
 
             this.TelemetryDocuments = accumulator.TelemetryDocuments.ToArray();
+
+            this.TopCpuDataAccessDenied = topCpuDataAccessDenied;
         }
         
         public DateTimeOffset StartTimestamp { get; }
@@ -107,6 +109,8 @@
 
         public IEnumerable<Tuple<string, int>> TopCpuData { get; private set; }
             
-        public ITelemetryDocument[] TelemetryDocuments { get; set; }
+        public ITelemetryDocument[] TelemetryDocuments { get; private set; }
+
+        public bool TopCpuDataAccessDenied { get; private set; }
     }
 }

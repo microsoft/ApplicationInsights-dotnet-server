@@ -31,6 +31,11 @@
             return new CategorySample(dataRef, categoryIndex, counterIndex, this);
         }
 
+        public void Initialize()
+        {
+            this.performanceMonitor = new PerformanceMonitor();
+        }
+
         public void Close()
         {
             this.performanceMonitor?.Close();
@@ -40,11 +45,6 @@
 
         public byte[] GetPerformanceData(string categoryIndex)
         {
-            if (this.performanceMonitor == null)
-            {
-                this.performanceMonitor = new PerformanceMonitor();
-            }
-
             return this.performanceMonitor.GetData(categoryIndex);
         }
     }
