@@ -294,7 +294,6 @@
             var resultWhenEverythingIsFineAgainButNotEnoughTimePassedToRetry = collector.GetTopProcessesByCpu(5);
             bool flagWhenAccessIsOkButNotEnoughTimePassed = collector.AccessDenied;
 
-
             timeProvider.FastForward(TimeSpan.FromSeconds(1));
             processProvider.AlwaysThrow = null;
             var resultWhenRetryIntervalHasPassed = collector.GetTopProcessesByCpu(5);
@@ -304,7 +303,6 @@
             processProvider.AlwaysThrow = null;
             var resultWhenEverythingIsBackToNormalForGood = collector.GetTopProcessesByCpu(5);
             bool flagWhenEverythingIsBackToNormalForGood = collector.AccessDenied;
-
 
             // ASSERT
             Assert.IsTrue(resultWhenEverythingIsFine.Any());
