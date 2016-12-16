@@ -104,10 +104,10 @@
 
             if (context.Request.Headers != null)
             {
-                // If the source header is present on the incoming request, use that to populate the source field.
                 string sourceIkey = context.Request.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader];
 
-                if (!string.IsNullOrEmpty(sourceIkey))
+                // If the source header is present on the incoming request, and it is an external component (not the same ikey as the one used by the current component), populate the source field.
+                if (!string.IsNullOrEmpty(sourceIkey) && sourceIkey != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(requestTelemetry.Context.InstrumentationKey))
                 {
                     requestTelemetry.Source = sourceIkey;
                 }
