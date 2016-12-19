@@ -102,6 +102,13 @@
                 requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
             }
 
+            if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
+            {
+                // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
+                // and get they instrumentation key from all possible sources in the process. Let's do that now.
+                this.telemetryClient.Initialize(requestTelemetry);
+            }
+
             if (context.Request.Headers != null)
             {
                 string sourceIkey = context.Request.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader];
