@@ -384,9 +384,7 @@
                             if (responseObj.Headers != null)
                             {
                                 var targetIkeyHash = responseObj.Headers[RequestResponseHeaders.TargetInstrumentationKeyHeader];
-                                
-                                // We only add the cross component correlation key if the key does not remain the current component.
-                                if (!string.IsNullOrEmpty(targetIkeyHash) && targetIkeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey))
+                                if (!string.IsNullOrEmpty(targetIkeyHash))
                                 {
                                     telemetry.Type = RemoteDependencyConstants.AI;
                                     telemetry.Target += " | " + targetIkeyHash;
