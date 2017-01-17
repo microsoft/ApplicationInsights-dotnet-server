@@ -45,13 +45,7 @@
         [TestInitialize]
         public void TestInitialize()
         {
-            this.configuration = new TelemetryConfiguration();
-            this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
-            this.sendItems = new List<ITelemetry>();
-            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
-            this.configuration.InstrumentationKey = Guid.NewGuid().ToString();
-            this.httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, new List<string>());
-            this.ex = new Exception();
+            this.Initialize(Guid.NewGuid().ToString());
         }
 
         [TestCleanup]
@@ -105,21 +99,34 @@
         [Description("Validates if DependencyTelemetry sent contains the cross component IKey hash.")]
         public void RddTestHttpProcessingProfilerOnEndAddsIkeyToTargetField()
         {
+            // Here is a sample IKey Hash, since the test initialize method adds a random ikey. This will not match the hash for current ikey. Hence represents an external component.
             string hashedIkey = "vwuSMCFBLdIHSdeEXvFnmiXPO5ilQRqw9kO/SE5ino4=";
 
-            var request = WebRequest.Create(this.testUrl);
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.TargetInstrumentationKeyHeader, hashedIkey);
-
-            var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK, headers);
-            returnObjectPassed.Headers[RequestResponseHeaders.TargetInstrumentationKeyHeader] = hashedIkey;
-
-            this.httpProcessingProfiler.OnBeginForGetResponse(request);
-            var objectReturned = this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, request);
+            this.SimulateWebRequestResponseWithIKeyHash(hashedIkey);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             Assert.AreEqual(this.testUrl.Host + " | " + hashedIkey, ((DependencyTelemetry)this.sendItems[0]).Target);
+        }
+
+        /// <summary>
+        /// Validates if DependencyTelemetry sent contains the cross component instrumentation key hash.
+        /// </summary>
+        [TestMethod]
+        [Description("Validates DependencyTelemetry does not sends IKey hash if the IKey is not from a different component.")]
+        public void RddTestHttpProcessingProfilerOnEndDoesNotAddIkeyToTargetFieldForInternalComponents()
+        {
+            // Initialize the test with a given instrumentation key.
+            this.Initialize("b3eb14d6-bb32-4542-9b93-473cd94aaedf");
+            
+            // Here is the equivalent generated IKey Hash
+            string hashedIkey = "o05HMrc4Og8W1Jyy60JPDPxxQy3bOKyuaj6HudZHTjE=";
+
+            this.SimulateWebRequestResponseWithIKeyHash(hashedIkey);
+
+            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
+
+            // As opposed to this.testUrl.Host + " | " + hashedIkey
+            Assert.AreEqual(this.testUrl.Host, ((DependencyTelemetry)this.sendItems[0]).Target);
         }
 
         /// <summary>
@@ -182,17 +189,23 @@
         [Description("Ensures that the source request header is not added when the config commands as such")]
         public void RddTestHttpProcessingProfilerOnBeginSkipsAddingSourceHeaderPerConfig()
         {
-            var request = WebRequest.Create(this.testUrl);
+            string hostnamepart = "partofhostname";
+            string url = string.Format(CultureInfo.InvariantCulture, "http://hostnamestart{0}hostnameend.com/path/to/something?param=1", hostnamepart);
+            var request = WebRequest.Create(new Uri(url));
 
             Assert.IsNull(request.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader]);
+            Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
 
             var httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ false, new List<string>());
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader]);
+            Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
 
-            httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, new List<string> { this.testUrl.Host });
+            ICollection<string> exclusionList = new SanitizedHostList() { "randomstringtoexclude", hostnamepart };
+            httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, exclusionList);
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader]);
+            Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
         }
 
         /// <summary>
@@ -727,7 +740,7 @@
         #endregion Disposable
 
         #region Helpers
-        
+
         private static void ValidateTelemetryPacket(
             DependencyTelemetry remoteDependencyTelemetryActual, Uri uri, string type, bool success, double expectedValue, string resultCode)
         {
@@ -750,6 +763,31 @@
 
             string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModuleTest), prefix: "rddp:");
             Assert.AreEqual(expectedVersion, remoteDependencyTelemetryActual.Context.GetInternalContext().SdkVersion);
+        }
+
+        private void SimulateWebRequestResponseWithIKeyHash(string hashedIkey)
+        {
+            var request = WebRequest.Create(this.testUrl);
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add(RequestResponseHeaders.TargetInstrumentationKeyHeader, hashedIkey);
+
+            var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK, headers);
+            returnObjectPassed.Headers[RequestResponseHeaders.TargetInstrumentationKeyHeader] = hashedIkey;
+
+            this.httpProcessingProfiler.OnBeginForGetResponse(request);
+            var objectReturned = this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, request);
+        }
+
+        private void Initialize(string instrumentationKey)
+        {
+            this.configuration = new TelemetryConfiguration();
+            this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+            this.sendItems = new List<ITelemetry>();
+            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
+            this.configuration.InstrumentationKey = instrumentationKey;
+            this.httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, new List<string>());
+            this.ex = new Exception();
         }
         #endregion Helpers
     }
