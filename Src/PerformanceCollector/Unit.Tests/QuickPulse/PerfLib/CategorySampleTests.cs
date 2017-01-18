@@ -17,12 +17,22 @@
             // ARRANGE
             var dataList = new List<byte>();
             string resourceName = "Unit.Tests.QuickPulse.PerfLib.PerfData.data";
-            using (Stream stream = typeof(CategorySampleTests).Assembly.GetManifestResourceStream(resourceName))
+
+            Stream stream = null;
+            try
             {
+                stream = typeof(CategorySampleTests).Assembly.GetManifestResourceStream(resourceName);
+
                 using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                 {
+                    stream = null;
+
                     dataList.AddRange(reader.ReadToEnd().Split(',').Select(byte.Parse));
                 }
+            }
+            finally
+            {
+                stream?.Dispose();
             }
 
             byte[] data = dataList.ToArray();
