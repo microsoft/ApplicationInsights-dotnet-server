@@ -13,7 +13,7 @@
         public void QuickPulseEventSourceSanityTest()
         {
             // check for FormatExceptions and ETW exceptions
-            QuickPulseEventSource.Log.ModuleIsBeingInitializedEvent("Test message");
+            QuickPulseEventSource.Log.ModuleIsBeingInitializedEvent("Endpoint", false, false);
             QuickPulseEventSource.Log.CounterRegisteredEvent("counter");
             QuickPulseEventSource.Log.CounterRegistrationFailedEvent("Test exception", "counter");
             QuickPulseEventSource.Log.CounterParsingFailedEvent("Test exception", "counter");

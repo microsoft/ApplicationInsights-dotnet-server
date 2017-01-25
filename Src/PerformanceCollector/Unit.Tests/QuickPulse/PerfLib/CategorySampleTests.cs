@@ -43,6 +43,7 @@
             var categorySample = new CategorySample(data, 230, 6, perfLib);
 
             // ASSERT
+            // the test data has 28 counters, 165 instances, with the first counter being index 6 (% Processor Time).
             Assert.AreEqual(28, categorySample.CounterTable.Count);
             Assert.AreEqual(165, categorySample.InstanceNameTable.Count);
             Assert.AreEqual(6, categorySample.CounterTable.First().Key);

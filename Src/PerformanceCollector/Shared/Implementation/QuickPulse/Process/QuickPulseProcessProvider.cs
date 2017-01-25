@@ -36,8 +36,12 @@
         /// amount of time spent by CPU cores executing system processes.</param>
         public IEnumerable<QuickPulseProcess> GetProcesses(out TimeSpan? totalTime)
         {
+            // "Process" object
             const int CategoryIndex = 230;
+
+            // "% Processor Time" counter
             const int CounterIndex = 6;
+
             const string TotalInstanceName = "_Total";
             const string IdleInstanceName = "Idle";
 

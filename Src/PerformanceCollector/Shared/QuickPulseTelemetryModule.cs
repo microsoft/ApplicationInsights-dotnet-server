@@ -141,12 +141,9 @@
                     if (!this.isInitialized)
                     {
                         QuickPulseEventSource.Log.ModuleIsBeingInitializedEvent(
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "QuickPulseServiceEndpoint: '{0}', DisableFullTelemetryItems: '{1}', DisableTopCpuProcesses: '{2}' ",
-                                this.QuickPulseServiceEndpoint,
-                                this.DisableFullTelemetryItems,
-                                this.DisableTopCpuProcesses));
+                            this.QuickPulseServiceEndpoint,
+                            this.DisableFullTelemetryItems,
+                            this.DisableTopCpuProcesses);
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Validating configuration...");
                         this.ValidateConfiguration(configuration);

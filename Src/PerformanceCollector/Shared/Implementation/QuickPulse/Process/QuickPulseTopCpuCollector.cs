@@ -49,11 +49,13 @@
 
                 if (this.InitializationFailed)
                 {
+                    // the initialization has failed, so we never attempt to do anything
                     return Enumerable.Empty<Tuple<string, int>>();
                 }
 
                 if (this.AccessDenied && now - this.lastReadAttempt < this.accessDeniedRetryInterval)
                 {
+                    // not enough time has passed since we got denied access, so don't retry just yet
                     return Enumerable.Empty<Tuple<string, int>>();
                 }
 
