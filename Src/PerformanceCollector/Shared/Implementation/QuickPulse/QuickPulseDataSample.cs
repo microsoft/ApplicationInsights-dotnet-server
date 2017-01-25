@@ -13,6 +13,7 @@
     {
         public QuickPulseDataSample(QuickPulseDataAccumulator accumulator, IDictionary<string, Tuple<PerformanceCounterData, double>> perfData, IEnumerable<Tuple<string, int>> topCpuData, bool topCpuDataAccessDenied)
         {
+            // NOTE: it is crucial not to keep any heap references on input parameters, new objects with separate roots must be created!
             if (accumulator == null)
             {
                 throw new ArgumentNullException(nameof(accumulator));

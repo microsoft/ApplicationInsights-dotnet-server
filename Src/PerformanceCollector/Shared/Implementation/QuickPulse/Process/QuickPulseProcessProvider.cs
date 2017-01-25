@@ -15,7 +15,7 @@
 
         public QuickPulseProcessProvider(IQuickPulsePerfLib perfLib)
         {
-            this.perfLib = perfLib ?? PerfLib.PerfLib.GetPerfLib();
+            this.perfLib = perfLib;
         }
 
         public void Initialize()

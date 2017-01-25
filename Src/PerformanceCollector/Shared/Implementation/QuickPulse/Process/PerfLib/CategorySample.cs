@@ -156,7 +156,7 @@
 
                     dataRef = (IntPtr)((long)dataRef + perfInstance.ByteLength);
 
-                    // we only need one counter
+                    // we only need one counter right now, to get more - use the following pattern:
                     ////foreach (CounterDefinitionSample s in samples)
                     ////{
                     ////    s.SetInstanceValue(i, dataRef);
