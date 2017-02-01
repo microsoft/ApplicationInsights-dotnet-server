@@ -3,6 +3,9 @@
     using System;
     using System.Runtime.InteropServices;
 
+    /// <summary>
+    /// Represents performance data for an individual counter.
+    /// </summary>
     internal class CounterDefinitionSample
     {
         internal readonly int NameIndex;
@@ -15,6 +18,11 @@
 
         private readonly int offset;
         
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CounterDefinitionSample"/> class. 
+        /// </summary>
+        /// <param name="perfCounter">Performance counter data.</param>
+        /// <param name="instanceNumber">Instance name.</param>
         public CounterDefinitionSample(NativeMethods.PERF_COUNTER_DEFINITION perfCounter, int instanceNumber)
         {
             this.NameIndex = perfCounter.CounterNameTitleIndex;
@@ -24,12 +32,22 @@
             this.InstanceValues = instanceNumber == -1 ? new long[1] : new long[instanceNumber];
         }
 
+        /// <summary>
+        /// Sets the value for an instance.
+        /// </summary>
+        /// <param name="index">Index value.</param>
+        /// <param name="dataRef">Data reference.</param>
         public void SetInstanceValue(int index, IntPtr dataRef)
         {
             long rawValue = this.ReadValue(dataRef);
             this.InstanceValues[index] = rawValue;
         }
 
+        /// <summary>
+        /// Gets the value for an instance.
+        /// </summary>
+        /// <param name="instanceIndex">The index of the instance.</param>
+        /// <returns>The instance value.</returns>
         public long GetInstanceValue(int instanceIndex)
         {
             return this.InstanceValues[instanceIndex];

@@ -7,22 +7,32 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib;
 
     /// <summary>
-    /// Top CPU collector.
+    /// Top CPU process provider.
     /// </summary>
     internal sealed class QuickPulseProcessProvider : IQuickPulseProcessProvider
     {
         private readonly IQuickPulsePerfLib perfLib;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuickPulseProcessProvider"/> class. 
+        /// </summary>
+        /// <param name="perfLib">Performance library.</param>
         public QuickPulseProcessProvider(IQuickPulsePerfLib perfLib)
         {
             this.perfLib = perfLib;
         }
 
+        /// <summary>
+        /// Initializes the process provider.
+        /// </summary>
         public void Initialize()
         {
             this.perfLib.Initialize();
         }
 
+        /// <summary>
+        /// Closes the process provider.
+        /// </summary>
         public void Close()
         {
             this.perfLib.Close();

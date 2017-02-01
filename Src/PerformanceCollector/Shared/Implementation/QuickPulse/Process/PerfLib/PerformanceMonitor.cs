@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib
 {
     using System;
-    using System.ComponentModel;
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Runtime.Versioning;
@@ -10,15 +9,24 @@
 
     using Microsoft.Win32;
 
+    /// <summary>
+    /// Represents the low-level performance monitor.
+    /// </summary>
     internal class PerformanceMonitor
     {
         private RegistryKey perfDataKey;
-        
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class. 
+        /// </summary>
         public PerformanceMonitor()
         {
             this.Init();
         }
         
+        /// <summary>
+        /// Closes the monitor.
+        /// </summary>
         public void Close()
         {
             this.perfDataKey?.Close();

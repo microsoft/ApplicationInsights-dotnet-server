@@ -28,6 +28,11 @@
 
         private DateTimeOffset lastReadAttempt = DateTimeOffset.MinValue;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuickPulseTopCpuCollector"/> class. 
+        /// </summary>
+        /// <param name="timeProvider">Time provider.</param>
+        /// <param name="processProvider">Process provider.</param>
         public QuickPulseTopCpuCollector(Clock timeProvider, IQuickPulseProcessProvider processProvider)
         {
             this.timeProvider = timeProvider;
@@ -37,10 +42,21 @@
             this.AccessDenied = false;
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the initialization has failed.
+        /// </summary>
         public bool InitializationFailed { get; private set; }
 
+        /// <summary>
+        /// Gets a value indicating whether the Access Denied error has taken place.
+        /// </summary>
         public bool AccessDenied { get; private set; }
 
+        /// <summary>
+        /// Gets top N processes by CPU consumption.
+        /// </summary>
+        /// <param name="topN">Top N processes.</param>
+        /// <returns>List of top processes by CPU consumption.</returns>
         public IEnumerable<Tuple<string, int>> GetTopProcessesByCpu(int topN)
         {
             try
@@ -116,6 +132,9 @@
             }
         }
 
+        /// <summary>
+        /// Initializes the top CPU collector.
+        /// </summary>
         public void Initialize()
         {
             this.InitializationFailed = false;
@@ -138,6 +157,9 @@
             }
         }
 
+        /// <summary>
+        /// Closes the top CPU collector.
+        /// </summary>
         public void Close()
         {
             this.processProvider.Close();

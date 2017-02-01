@@ -5,6 +5,9 @@
     using System.Globalization;
     using System.Runtime.InteropServices;
 
+    /// <summary>
+    /// Represents performance data for a performance object (category).
+    /// </summary>
     internal class CategorySample
     {
         public Dictionary<int, CounterDefinitionSample> CounterTable;
@@ -13,6 +16,11 @@
 
         private readonly PerfLib library;
 
+        /// <summary>Initializes a new instance of the <see cref="CategorySample"/> class. Instantiates a <see cref="CategorySample"/> class.</summary>
+        /// <param name="data">Performance data.</param>
+        /// <param name="categoryNameIndex">Category name index.</param>
+        /// <param name="counterNameIndex">Counter name index.</param>
+        /// <param name="library">Performance library.</param>
         public CategorySample(byte[] data, int categoryNameIndex, int counterNameIndex, PerfLib library)
         {
             if (library == null)

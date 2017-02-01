@@ -8,8 +8,14 @@
     /// </summary>
     internal interface IQuickPulseProcessProvider
     {
+        /// <summary>
+        /// Initializes the process provider.
+        /// </summary>
         void Initialize();
 
+        /// <summary>
+        /// Closes the process provider.
+        /// </summary>
         void Close();
 
         /// <summary>
