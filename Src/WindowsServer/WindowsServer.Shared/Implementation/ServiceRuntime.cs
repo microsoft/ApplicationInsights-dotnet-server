@@ -10,11 +10,11 @@ namespace Microsoft.ApplicationInsights.WindowsServer.Implementation
         /// <summary>
         /// Gets the role environment.
         /// </summary>
-        /// <param name="baseDirectory">The base directory.</param>
+        /// <param name="loadedAssembly">The loaded assembly on which methods are called using reflection.</param>
         /// <returns>
         /// The role environment object.
         /// </returns>
-        public RoleEnvironment GetRoleEnvironment(Assembly loadedAssembly, string baseDirectory = null)
+        public RoleEnvironment GetRoleEnvironment(Assembly loadedAssembly)
         {
             // TODO: remove factory
             return new RoleEnvironment(loadedAssembly);

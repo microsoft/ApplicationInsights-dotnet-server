@@ -8,8 +8,12 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Assert = Xunit.Assert;
 
-    /// <summary>
-    /// Device telemetry source tests.
+    /// <summary>    
+    /// Tests ServiceRuntime by supplying it with a custom version of Microsoft.WindowsAzure.ServiceRuntime.dll and testing
+    /// if it invokes the right methods and reads values as expected.
+    /// The supplied Microsoft.WindowsAzure.ServiceRuntime.dll is a proxy to the real dll, and this simulates
+    /// as if the tests are running inside a cloud service environment.
+    /// Read ServiceRuntimeHelper.cs to see how the actual calls to the dll are intercepted.
     /// </summary>
     [TestClass]
     public class ServiceRuntimeTests
@@ -18,7 +22,7 @@
         public void RoleEnvironmentIsAvailableReturnsFalseIfServiceRuntimeDoesntExit()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             roleEnvironment.TargetType = null;
             Assert.NotNull(roleEnvironment);
             Assert.False(roleEnvironment.IsAvailable);
@@ -29,7 +33,7 @@
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
 
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
         } 
 
@@ -37,7 +41,7 @@
         public void RoleEnvironmentReturnsCorrectAvailabilityState()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             Assert.Equal(ServiceRuntimeHelper.IsAvailable, roleEnvironment.IsAvailable);
@@ -51,7 +55,7 @@
         public void RoleEnvironmentReturnsCorrectDeploymentId()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             Assert.Equal(ServiceRuntimeHelper.DeploymentId, roleEnvironment.DeploymentId);
@@ -65,7 +69,7 @@
         public void RoleEnvironmentReturnsTheCurrentRoleInstanceWhichIsNotNull()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             RoleInstance roleInstance = roleEnvironment.CurrentRoleInstance;
@@ -76,7 +80,7 @@
         public void RoleInstanceReturnAnInstanceIdThatMatchesAnAzureInstanceId()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             RoleInstance roleInstance = roleEnvironment.CurrentRoleInstance;
@@ -107,7 +111,7 @@
         public void RoleInstanceReturnsARollWhichIsNotNull()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             RoleInstance roleInstance = roleEnvironment.CurrentRoleInstance;
@@ -121,7 +125,7 @@
         public void RoleReturnsCorrectName()
         {
             ServiceRuntime serviceRuntime = new ServiceRuntime();
-            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly, ServiceRuntimeHelper.TestWithServiceRuntimePath);
+            RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(typeof(Microsoft.WindowsAzure.ServiceRuntime.RoleEnvironment).Assembly);
             Assert.NotNull(roleEnvironment);
 
             RoleInstance roleInstance = roleEnvironment.CurrentRoleInstance;

@@ -62,8 +62,9 @@
                     AzureRoleEnvironmentContextReader.PublicKeyToken = "31bf3856ad364e35";
                 }
 
-                if (AzureRoleEnvironmentContextReader.VersionsToAttempt.Length == 0)
+                if (AzureRoleEnvironmentContextReader.VersionsToAttempt == null || AzureRoleEnvironmentContextReader.VersionsToAttempt.Length == 0)
                 {
+                    // This list should be explicity updated when 3.* versions of Microsoft.WindowsAzure.ServiceRuntime are released after confirming they don't have breaking API changes.
                     AzureRoleEnvironmentContextReader.VersionsToAttempt = new string[] { "2.7.0.0", "2.6.0.0", "2.5.0.0", "2.4.0.0", "2.3.0.0", "2.2.0.0", "2.1.0.0", "2.8.0.0", "2.9.0.0" };
                 }
                     
@@ -120,7 +121,15 @@
                 remoteWorker.culture = AzureRoleEnvironmentContextReader.Culture;
                 remoteWorker.publicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
                 remoteWorker.versionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
-                remoteWorker.ReadAndPopulateContextInformation(ref this.roleName, ref this.roleInstanceName);
+                bool success = remoteWorker.ReadAndPopulateContextInformation(ref this.roleName, ref this.roleInstanceName);
+                if(success)
+                {
+                    WindowsServerEventSource.Log.TroubleshootingMessageEvent("Successfully loaded assembly from remote worker in separate AppDomain");
+                }
+                else
+                {
+                    WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed loading assembly from remote worker in separate AppDomain. Application is assumed not be running in Azure Cloud service.");
+                }
             }
             catch(Exception ex)
             {
@@ -174,16 +183,17 @@
         public string culture;
         public string publicKeyToken;
         public string[] versionsToAttempt;
-        public void ReadAndPopulateContextInformation(ref string roleName, ref string roleInstanceId)
-        {                                             
+        public bool ReadAndPopulateContextInformation(ref string roleName, ref string roleInstanceId)
+        {
+            Assembly loadedAssembly = null;
             try
             {
                 // As this is executed inside a separate AppDomain, it is safe to load assemblies here without interfering with user code.                
-                Assembly loadedAssembly = AttemptToLoadAssembly(assemblyName, culture, publicKeyToken, versionsToAttempt);
+                loadedAssembly = AttemptToLoadAssembly(assemblyName, culture, publicKeyToken, versionsToAttempt);
                 if (loadedAssembly != null)
                 {
                     ServiceRuntime serviceRuntime = new ServiceRuntime();
-                    RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(loadedAssembly, AzureRoleEnvironmentContextReader.BaseDirectory);
+                    RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(loadedAssembly);
 
                     if (roleEnvironment.IsAvailable == true)
                     {
@@ -194,43 +204,45 @@
                             Role role = roleInstance.Role;
                             roleName = role.Name;
                         }
-                    }
-                }
+                    }                 
+                }                
             }
             catch(Exception ex)
             {
-                WindowsServerEventSource.Log.TroubleshootingMessageEvent("Unknown error occured attempting to populate Azure Context, Exception: " + ex.ToString());
+                WindowsServerEventSource.Log.TroubleshootingMessageEvent("Unknown error occured attempting to populate Azure Context, Exception: " + ex.ToString());                
             }
+
+            return (loadedAssembly != null);
         }
 
         private Assembly AttemptToLoadAssembly(string assemblyName, string culture, string publicKeyToken, string[] versionsToAttempt)
         {
-            Assembly loadedAssembly = null;
-            //string assemblyNameFormat = "Microsoft.WindowsAzure.ServiceRuntime, Version={0}, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
+            Assembly loadedAssembly = null;            
             string assemblyNameFormat = "{0}, Version={1}, Culture={2}, PublicKeyToken={3}";
             string assemblyNameFormatVersion = string.Format(assemblyNameFormat, assemblyName, "{0}", culture, publicKeyToken);
-
-            // Attempt to read 2.* versions. When 3.* is released, modify the list.            
-
-            foreach(string version in versionsToAttempt)
+            // An example of the above string contents at this point: "Microsoft.WindowsAzure.ServiceRuntime, Version={0}, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
+            
+            foreach (string version in versionsToAttempt)
             {
+                string fullyQualifiedAssemblyName = string.Format(assemblyNameFormatVersion, version);
                 try
-                {
-                    loadedAssembly = Assembly.Load(string.Format(assemblyNameFormatVersion, version));
+                {                    
+                    loadedAssembly = Assembly.Load(fullyQualifiedAssemblyName);
                     if(loadedAssembly != null)
                     {
-                        WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Successfully Loaded Microsoft.WindowsAzure.ServiceRuntime.dll version {0} from location: {1} ", version, loadedAssembly.Location));
-                        return loadedAssembly;
+                        // Found the assembly, stop probing and return the assembly.
+                        WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Successfully Loaded {0} from location: {1} ", fullyQualifiedAssemblyName, loadedAssembly.Location));
+                        return loadedAssembly; 
                     }
                 }
                 catch(Exception ex)
                 {
-                    WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Failed Loading Microsoft.WindowsAzure.ServiceRuntime.dll version {0} with exception: {1} ", version, ex.Message));
+                    WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Failed Loading {0} with exception: {1} ", fullyQualifiedAssemblyName, ex.Message));
                 }
             }
 
             // Failed to load assembly.
-            WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed to find any supported versions of Microsoft.WindowsAzure.ServiceRuntime.dll. It is assumed that the application is not run on AzureCloudService.");
+            WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed to find any supported versions of " + assemblyName);
             return loadedAssembly;
         }
     }
