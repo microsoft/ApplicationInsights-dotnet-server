@@ -71,6 +71,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="Filtering\FilterTests.cs" />
+    <Compile Include="Filtering\Mocks\FilterTests.cs" />
     <Compile Include="Mocks\PerformanceCollectorMock.cs" />
     <Compile Include="PerformanceCollectorTestBase.cs" />
     <Compile Include="QuickPulse\Mocks\CategorySampleMock.cs" />
