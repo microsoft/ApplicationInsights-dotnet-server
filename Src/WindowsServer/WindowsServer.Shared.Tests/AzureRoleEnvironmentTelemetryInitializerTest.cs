@@ -97,6 +97,7 @@
                     AzureRoleEnvironmentContextReader.Culture = "neutral";
                     AzureRoleEnvironmentContextReader.PublicKeyToken = "30ad4fe6b2a6aeed";
                     AzureRoleEnvironmentContextReader.VersionsToAttempt = new string[] { "2.7.0.0", "8.0.0.0" };
+                    AzureRoleEnvironmentContextReader.Instance = null;
                     AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
 
                     // Validate that the dll is still not loaded to current appdomain.
