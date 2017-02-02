@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.WindowsServer.Implementation
+﻿using System.Reflection;
+
+namespace Microsoft.ApplicationInsights.WindowsServer.Implementation
 {
     /// <summary>
     /// The wrapper for the Azure Service Runtime.
@@ -12,10 +14,10 @@
         /// <returns>
         /// The role environment object.
         /// </returns>
-        public RoleEnvironment GetRoleEnvironment(string baseDirectory = null)
+        public RoleEnvironment GetRoleEnvironment(Assembly loadedAssembly, string baseDirectory = null)
         {
             // TODO: remove factory
-            return new RoleEnvironment();
+            return new RoleEnvironment(loadedAssembly);
         }        
     }
 }

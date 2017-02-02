@@ -126,6 +126,12 @@
             this.WriteEvent(12, exception, this.ApplicationName);
         }
 
+        [Event(13, Message = "{0}", Level = EventLevel.Verbose)]
+        public void TroubleshootingMessageEvent(string message, string applicationName = "dummy")
+        {
+            this.WriteEvent(13, message, this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {

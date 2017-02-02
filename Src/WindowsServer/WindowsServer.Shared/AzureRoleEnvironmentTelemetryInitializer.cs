@@ -21,6 +21,16 @@
         public AzureRoleEnvironmentTelemetryInitializer()
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
+
+            try
+            {
+                this.roleName = AzureRoleEnvironmentContextReader.Instance.GetRoleName();
+                this.roleInstanceName = AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName();
+            }
+            catch(System.Exception ex)
+            {
+                WindowsServerEventSource.Log.TroubleshootingMessageEvent("AzureRoleEnvironmentTelemetryInitializer creation failed with:" + ex.ToString());
+            }
         }
 
         /// <summary>
@@ -30,21 +40,18 @@
         public void Initialize(ITelemetry telemetry)
         {
             if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
-            {
-                var name = LazyInitializer.EnsureInitialized(ref this.roleName, AzureRoleEnvironmentContextReader.Instance.GetRoleName);
-                telemetry.Context.Cloud.RoleName = name;
+            {                
+                telemetry.Context.Cloud.RoleName = this.roleName;
             }
 
             if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
-            {
-                var name = LazyInitializer.EnsureInitialized(ref this.roleInstanceName, AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName);
-                telemetry.Context.Cloud.RoleInstance = name;
+            {                
+                telemetry.Context.Cloud.RoleInstance = this.roleInstanceName;
             }
 
             if (string.IsNullOrEmpty(telemetry.Context.GetInternalContext().NodeName))
-            {
-                var name = LazyInitializer.EnsureInitialized(ref this.roleInstanceName, AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName);
-                telemetry.Context.GetInternalContext().NodeName = name;
+            {                
+                telemetry.Context.GetInternalContext().NodeName = this.roleInstanceName;
             }
         }
     }
