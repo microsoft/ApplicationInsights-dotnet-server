@@ -1,25 +1,23 @@
 ﻿namespace Microsoft.ApplicationInsights.WindowsServer
-{
-    using System.Globalization;
-    using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility.Implementation;
-
-    using Microsoft.ApplicationInsights.WindowsServer.Azure;
-    using Microsoft.ApplicationInsights.WindowsServer.Azure.Emulation;
-    using Microsoft.ApplicationInsights.WindowsServer.Implementation;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Assert = Xunit.Assert;
+{    
     using System;
-    using System.Linq;
-    using System.IO;
 #if NET45
     using System.Diagnostics.Tracing;
 #endif
-    using Web.TestFramework;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;    
+    using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.WindowsServer.Azure;
+    using Microsoft.ApplicationInsights.WindowsServer.Azure.Emulation;
+    using Microsoft.ApplicationInsights.WindowsServer.Implementation;
 #if NET40
     using Microsoft.Diagnostics.Tracing;
 #endif
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Web.TestFramework;
+    using Assert = Xunit.Assert;
 
     [TestClass]
     public class AzureRoleEnvironmentTelemetryInitializerTest
@@ -105,19 +103,19 @@
                     retrievedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(item => string.Equals(item.GetName().Name, "Newtonsoft.Json", StringComparison.OrdinalIgnoreCase));
                     Assert.Null(retrievedAssembly);
 
-
                     // Validate that Assembly was indeed loaded into separate AppDomain by checking if success message is logged to EventLog.
                     bool messageFound = false;
                     string expectedMessage = "loaded assembly from remote worker in separate AppDomain";
                     foreach (var actualEvent in listener.Messages.Where((arg) => { return arg.Level == EventLevel.Verbose; }))
                     {
                         string actualMessage = string.Format(CultureInfo.InvariantCulture, actualEvent.Message, actualEvent.Payload.ToArray());
-                        if(actualMessage.Contains(expectedMessage))
+                        if (actualMessage.Contains(expectedMessage))
                         {
                             messageFound = true;
                             break;
                         }
                     }
+
                     Assert.True(messageFound);
                 }                
             }

@@ -2,18 +2,17 @@
 {
     using System;
     using System.Globalization;
-
     using Microsoft.ApplicationInsights.WindowsServer.Azure;
     using Microsoft.ApplicationInsights.WindowsServer.Azure.Emulation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Assert = Xunit.Assert;
 
     /// <summary>    
-    /// Tests ServiceRuntime by supplying it with a custom version of Microsoft.WindowsAzure.ServiceRuntime.dll and testing
+    /// Tests ServiceRuntime by supplying it with a custom version of Microsoft.WindowsAzure.ServiceRuntime and testing
     /// if it invokes the right methods and reads values as expected.
-    /// The supplied Microsoft.WindowsAzure.ServiceRuntime.dll is a proxy to the real dll, and this simulates
+    /// The supplied Microsoft.WindowsAzure.ServiceRuntime is a proxy to the real one, and this simulates
     /// as if the tests are running inside a cloud service environment.
-    /// Read ServiceRuntimeHelper.cs to see how the actual calls to the dll are intercepted.
+    /// Read ServiceRuntimeHelper.cs to see how the actual calls are intercepted.
     /// </summary>
     [TestClass]
     public class ServiceRuntimeTests

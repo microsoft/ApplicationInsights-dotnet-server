@@ -29,6 +29,7 @@
         /// Initializes a new instance of the <see cref="RuntimeBindingObject"/> class.
         /// </summary>
         /// <param name="targetType">Type of the target.</param>
+        /// <param name="loadedAssembly">The loaded assembly.</param>
         /// <param name="activationArgs">The activation arguments.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Justification = "Safe to override")]
         protected RuntimeBindingObject(Type targetType, Assembly loadedAssembly, params object[] activationArgs)

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Reflection;
     using System.Threading;
@@ -86,8 +87,11 @@
         internal static string BaseDirectory { get; set; }
 
         internal static string AssemblyName { get; set; }
+
         internal static string Culture { get; set; }
+
         internal static string PublicKeyToken { get; set; }
+
         internal static string[] VersionsToAttempt { get; set; }
 
         /// <summary>
@@ -117,12 +121,12 @@
 
                 // Any method invoked on this object will be executed in the newly created AppDomain.
                 Worker remoteWorker = (Worker)tempDomainToLoadAssembly.CreateInstanceAndUnwrap(typeof(Worker).Assembly.FullName, typeof(Worker).FullName);
-                remoteWorker.assemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
-                remoteWorker.culture = AzureRoleEnvironmentContextReader.Culture;
-                remoteWorker.publicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
-                remoteWorker.versionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
+                remoteWorker.AssemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
+                remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
+                remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
+                remoteWorker.VersionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
                 bool success = remoteWorker.ReadAndPopulateContextInformation(ref this.roleName, ref this.roleInstanceName);
-                if(success)
+                if (success)
                 {
                     WindowsServerEventSource.Log.TroubleshootingMessageEvent("Successfully loaded assembly from remote worker in separate AppDomain");
                 }
@@ -131,7 +135,7 @@
                     WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed loading assembly from remote worker in separate AppDomain. Application is assumed not be running in Azure Cloud service.");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 WindowsServerEventSource.Log.TroubleshootingMessageEvent("AzureRoleEnvironmentContextReader Initialize failed : " + ex.ToString());
             }
@@ -139,7 +143,7 @@
             {                
                 try
                 {
-                    if(tempDomainToLoadAssembly != null)
+                    if (tempDomainToLoadAssembly != null)
                     {
                         AppDomain.Unload(tempDomainToLoadAssembly);
                         long endTimeInTicks = Stopwatch.GetTimestamp();
@@ -149,7 +153,7 @@
                         WindowsServerEventSource.Log.TroubleshootingMessageEvent("TimeTaken for initialization in msec:" + durationInMillisecs);
                     }                    
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     WindowsServerEventSource.Log.TroubleshootingMessageEvent(tempDomainName + " AppDomain  unload failed with exception: " + ex.ToString());
                 }
@@ -173,77 +177,5 @@
         {
             return this.roleInstanceName;
         }
-    }
-
-    // Worker contains logic to load Microsoft.WindowsAzure.ServiceRuntime assembly and read properties using reflection
-    // Inherits MarshalByRefObject so that methods of this class can be executed remotely in separate AppDomain.
-    internal class Worker : MarshalByRefObject
-    {
-        public string assemblyName;
-        public string culture;
-        public string publicKeyToken;
-        public string[] versionsToAttempt;
-        public bool ReadAndPopulateContextInformation(ref string roleName, ref string roleInstanceId)
-        {
-            Assembly loadedAssembly = null;
-            try
-            {
-                // As this is executed inside a separate AppDomain, it is safe to load assemblies here without interfering with user code.                
-                loadedAssembly = AttemptToLoadAssembly(assemblyName, culture, publicKeyToken, versionsToAttempt);
-                if (loadedAssembly != null)
-                {
-                    ServiceRuntime serviceRuntime = new ServiceRuntime();
-                    RoleEnvironment roleEnvironment = serviceRuntime.GetRoleEnvironment(loadedAssembly);
-
-                    if (roleEnvironment.IsAvailable == true)
-                    {
-                        RoleInstance roleInstance = roleEnvironment.CurrentRoleInstance;
-                        if (roleInstance != null)
-                        {
-                            roleInstanceId = roleInstance.Id;
-                            Role role = roleInstance.Role;
-                            roleName = role.Name;
-                        }
-                    }                 
-                }                
-            }
-            catch(Exception ex)
-            {
-                WindowsServerEventSource.Log.TroubleshootingMessageEvent("Unknown error occured attempting to populate Azure Context, Exception: " + ex.ToString());                
-            }
-
-            return (loadedAssembly != null);
-        }
-
-        private Assembly AttemptToLoadAssembly(string assemblyName, string culture, string publicKeyToken, string[] versionsToAttempt)
-        {
-            Assembly loadedAssembly = null;            
-            string assemblyNameFormat = "{0}, Version={1}, Culture={2}, PublicKeyToken={3}";
-            string assemblyNameFormatVersion = string.Format(assemblyNameFormat, assemblyName, "{0}", culture, publicKeyToken);
-            // An example of the above string contents at this point: "Microsoft.WindowsAzure.ServiceRuntime, Version={0}, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
-            
-            foreach (string version in versionsToAttempt)
-            {
-                string fullyQualifiedAssemblyName = string.Format(assemblyNameFormatVersion, version);
-                try
-                {                    
-                    loadedAssembly = Assembly.Load(fullyQualifiedAssemblyName);
-                    if(loadedAssembly != null)
-                    {
-                        // Found the assembly, stop probing and return the assembly.
-                        WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Successfully Loaded {0} from location: {1} ", fullyQualifiedAssemblyName, loadedAssembly.Location));
-                        return loadedAssembly; 
-                    }
-                }
-                catch(Exception ex)
-                {
-                    WindowsServerEventSource.Log.TroubleshootingMessageEvent(string.Format("Failed Loading {0} with exception: {1} ", fullyQualifiedAssemblyName, ex.Message));
-                }
-            }
-
-            // Failed to load assembly.
-            WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed to find any supported versions of " + assemblyName);
-            return loadedAssembly;
-        }
-    }
+    }    
 }

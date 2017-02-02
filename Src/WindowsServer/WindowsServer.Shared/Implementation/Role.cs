@@ -13,6 +13,7 @@
         /// Initializes a new instance of the <see cref="Role"/> class.
         /// </summary>
         /// <param name="targetObject">The target object.</param>
+        /// <param name="loadedAssembly">The loaded assembly.</param>
         public Role(object targetObject, Assembly loadedAssembly)
             : base(loadedAssembly.GetType("Microsoft.WindowsAzure.ServiceRuntime.Role", false), loadedAssembly, targetObject)
         {

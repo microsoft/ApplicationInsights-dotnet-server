@@ -1,7 +1,7 @@
-﻿using System.Reflection;
-
-namespace Microsoft.ApplicationInsights.WindowsServer.Implementation
+﻿namespace Microsoft.ApplicationInsights.WindowsServer.Implementation
 {
+    using System.Reflection;
+
     /// <summary>
     /// The wrapper for the Azure Service Runtime.
     /// </summary>

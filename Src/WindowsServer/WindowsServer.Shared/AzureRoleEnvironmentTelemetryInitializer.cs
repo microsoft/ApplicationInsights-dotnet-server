@@ -27,7 +27,7 @@
                 this.roleName = AzureRoleEnvironmentContextReader.Instance.GetRoleName();
                 this.roleInstanceName = AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName();
             }
-            catch(System.Exception ex)
+            catch (System.Exception ex)
             {
                 WindowsServerEventSource.Log.TroubleshootingMessageEvent("AzureRoleEnvironmentTelemetryInitializer creation failed with:" + ex.ToString());
             }
