@@ -6,9 +6,9 @@
     using System.Reflection;
     using System.Text;
 
-    // Worker contains logic to load Microsoft.WindowsAzure.ServiceRuntime assembly and read properties using reflection
+    // AssemblyLoader contains logic to load Microsoft.WindowsAzure.ServiceRuntime assembly and read properties using reflection
     // Inherits MarshalByRefObject so that methods of this class can be executed remotely in separate AppDomain.
-    internal class Worker : MarshalByRefObject
+    internal class AssemblyLoader : MarshalByRefObject
     {
         public string AssemblyName;
         public string Culture;

@@ -117,10 +117,10 @@
                 tempDomainToLoadAssembly = AppDomain.CreateDomain(tempDomainName, null, domaininfo);
 
                 // Load the RemoteWorker assembly to the new domain            
-                tempDomainToLoadAssembly.Load(typeof(Worker).Assembly.FullName);
+                tempDomainToLoadAssembly.Load(typeof(AssemblyLoader).Assembly.FullName);
 
                 // Any method invoked on this object will be executed in the newly created AppDomain.
-                Worker remoteWorker = (Worker)tempDomainToLoadAssembly.CreateInstanceAndUnwrap(typeof(Worker).Assembly.FullName, typeof(Worker).FullName);
+                AssemblyLoader remoteWorker = (AssemblyLoader)tempDomainToLoadAssembly.CreateInstanceAndUnwrap(typeof(AssemblyLoader).Assembly.FullName, typeof(AssemblyLoader).FullName);
                 remoteWorker.AssemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
                 remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
                 remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
