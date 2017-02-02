@@ -126,10 +126,19 @@
             this.WriteEvent(12, exception, this.ApplicationName);
         }
 
-        [Event(13, Message = "{0}", Level = EventLevel.Verbose)]
+        [Event(
+            13,
+            Message = "[UnobservedTaskException threw another exception:  {0}.]",
+            Level = EventLevel.Error)]
+        public void UnobservedTaskExceptionThrewUnhandledException(string exception, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(13, exception, this.ApplicationName);
+        }
+
+        [Event(14, Message = "{0}", Level = EventLevel.Verbose)]
         public void TroubleshootingMessageEvent(string message, string applicationName = "dummy")
         {
-            this.WriteEvent(13, message, this.ApplicationName);
+            this.WriteEvent(14, message, this.ApplicationName);
         }
 
         [NonEvent]
