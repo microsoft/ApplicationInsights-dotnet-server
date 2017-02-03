@@ -17,24 +17,18 @@
     }
   },
   "buildOptions": {
-    "keyFile": "../../keys/35MSSharedLib1024.snk",
+    "keyFile": "../../../Keys/35MSSharedLib1024.snk",
     "delaySign": true,
     "xmlDoc": true
   },
   "frameworks": {
-    "net451": {
-      "frameworkAssemblies": {
-        "System.Net.Http": "4.0.0.0"
-      }
-    },
-    "netstandard1.6": {
-      "dependencies": {
-        "NETStandard.Library": "1.6.0"
-      }
-    }
+    "netstandard1.6": {}
   },
   "dependencies": {
-    "Microsoft.ApplicationInsights": "2.3.0-beta1",
-    "System.Diagnostics.DiagnosticSource": "4.4.0-beta-24913-01"
+    "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0",
+    "Microsoft.Diagnostics.Correlation.Common": "1.0.0-*",
+    "NETStandard.Library": "1.6.0",
+    "System.Diagnostics.DiagnosticSource": "4.3.0"
   }
 }
