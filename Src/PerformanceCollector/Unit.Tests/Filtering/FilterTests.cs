@@ -14,9 +14,9 @@
         public void FilterSanityTest()
         {
             // ARRANGE
-            var filterInfo = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equals, Comparand = "123", Projection = "Field" };
-            var filter = new Filter(filterInfo, typeof(RequestTelemetry));
-            var telemetry = new RequestTelemetry() { Sequence= "123" };
+            var filterInfo = new FilterInfo() { TelemetryType = TelemetryType.Request, FieldName = "Field", Predicate = Predicate.Equals, Comparand = "123", Projection = "Field" };
+            var filter = new Filter<TelemetryMock>(filterInfo);
+            var telemetry = new TelemetryMock() { Field = "123" };
 
             // ACT
             object result = filter.Check(telemetry);

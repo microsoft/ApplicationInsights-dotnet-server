@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.ApplicationInsights.Extensibility.Filtering
+﻿namespace Microsoft.ApplicationInsights.Extensibility.Filtering
 {
-    using Microsoft.ApplicationInsights.Channel;
-    using Microsoft.ApplicationInsights.DataContracts;
+    using System.Runtime.Serialization;
 
-    public class FilterInfo
+    [DataContract]
+    internal class FilterInfo
     {
+        [DataMember]
+        public TelemetryType TelemetryType { get; set; }
+
+        [DataMember]
         public string FieldName { get; set; }
 
+        [DataMember]
         public Predicate Predicate { get; set; }
 
+        [DataMember]
         public string Comparand { get; set; }
 
+        [DataMember]
         public string Projection { get; set; }
     }
 }

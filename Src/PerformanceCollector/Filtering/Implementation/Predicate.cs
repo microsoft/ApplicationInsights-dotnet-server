@@ -1,24 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.ApplicationInsights.Extensibility.Filtering
+﻿namespace Microsoft.ApplicationInsights.Extensibility.Filtering
 {
-    using Microsoft.ApplicationInsights.Channel;
-    using Microsoft.ApplicationInsights.DataContracts;
-
-    public enum Predicate
+    internal enum Predicate
     {
-        Equals,
+        Equal = 0,
 
-        LessThan,
+        NotEqual = 1,
 
-        GreaterThan,
+        LessThan = 2,
 
-        LessOrEqual,
+        GreaterThan = 3,
 
-        GreaterOrEqual,
+        LessThanOrEqual = 4,
 
-        Contains
+        GreaterThanOrEqual = 5,
+
+        Contains = 6,
+
+        DoesNotContain = 7
     }
 }

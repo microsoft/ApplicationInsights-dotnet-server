@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Filter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\TelemetryType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Predicate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\FilterInfo.cs" />
   </ItemGroup>
