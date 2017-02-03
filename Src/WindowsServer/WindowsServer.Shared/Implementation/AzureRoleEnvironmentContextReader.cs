@@ -101,7 +101,7 @@
         {
             AppDomain tempDomainToLoadAssembly = null;
             string tempDomainName = "AppInsightsDomain-" + Guid.NewGuid().ToString().Substring(0, 6);
-            long beginTimeInTicks = Stopwatch.GetTimestamp();
+            Stopwatch sw = Stopwatch.StartNew();
 
             // The following approach is used to load Microsoft.WindowsAzure.ServiceRuntime assembly and read the required information.
             // Create a new AppDomain and try to load the ServiceRuntime dll into it.
@@ -145,12 +145,9 @@
                 {
                     if (tempDomainToLoadAssembly != null)
                     {
-                        AppDomain.Unload(tempDomainToLoadAssembly);
-                        long endTimeInTicks = Stopwatch.GetTimestamp();
-                        long stopWatchTicksDiff = endTimeInTicks - beginTimeInTicks;
-                        double durationInMillisecs = stopWatchTicksDiff * 1000 / (double)Stopwatch.Frequency;                        
+                        AppDomain.Unload(tempDomainToLoadAssembly);                                                
                         WindowsServerEventSource.Log.TroubleshootingMessageEvent(tempDomainName + " AppDomain  Unloaded.");
-                        WindowsServerEventSource.Log.TroubleshootingMessageEvent("TimeTaken for initialization in msec:" + durationInMillisecs);
+                        WindowsServerEventSource.Log.TroubleshootingMessageEvent("TimeTaken for initialization in msec:" + sw.ElapsedMilliseconds);                        
                     }                    
                 }
                 catch (Exception ex)

@@ -4,10 +4,11 @@
     using System.Collections.Generic;
     using System.Globalization;
     using System.Reflection;
-    using System.Text;
 
-    // AssemblyLoader contains logic to load Microsoft.WindowsAzure.ServiceRuntime assembly and read properties using reflection
-    // Inherits MarshalByRefObject so that methods of this class can be executed remotely in separate AppDomain.
+    /// <summary>
+    /// AssemblyLoader contains logic to load a given assembly and read properties using reflection.
+    /// Inherits MarshalByRefObject so that methods of this class can be executed remotely in separate AppDomain.
+    /// </summary>    
     internal class AssemblyLoader : MarshalByRefObject
     {
         public string AssemblyName;
