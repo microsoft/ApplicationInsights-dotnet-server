@@ -29,6 +29,7 @@
     "Microsoft.Extensions.Options.ConfigurationExtensions": "1.0.0",
     "Microsoft.Diagnostics.Correlation.Common": "1.0.0-*",
     "NETStandard.Library": "1.6.0",
-    "System.Diagnostics.DiagnosticSource": "4.3.0"
+    "System.Diagnostics.DiagnosticSource": "4.3.0",
+    "Microsoft.ApplicationInsights": "2.3.0-beta1"
   }
 }
