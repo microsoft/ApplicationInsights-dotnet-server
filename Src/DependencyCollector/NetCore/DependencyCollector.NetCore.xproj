@@ -1,22 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Paths.props'))\Paths.props" />
-
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)', 'Product.props'))\Product.props" />
+  <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
+  
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
 
-  <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>9da7e561-d729-478b-9ff7-dff0588c06f4</ProjectGuid>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
-  </PropertyGroup>
-
-  <Import Project="..\..\Common\Common.projitems" Label="Shared" />
-
-  <PropertyGroup>
+    <AssemblyName>Microsoft.AI.DependencyCollector</AssemblyName>
+    <Language>C#</Language>
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
+
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
+
+  <PropertyGroup>
+    <CopyFromFolder>$(OutDir)\Src\DependencyCollector\NetCore\bin\$(Configuration)\netstandard1.6</CopyFromFolder>
+    <CopyToFolder>$(OutDir.TrimEnd('\'))</CopyToFolder>
+    <CopyToFileName>Microsoft.AI.DependencyCollector</CopyToFileName>
+  </PropertyGroup>
+  <ItemGroup>
+    <CopyFrom Include="$(CopyFromFolder)\NetCore.deps.json" />
+    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).deps.json" />
+
+    <CopyFrom Include="$(CopyFromFolder)\NetCore.dll" />
+    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).dll" />
+
+    <CopyFrom Include="$(CopyFromFolder)\NetCore.pdb" />
+    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).pdb" />
+
+    <CopyFrom Include="$(CopyFromFolder)\NetCore.xml" />
+    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).xml" />
+  </ItemGroup>
+  <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build" Inputs="@(CopyFrom)" Outputs="@(CopyTo)">
+    <Copy SourceFiles="@(CopyFrom)" DestinationFiles="@(CopyTo)" />
+  </Target>
 </Project>

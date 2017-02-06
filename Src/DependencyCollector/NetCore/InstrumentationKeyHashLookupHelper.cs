@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Security.Cryptography;
     using System.Text;
 
     /// <summary>
@@ -53,7 +54,7 @@
         /// <returns>Base64 encoded hash string.</returns>
         private static string GenerateEncodedSHA256Hash(string value)
         {
-            using (var sha256 = SHA256Managed.Create())
+            using (SHA256 sha256 = SHA256.Create())
             {
                 byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(value));
                 return Convert.ToBase64String(hash);

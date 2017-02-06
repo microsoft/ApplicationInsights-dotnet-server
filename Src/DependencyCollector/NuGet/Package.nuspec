@@ -24,6 +24,10 @@
         <dependency id="Microsoft.ApplicationInsights" version="[$coresdkversion$]" />
         <dependency id="Microsoft.ApplicationInsights.Agent.Intercept" version="2.0.7" />
       </group>
+      <group targetFramework="netcore">
+        <dependency id="Microsoft.ApplicationInsights" version="[$coresdkversion$]" />
+        <dependency id="Microsoft.ApplicationInsights.Agent.Intercept" version="2.0.7" />
+      </group>
     </dependencies>
   </metadata>
   <files>
@@ -40,5 +44,10 @@
     <file src="$configuration$\Src\DependencyCollector\Net45\Microsoft.AI.DependencyCollector.dll" target="lib\net45" />
     <file src="$configuration$\Src\DependencyCollector\Net45\Microsoft.AI.DependencyCollector.pdb" target="lib\net45" />
     <file src="$configuration$\Src\DependencyCollector\Net45\Microsoft.AI.DependencyCollector.xml" target="lib\net45" />
+
+    <!-- For .NET Core projects -->
+    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.dll" target="lib\netcore" />
+    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.pdb" target="lib\netcore" />
+    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.xml" target="lib\netcore" />
   </files>
 </package>
