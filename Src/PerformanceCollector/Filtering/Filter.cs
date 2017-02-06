@@ -13,14 +13,16 @@
     {
         private readonly Func<TTelemetry, object> lambda = null;
 
-        private readonly bool isComparandDouble;
-
-        private readonly bool isComparandBoolean;
-
-        private readonly bool isComparandTimeSpan;
-
         private readonly Type fieldType;
 
+        private readonly double? comparandDouble = null;
+
+        private readonly bool? comparandBoolean = null;
+
+        private readonly TimeSpan? comparandTimeSpan = null;
+
+        private readonly string comparand = string.Empty;
+        
         //!!! refactor
         public Filter(FilterInfo filterInfo)
         {
@@ -29,13 +31,24 @@
             this.fieldType = GetFieldType(filterInfo);
 
             double comparandDouble;
-            this.isComparandDouble = double.TryParse(filterInfo.Comparand, out comparandDouble);
+            if (double.TryParse(filterInfo.Comparand, out comparandDouble))
+            {
+                this.comparandDouble = comparandDouble;
+            }
 
             bool comparandBoolean;
-            this.isComparandBoolean = bool.TryParse(filterInfo.Comparand, out comparandBoolean);
+            if (bool.TryParse(filterInfo.Comparand, out comparandBoolean))
+            {
+                this.comparandBoolean = comparandBoolean;
+            }
 
             TimeSpan comparandTimeSpan;
-            this.isComparandTimeSpan = TimeSpan.TryParse(filterInfo.Comparand, CultureInfo.InvariantCulture, out comparandTimeSpan);
+            if (TimeSpan.TryParse(filterInfo.Comparand, CultureInfo.InvariantCulture, out comparandTimeSpan))
+            {
+                this.comparandTimeSpan = comparandTimeSpan;
+            }
+
+            this.comparand = filterInfo.Comparand;
 
             ValidateFilterInfo(filterInfo);
 
@@ -47,7 +60,6 @@
                 case TypeCode.Boolean:
                     break;
                 case TypeCode.Int32:
-                    break;
                 case TypeCode.Double:
                     break;
                 case TypeCode.String:
@@ -120,8 +132,9 @@
             }
         }
 
-        private bool Compare(int fieldValue)
+        private bool CompareString(string fieldValue)
         {
+            Environment.MachineName
             return fieldValue > comparandDouble;
         }
 
@@ -143,8 +156,7 @@
                     e);
             }
 
-            Type fieldType = fieldPropertyInfo.PropertyType;
-            return fieldType;
+            return fieldPropertyInfo.PropertyType;
         }
 
         private static void ValidateInput(FilterInfo filterInfo)
@@ -165,14 +177,15 @@
             switch (filterInfo.Predicate)
             {
                 case Predicate.Equal:
-                    return;
                 case Predicate.NotEqual:
+                case Predicate.Contains:
+                case Predicate.DoesNotContain:
                     return;
                 case Predicate.LessThan:
                 case Predicate.GreaterThan:
                 case Predicate.LessThanOrEqual:
                 case Predicate.GreaterThanOrEqual:
-                    if (!this.isComparandDouble && !this.isComparandTimeSpan)
+                    if (!this.comparandDouble.HasValue && !this.comparandTimeSpan.HasValue)
                     {
                         throw new ArgumentOutOfRangeException(
                             string.Format(
@@ -181,11 +194,7 @@
                                 filterInfo.Predicate,
                                 filterInfo.Comparand));
                     }
-                    break;
-                case Predicate.Contains:
-                    return;
-                case Predicate.DoesNotContain:
-                    return;
+                    break;                
                 default:
                     throw new ArgumentOutOfRangeException(
                         string.Format(CultureInfo.InvariantCulture, "Predicate is unsupported: {0}", filterInfo.Predicate));
