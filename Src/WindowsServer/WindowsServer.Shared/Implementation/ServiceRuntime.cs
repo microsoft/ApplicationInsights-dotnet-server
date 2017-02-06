@@ -7,17 +7,23 @@
     /// </summary>
     internal class ServiceRuntime
     {
+        private Assembly loadedAssembly;
+
+        public ServiceRuntime(Assembly loadedAssembly)
+        {
+            this.loadedAssembly = loadedAssembly;
+        }
+
         /// <summary>
         /// Gets the role environment.
-        /// </summary>
-        /// <param name="loadedAssembly">The loaded assembly on which methods are called using reflection.</param>
+        /// </summary>        
         /// <returns>
         /// The role environment object.
         /// </returns>
-        public RoleEnvironment GetRoleEnvironment(Assembly loadedAssembly)
+        public RoleEnvironment GetRoleEnvironment()
         {
             // TODO: remove factory
-            return new RoleEnvironment(loadedAssembly);
+            return new RoleEnvironment(this.loadedAssembly);
         }        
     }
 }

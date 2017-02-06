@@ -25,7 +25,8 @@
         [TestMethod]
         public void AzureRoleEnvironmentTelemetryInitializerDoesNotOverrideRoleName()
         {
-            var telemetryItem = new EventTelemetry();            
+            var telemetryItem = new EventTelemetry();
+            AzureRoleEnvironmentContextReader.Instance = null;
             AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
             telemetryItem.Context.Cloud.RoleName = "Test";
             initializer.Initialize(telemetryItem);
@@ -47,7 +48,8 @@
         [TestMethod]
         public void AzureRoleEnvironmentTelemetryInitializerDoesNotOverrideNodeName()
         {
-            var telemetryItem = new EventTelemetry();            
+            var telemetryItem = new EventTelemetry();
+            AzureRoleEnvironmentContextReader.Instance = null;
             AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
             telemetryItem.Context.GetInternalContext().NodeName = "Test";
             initializer.Initialize(telemetryItem);
@@ -61,7 +63,9 @@
             // This test asssumes that it is not running inside a cloud service.
             // Its Ok even if Azure ServiceRunTime dlls are in the GAC, as IsAvailable() will return false, and hence 
             // no context will be further attempted to be read.
-            var telemetryItem = new EventTelemetry();            
+            var telemetryItem = new EventTelemetry();
+            AzureRoleEnvironmentContextReader.Instance = null;
+            AzureRoleEnvironmentContextReader.AssemblyLoaderType = null;
             AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
             initializer.Initialize(telemetryItem);            
 
@@ -71,7 +75,31 @@
         }
 
         [TestMethod]
-        [Description("Validates that requested DLL was loaded into separate AppDomain and not to the current domain.")]
+        public void AzureRoleEnvironmentTelemetryInitializerDoNotPopulateContextIfRunningAzureWebApp()
+        {
+            try
+            {
+                // Set the ENV variable so as to trick app is running as Azure WebApp
+                Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "TestRoleName.AzureWebSites.net");
+
+                // Initialize telemetry using AzureRoleEnvironmentTelemetryInitializer
+                var telemetryItem = new EventTelemetry();
+                AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
+                initializer.Initialize(telemetryItem);
+
+                // As app is running as Azure WebApp, AzureRoleEnvironmentTelemetryInitializer will not populate any context.
+                Assert.Null(telemetryItem.Context.Cloud.RoleName);
+                Assert.Null(telemetryItem.Context.Cloud.RoleInstance);
+                Assert.Null(telemetryItem.Context.GetInternalContext().NodeName);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", null);
+            }
+        }
+
+        [TestMethod]        
+        [Description("Validates that requested DLL was loaded into separate AppDomain and not to the current domain. This test will fail if not run with admin privileges.")]
         public void AzureRoleEnvironmentTelemetryInitializerLoadDllToSeparateAppDomain()
         {
             // A random dll which is not already loaded to the current AppDomain but dropped into bin folder.
@@ -86,39 +114,23 @@
                 var retrievedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(item => string.Equals(item.GetName().Name, "Newtonsoft.Json", StringComparison.OrdinalIgnoreCase));
                 Assert.Null(retrievedAssembly);
 
-                using (var listener = new TestEventListener())
-                {
-                    const long AllKeyword = -1;
-                    listener.EnableEvents(WindowsServerEventSource.Log, EventLevel.Verbose, (EventKeywords)AllKeyword);
+                // Create initializer - this will internally create separate appdomain and load assembly into it.
+                AzureRoleEnvironmentContextReader.BaseDirectory = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
 
-                    // Create initializer - this will internally create separate appdomain and load assemblies into it.
-                    AzureRoleEnvironmentContextReader.BaseDirectory = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-                    AzureRoleEnvironmentContextReader.AssemblyName = "Newtonsoft.Json";
-                    AzureRoleEnvironmentContextReader.Culture = "neutral";
-                    AzureRoleEnvironmentContextReader.PublicKeyToken = "30ad4fe6b2a6aeed";
-                    AzureRoleEnvironmentContextReader.VersionsToAttempt = new string[] { "2.7.0.0", "8.0.0.0" };
-                    AzureRoleEnvironmentContextReader.Instance = null;
-                    AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
+                // TestAssemblyLoader will load a random assembly (newtonsoft.json.dll) and populate TestRoleName, TestRoleInstanceId into the fields.
+                AzureRoleEnvironmentContextReader.AssemblyLoaderType = typeof(TestAzureServiceRuntimeAssemblyLoader);
+                AzureRoleEnvironmentContextReader.Instance = null;
+                AzureRoleEnvironmentTelemetryInitializer initializer = new AzureRoleEnvironmentTelemetryInitializer();
 
-                    // Validate that the dll is still not loaded to current appdomain.
-                    retrievedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(item => string.Equals(item.GetName().Name, "Newtonsoft.Json", StringComparison.OrdinalIgnoreCase));
-                    Assert.Null(retrievedAssembly);
+                // Validate that the dll is still not loaded to current appdomain.
+                retrievedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(item => string.Equals(item.GetName().Name, "Newtonsoft.Json", StringComparison.OrdinalIgnoreCase));
+                Assert.Null(retrievedAssembly);
 
-                    // Validate that Assembly was indeed loaded into separate AppDomain by checking if success message is logged to EventLog.
-                    bool messageFound = false;
-                    string expectedMessage = "loaded assembly from remote worker in separate AppDomain";
-                    foreach (var actualEvent in listener.Messages.Where((arg) => { return arg.Level == EventLevel.Verbose; }))
-                    {
-                        string actualMessage = string.Format(CultureInfo.InvariantCulture, actualEvent.Message, actualEvent.Payload.ToArray());
-                        if (actualMessage.Contains(expectedMessage))
-                        {
-                            messageFound = true;
-                            break;
-                        }
-                    }
-
-                    Assert.True(messageFound);
-                }                
+                // Validate that initializer has populated expected context properties. (set by TestAssemblyLoader)
+                var telemetryItem = new EventTelemetry();
+                initializer.Initialize(telemetryItem);
+                Assert.Equal("TestRoleName", telemetryItem.Context.Cloud.RoleName);
+                Assert.Equal("TestRoleInstanceId", telemetryItem.Context.Cloud.RoleInstance);              
             }
             finally
             {

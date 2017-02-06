@@ -46,8 +46,14 @@
                 if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.BaseDirectory) == true)
                 {
                     AzureRoleEnvironmentContextReader.BaseDirectory = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "bin");
-                }                
-                    
+                }
+
+                // Allows replacement for test purposes to load a different AssemblyLoaderType.
+                if (AzureRoleEnvironmentContextReader.AssemblyLoaderType == null)
+                {
+                    AzureRoleEnvironmentContextReader.AssemblyLoaderType = typeof(AzureServiceRuntimeAssemblyLoader);
+                }
+
                 Interlocked.CompareExchange(ref AzureRoleEnvironmentContextReader.instance, new AzureRoleEnvironmentContextReader(), null);
                 AzureRoleEnvironmentContextReader.instance.Initialize();
                 return AzureRoleEnvironmentContextReader.instance;
@@ -63,15 +69,9 @@
         /// <summary>
         /// Gets or sets the base directly where hunting for application DLLs is to start.
         /// </summary>
-        internal static string BaseDirectory { get; set; }
+        internal static string BaseDirectory { get; set; }        
 
-        internal static string AssemblyName { get; set; }
-
-        internal static string Culture { get; set; }
-
-        internal static string PublicKeyToken { get; set; }
-
-        internal static string[] VersionsToAttempt { get; set; }
+        internal static Type AssemblyLoaderType { get; set; }        
 
         /// <summary>
         /// Initializes the current reader with respect to its environment.
@@ -79,7 +79,7 @@
         public void Initialize()
         {
             AppDomain tempDomainToLoadAssembly = null;
-            string tempDomainName = "AppInsightsDomain-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string tempDomainName = "AppInsightsDomain-" + Guid.NewGuid().ToString();
             Stopwatch sw = Stopwatch.StartNew();
 
             // The following approach is used to load Microsoft.WindowsAzure.ServiceRuntime assembly and read the required information.
@@ -96,51 +96,24 @@
                 tempDomainToLoadAssembly = AppDomain.CreateDomain(tempDomainName, null, domaininfo);
 
                 // Load the RemoteWorker assembly to the new domain            
-                tempDomainToLoadAssembly.Load(typeof(AssemblyLoader).Assembly.FullName);
-
+                tempDomainToLoadAssembly.Load(typeof(AzureServiceRuntimeAssemblyLoader).Assembly.FullName);
+                
                 // Any method invoked on this object will be executed in the newly created AppDomain.
-                AssemblyLoader remoteWorker = (AssemblyLoader)tempDomainToLoadAssembly.CreateInstanceAndUnwrap(typeof(AssemblyLoader).Assembly.FullName, typeof(AssemblyLoader).FullName);
-                remoteWorker.AssemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
-                remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
-                remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
-                remoteWorker.VersionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
+                AzureServiceRuntimeAssemblyLoader remoteWorker = (AzureServiceRuntimeAssemblyLoader)tempDomainToLoadAssembly.CreateInstanceAndUnwrap(AzureRoleEnvironmentContextReader.AssemblyLoaderType.Assembly.FullName, AzureRoleEnvironmentContextReader.AssemblyLoaderType.FullName);
 
-                // Populating remote worker fields is done only in unit tests as it is 
-                // an expensive operation to communicate to remote object.
-                // The remote worker by default loads Azure ServiceRuntime assembly.
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.AssemblyName) == false)
-                {
-                    remoteWorker.AssemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
-                }
-
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.Culture) == false)
-                {
-                    remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
-                }
-
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.PublicKeyToken) == false)
-                {
-                    remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
-                }
-
-                if (AzureRoleEnvironmentContextReader.VersionsToAttempt != null && AzureRoleEnvironmentContextReader.VersionsToAttempt.Length != 0)
-                {                    
-                    remoteWorker.VersionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
-                }
-
-                bool success = remoteWorker.ReadAndPopulateContextInformation(ref this.roleName, ref this.roleInstanceName);
+                bool success = remoteWorker.ReadAndPopulateContextInformation(out this.roleName, out this.roleInstanceName);
                 if (success)
                 {
-                    WindowsServerEventSource.Log.TroubleshootingMessageEvent("Successfully loaded assembly from remote worker in separate AppDomain");
+                    WindowsServerEventSource.Log.AzureRoleEnvironmentContextReaderInitializedSuccess();
                 }
                 else
-                {
-                    WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed loading assembly from remote worker in separate AppDomain. Application is assumed not be running in Azure Cloud service.");
+                {                    
+                    WindowsServerEventSource.Log.AzureRoleEnvironmentContextReaderInitializationFailed();
                 }
             }
             catch (Exception ex)
             {
-                WindowsServerEventSource.Log.TroubleshootingMessageEvent("AzureRoleEnvironmentContextReader Initialize failed : " + ex.ToString());
+                WindowsServerEventSource.Log.UnknownErrorOccured("AzureRoleEnvironmentContextReader Initialize", ex.ToString());
             }
             finally
             {                
@@ -149,13 +122,13 @@
                     if (tempDomainToLoadAssembly != null)
                     {
                         AppDomain.Unload(tempDomainToLoadAssembly);                                                
-                        WindowsServerEventSource.Log.TroubleshootingMessageEvent(tempDomainName + " AppDomain  Unloaded.");
-                        WindowsServerEventSource.Log.TroubleshootingMessageEvent("TimeTaken for initialization in msec:" + sw.ElapsedMilliseconds);                        
+                        WindowsServerEventSource.Log.AzureRoleEnvironmentContextReaderAppDomainTroubleshoot(tempDomainName, " Successfully  Unloaded.");
+                        WindowsServerEventSource.Log.AzureRoleEnvironmentContextReaderInitializationDuration(sw.ElapsedMilliseconds);                        
                     }                    
                 }
                 catch (Exception ex)
                 {
-                    WindowsServerEventSource.Log.TroubleshootingMessageEvent(tempDomainName + " AppDomain  unload failed with exception: " + ex.ToString());
+                    WindowsServerEventSource.Log.AzureRoleEnvironmentContextReaderAppDomainTroubleshoot(tempDomainName, "AppDomain  unload failed with exception: " + ex.ToString());
                 }
             }
         }

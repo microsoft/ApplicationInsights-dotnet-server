@@ -58,7 +58,7 @@
         }
 
         /// <summary>
-        /// Gets or sets the target object.
+        /// Gets or sets the loaded assembly.
         /// </summary>
         protected internal Assembly LoadedAssembly
         {

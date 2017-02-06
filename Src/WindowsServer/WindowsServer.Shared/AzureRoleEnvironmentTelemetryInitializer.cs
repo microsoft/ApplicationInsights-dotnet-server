@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.WindowsServer
 {
-    using System.Threading;
-
+    using System;    
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -12,8 +11,10 @@
     /// </summary>
     public class AzureRoleEnvironmentTelemetryInitializer : ITelemetryInitializer
     {
+        private const string WebSiteEnvironmentVariable = "WEBSITE_SITE_NAME";
+        private static bool? isAzureWebApp = null;
         private string roleInstanceName;
-        private string roleName;
+        private string roleName;                
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureRoleEnvironmentTelemetryInitializer" /> class.
@@ -22,15 +23,22 @@
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
 
-            try
+            if (IsAppRunningInAzureWebApp())
             {
-                this.roleName = AzureRoleEnvironmentContextReader.Instance.GetRoleName();
-                this.roleInstanceName = AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName();
+                WindowsServerEventSource.Log.AzureRoleEnvironmentTelemetryInitializerNotInitializedInWebApp();
             }
-            catch (System.Exception ex)
+            else
             {
-                WindowsServerEventSource.Log.TroubleshootingMessageEvent("AzureRoleEnvironmentTelemetryInitializer creation failed with:" + ex.ToString());
-            }
+                try
+                {
+                    this.roleName = AzureRoleEnvironmentContextReader.Instance.GetRoleName();
+                    this.roleInstanceName = AzureRoleEnvironmentContextReader.Instance.GetRoleInstanceName();
+                }
+                catch (Exception ex)
+                {
+                    WindowsServerEventSource.Log.UnknownErrorOccured("AzureRoleEnvironmentTelemetryInitializer constructor", ex.ToString());
+                }
+            }            
         }
 
         /// <summary>
@@ -53,6 +61,28 @@
             {                
                 telemetry.Context.GetInternalContext().NodeName = this.roleInstanceName;
             }
+        }
+
+        /// <summary>
+        /// Searches for the environment variable specific to Azure web applications and confirms if the current application is a web application or not.
+        /// </summary>
+        /// <returns>Boolean, which is true if the current application is an Azure web application.</returns>
+        private static bool IsAppRunningInAzureWebApp()
+        {
+            if (!isAzureWebApp.HasValue)
+            {
+                try
+                {
+                    isAzureWebApp = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WebSiteEnvironmentVariable));
+                }
+                catch (Exception ex)
+                {
+                    WindowsServerEventSource.Log.AccessingEnvironmentVariableFailedWarning(WebSiteEnvironmentVariable, ex.ToString());
+                    return false;
+                }
+            }
+
+            return (bool)isAzureWebApp;
         }
     }
 }
