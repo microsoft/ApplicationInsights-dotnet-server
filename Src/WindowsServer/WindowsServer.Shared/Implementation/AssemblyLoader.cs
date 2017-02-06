@@ -11,10 +11,18 @@
     /// </summary>    
     internal class AssemblyLoader : MarshalByRefObject
     {
-        public string AssemblyName;
-        public string Culture;
-        public string PublicKeyToken;
-        public string[] VersionsToAttempt;
+        internal string AssemblyName;
+        internal string Culture;
+        internal string PublicKeyToken;
+        internal string[] VersionsToAttempt;
+
+        public AssemblyLoader()
+        {
+            this.AssemblyName = "Microsoft.WindowsAzure.ServiceRuntime";
+            this.Culture = "neutral";
+            this.PublicKeyToken = "31bf3856ad364e35";
+            this.VersionsToAttempt = new string[] { "2.7.0.0", "2.6.0.0"};
+        }
 
         public bool ReadAndPopulateContextInformation(ref string roleName, ref string roleInstanceId)
         {
@@ -77,6 +85,6 @@
             // Failed to load assembly.
             WindowsServerEventSource.Log.TroubleshootingMessageEvent("Failed to find any supported versions of " + assemblyName);
             return loadedAssembly;
-        }
+        }        
     }
 }

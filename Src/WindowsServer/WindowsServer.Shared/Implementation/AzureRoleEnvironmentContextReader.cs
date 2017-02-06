@@ -46,28 +46,7 @@
                 if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.BaseDirectory) == true)
                 {
                     AzureRoleEnvironmentContextReader.BaseDirectory = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "bin");
-                }
-
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.AssemblyName) == true)
-                {
-                    AzureRoleEnvironmentContextReader.AssemblyName = "Microsoft.WindowsAzure.ServiceRuntime";
-                }
-
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.Culture) == true)
-                {
-                    AzureRoleEnvironmentContextReader.Culture = "neutral";
-                }
-
-                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.PublicKeyToken) == true)
-                {
-                    AzureRoleEnvironmentContextReader.PublicKeyToken = "31bf3856ad364e35";
-                }
-
-                if (AzureRoleEnvironmentContextReader.VersionsToAttempt == null || AzureRoleEnvironmentContextReader.VersionsToAttempt.Length == 0)
-                {
-                    // This list should be explicity updated when 3.* versions of Microsoft.WindowsAzure.ServiceRuntime are released after confirming they don't have breaking API changes.
-                    AzureRoleEnvironmentContextReader.VersionsToAttempt = new string[] { "2.7.0.0", "2.6.0.0", "2.5.0.0", "2.4.0.0", "2.3.0.0", "2.2.0.0", "2.1.0.0", "2.8.0.0", "2.9.0.0" };
-                }
+                }                
                     
                 Interlocked.CompareExchange(ref AzureRoleEnvironmentContextReader.instance, new AzureRoleEnvironmentContextReader(), null);
                 AzureRoleEnvironmentContextReader.instance.Initialize();
@@ -125,6 +104,30 @@
                 remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
                 remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
                 remoteWorker.VersionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
+
+                // Populating remote worker fields is done only in unit tests as it is 
+                // an expensive operation to communicate to remote object.
+                // The remote worker by default loads Azure ServiceRuntime assembly.
+                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.AssemblyName) == false)
+                {
+                    remoteWorker.AssemblyName = AzureRoleEnvironmentContextReader.AssemblyName;
+                }
+
+                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.Culture) == false)
+                {
+                    remoteWorker.Culture = AzureRoleEnvironmentContextReader.Culture;
+                }
+
+                if (string.IsNullOrEmpty(AzureRoleEnvironmentContextReader.PublicKeyToken) == false)
+                {
+                    remoteWorker.PublicKeyToken = AzureRoleEnvironmentContextReader.PublicKeyToken;
+                }
+
+                if (AzureRoleEnvironmentContextReader.VersionsToAttempt != null && AzureRoleEnvironmentContextReader.VersionsToAttempt.Length != 0)
+                {                    
+                    remoteWorker.VersionsToAttempt = AzureRoleEnvironmentContextReader.VersionsToAttempt;
+                }
+
                 bool success = remoteWorker.ReadAndPopulateContextInformation(ref this.roleName, ref this.roleInstanceName);
                 if (success)
                 {
