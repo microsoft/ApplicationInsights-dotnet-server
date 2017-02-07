@@ -14,6 +14,7 @@
         public TestAzureServiceRuntimeAssemblyLoader()
         {
             // Loads a random assembly. (only requirement is that this assembly is foundable in GAC)
+            // Newtonsoft.Json.dll version 8.0.0.0 with the publickeytoken below is checked in to source control to be put in GAC.
             this.AssemblyNameToLoad.Name = "Newtonsoft.Json";
             this.AssemblyNameToLoad.CultureInfo = CultureInfo.InvariantCulture;
             this.AssemblyNameToLoad.SetPublicKeyToken(new byte[] { 48, 173, 79, 230, 178, 166, 174, 237 });
