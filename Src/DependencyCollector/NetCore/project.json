@@ -4,25 +4,27 @@
   "authors": [ "Microsoft" ],
   "version": "1.0.0",
   "copyright": "Copyright © Microsoft. All Rights Reserved.",
-  "packOptions": {
-    "summary": "Dependency Collector .NET Core Applications",
-    "projectUrl": "https://github.com/Microsoft/ApplicationInsights-dotnet-server/tree/develop/Src/DependencyCollector",
-    "licenseUrl": "https://github.com/Microsoft/ApplicationInsights-dotnet-server/tree/develop/Src/DependencyCollector",
-    "requireLicenseAcceptance": true,
-    "iconUrl": "http://appanacdn.blob.core.windows.net/cdn/icons/aic.png",
-    "tags": [ "Analytics", "ApplicationInsights", "Telemetry", "AppInsights", "DependencyCollector" ],
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/Microsoft/ApplicationInsights-dotnet-server.git"
-    }
-  },
-  "buildOptions": {
-    "keyFile": "../../../Keys/35MSSharedLib1024.snk",
-    "delaySign": true,
-    "xmlDoc": true
-  },
+  //"packOptions": {
+  //  "summary": "Dependency Collector .NET Core Applications",
+  //  "projectUrl": "https://github.com/Microsoft/ApplicationInsights-dotnet-server/tree/develop/Src/DependencyCollector",
+  //  "licenseUrl": "https://github.com/Microsoft/ApplicationInsights-dotnet-server/tree/develop/Src/DependencyCollector",
+  //  "requireLicenseAcceptance": true,
+  //  "iconUrl": "http://appanacdn.blob.core.windows.net/cdn/icons/aic.png",
+  //  "tags": [ "Analytics", "ApplicationInsights", "Telemetry", "AppInsights", "DependencyCollector" ],
+  //  "repository": {
+  //    "type": "git",
+  //    "url": "https://github.com/Microsoft/ApplicationInsights-dotnet-server.git"
+  //  }
+  //},
+  //"buildOptions": {
+  //  "keyFile": "../../../Keys/35MSSharedLib1024.snk",
+  //  "delaySign": true,
+  //  "xmlDoc": true
+  //},
   "frameworks": {
-    "netstandard1.6": {}
+    "netstandard1.6": {
+      "imports": "dnxcore50"
+    }
   },
   "dependencies": {
     "Microsoft.Extensions.Configuration.Abstractions": "1.0.0",
