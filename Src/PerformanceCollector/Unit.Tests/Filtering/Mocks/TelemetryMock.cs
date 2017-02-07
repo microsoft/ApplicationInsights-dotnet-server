@@ -7,7 +7,15 @@
 
     class TelemetryMock : ITelemetry
     {
-        public string Field { get; set; }
+        public bool BooleanField { get; set; }
+
+        public int IntField { get; set; }
+
+        public float FloatField { get; set; }
+
+        public double DoubleField { get; set; }
+
+        public string StringField { get; set; }
 
         public void Sanitize()
         {

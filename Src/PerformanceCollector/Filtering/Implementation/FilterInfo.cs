@@ -6,6 +6,9 @@
     internal class FilterInfo
     {
         [DataMember]
+        public string SessionId { get; set; }
+
+        [DataMember]
         public TelemetryType TelemetryType { get; set; }
 
         [DataMember]

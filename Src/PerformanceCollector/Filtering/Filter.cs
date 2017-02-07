@@ -11,22 +11,30 @@
     /// <typeparam name="TTelemetry">Type of telemetry documents.</typeparam>
     internal class Filter<TTelemetry>
     {
-        private readonly Func<TTelemetry, object> lambda = null;
+        private readonly Func<TTelemetry, bool> lambda;
 
         private readonly Type fieldType;
 
-        private readonly double? comparandDouble = null;
+        private readonly double? comparandDouble;
 
-        private readonly bool? comparandBoolean = null;
+        private readonly bool? comparandBoolean;
 
-        private readonly TimeSpan? comparandTimeSpan = null;
+        private readonly TimeSpan? comparandTimeSpan;
 
-        private readonly string comparand = string.Empty;
-        
+        private readonly string comparand;
+
+        private readonly Predicate predicate;
+
+        private readonly string fieldName;
+
         //!!! refactor
         public Filter(FilterInfo filterInfo)
         {
             ValidateInput(filterInfo);
+
+            this.fieldName = filterInfo.FieldName;
+            this.predicate = filterInfo.Predicate;
+            this.comparand = filterInfo.Comparand;
 
             this.fieldType = GetFieldType(filterInfo);
 
@@ -47,95 +55,156 @@
             {
                 this.comparandTimeSpan = comparandTimeSpan;
             }
+            
+            ParameterExpression documentExpression = Expression.Variable(typeof(TTelemetry));
+            MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
 
-            this.comparand = filterInfo.Comparand;
+            MethodCallExpression comparisonExpression = this.ProduceComparator(fieldExpression);
+            
+            Expression<Func<TTelemetry, bool>> lambdaExpression = Expression.Lambda<Func<TTelemetry, bool>>(comparisonExpression, documentExpression);
 
-            ValidateFilterInfo(filterInfo);
+            this.lambda = lambdaExpression.Compile();
 
-            ParameterExpression parameterExpression = Expression.Variable(typeof(TTelemetry));
-            MemberExpression fieldExpression = Expression.Property(parameterExpression, filterInfo.FieldName);
+            //!!! call to check if it runs ok
+        }
 
-            switch (Type.GetTypeCode(fieldType))
+        private MethodCallExpression ProduceComparator(Expression fieldExpression)
+        {
+            // this must determine an appropriate runtime comparison given the field type, the predicate, and the comparand
+            TypeCode fieldTypeCode = Type.GetTypeCode(this.fieldType);
+            switch (fieldTypeCode)
             {
                 case TypeCode.Boolean:
+                    {
+                        this.ThrowOnInvalidFilter(!this.comparandBoolean.HasValue);
+
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:        
+                                Func<bool, bool> comparator = fieldValue => fieldValue == this.comparandBoolean.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.NotEqual:
+                                comparator = fieldValue => fieldValue != this.comparandBoolean.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
+                    }
+
                     break;
+                case TypeCode.Int16:
                 case TypeCode.Int32:
+                case TypeCode.Int64:
+                case TypeCode.UInt16:
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
                 case TypeCode.Double:
+                    {
+                        Expression fieldConvertedExpression = fieldTypeCode == TypeCode.Double
+                                                                  ? fieldExpression
+                                                                  : Expression.ConvertChecked(fieldExpression, typeof(double));
+
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                Func<double, bool> comparator = fieldValue => fieldValue == this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.NotEqual:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                comparator = fieldValue => fieldValue != this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.LessThan:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                comparator = fieldValue => fieldValue < this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.GreaterThan:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                comparator = fieldValue => fieldValue > this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.LessThanOrEqual:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                comparator = fieldValue => fieldValue <= this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.GreaterThanOrEqual:
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                comparator = fieldValue => fieldValue >= this.comparandDouble.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.Contains:
+                                comparator = fieldValue => fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            case Predicate.DoesNotContain:
+                                comparator = fieldValue => fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
+                    }
+
                     break;
                 case TypeCode.String:
-                    break;
-                    
-                default:
-                    if (fieldType == typeof(bool?))
                     {
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:
+                                Func<string, bool> comparator = fieldValue => (fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase);
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.NotEqual:
+                                comparator = fieldValue => !(fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase);
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.Contains:
+                                comparator = fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.DoesNotContain:
+                                comparator = fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
+                    }
+
+                    break;
+                default:
+                    if (this.fieldType == typeof(bool?))
+                    {
+                        throw new NotImplementedException();
+                        //isFieldPredicateCompatible = this.predicate == Predicate.Equal || this.predicate == Predicate.NotEqual;
                         break;
                     }
-                    else if (fieldType == typeof(TimeSpan))
+                    else if (this.fieldType == typeof(TimeSpan))
                     {
+                        throw new NotImplementedException();
+                        //isFieldPredicateCompatible = this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain;
                         break;
                     }
                     else
                     {
-                        throw new ArgumentOutOfRangeException(
-                            nameof(filterInfo.FieldName),
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "The property {0} of class {2} has a type of {1}, which is not supported.",
-                                filterInfo.FieldName,
-                                fieldType.FullName,
-                                typeof(TTelemetry).FullName));
+                        this.ThrowOnInvalidFilter();
                     }
+                    break;
             }
 
-            try
-            {
-                
-                Expression.Call()
-                BinaryExpression predicateExpression;
-                
-                switch (filterInfo.Predicate)
-                {
-                    case Predicate.Equal:
-                        predicateExpression = Expression.Equal()
-                        break;
-                    case Predicate.NotEqual:
-                        break;
-                    case Predicate.LessThan:
-                        break;
-                    case Predicate.GreaterThan:
-                        break;
-                    case Predicate.LessThanOrEqual:
-                        break;
-                    case Predicate.GreaterThanOrEqual:
-                        break;
-                    case Predicate.Contains:
-                        break;
-                    case Predicate.DoesNotContain:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException($"Predicate is unsupported: {filterInfo.Predicate}");
-                }
-
-                Expression<Func<TTelemetry, bool>> lambdaExpression = Expression.Lambda<Func<TTelemetry, bool>>(
-                    fieldExpression,
-                    parameterExpression);
-
-                this.lambda = lambdaExpression.Compile();
-
-                //!!! call to check if it runs ok
-            }
-            catch (Exception e)
-            {
-                // couldn't create the filter
-
-                //!!! report error?
-            }
+            return null;
         }
 
-        private bool CompareString(string fieldValue)
+        private void ThrowOnInvalidFilter(bool conditionToThrow = true)
         {
-            Environment.MachineName
-            return fieldValue > comparandDouble;
+            if (conditionToThrow)
+            {
+                throw new ArgumentOutOfRangeException(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "The filter is invalid. Field: '{0}', field type: '{1}', predicate: '{2}', comparand: '{3}', document type: '{4}'",
+                        this.fieldName,
+                        this.fieldType.FullName,
+                        this.predicate,
+                        this.comparand,
+                        typeof(TTelemetry).FullName));
+            }
         }
 
         private static Type GetFieldType(FilterInfo filterInfo)
@@ -143,17 +212,28 @@
             PropertyInfo fieldPropertyInfo;
             try
             {
-                fieldPropertyInfo = typeof(TTelemetry).GetProperty(filterInfo.FieldName, BindingFlags.Instance);
+                fieldPropertyInfo = typeof(TTelemetry).GetProperty(filterInfo.FieldName, BindingFlags.Instance | BindingFlags.Public);
             }
             catch (Exception e)
             {
                 throw new ArgumentOutOfRangeException(
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        "Could not find the property {0} in the type {1}",
+                        "Error finding property {0} in the type {1}",
                         filterInfo.FieldName,
                         typeof(TTelemetry).FullName),
                     e);
+            }
+
+            if (fieldPropertyInfo == null)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(filterInfo),
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Could not find the property {0} in the type {1}",
+                        filterInfo.FieldName,
+                        typeof(TTelemetry).FullName));
             }
 
             return fieldPropertyInfo.PropertyType;
@@ -171,37 +251,7 @@
                 throw new ArgumentNullException(nameof(filterInfo.Comparand), string.Format(CultureInfo.InvariantCulture, "Parameter cannot be null."));
             }
         }
-
-        private void ValidateFilterInfo(FilterInfo filterInfo)
-        {
-            switch (filterInfo.Predicate)
-            {
-                case Predicate.Equal:
-                case Predicate.NotEqual:
-                case Predicate.Contains:
-                case Predicate.DoesNotContain:
-                    return;
-                case Predicate.LessThan:
-                case Predicate.GreaterThan:
-                case Predicate.LessThanOrEqual:
-                case Predicate.GreaterThanOrEqual:
-                    if (!this.comparandDouble.HasValue && !this.comparandTimeSpan.HasValue)
-                    {
-                        throw new ArgumentOutOfRangeException(
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Invalid combination of comparand and predicate: predicate is {0}, comparand is {1}",
-                                filterInfo.Predicate,
-                                filterInfo.Comparand));
-                    }
-                    break;                
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        string.Format(CultureInfo.InvariantCulture, "Predicate is unsupported: {0}", filterInfo.Predicate));
-            }
-
-        }
-
+        
         public bool Check(TTelemetry document)
         {
             try
