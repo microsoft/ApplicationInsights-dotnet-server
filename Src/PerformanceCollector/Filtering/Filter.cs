@@ -4,15 +4,21 @@
     using System.Globalization;
     using System.Linq.Expressions;
     using System.Reflection;
-
+    
     /// <summary>
     /// Filter determines whether a telemetry document matches the criterion.
     /// </summary>
     /// <typeparam name="TTelemetry">Type of telemetry documents.</typeparam>
     internal class Filter<TTelemetry>
     {
-        private readonly Func<TTelemetry, bool> lambda;
+        private static readonly MethodInfo StringToStringMethodInfo = GetMethodInfo<double, string>(x => x.ToString(CultureInfo.InvariantCulture));
 
+        private static readonly MethodInfo StringIndexOfMethodInfo = GetMethodInfo<string, string, int>((x, y) => x.IndexOf(y, StringComparison.OrdinalIgnoreCase));
+
+        private static readonly MethodInfo StringEqualsMethodInfo = GetMethodInfo<string, string, bool>((x, y) => x.Equals(y, StringComparison.OrdinalIgnoreCase));
+
+        private readonly Func<TTelemetry, bool> lambda;
+        
         private readonly Type fieldType;
 
         private readonly double? comparandDouble;
@@ -51,7 +57,7 @@
             ParameterExpression documentExpression = Expression.Variable(typeof(TTelemetry));
             MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
 
-            MethodCallExpression comparisonExpression;
+            Expression comparisonExpression;
 
             try
             {
@@ -86,6 +92,30 @@
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Runtime error in filter"), e);
             }
+        }
+
+        private static MethodInfo GetMethodInfo<T, TResult>(Expression<Func<T, TResult>> expression)
+        {
+            var member = expression.Body as MethodCallExpression;
+
+            if (member != null)
+            {
+                return member.Method;
+            }
+
+            throw new ArgumentException("Expression is not a method", "expression");
+        }
+
+        private static MethodInfo GetMethodInfo<T1, T2, TResult>(Expression<Func<T1, T2, TResult>> expression)
+        {
+            var member = expression.Body as MethodCallExpression;
+
+            if (member != null)
+            {
+                return member.Method;
+            }
+
+            throw new ArgumentException("Expression is not a method", "expression");
         }
 
         private static Type GetFieldType(FilterInfo filterInfo)
@@ -128,8 +158,8 @@
                 throw new ArgumentNullException(nameof(filterInfo.Comparand), string.Format(CultureInfo.InvariantCulture, "Parameter cannot be null."));
             }
         }
-
-        private MethodCallExpression ProduceComparator(Expression fieldExpression)
+        
+        private Expression ProduceComparator(Expression fieldExpression)
         {
             // this must determine an appropriate runtime comparison given the field type, the predicate, and the comparand
             TypeCode fieldTypeCode = Type.GetTypeCode(this.fieldType);
@@ -173,34 +203,32 @@
                         {
                             case Predicate.Equal:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                Func<double, bool> comparator = fieldValue => fieldValue == this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.Equal(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.NotEqual:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                comparator = fieldValue => fieldValue != this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.NotEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.LessThan:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                comparator = fieldValue => fieldValue < this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.LessThan(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.GreaterThan:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                comparator = fieldValue => fieldValue > this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.GreaterThan(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.LessThanOrEqual:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                comparator = fieldValue => fieldValue <= this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.LessThanOrEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.GreaterThanOrEqual:
                                 this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
-                                comparator = fieldValue => fieldValue >= this.comparandDouble.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                return Expression.GreaterThanOrEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.Contains:
-                                comparator = fieldValue => fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1
+                                Expression toStringCall = Expression.Call(fieldConvertedExpression, StringToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
+                                Expression indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
                             case Predicate.DoesNotContain:
-                                comparator = fieldValue => fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldConvertedExpression);
+                                // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1
+                                toStringCall = Expression.Call(fieldConvertedExpression, StringToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
+                                indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                return Expression.Equal(indexOfCall, Expression.Constant(-1));
                             default:
                                 this.ThrowOnInvalidFilter();
                                 break;
@@ -210,20 +238,41 @@
                     break;
                 case TypeCode.String:
                     {
+                        Expression fieldValueOrEmptyString = Expression.Condition(
+                                    Expression.Equal(fieldExpression, Expression.Constant(null)),
+                                    Expression.Constant(string.Empty),
+                                    fieldExpression);
+
+                        Expression indexOfCall = Expression.Call(
+                            fieldValueOrEmptyString,
+                            StringIndexOfMethodInfo,
+                            Expression.Constant(this.comparand),
+                            Expression.Constant(StringComparison.OrdinalIgnoreCase));
+
                         switch (this.predicate)
                         {
                             case Predicate.Equal:
-                                Func<string, bool> comparator = fieldValue => (fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase);
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // (fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase)
+                                return Expression.Call(
+                                    fieldValueOrEmptyString,
+                                    StringEqualsMethodInfo,
+                                    Expression.Constant(this.comparand),
+                                    Expression.Constant(StringComparison.OrdinalIgnoreCase));
                             case Predicate.NotEqual:
-                                comparator = fieldValue => !(fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase);
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // !(fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase)
+                                return
+                                    Expression.Not(
+                                        Expression.Call(
+                                            fieldValueOrEmptyString,
+                                            StringEqualsMethodInfo,
+                                            Expression.Constant(this.comparand),
+                                            Expression.Constant(StringComparison.OrdinalIgnoreCase)));
                             case Predicate.Contains:
-                                comparator = fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
+                                return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
                             case Predicate.DoesNotContain:
-                                comparator = fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
+                                return Expression.Equal(indexOfCall, Expression.Constant(-1));
                             default:
                                 this.ThrowOnInvalidFilter();
                                 break;
