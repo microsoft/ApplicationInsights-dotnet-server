@@ -12,7 +12,7 @@
     public class AzureRoleEnvironmentTelemetryInitializer : ITelemetryInitializer
     {
         private const string WebSiteEnvironmentVariable = "WEBSITE_SITE_NAME";
-        private static bool? isAzureWebApp = null;
+        private bool? isAzureWebApp = null;
         private string roleInstanceName;
         private string roleName;                
 
@@ -23,7 +23,7 @@
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
 
-            if (IsAppRunningInAzureWebApp())
+            if (this.IsAppRunningInAzureWebApp())
             {
                 WindowsServerEventSource.Log.AzureRoleEnvironmentTelemetryInitializerNotInitializedInWebApp();
             }
@@ -67,13 +67,13 @@
         /// Searches for the environment variable specific to Azure web applications and confirms if the current application is a web application or not.
         /// </summary>
         /// <returns>Boolean, which is true if the current application is an Azure web application.</returns>
-        private static bool IsAppRunningInAzureWebApp()
+        private bool IsAppRunningInAzureWebApp()
         {
-            if (!isAzureWebApp.HasValue)
+            if (!this.isAzureWebApp.HasValue)
             {
                 try
                 {
-                    isAzureWebApp = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WebSiteEnvironmentVariable));
+                    this.isAzureWebApp = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WebSiteEnvironmentVariable));
                 }
                 catch (Exception ex)
                 {
@@ -82,7 +82,7 @@
                 }
             }
 
-            return (bool)isAzureWebApp;
+            return (bool)this.isAzureWebApp;
         }
     }
 }

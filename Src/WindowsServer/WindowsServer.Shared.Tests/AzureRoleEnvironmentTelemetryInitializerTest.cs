@@ -103,7 +103,7 @@
         public void AzureRoleEnvironmentTelemetryInitializerLoadDllToSeparateAppDomain()
         {
             // A random dll which is not already loaded to the current AppDomain but dropped into bin folder.
-            string dllPath = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "Newtonsoft.Json.dll");
+            string dllPath = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase, "Microsoft.ApplicationInsights.Log4NetAppender.dll");
                         
             try
             {

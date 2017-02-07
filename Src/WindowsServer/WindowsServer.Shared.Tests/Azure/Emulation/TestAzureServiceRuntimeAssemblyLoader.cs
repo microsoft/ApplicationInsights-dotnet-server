@@ -14,11 +14,11 @@
         public TestAzureServiceRuntimeAssemblyLoader()
         {
             // Loads a random assembly. (only requirement is that this assembly is foundable in GAC)
-            // Newtonsoft.Json.dll version 8.0.0.0 with the publickeytoken below is checked in to source control to be put in GAC.
-            this.AssemblyNameToLoad.Name = "Newtonsoft.Json";
+            // Microsoft.ApplicationInsights.Log4NetAppender.dll version 2.2.0.0 with the publickeytoken below is checked in to source control to be put in GAC.
+            this.AssemblyNameToLoad.Name = "Microsoft.ApplicationInsights.Log4NetAppender";
             this.AssemblyNameToLoad.CultureInfo = CultureInfo.InvariantCulture;
-            this.AssemblyNameToLoad.SetPublicKeyToken(new byte[] { 48, 173, 79, 230, 178, 166, 174, 237 });
-            this.VersionsToAttempt = new Version[] { new Version("2.0.0.0"), new Version("8.0.0.0") };            
+            this.AssemblyNameToLoad.SetPublicKeyToken(new byte[] { 49, 191, 56, 86, 173, 54, 78, 53 });
+            this.VersionsToAttempt = new Version[] { new Version("2.0.0.0"), new Version("2.2.0.0") };            
         }
 
         public override bool ReadAndPopulateContextInformation(out string roleName, out string roleInstanceId)

@@ -28,7 +28,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)UnobservedExceptionTelemetryModuleTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)Newtonsoft.Json.dll">
+    <Content Include="$(MSBuildThisFileDirectory)Microsoft.ApplicationInsights.Log4NetAppender.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
