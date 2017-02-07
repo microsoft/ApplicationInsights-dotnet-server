@@ -1,21 +1,21 @@
 ﻿{
   "version": "1.0.0-*",
+
   "testRunner": "mstest",
+
   "dependencies": {
-    "src/DependencyCollector/NetCore": {
-      "target": "project"
-    },
-    "MSTest.TestAdapter": "1.1.10-rc2",
-    "MSTest.TestFramework": "1.0.8-rc2"
+    "dotnet-test-mstest": "1.1.2-preview",
+    "MSTest.TestFramework": "1.0.8-rc2",
+    "NETStandard.Library": "1.6.1"
   },
+
   "frameworks": {
     "netcoreapp1.0": {
-      "dependencies": {
-        "Microsoft.NETCore.App": {
-          "type": "platform",
-          "version": "1.0.0"
-        }
-      }
+      "imports": "dnxcore50"
     }
+  },
+
+  "runtimes": {
+    "win10-x64": {}
   }
 }
