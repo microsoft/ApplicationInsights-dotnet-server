@@ -18,7 +18,7 @@
             this.AssemblyNameToLoad.Name = "Microsoft.WindowsAzure.ServiceRuntime";
             this.AssemblyNameToLoad.CultureInfo = CultureInfo.InvariantCulture;
             this.AssemblyNameToLoad.SetPublicKeyToken(new byte[] { 49, 191, 56, 86, 173, 54, 78, 53 });
-            this.VersionsToAttempt = new Version[] { new Version("2.7.0.0"), new Version("2.6.0.0") };
+            this.VersionsToAttempt = new Version[] { new Version("2.7.0.0"), new Version("2.6.0.0"), new Version("2.5.0.0") };
         }
 
         public virtual bool ReadAndPopulateContextInformation(out string roleName, out string roleInstanceId)
