@@ -27,7 +27,6 @@
 
         private readonly string fieldName;
 
-        //!!! refactor
         public Filter(FilterInfo filterInfo)
         {
             ValidateInput(filterInfo);
@@ -39,33 +38,95 @@
             this.fieldType = GetFieldType(filterInfo);
 
             double comparandDouble;
-            if (double.TryParse(filterInfo.Comparand, out comparandDouble))
-            {
-                this.comparandDouble = comparandDouble;
-            }
-
+            this.comparandDouble = double.TryParse(filterInfo.Comparand, out comparandDouble) ? comparandDouble : (double?)null;
+            
             bool comparandBoolean;
-            if (bool.TryParse(filterInfo.Comparand, out comparandBoolean))
-            {
-                this.comparandBoolean = comparandBoolean;
-            }
+            this.comparandBoolean = bool.TryParse(filterInfo.Comparand, out comparandBoolean) ? comparandBoolean : (bool?)null;
 
             TimeSpan comparandTimeSpan;
-            if (TimeSpan.TryParse(filterInfo.Comparand, CultureInfo.InvariantCulture, out comparandTimeSpan))
-            {
-                this.comparandTimeSpan = comparandTimeSpan;
-            }
+            this.comparandTimeSpan = TimeSpan.TryParse(filterInfo.Comparand, CultureInfo.InvariantCulture, out comparandTimeSpan)
+                                         ? comparandTimeSpan
+                                         : (TimeSpan?)null;
             
             ParameterExpression documentExpression = Expression.Variable(typeof(TTelemetry));
             MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
 
-            MethodCallExpression comparisonExpression = this.ProduceComparator(fieldExpression);
-            
-            Expression<Func<TTelemetry, bool>> lambdaExpression = Expression.Lambda<Func<TTelemetry, bool>>(comparisonExpression, documentExpression);
+            MethodCallExpression comparisonExpression;
 
-            this.lambda = lambdaExpression.Compile();
+            try
+            {
+                comparisonExpression = this.ProduceComparator(fieldExpression);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentOutOfRangeException("Could not construct the filter", e);
+            }
 
-            //!!! call to check if it runs ok
+            try
+            {
+                Expression<Func<TTelemetry, bool>> lambdaExpression = Expression.Lambda<Func<TTelemetry, bool>>(
+                    comparisonExpression,
+                    documentExpression);
+
+                this.lambda = lambdaExpression.Compile();
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentOutOfRangeException("Could not compile the filter", e);
+            }
+        }
+
+        public bool Check(TTelemetry document)
+        {
+            try
+            {
+                return this.lambda(document);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Runtime error in filter"), e);
+            }
+        }
+
+        private static Type GetFieldType(FilterInfo filterInfo)
+        {
+            PropertyInfo fieldPropertyInfo;
+            try
+            {
+                fieldPropertyInfo = typeof(TTelemetry).GetProperty(filterInfo.FieldName, BindingFlags.Instance | BindingFlags.Public);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentOutOfRangeException(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Error finding property {0} in the type {1}",
+                        filterInfo.FieldName,
+                        typeof(TTelemetry).FullName),
+                    e);
+            }
+
+            if (fieldPropertyInfo == null)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(filterInfo),
+                    string.Format(CultureInfo.InvariantCulture, "Could not find the property {0} in the type {1}", filterInfo.FieldName, typeof(TTelemetry).FullName));
+            }
+
+            return fieldPropertyInfo.PropertyType;
+        }
+
+        private static void ValidateInput(FilterInfo filterInfo)
+        {
+            if (string.IsNullOrEmpty(filterInfo.FieldName))
+            {
+                throw new ArgumentNullException(nameof(filterInfo.FieldName), string.Format(CultureInfo.InvariantCulture, "Parameter must be specified."));
+            }
+
+            if (filterInfo.Comparand == null)
+            {
+                throw new ArgumentNullException(nameof(filterInfo.Comparand), string.Format(CultureInfo.InvariantCulture, "Parameter cannot be null."));
+            }
         }
 
         private MethodCallExpression ProduceComparator(Expression fieldExpression)
@@ -102,6 +163,8 @@
                 case TypeCode.Single:
                 case TypeCode.Double:
                     {
+                        // in order for the expression to compile, we must cast to double unless it's already double
+                        // we're using double as the common lowest denominator for all numerical types
                         Expression fieldConvertedExpression = fieldTypeCode == TypeCode.Double
                                                                   ? fieldExpression
                                                                   : Expression.ConvertChecked(fieldExpression, typeof(double));
@@ -172,19 +235,20 @@
                     if (this.fieldType == typeof(bool?))
                     {
                         throw new NotImplementedException();
-                        //isFieldPredicateCompatible = this.predicate == Predicate.Equal || this.predicate == Predicate.NotEqual;
-                        break;
+
+                        // isFieldPredicateCompatible = this.predicate == Predicate.Equal || this.predicate == Predicate.NotEqual;
                     }
                     else if (this.fieldType == typeof(TimeSpan))
                     {
                         throw new NotImplementedException();
-                        //isFieldPredicateCompatible = this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain;
-                        break;
+
+                        // isFieldPredicateCompatible = this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain;
                     }
                     else
                     {
                         this.ThrowOnInvalidFilter();
                     }
+
                     break;
             }
 
@@ -204,64 +268,6 @@
                         this.predicate,
                         this.comparand,
                         typeof(TTelemetry).FullName));
-            }
-        }
-
-        private static Type GetFieldType(FilterInfo filterInfo)
-        {
-            PropertyInfo fieldPropertyInfo;
-            try
-            {
-                fieldPropertyInfo = typeof(TTelemetry).GetProperty(filterInfo.FieldName, BindingFlags.Instance | BindingFlags.Public);
-            }
-            catch (Exception e)
-            {
-                throw new ArgumentOutOfRangeException(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Error finding property {0} in the type {1}",
-                        filterInfo.FieldName,
-                        typeof(TTelemetry).FullName),
-                    e);
-            }
-
-            if (fieldPropertyInfo == null)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(filterInfo),
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "Could not find the property {0} in the type {1}",
-                        filterInfo.FieldName,
-                        typeof(TTelemetry).FullName));
-            }
-
-            return fieldPropertyInfo.PropertyType;
-        }
-
-        private static void ValidateInput(FilterInfo filterInfo)
-        {
-            if (string.IsNullOrEmpty(filterInfo.FieldName))
-            {
-                throw new ArgumentNullException(nameof(filterInfo.FieldName), string.Format(CultureInfo.InvariantCulture, "Parameter must be specified."));
-            }
-
-            if (filterInfo.Comparand == null)
-            {
-                throw new ArgumentNullException(nameof(filterInfo.Comparand), string.Format(CultureInfo.InvariantCulture, "Parameter cannot be null."));
-            }
-        }
-        
-        public bool Check(TTelemetry document)
-        {
-            try
-            {
-                return this.lambda(document);
-            }
-            catch (Exception e)
-            {
-                //!!! report error?
-                return false;
             }
         }
     }
