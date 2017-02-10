@@ -17,3 +17,5 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("1d40941a-6018-4505-ad0b-c739b094b2be")]
+
+[assembly: InternalsVisibleTo("NetStandard.Tests")]

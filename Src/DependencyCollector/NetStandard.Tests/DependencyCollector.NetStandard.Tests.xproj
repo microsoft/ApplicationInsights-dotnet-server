@@ -15,8 +15,7 @@
     <TestProjectType>UnitTest</TestProjectType>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <Language>C#</Language>
-
-    <OutputPath>$(BinRoot)</OutputPath>
+    <OutputPath>$(BinRoot)\$(Configuration)</OutputPath>
     <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
   </PropertyGroup>
   <PropertyGroup>
@@ -25,5 +24,11 @@
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
+  <!--<ItemGroup>
+    <ProjectReference Include="..\NetStandard\DependencyCollector.NetStandard.xproj">
+      <Project>{1d40941a-6018-4505-ad0b-c739b094b2be}</Project>
+      <Name>DependencyCollector.NetStandard</Name>
+    </ProjectReference>
+  </ItemGroup>-->
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
 </Project>

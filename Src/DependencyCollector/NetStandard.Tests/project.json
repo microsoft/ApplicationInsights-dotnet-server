@@ -10,10 +10,7 @@
       "version": "1.0.1"
     },
     "MSTest.TestFramework": "1.0.8-rc2",
-    "NetStandard": {
-      "target": "project",
-      "version": "1.0.0-*"
-    }
+    "NetStandard": "1.0.0-*"
   },
 
   "frameworks": {

@@ -15,7 +15,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
 
-    internal class DependencyCollectorDiagnosticListener : IObserver<KeyValuePair<string, object>>
+    public class DependencyCollectorDiagnosticListener : IObserver<KeyValuePair<string, object>>
     {
         /// <summary>
         /// Source instrumentation header that is added by an application while making http requests and retrieved by the other application when processing incoming requests.
@@ -45,10 +45,17 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         {
         }
 
-        /// <inheritdoc/>
         public DependencyCollectorDiagnosticListener(TelemetryClient client)
         {
             this.client = client;
+        }
+
+        /// <summary>
+        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency.
+        /// </summary>
+        internal IEnumerable<DependencyTelemetry> PendingDependencyTelemetry
+        {
+            get { return requestTelemetry.Values; }
         }
 
         private static HttpRequestMessage GetRequest(object value)
@@ -82,7 +89,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 HttpRequestMessage request = GetRequest(value.Value);
                 Guid? loggingRequestId = GetLoggingRequestId(value.Value);
 
-                if (request != null && loggingRequestId != null)
+                if (request != null && request.RequestUri != null && loggingRequestId != null)
                 {
                     string httpMethod = request.Method.Method;
                     Uri requestUri = request.RequestUri;

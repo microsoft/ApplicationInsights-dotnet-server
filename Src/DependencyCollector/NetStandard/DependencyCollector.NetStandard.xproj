@@ -15,7 +15,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <Language>C#</Language>
 
-    <OutputPath>$(BinRoot)</OutputPath>
+    <OutputPath>$(BinRoot)\$(Configuration)</OutputPath>
     <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
   </PropertyGroup>
 
@@ -24,7 +24,7 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
 
-  <PropertyGroup>
+  <!--<PropertyGroup>
     <CopyFromFolder>$(OutDir)\Src\DependencyCollector\NetCore\bin\$(Configuration)\netstandard1.6</CopyFromFolder>
     <CopyToFolder>$(OutDir.TrimEnd('\'))</CopyToFolder>
     <CopyToFileName>Microsoft.AI.DependencyCollector</CopyToFileName>
@@ -44,5 +44,5 @@
   </ItemGroup>
   <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build" Inputs="@(CopyFrom)" Outputs="@(CopyTo)">
     <Copy SourceFiles="@(CopyFrom)" DestinationFiles="@(CopyTo)" />
-  </Target>
+  </Target>-->
 </Project>
