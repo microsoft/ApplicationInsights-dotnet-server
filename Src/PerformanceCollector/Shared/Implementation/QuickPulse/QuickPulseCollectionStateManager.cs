@@ -2,8 +2,13 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
+    using System.Threading;
+
     using Helpers;
+
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
 
     internal class QuickPulseCollectionStateManager
     {
@@ -21,6 +26,8 @@
 
         private readonly Action<IList<QuickPulseDataSample>> onReturnFailedSamples;
 
+        private readonly Func<CollectionConfigurationInfo, string[]> onUpdatedConfiguration;
+
         private DateTimeOffset lastSuccessfulPing;
         
         private DateTimeOffset lastSuccessfulSubmit;
@@ -29,6 +36,12 @@
 
         private bool firstStateUpdate = true;
 
+        private string currentConfigurationETag = string.Empty;
+
+        private readonly TimeSpan coolDownTimeout = TimeSpan.FromMilliseconds(50);
+
+        private readonly List<string> collectionConfigurationErrors = new List<string>(); 
+
         public QuickPulseCollectionStateManager(
             IQuickPulseServiceClient serviceClient, 
             Clock timeProvider, 
@@ -36,7 +49,8 @@
             Action onStartCollection, 
             Action onStopCollection, 
             Func<IList<QuickPulseDataSample>> onSubmitSamples, 
-            Action<IList<QuickPulseDataSample>> onReturnFailedSamples)
+            Action<IList<QuickPulseDataSample>> onReturnFailedSamples,
+            Func<CollectionConfigurationInfo, string[]> onUpdatedConfiguration)
         {
             if (serviceClient == null)
             {
@@ -73,6 +87,11 @@
                 throw new ArgumentNullException(nameof(onReturnFailedSamples));
             }
 
+            if (onUpdatedConfiguration == null)
+            {
+                throw new ArgumentNullException(nameof(onUpdatedConfiguration));
+            }
+
             this.serviceClient = serviceClient;
             this.timeProvider = timeProvider;
             this.timings = timings;
@@ -80,6 +99,7 @@
             this.onStopCollection = onStopCollection;
             this.onSubmitSamples = onSubmitSamples;
             this.onReturnFailedSamples = onReturnFailedSamples;
+            this.onUpdatedConfiguration = onUpdatedConfiguration;
         }
         
         public bool IsCollectingData
@@ -115,6 +135,7 @@
                 this.firstStateUpdate = false;
             }
 
+            CollectionConfigurationInfo configurationInfo;
             if (this.IsCollectingData)
             {
                 // we are currently collecting
@@ -125,8 +146,30 @@
                     // no samples to submit, do nothing
                     return this.DetermineBackOffs();
                 }
+                else
+                {
+                    // we have samples
+                    if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.ReferenceCount != 0))
+                    {
+                        // some samples are still being processed, wait a little to give them a chance to finish
+                        Thread.Sleep(this.coolDownTimeout);
 
-                bool? keepCollecting = this.serviceClient.SubmitSamples(dataSamplesToSubmit, instrumentationKey);
+                        bool allCooledDown = dataSamplesToSubmit.All(sample => sample.CollectionConfigurationAccumulator.ReferenceCount == 0);
+
+                        QuickPulseEventSource.Log.TroubleshootingMessageEvent(
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                "Waited for a sample to cool down... {0}",
+                                allCooledDown ? "Success" : "Failed"));
+                    }
+                }
+
+                bool? keepCollecting = this.serviceClient.SubmitSamples(
+                    dataSamplesToSubmit,
+                    instrumentationKey,
+                    this.currentConfigurationETag,
+                    out configurationInfo,
+                    this.collectionConfigurationErrors.ToArray());
 
                 QuickPulseEventSource.Log.SampleSubmittedEvent(keepCollecting.ToString());
 
@@ -139,6 +182,7 @@
 
                     case true:
                         // the service wants us to keep collecting
+                        this.UpdateConfiguration(configurationInfo);
                         break;
 
                     case false:
@@ -153,7 +197,11 @@
             else
             {
                 // we are currently idle and pinging the service waiting for it to ask us to start collecting data
-                bool? startCollection = this.serviceClient.Ping(instrumentationKey, this.timeProvider.UtcNow);
+                bool? startCollection = this.serviceClient.Ping(
+                    instrumentationKey,
+                    this.timeProvider.UtcNow,
+                    this.currentConfigurationETag,
+                    out configurationInfo);
 
                 QuickPulseEventSource.Log.PingSentEvent(startCollection.ToString());
 
@@ -165,6 +213,7 @@
 
                     case true:
                         // the service wants us to start collection now
+                        this.UpdateConfiguration(configurationInfo);
                         this.onStartCollection();
                         break;
 
@@ -180,6 +229,22 @@
             return this.DetermineBackOffs();
         }
 
+        private void UpdateConfiguration(CollectionConfigurationInfo configurationInfo)
+        {
+            if (configurationInfo != null && !string.Equals(configurationInfo.ETag, this.currentConfigurationETag, StringComparison.Ordinal))
+            {
+                this.collectionConfigurationErrors.Clear();
+
+                string[] errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
+                if (errors != null)
+                {
+                    this.collectionConfigurationErrors.AddRange(errors.Distinct(StringComparer.Ordinal));
+                }
+
+                this.currentConfigurationETag = configurationInfo.ETag;
+            }
+        }
+        
         private TimeSpan DetermineBackOffs()
         {
             if (this.IsCollectingData)

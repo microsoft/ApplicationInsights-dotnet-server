@@ -9,6 +9,7 @@
     using System.Threading;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
@@ -387,7 +388,12 @@
             var collectionInterval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            string[] errors;
+            var accumulatorManager =
+                new QuickPulseDataAccumulatorManager(
+                    new CollectionConfiguration(
+                        new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                        out errors));
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();

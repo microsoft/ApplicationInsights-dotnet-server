@@ -3,8 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
 
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
 
     internal class QuickPulseServiceClientMock : IQuickPulseServiceClient
@@ -20,6 +20,8 @@
         public int PingCount { get; private set; }
 
         public bool? ReturnValueFromPing { private get; set; }
+
+        public CollectionConfigurationInfo ConfigurationInfo { private get; set; }
 
         public bool? ReturnValueFromSubmitSample { private get; set; }
 
@@ -59,7 +61,7 @@
             }
         }
 
-        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp)
+        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp, string configurationETag, out CollectionConfigurationInfo configurationInfo)
         {
             lock (this.ResponseLock)
             {
@@ -77,11 +79,13 @@
                     throw new InvalidOperationException("Mock is set to always throw");
                 }
 
+                configurationInfo = this.ConfigurationInfo;
+
                 return this.ReturnValueFromPing;
             }
         }
 
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey)
+        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, string configurationETag, out CollectionConfigurationInfo configurationInfo, string[] collectionConfigurationErrors)
         {
             lock (this.ResponseLock)
             {
@@ -99,6 +103,8 @@
                 {
                     throw new InvalidOperationException("Mock is set to always throw");
                 }
+
+                configurationInfo = this.ConfigurationInfo;
 
                 return this.ReturnValueFromSubmitSample;
             }

@@ -9,6 +9,9 @@
         public string Name { get; set; }
 
         [DataMember]
+        public string SessionId { get; set; }
+
+        [DataMember]
         public double Value { get; set; }
 
         [DataMember]

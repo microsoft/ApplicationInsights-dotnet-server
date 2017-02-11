@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     
@@ -14,11 +16,15 @@
         public void QuickPulseDataAccumulatorManagerLocksInSampleCorrectly()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            string[] errors;
+            CollectionConfiguration collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             accumulatorManager.CurrentDataAccumulator.AIRequestSuccessCount = 5;
-
+            
             // ACT
-            var completedSample = accumulatorManager.CompleteCurrentDataAccumulator();
+            var completedSample = accumulatorManager.CompleteCurrentDataAccumulator(collectionConfiguration);
 
             // ASSERT
             Assert.AreEqual(5, completedSample.AIRequestSuccessCount);
@@ -30,7 +36,11 @@
         public void QuickPulseDataAccumulatorManagerLocksInSampleCorrectlyMultithreaded()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            string[] errors;
+            CollectionConfiguration collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             int taskCount = 100;
             var writeTasks = new List<Task>(taskCount);
             var pause = TimeSpan.FromMilliseconds(10);
@@ -55,7 +65,7 @@
                 // sleep to increase the probability of more write tasks being between the two writes
                 Thread.Sleep(TimeSpan.FromTicks(pause.Ticks / 2));
 
-                accumulatorManager.CompleteCurrentDataAccumulator();
+                accumulatorManager.CompleteCurrentDataAccumulator(collectionConfiguration);
             });
 
             // shuffle the completion task into the middle of the pile to have it fire roughly halfway through

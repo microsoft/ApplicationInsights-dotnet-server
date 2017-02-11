@@ -10,6 +10,7 @@
     internal struct MonitoringDataPoint
     {
         /*
+         * 4 - adding errors for extended backchannel
          * 3 - adding TopCpuProcesses
         */
         public const int CurrentInvariantVersion = 3;
@@ -49,5 +50,8 @@
 
         [DataMember(EmitDefaultValue = false)]
         public bool TopCpuDataAccessDenied { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string[] CollectionConfigurationErrors { get; set; }
     }
 }

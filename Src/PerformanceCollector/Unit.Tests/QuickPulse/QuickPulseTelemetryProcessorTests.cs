@@ -8,16 +8,25 @@
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
     using Microsoft.ApplicationInsights.Web.Helpers;
+    using Microsoft.Diagnostics.Tracing;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class QuickPulseTelemetryProcessorTests
     {
+        private static string[] errors;
+
+        private static readonly CollectionConfiguration EmptyCollectionConfiguration =
+            new CollectionConfiguration(
+                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                out errors);
+
         const int MaxFieldLength = 32768;
 
         [TestInitialize]
@@ -68,7 +77,7 @@
         public void QuickPulseTelemetryProcessorKeepsAccurateCountOfRequests()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
                 accumulatorManager,
@@ -138,7 +147,7 @@
         public void QuickPulseTelemetryProcessorKeepsAccurateCountOfDependencies()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
                 accumulatorManager,
@@ -166,7 +175,7 @@
         public void QuickPulseTelemetryProcessorKeepsAccurateCountOfExceptions()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
                 accumulatorManager,
@@ -186,7 +195,7 @@
         public void QuickPulseTelemetryProcessorStopsCollection()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var endpoint = new Uri("http://microsoft.com");
             var config = new TelemetryConfiguration() { InstrumentationKey = "some ikey" };
@@ -206,7 +215,7 @@
         public void QuickPulseTelemetryProcessorIgnoresUnrelatedTelemetryItems()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
                 accumulatorManager,
@@ -229,7 +238,7 @@
         public void QuickPulseTelemetryProcessorIgnoresTelemetryItemsToDifferentInstrumentationKeys()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -249,7 +258,7 @@
         public void QuickPulseTelemetryProcessorHandlesMultipleThreadsCorrectly()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -288,8 +297,8 @@
         public void QuickPulseTelemetryProcessorSwitchesBetweenMultipleAccumulatorManagers()
         {
             // ARRANGE
-            var accumulatorManager1 = new QuickPulseDataAccumulatorManager();
-            var accumulatorManager2 = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager1 = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var accumulatorManager2 = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             // ACT
@@ -322,7 +331,7 @@
         public void QuickPulseTelemetryProcessorMustBeStoppedBeforeReceivingStartCommand()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -344,7 +353,7 @@
         public void QuickPulseTelemetryProcessorFiltersOutDependencyCallsToQuickPulseServiceDuringCollection()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var simpleTelemetryProcessorSpy = new SimpleTelemetryProcessorSpy();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(simpleTelemetryProcessorSpy);
             var config = new TelemetryConfiguration() { InstrumentationKey = "some ikey" };
@@ -391,7 +400,7 @@
         public void QuickPulseTelemetryProcessorCollectsFullTelemetryItems()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -456,7 +465,7 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectSucceededFullTelemetryItems()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -497,7 +506,7 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullRequestTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -558,7 +567,7 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullDependencyTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -617,7 +626,7 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullExceptionTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -672,7 +681,7 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsWhenSwitchIsOff()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -711,7 +720,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullRequestTelemetryItemName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -740,7 +749,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullRequestTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -782,7 +791,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemCommandName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -826,7 +835,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -872,7 +881,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -930,7 +939,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemMessage()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -964,7 +973,7 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1008,7 +1017,7 @@
         public void QuickPulseTelemetryProcessorHandlesDuplicatePropertyNamesDueToTruncation()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1041,7 +1050,7 @@
         public void QuickPulseTelemetryProcessorExpandsAggregateExceptionMessage()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1070,7 +1079,7 @@
         public void QuickPulseTelemetryProcessorExpandsAggregateExceptionMessageWhenEmpty()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1095,7 +1104,7 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenSingleInnerException()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1120,7 +1129,7 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenNoInnerExceptions()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1145,7 +1154,7 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenMultipleInnerExceptions()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1170,7 +1179,7 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessagesAndDedupesThem()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager();
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(

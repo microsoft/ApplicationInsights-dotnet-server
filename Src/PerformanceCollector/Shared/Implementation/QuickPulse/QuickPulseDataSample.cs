@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.Linq;
     using Helpers;
+
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
     /// <summary>
@@ -14,6 +16,7 @@
         public QuickPulseDataSample(QuickPulseDataAccumulator accumulator, IDictionary<string, Tuple<PerformanceCounterData, double>> perfData, IEnumerable<Tuple<string, int>> topCpuData, bool topCpuDataAccessDenied)
         {
             // NOTE: it is crucial not to keep any heap references on input parameters, new objects with separate roots must be created!
+            // CollectionConfiguration is an exception to this rule as it may be still processed, and the sender will check the reference count before sending it out
             if (accumulator == null)
             {
                 throw new ArgumentNullException(nameof(accumulator));
@@ -75,6 +78,8 @@
             this.TelemetryDocuments = accumulator.TelemetryDocuments.ToArray();
 
             this.TopCpuDataAccessDenied = topCpuDataAccessDenied;
+
+            this.CollectionConfigurationAccumulator = accumulator.CollectionConfigurationAccumulator;
         }
         
         public DateTimeOffset StartTimestamp { get; }
@@ -113,5 +118,7 @@
         public ITelemetryDocument[] TelemetryDocuments { get; private set; }
 
         public bool TopCpuDataAccessDenied { get; private set; }
+
+        public CollectionConfigurationAccumulator CollectionConfigurationAccumulator { get; private set; }
     }
 }

@@ -5,11 +5,11 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
-    using System.Security;
     using System.Threading;
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
@@ -18,6 +18,7 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
     using Microsoft.ApplicationInsights.Web.Implementation;
+    using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
     /// <summary>
     /// Telemetry module for collecting QuickPulse data.
@@ -67,6 +68,8 @@
         private IPerformanceCollector performanceCollector = null;
 
         private IQuickPulseTopCpuCollector topCpuCollector = null;
+
+        private CollectionConfiguration collectionConfiguration;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryModule"/> class.
@@ -151,13 +154,19 @@
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Initializing members...");
                         this.collectionTimeSlotManager = this.collectionTimeSlotManager ?? new QuickPulseCollectionTimeSlotManager();
-                        this.dataAccumulatorManager = this.dataAccumulatorManager ?? new QuickPulseDataAccumulatorManager();
                         this.performanceCollector = this.performanceCollector ?? 
                             (PerformanceCounterUtility.IsWebAppRunningInAzure() ? (IPerformanceCollector)new WebAppPerformanceCollector() : (IPerformanceCollector)new StandardPerformanceCollector());
                         this.timeProvider = this.timeProvider ?? new Clock();
                         this.topCpuCollector = this.topCpuCollector
                                                ?? new QuickPulseTopCpuCollector(this.timeProvider, new QuickPulseProcessProvider(PerfLib.GetPerfLib()));
                         this.timings = timings ?? QuickPulseTimings.Default;
+
+                        string[] errors;
+                        this.collectionConfiguration =
+                            new CollectionConfiguration(
+                                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                                out errors);
+                        this.dataAccumulatorManager = this.dataAccumulatorManager ?? new QuickPulseDataAccumulatorManager(this.collectionConfiguration);
 
                         this.InitializeServiceClient(configuration);
 
@@ -168,7 +177,8 @@
                             this.OnStartCollection,
                             this.OnStopCollection,
                             this.OnSubmitSamples,
-                            this.OnReturnFailedSamples);
+                            this.OnReturnFailedSamples,
+                            this.OnUpdatedConfiguration);
 
                         this.CreateStateThread();
 
@@ -426,7 +436,6 @@
             }
         }
         
-
         private void InitializeCollectionThread()
         {
             try
@@ -478,7 +487,8 @@
         private QuickPulseDataSample CollectSample()
         {
             // For AI data, all we have to do is lock the current accumulator in
-            QuickPulseDataAccumulator completeAccumulator = this.dataAccumulatorManager.CompleteCurrentDataAccumulator();
+            // use the latest collection configuration info set by the state thread to create the new accumulator
+            QuickPulseDataAccumulator completeAccumulator = this.dataAccumulatorManager.CompleteCurrentDataAccumulator(this.collectionConfiguration);
 
             // For performance collection, we have to read perf samples from Windows
             List<Tuple<PerformanceCounterData, double>> perfData =
@@ -516,7 +526,7 @@
 
             this.EnsurePerformanceCollectorInitialized();
 
-            this.dataAccumulatorManager.CompleteCurrentDataAccumulator();
+            this.dataAccumulatorManager.CompleteCurrentDataAccumulator(this.collectionConfiguration);
 
             lock (this.telemetryProcessorsLock)
             {
@@ -601,6 +611,17 @@
                     this.collectedSamples.RemoveFirst();
                 }
             }
+        }
+
+        private string[] OnUpdatedConfiguration(CollectionConfigurationInfo configurationInfo)
+        {
+            // the next accumulator that gets swapped in on the collection thread will be initialized with the new collection configuration
+            string[] errors;
+            var newCollectionConfiguration = new CollectionConfiguration(configurationInfo, out errors);
+
+            Interlocked.Exchange(ref this.collectionConfiguration, newCollectionConfiguration);
+
+            return errors;
         }
 
         #endregion

@@ -14,5 +14,10 @@
         /// Transmission time header.
         /// </summary>
         internal const string XMsQpsTransmissionTimeHeaderName = "x-ms-qps-transmission-time";
+
+        /// <summary>
+        /// Configuration etag header.
+        /// </summary>
+        internal const string XMsQpsConfigurationETagHeaderName = "x-ms-qps-configuration-etag";
     }
 }

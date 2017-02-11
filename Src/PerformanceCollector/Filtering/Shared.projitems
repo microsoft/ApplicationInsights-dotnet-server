@@ -9,9 +9,16 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.Extensibility.Filtering</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CollectionConfigurationAccumulator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CollectionConfigurationInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CollectionConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\AccumulatedValue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OperationalizedMetric.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Filter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\TelemetryType.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Predicate.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\FilterInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\OperationalizedMetricInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\FilterInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\Predicate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\AggregationType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\TelemetryType.cs" />
   </ItemGroup>
 </Project>

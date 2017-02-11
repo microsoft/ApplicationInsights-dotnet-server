@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
@@ -17,6 +18,14 @@
         private const string StopCollectionMessage = "StopCollection";
 
         private const string CollectMessage = "Collect";
+
+        private const string UpdatedConfigurationMessage = "UpdatedConfiguration";
+
+        private static readonly CollectionConfigurationInfo EmptyCollectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                                                                   {
+                                                                                                       ETag = string.Empty,
+                                                                                                       Metrics = new OperationalizedMetricInfo[0]
+                                                                                                   };
 
         [TestMethod]
         public void QuickPulseCollectionStateManagerDoesNothingWithoutInstrumentationKey()
@@ -51,7 +60,8 @@
                 () => { },
                 () => { },
                 () => null,
-                _ => { });
+                _ => { },
+                _ => null);
 
             // ACT
 
@@ -437,12 +447,13 @@
                     {
                         actions.Add(CollectMessage);
 
+                        string[] errors;
                         var now = DateTimeOffset.UtcNow;
                         return
                             new[]
                                 {
                                     new QuickPulseDataSample(
-                                        new QuickPulseDataAccumulator
+                                        new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out errors))
                                             {
                                                 AIRequestSuccessCount = 5,
                                                 StartTimestamp = now,
@@ -455,10 +466,12 @@
                     },
                 samples =>
                     {
-                        if (returnedSamples != null)
-                        {
-                            returnedSamples.AddRange(samples);
-                        }
+                        returnedSamples?.AddRange(samples);
+                    },
+                configuration =>
+                    {
+                        actions.Add(UpdatedConfigurationMessage);
+                        return null;
                     });
 
             return manager;

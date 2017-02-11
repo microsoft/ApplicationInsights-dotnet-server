@@ -8,6 +8,8 @@
     using System.Net;
     using System.Runtime.Serialization.Json;
     using Helpers;
+
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
@@ -34,6 +36,8 @@
 
         private readonly DataContractJsonSerializer serializerDataPointArray = new DataContractJsonSerializer(typeof(MonitoringDataPoint[]));
 
+        private readonly DataContractJsonSerializer deserializerServerResponse = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+
         public QuickPulseServiceClient(Uri serviceUri, string instanceName, string streamId, string machineName, string version, Clock timeProvider, bool isWebApp, TimeSpan? timeout = null)
         {
             this.ServiceUri = serviceUri;
@@ -48,41 +52,64 @@
 
         public Uri ServiceUri { get; }
 
-        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp)
+        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp, string configurationETag, out CollectionConfigurationInfo configurationInfo)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "ping?ikey={0}", Uri.EscapeUriString(instrumentationKey));
-            HttpWebResponse response = this.SendRequest(WebRequestMethods.Http.Post, path, stream => this.WritePingData(timestamp, stream));
+            HttpWebResponse response = this.SendRequest(WebRequestMethods.Http.Post, path, configurationETag, stream => this.WritePingData(timestamp, stream));
 
             if (response == null)
             {
+                configurationInfo = null;
                 return null;
             }
 
-            return ProcessResponse(response);
+            return this.ProcessResponse(response, configurationETag, out configurationInfo);
         }
 
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey)
+        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, string configurationETag, out CollectionConfigurationInfo configurationInfo, string[] collectionConfigurationErrors)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "post?ikey={0}", Uri.EscapeUriString(instrumentationKey));
             HttpWebResponse response = this.SendRequest(
                 WebRequestMethods.Http.Post,
                 path,
-                stream => this.WriteSamples(samples, instrumentationKey, stream));
+                configurationETag,
+                stream => this.WriteSamples(samples, instrumentationKey, stream, collectionConfigurationErrors));
 
             if (response == null)
             {
+                configurationInfo = null;
                 return null;
             }
 
-            return ProcessResponse(response);
+            return this.ProcessResponse(response, configurationETag, out configurationInfo);
         }
 
-        private static bool? ProcessResponse(HttpWebResponse response)
+        private bool? ProcessResponse(HttpWebResponse response, string configurationETag, out CollectionConfigurationInfo configurationInfo)
         {
+            configurationInfo = null;
+
             bool isSubscribed;
             if (!bool.TryParse(response.GetResponseHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName), out isSubscribed))
             {
                 return null;
+            }
+
+            string latestConfigurationETag = response.GetResponseHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName);
+
+            if (isSubscribed && !string.Equals(latestConfigurationETag, configurationETag, StringComparison.Ordinal))
+            {
+                try
+                {
+                    using (var stream = response.GetResponseStream())
+                    {
+                        configurationInfo = this.deserializerServerResponse.ReadObject(stream) as CollectionConfigurationInfo;
+                    }
+                }
+                catch (Exception e)
+                {
+                    // couldn't read or deserialize the response
+                    QuickPulseEventSource.Log.ServiceCommunicationFailedEvent(e.ToInvariantString());
+                }
             }
 
             return isSubscribed;
@@ -110,7 +137,7 @@
             this.serializerDataPoint.WriteObject(stream, dataPoint);
         }
 
-        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream)
+        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream, string[] errors)
         {
             var monitoringPoints = new List<MonitoringDataPoint>();
 
@@ -176,6 +203,32 @@
 
                 metricPoints.AddRange(sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
 
+                foreach (KeyValuePair<Tuple<string, string>, AccumulatedValue> metricAccumulator in sample.CollectionConfigurationAccumulator.MetricAccumulators)
+                {
+                    try
+                    {
+                        double[] accumulatedValues = metricAccumulator.Value.Value.ToArray();
+
+                        var metricPoint = new MetricPoint
+                                              {
+                                                  Name = metricAccumulator.Key.Item1,
+                                                  SessionId = metricAccumulator.Key.Item2,
+                                                  Value =
+                                                      OperationalizedMetric<int>.Aggregate(
+                                                          accumulatedValues,
+                                                          metricAccumulator.Value.AggregationType),
+                                                  Weight = accumulatedValues.Length
+                                              };
+
+                        metricPoints.Add(metricPoint);
+                    }
+                    catch (Exception e)
+                    {
+                        // skip this metric
+                        QuickPulseEventSource.Log.UnknownErrorEvent(e.ToString());
+                    }
+                }
+                
                 ITelemetryDocument[] documents = sample.TelemetryDocuments.ToArray();
                 Array.Reverse(documents);
 
@@ -195,7 +248,8 @@
                                         Metrics = metricPoints.ToArray(),
                                         Documents = documents,
                                         TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
-                                        TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied
+                                        TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied,
+                                        CollectionConfigurationErrors = errors
                                     };
 
                 monitoringPoints.Add(dataPoint);
@@ -204,7 +258,7 @@
             this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
         }
 
-        private HttpWebResponse SendRequest(string httpVerb, string path, Action<Stream> onWriteBody)
+        private HttpWebResponse SendRequest(string httpVerb, string path, string configurationETag, Action<Stream> onWriteBody)
         {
             var requestUri = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", this.ServiceUri.AbsoluteUri.TrimEnd('/'), path.TrimStart('/'));
 
@@ -214,6 +268,7 @@
                 request.Method = httpVerb;
                 request.Timeout = (int)this.timeout.TotalMilliseconds;
                 request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
+                request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
 
                 onWriteBody?.Invoke(request.GetRequestStream());
 

@@ -17,7 +17,7 @@
 
         private static readonly MethodInfo StringEqualsMethodInfo = GetMethodInfo<string, string, bool>((x, y) => x.Equals(y, StringComparison.OrdinalIgnoreCase));
 
-        private readonly Func<TTelemetry, bool> lambda;
+        private readonly Func<TTelemetry, bool> filterLambda;
         
         private readonly Type fieldType;
 
@@ -45,7 +45,7 @@
 
             double comparandDouble;
             this.comparandDouble = double.TryParse(filterInfo.Comparand, out comparandDouble) ? comparandDouble : (double?)null;
-            
+
             bool comparandBoolean;
             this.comparandBoolean = bool.TryParse(filterInfo.Comparand, out comparandBoolean) ? comparandBoolean : (bool?)null;
 
@@ -53,7 +53,7 @@
             this.comparandTimeSpan = TimeSpan.TryParse(filterInfo.Comparand, CultureInfo.InvariantCulture, out comparandTimeSpan)
                                          ? comparandTimeSpan
                                          : (TimeSpan?)null;
-            
+
             ParameterExpression documentExpression = Expression.Variable(typeof(TTelemetry));
             MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
 
@@ -65,7 +65,7 @@
             }
             catch (Exception e)
             {
-                throw new ArgumentOutOfRangeException("Could not construct the filter", e);
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Could not construct the filter."), e);
             }
 
             try
@@ -74,11 +74,11 @@
                     comparisonExpression,
                     documentExpression);
 
-                this.lambda = lambdaExpression.Compile();
+                this.filterLambda = lambdaExpression.Compile();
             }
             catch (Exception e)
             {
-                throw new ArgumentOutOfRangeException("Could not compile the filter", e);
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Could not compile the filter."), e);
             }
         }
 
@@ -86,11 +86,11 @@
         {
             try
             {
-                return this.lambda(document);
+                return this.filterLambda(document);
             }
             catch (Exception e)
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Runtime error in filter"), e);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Runtime error while filtering."), e);
             }
         }
 
@@ -103,7 +103,7 @@
                 return member.Method;
             }
 
-            throw new ArgumentException("Expression is not a method", "expression");
+            throw new ArgumentException("Expression is not a method", nameof(expression));
         }
 
         private static MethodInfo GetMethodInfo<T1, T2, TResult>(Expression<Func<T1, T2, TResult>> expression)
@@ -115,7 +115,7 @@
                 return member.Method;
             }
 
-            throw new ArgumentException("Expression is not a method", "expression");
+            throw new ArgumentException("Expression is not a method", nameof(expression));
         }
 
         private static Type GetFieldType(FilterInfo filterInfo)

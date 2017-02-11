@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,11 +12,19 @@
     [TestClass]
     public class QuickPulseDataSampleTests
     {
+        private static readonly CollectionConfigurationInfo EmptyCollectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                                                                   {
+                                                                                                       ETag = string.Empty,
+                                                                                                       Metrics = new OperationalizedMetricInfo[0]
+                                                                                                   };
+
         private readonly DateTimeOffset now = new DateTimeOffset(2017, 1, 1, 0, 0, 0, 0, TimeSpan.Zero);
 
         private IDictionary<string, Tuple<PerformanceCounterData, double>> dummyDictionary;
 
         private IEnumerable<Tuple<string, int>> dummyTopCpu;
+
+        private string[] errors;
         
         [TestInitialize]
         public void TestInitialize()
@@ -35,21 +44,21 @@
         [ExpectedException(typeof(ArgumentNullException))]
         public void QuickPulseDataSampleThrowsWhenPerfDataIsNull()
         {
-            new QuickPulseDataSample(new QuickPulseDataAccumulator(), null, null, false);
+            new QuickPulseDataSample(new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors)), null, null, false);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void QuickPulseDataSampleThrowsWhenAccumulatorStartTimestampIsNull()
         {
-            new QuickPulseDataSample(new QuickPulseDataAccumulator() { EndTimestamp = DateTimeOffset.UtcNow }, this.dummyDictionary, this.dummyTopCpu, false);
+            new QuickPulseDataSample(new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors)) { EndTimestamp = DateTimeOffset.UtcNow }, this.dummyDictionary, this.dummyTopCpu, false);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void QuickPulseDataSampleThrowsWhenAccumulatorEndTimestampIsNull()
         {
-            new QuickPulseDataSample(new QuickPulseDataAccumulator() { StartTimestamp = DateTimeOffset.UtcNow }, this.dummyDictionary, this.dummyTopCpu, false);
+            new QuickPulseDataSample(new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors)) { StartTimestamp = DateTimeOffset.UtcNow }, this.dummyDictionary, this.dummyTopCpu, false);
         }
 
         [TestMethod]
@@ -57,7 +66,7 @@
         public void QuickPulseDataSampleThrowsWhenTimestampsAreReversedInTime()
         {
             new QuickPulseDataSample(
-                new QuickPulseDataAccumulator() { StartTimestamp = DateTimeOffset.UtcNow, EndTimestamp = DateTimeOffset.UtcNow.AddSeconds(-1) },
+                new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors)) { StartTimestamp = DateTimeOffset.UtcNow, EndTimestamp = DateTimeOffset.UtcNow.AddSeconds(-1) },
                 this.dummyDictionary,
                 this.dummyTopCpu,
                 false);
@@ -69,7 +78,7 @@
             // ARRANGE
             var timestampStart = this.now;
             var timestampEnd = this.now.AddSeconds(3);
-            var accumulator = new QuickPulseDataAccumulator { StartTimestamp = timestampStart, EndTimestamp = timestampEnd };
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors)) { StartTimestamp = timestampStart, EndTimestamp = timestampEnd };
 
             // ACT
             var dataSample = new QuickPulseDataSample(accumulator, this.dummyDictionary, this.dummyTopCpu, false);
@@ -87,8 +96,8 @@
         public void QuickPulseDataSampleCalculatesAIRpsCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIRequestCountAndDurationInTicks = QuickPulseDataAccumulator.EncodeCountAndDuration(10, 0)
@@ -105,8 +114,8 @@
         public void QuickPulseDataSampleCalculatesAIRequestDurationAveCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIRequestCountAndDurationInTicks =
@@ -124,8 +133,8 @@
         public void QuickPulseDataSampleCalculatesAIRequestsFailedPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIRequestFailureCount = 10
@@ -142,8 +151,8 @@
         public void QuickPulseDataSampleCalculatesAIRequestsSucceededPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIRequestSuccessCount = 10
@@ -164,8 +173,8 @@
         public void QuickPulseDataSampleCalculatesAIDependencyCallsPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIDependencyCallCountAndDurationInTicks =
@@ -183,8 +192,8 @@
         public void QuickPulseDataSampleCalculatesAIDependencyCallDurationAveCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIDependencyCallCountAndDurationInTicks =
@@ -202,8 +211,8 @@
         public void QuickPulseDataSampleCalculatesAIDependencyCallsFailedPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIDependencyCallFailureCount = 10
@@ -220,8 +229,8 @@
         public void QuickPulseDataSampleCalculatesAIDependencyCallsSucceededPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIDependencyCallSuccessCount = 10
@@ -238,8 +247,8 @@
         public void QuickPulseDataSampleCalculatesAIRequestDurationAveWhenRequestCountIsZeroCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIRequestCountAndDurationInTicks =
@@ -257,8 +266,8 @@
         public void QuickPulseDataSampleCalculatesAIDependencyCallDurationAveWhenDependencyCallCountIsZeroCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = this.now,
                                       EndTimestamp = this.now.AddSeconds(2),
                                       AIDependencyCallCountAndDurationInTicks =
@@ -279,7 +288,7 @@
         public void QuickPulseDataSampleCalculatesAIExceptionsPerSecondCorrectly()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
             {
                 StartTimestamp = this.now,
                 EndTimestamp = this.now.AddSeconds(2),
@@ -302,7 +311,7 @@
         public void QuickPulseDataSampleHandlesAbsentCounterInPerfData()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
             {
                 StartTimestamp = DateTimeOffset.UtcNow,
                 EndTimestamp = DateTimeOffset.UtcNow.AddSeconds(2)
@@ -322,8 +331,8 @@
         public void QuickPulseDataSampleStoresTopCpuData()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
-                                  {
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
+            {
                                       StartTimestamp = DateTimeOffset.UtcNow,
                                       EndTimestamp = DateTimeOffset.UtcNow.AddSeconds(2)
                                   };
@@ -344,7 +353,7 @@
         public void QuickPulseDataSampleHandlesAbsentTopCpuData()
         {
             // ARRANGE
-            var accumulator = new QuickPulseDataAccumulator
+            var accumulator = new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out this.errors))
             {
                 StartTimestamp = DateTimeOffset.UtcNow,
                 EndTimestamp = DateTimeOffset.UtcNow.AddSeconds(2)

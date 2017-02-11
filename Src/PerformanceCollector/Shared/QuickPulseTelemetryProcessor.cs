@@ -2,12 +2,14 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
@@ -43,11 +45,13 @@
 
         private bool disableFullTelemetryItems = false;
 
-        private QuickPulseQuotaTracker requestQuotaTracker = null;
+        private CollectionConfiguration collectionConfiguration = null;
 
-        private QuickPulseQuotaTracker dependencyQuotaTracker = null;
+        private readonly QuickPulseQuotaTracker requestQuotaTracker = null;
 
-        private QuickPulseQuotaTracker exceptionQuotaTracker = null;
+        private readonly QuickPulseQuotaTracker dependencyQuotaTracker = null;
+
+        private readonly QuickPulseQuotaTracker exceptionQuotaTracker = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryProcessor"/> class.
@@ -138,6 +142,12 @@
             this.isCollecting = false;
         }
 
+        void IQuickPulseTelemetryProcessor.UpdateCollectionConfiguration(CollectionConfiguration collectionConfiguration)
+        {
+            // atomic swap, next accumulator will receive the new collection configuration
+            Interlocked.Exchange(ref this.collectionConfiguration, collectionConfiguration);
+        }
+
         /// <summary>
         /// Intercepts telemetry items and updates QuickPulse data when needed.
         /// </summary>
@@ -151,7 +161,7 @@
             {
                 // filter out QPS requests from dependencies even when we're not collecting (for Pings)
                 var dependency = telemetry as DependencyTelemetry;
-                if (this.serviceEndpoint != null && dependency != null && !string.IsNullOrWhiteSpace(dependency.Name))
+                if (this.serviceEndpoint != null && !string.IsNullOrWhiteSpace(dependency?.Name))
                 {
                     if (dependency.Name.IndexOf(this.serviceEndpoint.Host, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
@@ -364,8 +374,8 @@
         private void ProcessTelemetry(ITelemetry telemetry)
         {
             // only process items that are going to the instrumentation key that our module is initialized with
-            if (this.config != null && !string.IsNullOrWhiteSpace(this.config.InstrumentationKey) && telemetry.Context != null
-                && string.Equals(telemetry.Context.InstrumentationKey, this.config.InstrumentationKey, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(this.config?.InstrumentationKey)
+                && string.Equals(telemetry?.Context?.InstrumentationKey, this.config.InstrumentationKey, StringComparison.OrdinalIgnoreCase))
             {
                 var telemetryAsRequest = telemetry as RequestTelemetry;
                 var telemetryAsDependency = telemetry as DependencyTelemetry;
@@ -401,9 +411,100 @@
                         this.CollectException(telemetryAsException);
                     }
                 }
+
+                // collect operationalized metrics
+
+                // get a local reference, the accumulator might get swapped out a any time
+                // in case wel continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
+                QuickPulseDataAccumulator accumulatorLocal = this.dataAccumulatorManager.CurrentDataAccumulator;
+
+                // if the accumulator is swapped out, a sample is created and sent out - all while between these two lines, this telemetry item gets lost
+                // however, that is not likely to happen
+
+                Interlocked.Increment(ref accumulatorLocal.CollectionConfigurationAccumulator.ReferenceCount);
+                try
+                {
+                    var telemetryAsEvent = telemetry as EventTelemetry;
+
+                    string[] filteringErrors;
+
+                    string projectionError = null;
+
+                    if (telemetryAsRequest != null)
+                    {
+                        QuickPulseTelemetryProcessor.ProcessMetrics(
+                            accumulatorLocal,
+                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.RequestMetrics,
+                            telemetryAsRequest,
+                            out filteringErrors,
+                            ref projectionError);
+                    }
+                    else if (telemetryAsDependency != null)
+                    {
+                        QuickPulseTelemetryProcessor.ProcessMetrics(
+                            accumulatorLocal,
+                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.DependencyMetrics,
+                            telemetryAsDependency,
+                            out filteringErrors,
+                            ref projectionError);
+                    }
+                    else if (telemetryAsException != null)
+                    {
+                        QuickPulseTelemetryProcessor.ProcessMetrics(
+                            accumulatorLocal,
+                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.ExceptionMetrics,
+                            telemetryAsException,
+                            out filteringErrors,
+                            ref projectionError);
+                    }
+                    else if (telemetryAsEvent != null)
+                    {
+                        QuickPulseTelemetryProcessor.ProcessMetrics(
+                            accumulatorLocal,
+                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.EventMetrics,
+                            telemetryAsEvent,
+                            out filteringErrors,
+                            ref projectionError);
+                    }
+
+                    //!!! report errors from string[] errors; and string projectionError;
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref accumulatorLocal.CollectionConfigurationAccumulator.ReferenceCount);
+                }
             }
         }
-        
+
+        private static void ProcessMetrics<TTelemetry>(
+            QuickPulseDataAccumulator accumulatorLocal,
+            IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
+            TTelemetry telemetry,
+            out string[] filteringErrors,
+            ref string projectionError)
+        {
+            filteringErrors = new string[] { };
+
+            foreach (OperationalizedMetric<TTelemetry> metric in metrics)
+            {
+                if (metric.CheckFilters(telemetry, out filteringErrors))
+                {
+                    // the telemetry document has passed the filters, count it in and project
+                    try
+                    {
+                        double projection = metric.Project(telemetry);
+
+                        // use the first id, all of them are present in the dictionary and point to the same accumulator
+                        accumulatorLocal.CollectionConfigurationAccumulator.MetricAccumulators[metric.IdsToReportUnder.First()].Value.Push(projection);
+                    }
+                    catch (Exception e)
+                    {
+                        projectionError = e.ToString();
+                    }
+                }
+            }
+        }
+
         private void CollectRequest(RequestTelemetry requestTelemetry)
         {
             if (this.requestQuotaTracker.ApplyQuota())
