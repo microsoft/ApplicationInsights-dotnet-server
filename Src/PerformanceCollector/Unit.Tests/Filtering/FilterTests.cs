@@ -182,6 +182,151 @@
 
         #endregion
 
+        #region Nullable<Boolean>
+
+        [TestMethod]
+        public void FilterNullableBooleanEqualTest()
+        {
+            // ARRANGE
+            var equalsTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "true" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = true });
+            bool result2 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = false });
+            bool result3 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableBooleanNotEqualTest()
+        {
+            // ARRANGE
+            var notEqualTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.NotEqual, Comparand = "true" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(notEqualTrue).Check(new TelemetryMock() { NullableBooleanField = true });
+            bool result2 = new Filter<TelemetryMock>(notEqualTrue).Check(new TelemetryMock() { NullableBooleanField = false });
+            bool result3 = new Filter<TelemetryMock>(notEqualTrue).Check(new TelemetryMock() { NullableBooleanField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanGreaterThanTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.GreaterThan, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanLessThanTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.LessThan, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanGreaterThanOrEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanLessThanOrEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.LessThanOrEqual, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanContainsTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Contains, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanDoesNotContainTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.DoesNotContain, Comparand = "true" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableBooleanGarbageComparandTest()
+        {
+            // ARRANGE
+            var notEqualTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "garbage" };
+
+            // ACT
+            new Filter<TelemetryMock>(notEqualTrue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        public void FilterNullableBooleanNullEqualTest()
+        {
+            // ARRANGE
+            var equalsTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "NULL" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = true });
+            bool result2 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = false });
+            bool result3 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+        }
+        #endregion
+
         #region Int
 
         [TestMethod]
@@ -469,7 +614,148 @@
 
             // ASSERT
         }
-        
+
+        #endregion
+
+        #region TimeSpan
+
+        [TestMethod]
+        public void FilterTimeSpanEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.Equal, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("124") });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+        }
+
+        [TestMethod]
+        public void FilterTimeSpanNotEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.NotEqual, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("124") });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+        }
+
+        [TestMethod]
+        public void FilterTimeSpanGreaterThanTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.GreaterThan, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("122.05:00") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123.05:00") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterTimeSpanLessThanTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.LessThan, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("122.05:00") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123.05:00") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterTimeSpanGreaterThanOrEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("122.05:00") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123.05:00") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterTimeSpanLessThanOrEqualTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.LessThanOrEqual, Comparand = "123" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("122.05:00") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123.05:00") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { TimeSpanField = TimeSpan.Parse("123") });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterTimeSpanContainsTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.Contains, Comparand = "2" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterTimeSpanDoesNotContainTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterTimeSpanGarbageComparandTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Equal, Comparand = "garbage" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
         #endregion
 
         #region String
@@ -509,55 +795,71 @@
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public void FilterStringGreaterThanTest()
         {
             // ARRANGE
-            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThan, Comparand = "abc" };
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue);
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "122.5" });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123.5" });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123" });
 
             // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public void FilterStringLessThanTest()
         {
             // ARRANGE
-            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "abc" };
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "123.0" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue);
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "122.5" });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123.5" });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123" });
 
             // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public void FilterStringGreaterThanOrEqualTest()
         {
             // ARRANGE
-            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "abc" };
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue);
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "122.5" });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123.5" });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123" });
 
             // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
         public void FilterStringLessThanOrEqualTest()
         {
             // ARRANGE
-            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThanOrEqual, Comparand = "abc" };
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue);
-
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "122.5" });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123.5" });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "123" });
+            
             // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
         }
 
         [TestMethod]
@@ -595,16 +897,29 @@
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
         public void FilterStringGarbageFieldValueTest()
         {
             // ARRANGE
-            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.Equal, Comparand = "abc" };
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "123.0" };
 
             // ACT
-            bool result = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = null });
+            new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "Not at all a number" });
 
             // ASSERT
-            Assert.IsFalse(result);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterStringGarbageComparandValueTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "Not a number at all" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
         }
 
         #endregion
@@ -613,7 +928,7 @@
 
         #region Support for actual telemetry types
 
-        //!!! enumerate real telemetry type's properties through reflectino and explicitely state which ones we don't support
+        //!!! enumerate real telemetry type's properties through reflection and explicitly state which ones we don't support
         [TestMethod]
         public void FilterSupportsRequestTelemetryTest()
         {

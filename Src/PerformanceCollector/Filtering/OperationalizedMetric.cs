@@ -50,7 +50,7 @@
         public bool CheckFilters(TTelemetry document, out string[] errors)
         {
             // AND filters
-            var errorList = new List<string>();
+            var errorList = new List<string>(this.filters.Count);
             foreach (Filter<TTelemetry> filter in this.filters)
             {
                 bool filterPassed;
@@ -60,9 +60,9 @@
                 }
                 catch (Exception e)
                 {
-                    // the filter has failed to run, ignore it
+                    // the filter has failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out
                     errorList.Add(e.ToString());
-                    continue;
+                    filterPassed = false;
                 }
 
                 if (!filterPassed)

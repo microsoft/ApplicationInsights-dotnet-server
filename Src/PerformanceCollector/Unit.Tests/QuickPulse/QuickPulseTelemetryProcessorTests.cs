@@ -1202,5 +1202,555 @@
 
             Assert.AreEqual("Exception 1", telemetryDocuments[0].ExceptionMessage);
         }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForRequests()
+        {
+            // ARRANGE
+            var filterInfoResponseCodeGreaterThanOrEqualTo500 = new FilterInfo()
+                                                                    {
+                                                                        FieldName = "ResponseCode",
+                                                                        Predicate = Predicate.GreaterThanOrEqual,
+                                                                        Comparand = "500"
+                                                                    };
+            var filterInfoResponseCode200 = new FilterInfo() { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "201" };
+            var filterInfoSuccessful = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "true" };
+            var filterInfoFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
+
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "AverageIdOfFailedRequestsGreaterThanOrEqualTo500",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters =
+                                              new[] { filterInfoResponseCodeGreaterThanOrEqualTo500, filterInfoFailed }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "SumIdsOfSuccessfulRequestsEqualTo201",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful }
+                                      }
+                              };
+
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var requests = new[]
+                               {
+                                   new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
+                                   new RequestTelemetry() { Id = "2", Success = false, ResponseCode = "500" },
+                                   new RequestTelemetry() { Id = "3", Success = true, ResponseCode = "501" },
+                                   new RequestTelemetry() { Id = "4", Success = false, ResponseCode = "501" },
+                                   new RequestTelemetry() { Id = "5", Success = true, ResponseCode = "499" },
+                                   new RequestTelemetry() { Id = "6", Success = false, ResponseCode = "499" },
+                                   new RequestTelemetry() { Id = "7", Success = true, ResponseCode = "201" },
+                                   new RequestTelemetry() { Id = "8", Success = false, ResponseCode = "201" },
+                                   new RequestTelemetry() { Id = "9", Success = true, ResponseCode = "blah" },
+                                   new RequestTelemetry() { Id = "10", Success = false, ResponseCode = "blah" },
+                               };
+
+            Array.ForEach(requests, r => r.Context.InstrumentationKey = instrumentationKey);
+
+            Array.ForEach(requests, telemetryProcessor.Process);
+
+            // ASSERT
+            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+            Assert.AreEqual(2, calculatedMetrics.Count);
+
+            Assert.AreEqual("2, 4", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedRequestsGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
+            Assert.AreEqual("7", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulRequestsEqualTo201")].Value.Reverse().ToArray()));
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForDependencies()
+        {
+            // ARRANGE
+            var filterInfoDataGreaterThanOrEqualTo500 = new FilterInfo()
+                                                            {
+                                                                FieldName = "Data",
+                                                                Predicate = Predicate.GreaterThanOrEqual,
+                                                                Comparand = "500"
+                                                            };
+            var filterInfoData200 = new FilterInfo() { FieldName = "Data", Predicate = Predicate.Equal, Comparand = "201" };
+            var filterInfoSuccessful = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "true" };
+            var filterInfoFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
+
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500",
+                                          TelemetryType = TelemetryType.Dependency,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters =
+                                              new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "SumIdsOfSuccessfulDependenciesEqualTo201",
+                                          TelemetryType = TelemetryType.Dependency,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new[] { filterInfoData200, filterInfoSuccessful }
+                                      }
+                              };
+
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var dependencies = new[]
+                               {
+                                   new DependencyTelemetry() { Id = "1", Success = true, Data = "500" },
+                                   new DependencyTelemetry() { Id = "2", Success = false, Data = "500" },
+                                   new DependencyTelemetry() { Id = "3", Success = true, Data = "501" },
+                                   new DependencyTelemetry() { Id = "4", Success = false, Data = "501" },
+                                   new DependencyTelemetry() { Id = "5", Success = true, Data = "499" },
+                                   new DependencyTelemetry() { Id = "6", Success = false, Data = "499" },
+                                   new DependencyTelemetry() { Id = "7", Success = true, Data = "201" },
+                                   new DependencyTelemetry() { Id = "8", Success = false, Data = "201" },
+                                   new DependencyTelemetry() { Id = "9", Success = true, Data = "blah" },
+                                   new DependencyTelemetry() { Id = "10", Success = false, Data = "blah" },
+                               };
+
+            Array.ForEach(dependencies, d => d.Context.InstrumentationKey = instrumentationKey);
+
+            Array.ForEach(dependencies, telemetryProcessor.Process);
+
+            // ASSERT
+            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+            Assert.AreEqual(2, calculatedMetrics.Count);
+
+            Assert.AreEqual("2, 4", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
+            Assert.AreEqual("7", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulDependenciesEqualTo201")].Value.Reverse().ToArray()));
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForExceptions()
+        {
+            // ARRANGE
+            var filterInfoMessageGreaterThanOrEqualTo500 = new FilterInfo()
+            {
+                FieldName = "Message",
+                Predicate = Predicate.GreaterThanOrEqual,
+                Comparand = "500"
+            };
+            var filterInfoMessage200 = new FilterInfo() { FieldName = "Message", Predicate = Predicate.Equal, Comparand = "201" };
+            var filterInfoSuccessful = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "true" };
+            var filterInfoFailed = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "false" };
+
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "AverageIdOfFailedMessageGreaterThanOrEqualTo500",
+                                          TelemetryType = TelemetryType.Exception,
+                                          Projection = "Message",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters =
+                                              new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "SumIdsOfSuccessfulMessageEqualTo201",
+                                          TelemetryType = TelemetryType.Exception,
+                                          Projection = "Message",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new[] { filterInfoMessage200, filterInfoSuccessful }
+                                      }
+                              };
+
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var exceptions = new[]
+                               {
+                                   new ExceptionTelemetry() { Sequence = "true", Message = "500" },
+                                   new ExceptionTelemetry() { Sequence = "false", Message = "500" },
+                                   new ExceptionTelemetry() { Sequence = "true", Message = "501" },
+                                   new ExceptionTelemetry() { Sequence = "false", Message = "501" },
+                                   new ExceptionTelemetry() { Sequence = "true", Message = "499" },
+                                   new ExceptionTelemetry() { Sequence = "false", Message = "499" },
+                                   new ExceptionTelemetry() { Sequence = "true", Message = "201" },
+                                   new ExceptionTelemetry() { Sequence = "false", Message = "201" },
+                                   new ExceptionTelemetry() { Sequence = "true", Message = "blah" },
+                                   new ExceptionTelemetry() { Sequence = "false", Message = "blah" },
+                               };
+
+            Array.ForEach(exceptions, e => e.Context.InstrumentationKey = instrumentationKey);
+
+            Array.ForEach(exceptions, telemetryProcessor.Process);
+
+            // ASSERT
+            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+            Assert.AreEqual(2, calculatedMetrics.Count);
+
+            Assert.AreEqual("500, 501", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedMessageGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
+            Assert.AreEqual("201", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulMessageEqualTo201")].Value.Reverse().ToArray()));
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForEvents()
+        {
+            // ARRANGE
+            var filterInfoNameGreaterThanOrEqualTo500 = new FilterInfo()
+                                                            {
+                                                                FieldName = "Name",
+                                                                Predicate = Predicate.GreaterThanOrEqual,
+                                                                Comparand = "500"
+                                                            };
+            var filterInfoResponseCode200 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "201" };
+            var filterInfoSuccessful = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "true" };
+            var filterInfoFailed = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "false" };
+
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "AverageIdOfFailedEventsGreaterThanOrEqualTo500",
+                                          TelemetryType = TelemetryType.Event,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters =
+                                              new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "SumIdsOfSuccessfulEventsEqualTo201",
+                                          TelemetryType = TelemetryType.Event,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful }
+                                      }
+                              };
+
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var events = new[]
+                              {
+                                   new EventTelemetry() { Sequence = "true", Name = "500" },
+                                   new EventTelemetry() { Sequence = "false", Name = "500" },
+                                   new EventTelemetry() { Sequence = "true", Name = "501" },
+                                   new EventTelemetry() { Sequence = "false", Name = "501" },
+                                   new EventTelemetry() { Sequence = "true", Name = "499" },
+                                   new EventTelemetry() { Sequence = "false", Name = "499" },
+                                   new EventTelemetry() { Sequence = "true", Name = "201" },
+                                   new EventTelemetry() { Sequence = "false", Name = "201" },
+                                   new EventTelemetry() { Sequence = "true", Name = "blah" },
+                                   new EventTelemetry() { Sequence = "false", Name = "blah" },
+                               };
+
+            Array.ForEach(events, e => e.Context.InstrumentationKey = instrumentationKey);
+
+            Array.ForEach(events, telemetryProcessor.Process);
+
+            // ASSERT
+            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+            Assert.AreEqual(2, calculatedMetrics.Count);
+
+            Assert.AreEqual("500, 501", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedEventsGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
+            Assert.AreEqual("201", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulEventsEqualTo201")].Value.Reverse().ToArray()));
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorOperationalizedMetricsIgnoresTelemetryWhereProjectionIsNotDouble()
+        {
+            // ARRANGE
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = new FilterInfo[0]
+                                      }
+                              };
+
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var requests = new[]
+                               {
+                                   new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
+                                   new RequestTelemetry() { Id = "Not even a number...", Success = false, ResponseCode = "500" }
+                               };
+
+            Array.ForEach(requests, r => r.Context.InstrumentationKey = instrumentationKey);
+
+            Array.ForEach(requests, telemetryProcessor.Process);
+
+            // ASSERT
+            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+            Assert.AreEqual(1, calculatedMetrics.Count);
+
+            Assert.AreEqual(1.0d, calculatedMetrics[Tuple.Create("Session1", "Metric1")].Value.Single());
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorHandlesOperationalizedMetricsInThreadSafeManner()
+        {
+            // ARRANGE
+            var filterInfoAll200 = new FilterInfo() { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "200" };
+            var filterInfoAll500 = new FilterInfo() { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "500" };
+            var filterInfoAllSuccessful = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "true" };
+            var filterInfoAllFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
+            var filterInfoAllFast = new FilterInfo() { FieldName = "Duration", Predicate = Predicate.LessThan, Comparand = "5000" };
+            var filterInfoAllSlow = new FilterInfo() { FieldName = "Duration", Predicate = Predicate.GreaterThanOrEqual, Comparand = "5000" };
+            
+            var metrics1 = new[]
+                               {
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllGood1",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllBad1",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllGoodFast1",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllBadSlow1",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow }
+                                       }
+                               };
+
+            var metrics2 = new[]
+                               {
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllGood2",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllBad2",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllGoodFast2",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
+                                       },
+                                   new OperationalizedMetricInfo()
+                                       {
+                                           SessionId = "Session1",
+                                           Id = "AllBadSlow2",
+                                           TelemetryType = TelemetryType.Request,
+                                           Projection = "Id",
+                                           Aggregation = AggregationType.Avg,
+                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow }
+                                       }
+                               };
+
+            var collectionConfiguration1 = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics1 }, out errors);
+            var collectionConfiguration2 = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics2 }, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration1);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
+
+            int taskCount = 10000;
+            int swapTaskCount = 100;
+            var tasks = new List<Task>(taskCount);
+
+            for (int i = 0; i < taskCount; i++)
+            {
+                var requestTelemetry = new RequestTelemetry()
+                                           {
+                                               Id = i.ToString(),
+                                               ResponseCode = (i % 2 == 0) ? "200" : "500",
+                                               Success = i % 2 == 0,
+                                               Duration = TimeSpan.FromDays(i),
+                                               Context = { InstrumentationKey = "some ikey" }
+                                           };
+
+                var task = new Task(() => telemetryProcessor.Process(requestTelemetry));
+                tasks.Add(task);
+            }
+
+            // shuffle in a bunch of accumulator swapping operations
+            var accumulators = new List<QuickPulseDataAccumulator>();
+            for (int i = 0; i < swapTaskCount; i++)
+            {
+                int localI = i;
+                var swapTask = new Task(
+                    () =>
+                        {
+                            lock (accumulators)
+                            {
+                                // switch the configuration when about half-way in
+                                accumulators.Add(
+                                    accumulatorManager.CompleteCurrentDataAccumulator(
+                                        localI < swapTaskCount / 2 ? collectionConfiguration1 : collectionConfiguration2));
+                            }
+                        });
+
+                tasks.Insert((int)((double)taskCount / swapTaskCount * i), swapTask);
+            }
+
+            // ACT
+            tasks.ForEach(task => task.Start());
+
+            Task.WaitAll(tasks.ToArray());
+
+            // swap the last accumulator
+            accumulators.Add(accumulatorManager.CompleteCurrentDataAccumulator(null));
+
+            // ASSERT
+            // validate that all accumulators add up to the correct totals
+            var allGood1 = new List<double>();
+            var allBad1 = new List<double>();
+            var allGoodFast1 = new List<double>();
+            var allBadSlow1 = new List<double>();
+            var allGood2 = new List<double>();
+            var allBad2 = new List<double>();
+            var allGoodFast2 = new List<double>();
+            var allBadSlow2 = new List<double>();
+            foreach (var accumulator in accumulators)
+            {
+                Dictionary<Tuple<string, string>, AccumulatedValue> metricsValues = accumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+
+                try
+                {
+                    // configuration 1
+                    allGood1.AddRange(metricsValues[Tuple.Create("Session1", "AllGood1")].Value.Reverse().ToArray());
+                    allBad1.AddRange(metricsValues[Tuple.Create("Session1", "AllBad1")].Value.Reverse().ToArray());
+                    allGoodFast1.AddRange(metricsValues[Tuple.Create("Session1", "AllGoodFast1")].Value.Reverse().ToArray());
+                    allBadSlow1.AddRange(metricsValues[Tuple.Create("Session1", "AllBadSlow1")].Value.Reverse().ToArray());
+                }
+                catch
+                {
+                    // metrics not found, wrong configuration
+                }
+
+                try
+                {
+                    // configuration 2
+                    allGood2.AddRange(metricsValues[Tuple.Create("Session1", "AllGood2")].Value.Reverse().ToArray());
+                    allBad2.AddRange(metricsValues[Tuple.Create("Session1", "AllBad2")].Value.Reverse().ToArray());
+                    allGoodFast2.AddRange(metricsValues[Tuple.Create("Session1", "AllGoodFast2")].Value.Reverse().ToArray());
+                    allBadSlow2.AddRange(metricsValues[Tuple.Create("Session1", "AllBadSlow2")].Value.Reverse().ToArray());
+                }
+                catch
+                {
+                    // metrics not found, wrong configuration
+                }
+            }
+
+            Assert.AreEqual(taskCount / 2, allGood1.Count + allGood2.Count);
+            Assert.IsTrue(allGood1.All(value => (int)value % 2 == 0));
+            Assert.IsTrue(allGood2.All(value => (int)value % 2 == 0));
+
+            Assert.AreEqual(taskCount / 2, allBad1.Count + allBad2.Count);
+            Assert.IsTrue(allBad1.All(value => (int)value % 2 == 1));
+            Assert.IsTrue(allBad2.All(value => (int)value % 2 == 1));
+
+            Assert.AreEqual(taskCount / 4, allGoodFast1.Count + allGoodFast2.Count);
+            Assert.IsTrue(allGoodFast1.All(value => (int)value % 2 == 0 && value < taskCount / 2));
+            Assert.IsTrue(allGoodFast2.All(value => (int)value % 2 == 0 && value < taskCount / 2));
+            Assert.IsTrue(allGoodFast1.Count > allGoodFast2.Count);
+
+            Assert.AreEqual(taskCount / 4, allBadSlow1.Count + allBadSlow2.Count);
+            Assert.IsTrue(allBadSlow1.All(value => (int)value % 2 == 1 && value >= taskCount / 2));
+            Assert.IsTrue(allBadSlow2.All(value => (int)value % 2 == 1 && value >= taskCount / 2));
+            Assert.IsTrue(allBadSlow1.Count < allBadSlow2.Count);
+        }
     }
 }

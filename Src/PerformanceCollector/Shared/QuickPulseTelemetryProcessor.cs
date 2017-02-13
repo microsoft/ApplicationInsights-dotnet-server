@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
@@ -44,8 +43,6 @@
         private bool isCollecting = false;
 
         private bool disableFullTelemetryItems = false;
-
-        private CollectionConfiguration collectionConfiguration = null;
 
         private readonly QuickPulseQuotaTracker requestQuotaTracker = null;
 
@@ -140,12 +137,6 @@
         {
             this.dataAccumulatorManager = null;
             this.isCollecting = false;
-        }
-
-        void IQuickPulseTelemetryProcessor.UpdateCollectionConfiguration(CollectionConfiguration collectionConfiguration)
-        {
-            // atomic swap, next accumulator will receive the new collection configuration
-            Interlocked.Exchange(ref this.collectionConfiguration, collectionConfiguration);
         }
 
         /// <summary>
@@ -428,7 +419,6 @@
                     var telemetryAsEvent = telemetry as EventTelemetry;
 
                     string[] filteringErrors;
-
                     string projectionError = null;
 
                     if (telemetryAsRequest != null)

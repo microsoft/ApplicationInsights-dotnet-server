@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.Filtering
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -32,7 +33,9 @@
             this.CollectionConfiguration = collectionConfiguration;
 
             // prepare the accumulators based on the collection configuration
-            foreach (Tuple<MetricIdCollection, AggregationType> metricIds in collectionConfiguration.MetricMetadata)
+            foreach (
+                Tuple<MetricIdCollection, AggregationType> metricIds in
+                    collectionConfiguration?.MetricMetadata ?? Enumerable.Empty<Tuple<MetricIdCollection, AggregationType>>())
             {
                 var accumulatedValue = new AccumulatedValue(metricIds.Item1, metricIds.Item2);
 

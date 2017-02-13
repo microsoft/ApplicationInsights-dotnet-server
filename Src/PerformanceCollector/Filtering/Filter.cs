@@ -17,6 +17,10 @@
 
         private static readonly MethodInfo StringEqualsMethodInfo = GetMethodInfo<string, string, bool>((x, y) => x.Equals(y, StringComparison.OrdinalIgnoreCase));
 
+        private static readonly MethodInfo DoubleParseMethodInfo = typeof(double).GetMethod(
+            "Parse",
+            new[] { typeof(string), typeof(IFormatProvider) });
+
         private readonly Func<TTelemetry, bool> filterLambda;
         
         private readonly Type fieldType;
@@ -183,6 +187,7 @@
                                 break;
                         }
                     }
+
                     break;
                 case TypeCode.Int16:
                 case TypeCode.Int32:
@@ -234,6 +239,7 @@
                                 break;
                         }
                     }
+
                     break;
                 case TypeCode.String:
                     {
@@ -266,6 +272,26 @@
                                             StringEqualsMethodInfo,
                                             Expression.Constant(this.comparand),
                                             Expression.Constant(StringComparison.OrdinalIgnoreCase)));
+                            case Predicate.LessThan:
+                                // double.Parse(fieldValue) < comparandDouble
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                MethodCallExpression fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
+                                return Expression.LessThan(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
+                            case Predicate.GreaterThan:
+                                // double.Parse(fieldValue) > comparandDouble
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
+                                return Expression.GreaterThan(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
+                            case Predicate.LessThanOrEqual:
+                                // double.Parse(fieldValue) <= comparandDouble
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
+                                return Expression.LessThanOrEqual(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
+                            case Predicate.GreaterThanOrEqual:
+                                // double.Parse(fieldValue) >= comparandDouble
+                                this.ThrowOnInvalidFilter(!this.comparandDouble.HasValue);
+                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
+                                return Expression.GreaterThanOrEqual(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.Contains:
                                 // fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
                                 return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
@@ -282,15 +308,50 @@
                 default:
                     if (this.fieldType == typeof(bool?))
                     {
-                        throw new NotImplementedException();
+                        this.ThrowOnInvalidFilter(
+                            !this.comparandBoolean.HasValue && !string.Equals(this.comparand, "null", StringComparison.OrdinalIgnoreCase));
 
-                        // isFieldPredicateCompatible = this.predicate == Predicate.Equal || this.predicate == Predicate.NotEqual;
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:
+                                Func<bool?, bool> comparator = fieldValue => fieldValue == this.comparandBoolean;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.NotEqual:
+                                comparator = fieldValue => fieldValue != this.comparandBoolean;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
                     }
                     else if (this.fieldType == typeof(TimeSpan))
                     {
-                        throw new NotImplementedException();
+                        this.ThrowOnInvalidFilter(!this.comparandTimeSpan.HasValue);
 
-                        // isFieldPredicateCompatible = this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain;
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:
+                                Func<TimeSpan, bool> comparator = fieldValue => fieldValue == this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.NotEqual:
+                                comparator = fieldValue => fieldValue != this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.LessThan:
+                                comparator = fieldValue => fieldValue < this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.GreaterThan:
+                                comparator = fieldValue => fieldValue > this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.LessThanOrEqual:
+                                comparator = fieldValue => fieldValue <= this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            case Predicate.GreaterThanOrEqual:
+                                comparator = fieldValue => fieldValue >= this.comparandTimeSpan.Value;
+                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
                     }
                     else
                     {

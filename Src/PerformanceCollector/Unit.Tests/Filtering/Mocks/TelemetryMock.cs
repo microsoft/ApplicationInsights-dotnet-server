@@ -9,11 +9,15 @@
     {
         public bool BooleanField { get; set; }
 
+        public bool? NullableBooleanField { get; set; }
+
         public int IntField { get; set; }
 
         public double DoubleField { get; set; }
 
         public string StringField { get; set; }
+
+        public TimeSpan TimeSpanField { get; set; }
         
         public DateTimeOffset Timestamp { get; set; }
 
