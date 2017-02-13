@@ -55,12 +55,13 @@
                                          : (TimeSpan?)null;
 
             ParameterExpression documentExpression = Expression.Variable(typeof(TTelemetry));
-            MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
-
+            
             Expression comparisonExpression;
 
             try
             {
+                MemberExpression fieldExpression = Expression.Property(documentExpression, filterInfo.FieldName);
+
                 comparisonExpression = this.ProduceComparator(fieldExpression);
             }
             catch (Exception e)
@@ -103,7 +104,7 @@
                 return member.Method;
             }
 
-            throw new ArgumentException("Expression is not a method", nameof(expression));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Expression is not a method"), nameof(expression));
         }
 
         private static MethodInfo GetMethodInfo<T1, T2, TResult>(Expression<Func<T1, T2, TResult>> expression)
@@ -115,7 +116,7 @@
                 return member.Method;
             }
 
-            throw new ArgumentException("Expression is not a method", nameof(expression));
+            throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Expression is not a method"), nameof(expression));
         }
 
         private static Type GetFieldType(FilterInfo filterInfo)
@@ -182,7 +183,6 @@
                                 break;
                         }
                     }
-
                     break;
                 case TypeCode.Int16:
                 case TypeCode.Int32:
@@ -234,7 +234,6 @@
                                 break;
                         }
                     }
-
                     break;
                 case TypeCode.String:
                     {
@@ -297,7 +296,6 @@
                     {
                         this.ThrowOnInvalidFilter();
                     }
-
                     break;
             }
 

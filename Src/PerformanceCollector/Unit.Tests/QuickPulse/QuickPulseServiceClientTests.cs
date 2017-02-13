@@ -19,15 +19,18 @@
     [TestClass]
     public sealed class QuickPulseServiceClientTests : IDisposable
     {
-        private string[] errors;
-
         private const int Port = 49152 + 11;
 
         private readonly Uri serviceEndpoint = new Uri(string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}", Port));
 
-        private readonly List<Tuple<DateTimeOffset, MonitoringDataPoint>> samples = new List<Tuple<DateTimeOffset, MonitoringDataPoint>>();
+        /// <summary>
+        /// Tuple of (Timestamp, CollectionConfigurationETag, MonitoringDataPoint).
+        /// </summary>
+        private readonly List<Tuple<DateTimeOffset, string, MonitoringDataPoint>> samples = new List<Tuple<DateTimeOffset, string, MonitoringDataPoint>>();
 
-        private readonly List<Tuple<DateTimeOffset, MonitoringDataPoint>> pings = new List<Tuple<DateTimeOffset, MonitoringDataPoint>>();
+        private readonly List<Tuple<DateTimeOffset, string, MonitoringDataPoint>> pings = new List<Tuple<DateTimeOffset, string, MonitoringDataPoint>>();
+
+        private readonly CollectionConfiguration emptyCollectionConfiguration;
 
         private Action<HttpListenerResponse> pingResponse;
 
@@ -47,16 +50,15 @@
 
         private bool emulateTimeout;
 
-        private readonly CollectionConfiguration emptyCollectionConfiguration;
-
         public QuickPulseServiceClientTests()
         {
+            string[] errors;
             this.emptyCollectionConfiguration =
                 new CollectionConfiguration(
                     new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
                     out errors);
         }
-        
+
         [TestInitialize]
         public void TestInitialize()
         {
@@ -156,9 +158,9 @@
 
             Assert.AreEqual(true, sendMore);
             Assert.AreEqual(3, this.samples.Count);
-            Assert.AreEqual(5, this.samples[0].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
-            Assert.AreEqual(10, this.samples[1].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Calls Succeeded/Sec").Value);
-            Assert.AreEqual(15, this.samples[2].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Exceptions/Sec").Value);
+            Assert.AreEqual(5, this.samples[0].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
+            Assert.AreEqual(10, this.samples[1].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Calls Succeeded/Sec").Value);
+            Assert.AreEqual(15, this.samples[2].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Exceptions/Sec").Value);
         }
 
         [TestMethod]
@@ -205,7 +207,7 @@
             Assert.IsTrue((timeProvider.UtcNow - this.samples[0].Item1).Duration() < TimeSpan.FromMilliseconds(1));
             Assert.IsTrue((timeProvider.UtcNow - this.samples[1].Item1).Duration() < TimeSpan.FromMilliseconds(1));
             Assert.IsTrue((timeProvider.UtcNow - this.samples[2].Item1).Duration() < TimeSpan.FromMilliseconds(1));
-            Assert.IsTrue(this.samples.All(s => (s.Item2.Timestamp - timeProvider.UtcNow).Duration() > TimeSpan.FromSeconds(1)));
+            Assert.IsTrue(this.samples.All(s => (s.Item3.Timestamp - timeProvider.UtcNow).Duration() > TimeSpan.FromSeconds(1)));
         }
 
         [TestMethod]
@@ -228,7 +230,7 @@
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(0.3333, this.samples[0].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
+            Assert.AreEqual(0.3333, this.samples[0].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Requests Succeeded/Sec").Value);
         }
 
         [TestMethod]
@@ -269,8 +271,8 @@
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual(3, this.samples[0].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Request Duration").Weight);
-            Assert.AreEqual(4, this.samples[1].Item2.Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Call Duration").Weight);
+            Assert.AreEqual(3, this.samples[0].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Request Duration").Weight);
+            Assert.AreEqual(4, this.samples[1].Item3.Metrics.Single(m => m.Name == @"\ApplicationInsights\Dependency Call Duration").Weight);
         }
 
         [TestMethod]
@@ -306,17 +308,17 @@
             // ASSERT
             this.listener.Stop();
 
-            Assert.AreEqual("Request1", ((RequestTelemetryDocument)this.samples[0].Item2.Documents[0]).Name);
-            Assert.AreEqual("Prop1", ((RequestTelemetryDocument)this.samples[0].Item2.Documents[0]).Properties.First().Key);
-            Assert.AreEqual("Val1", ((RequestTelemetryDocument)this.samples[0].Item2.Documents[0]).Properties.First().Value);
+            Assert.AreEqual("Request1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Name);
+            Assert.AreEqual("Prop1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Properties.First().Key);
+            Assert.AreEqual("Val1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Properties.First().Value);
 
-            Assert.AreEqual("Dependency1", ((DependencyTelemetryDocument)this.samples[0].Item2.Documents[1]).Name);
-            Assert.AreEqual("Prop1", ((DependencyTelemetryDocument)this.samples[0].Item2.Documents[1]).Properties.First().Key);
-            Assert.AreEqual("Val1", ((DependencyTelemetryDocument)this.samples[0].Item2.Documents[1]).Properties.First().Value);
+            Assert.AreEqual("Dependency1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Name);
+            Assert.AreEqual("Prop1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Properties.First().Key);
+            Assert.AreEqual("Val1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Properties.First().Value);
 
-            Assert.AreEqual("Exception1", ((ExceptionTelemetryDocument)this.samples[0].Item2.Documents[2]).Exception);
-            Assert.AreEqual("Prop1", ((ExceptionTelemetryDocument)this.samples[0].Item2.Documents[2]).Properties.First().Key);
-            Assert.AreEqual("Val1", ((ExceptionTelemetryDocument)this.samples[0].Item2.Documents[2]).Properties.First().Value);
+            Assert.AreEqual("Exception1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Exception);
+            Assert.AreEqual("Prop1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Key);
+            Assert.AreEqual("Val1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Value);
         }
 
         [TestMethod]
@@ -508,6 +510,341 @@
         }
 
         [TestMethod]
+        public void QuickPulseServiceClientDoesNotReadCollectionConfigurationFromPingWhenNotSubscribed()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            this.pingResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                          {
+                                                              ETag = "ETag2",
+                                                              Metrics =
+                                                                  new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                                                          };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping("ikey", now, "ETag1", out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.IsNull(configurationInfo);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientDoesNotReadCollectionConfigurationFromPostWhenNotSubscribed()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(3) },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            this.submitResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                          {
+                                                              ETag = "ETag2",
+                                                              Metrics =
+                                                                  new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                                                          };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.IsNull(configurationInfo);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientReadsCollectionConfigurationFromPingWhenETagIsDifferent()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            this.pingResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                          {
+                                                              ETag = "ETag2",
+                                                              Metrics =
+                                                                  new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                                                          };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping("ikey", now, "ETag1", out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual("ETag2", configurationInfo.ETag);
+            Assert.AreEqual("Id1", configurationInfo.Metrics.Single().Id);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientReadsCollectionConfigurationFromPostWhenETagIsDifferent()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(3) },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            this.submitResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                          {
+                                                              ETag = "ETag2",
+                                                              Metrics =
+                                                                  new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                                                          };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual("ETag2", configurationInfo.ETag);
+            Assert.AreEqual("Id1", configurationInfo.Metrics.Single().Id);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientDoesNotReadCollectionConfigurationFromPingWhenETagIsSame()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            this.pingResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2", Metrics = null };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping("ikey", now, "ETag2", out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.IsNull(configurationInfo);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientDoesNotReadCollectionConfigurationFromPostWhenETagIsSame()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(3) },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            this.submitResponse = r =>
+                {
+                    r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+                    r.AddHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, "ETag2");
+
+                    var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2", Metrics = null };
+
+                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", out configurationInfo, new string[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.IsNull(configurationInfo);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientProducesOperationalizedMetricsCorrectly()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = new FilterInfo[0]
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session2",
+                                          Id = "Metric2",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = new FilterInfo[0]
+                                      },
+                                   new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session3",
+                                          Id = "Metric3",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new FilterInfo[0]
+                                      }
+                              };
+
+            string[] errors;
+            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
+
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(collectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(3) },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            var accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators[Tuple.Create("Session1", "Metric1")];
+            accumulator.Value.Push(1.0d);
+            accumulator.Value.Push(2.0d);
+
+            accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators[Tuple.Create("Session3", "Metric3")];
+            accumulator.Value.Push(1.0d);
+            accumulator.Value.Push(2.0d);
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            MetricPoint metric1 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session1" && m.Name == "Metric1");
+            MetricPoint metric2 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session2" && m.Name == "Metric2");
+            MetricPoint metric3 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session3" && m.Name == "Metric3");
+
+            Assert.AreEqual(1.5d, metric1.Value);
+            Assert.AreEqual(2, metric1.Weight);
+            Assert.AreEqual(1.5d, metric2.Value);
+            Assert.AreEqual(2, metric2.Weight);
+            Assert.AreEqual(3.0d, metric3.Value);
+            Assert.AreEqual(2, metric3.Weight);
+        }
+
+        [TestMethod]
         public void QuickPulseServiceClientSubmitsInstanceNameToServiceWithPing()
         {
             // ARRANGE
@@ -522,7 +859,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.pings.Count);
-            Assert.AreEqual(instanceName, this.pings[0].Item2.Instance);
+            Assert.AreEqual(instanceName, this.pings[0].Item3.Instance);
         }
 
         [TestMethod]
@@ -546,7 +883,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(instanceName, this.samples[0].Item2.Instance);
+            Assert.AreEqual(instanceName, this.samples[0].Item3.Instance);
         }
 
         [TestMethod]
@@ -564,7 +901,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.pings.Count);
-            Assert.AreEqual(streamId, this.pings[0].Item2.StreamId);
+            Assert.AreEqual(streamId, this.pings[0].Item3.StreamId);
         }
         
         [TestMethod]
@@ -588,7 +925,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(streamId, this.samples[0].Item2.StreamId);
+            Assert.AreEqual(streamId, this.samples[0].Item3.StreamId);
         }
 
         [TestMethod]
@@ -606,7 +943,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.pings.Count);
-            Assert.AreEqual(machineName, this.pings[0].Item2.MachineName);
+            Assert.AreEqual(machineName, this.pings[0].Item3.MachineName);
         }
 
         [TestMethod]
@@ -630,7 +967,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(machineName, this.samples[0].Item2.MachineName);
+            Assert.AreEqual(machineName, this.samples[0].Item3.MachineName);
         }
 
         [TestMethod]
@@ -673,8 +1010,57 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(version, this.samples[0].Item2.Version);
-            Assert.AreEqual(MonitoringDataPoint.CurrentInvariantVersion, this.samples[0].Item2.InvariantVersion);
+            Assert.AreEqual(version, this.samples[0].Item3.Version);
+            Assert.AreEqual(MonitoringDataPoint.CurrentInvariantVersion, this.samples[0].Item3.InvariantVersion);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientSubmitsCollectionConfigurationETagToService()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
+            var sample = new QuickPulseDataSample(
+                new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>(),
+                false);
+            
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+            serviceClient.Ping(string.Empty, now, "ETag1", out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual("ETag1", this.samples.Single().Item2);
+            Assert.AreEqual("ETag1", this.pings.Single().Item2);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientSubmitsCollectionConfigurationErrorsToServiceWithSubmitSamples()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
+            var sample = new QuickPulseDataSample(
+                new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>(),
+                false);
+            string[] collectionConfigurationErrors = { "Error1", "Error2" };
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, collectionConfigurationErrors);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(2, this.samples.Single().Item3.CollectionConfigurationErrors.Length);
+            Assert.AreEqual("Error1", this.samples.Single().Item3.CollectionConfigurationErrors[0]);
+            Assert.AreEqual("Error2", this.samples.Single().Item3.CollectionConfigurationErrors[1]);
         }
 
         [TestMethod]
@@ -698,7 +1084,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(ikey, this.samples[0].Item2.InstrumentationKey);
+            Assert.AreEqual(ikey, this.samples[0].Item3.InstrumentationKey);
         }
 
         [TestMethod]
@@ -722,7 +1108,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.IsTrue(this.samples[0].Item2.IsWebApp);
+            Assert.IsTrue(this.samples[0].Item3.IsWebApp);
         }
 
         [TestMethod]
@@ -748,11 +1134,11 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.AreEqual(2, this.samples[0].Item2.TopCpuProcesses.Count());
-            Assert.AreEqual("Process1", this.samples[0].Item2.TopCpuProcesses[0].ProcessName);
-            Assert.AreEqual(1, this.samples[0].Item2.TopCpuProcesses[0].CpuPercentage);
-            Assert.AreEqual("Process2", this.samples[0].Item2.TopCpuProcesses[1].ProcessName);
-            Assert.AreEqual(2, this.samples[0].Item2.TopCpuProcesses[1].CpuPercentage);
+            Assert.AreEqual(2, this.samples[0].Item3.TopCpuProcesses.Count());
+            Assert.AreEqual("Process1", this.samples[0].Item3.TopCpuProcesses[0].ProcessName);
+            Assert.AreEqual(1, this.samples[0].Item3.TopCpuProcesses[0].CpuPercentage);
+            Assert.AreEqual("Process2", this.samples[0].Item3.TopCpuProcesses[1].ProcessName);
+            Assert.AreEqual(2, this.samples[0].Item3.TopCpuProcesses[1].CpuPercentage);
         }
 
         [TestMethod]
@@ -777,7 +1163,7 @@
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
-            Assert.IsTrue(this.samples[0].Item2.TopCpuDataAccessDenied);
+            Assert.IsTrue(this.samples[0].Item3.TopCpuDataAccessDenied);
         }
 
         public void Dispose()
@@ -805,8 +1191,9 @@
 
                     var dataPoint = (MonitoringDataPoint)serializerDataPoint.ReadObject(context.Request.InputStream);
                     var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
+                    var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
 
-                    this.pings.Add(Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), dataPoint));
+                    this.pings.Add(Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), collectionConfigurationETag, dataPoint));
 
                     this.lastPingTimestamp = dataPoint.Timestamp;
                     this.lastPingInstance = dataPoint.Instance;
@@ -820,8 +1207,9 @@
 
                     var dataPoints = serializerDataPointArray.ReadObject(context.Request.InputStream) as MonitoringDataPoint[];
                     var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
+                    var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
 
-                    this.samples.AddRange(dataPoints.Select(dp => Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), dp)));
+                    this.samples.AddRange(dataPoints.Select(dp => Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), collectionConfigurationETag, dp)));
                 }
 
                 if (!this.emulateTimeout)

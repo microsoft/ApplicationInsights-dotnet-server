@@ -40,6 +40,19 @@
 
             // ASSERT
         }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterThrowsWhenFieldNameDoesNotExistInTypeTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NonExistentFieldName", Predicate = Predicate.Equal, Comparand = "abc" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
         #endregion
 
         #region Generic filtering
@@ -600,6 +613,7 @@
 
         #region Support for actual telemetry types
 
+        //!!! enumerate real telemetry type's properties through reflectino and explicitely state which ones we don't support
         [TestMethod]
         public void FilterSupportsRequestTelemetryTest()
         {

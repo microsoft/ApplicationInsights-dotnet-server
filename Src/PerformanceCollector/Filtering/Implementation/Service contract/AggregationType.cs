@@ -2,14 +2,12 @@
 {
     internal enum AggregationType
     {
-        Unknown = 0,
+        Avg = 0,
 
-        Avg = 1,
+        Sum = 1,
 
-        Sum = 2,
+        Min = 2,
 
-        Min = 3,
-
-        Max = 4
+        Max = 3
     }
 }

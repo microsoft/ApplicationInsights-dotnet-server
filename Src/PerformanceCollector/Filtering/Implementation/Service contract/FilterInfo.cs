@@ -17,22 +17,6 @@
         public string Comparand { get; set; }
 
         #region Comparability overloads
-        public override string ToString()
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", this.FieldName, this.Predicate, this.Comparand);
-        }
-
-        public override int GetHashCode()
-        {
-            throw new InvalidOperationException("Hash calculation is not supported.");
-        }
-
-        public override bool Equals(object obj)
-        {
-            FilterInfo arg = obj as FilterInfo;
-
-            return arg != null && FilterInfo.Equals(this, arg);
-        }
 
         public static bool operator ==(FilterInfo left, FilterInfo right)
         {
@@ -41,7 +25,7 @@
                 return true;
             }
 
-            if (left == null || right == null)
+            if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
             {
                 return false;
             }
@@ -54,11 +38,34 @@
             return !(left == right);
         }
 
+        public override bool Equals(object obj)
+        {
+            FilterInfo arg = obj as FilterInfo;
+
+            return !ReferenceEquals(arg, null) && FilterInfo.Equals(this, arg);
+        }
+
+        public bool Equals(FilterInfo arg)
+        {
+            return !ReferenceEquals(arg, null) && FilterInfo.Equals(this, arg);
+        }
+
+        public override string ToString()
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0} {1} {2}", this.FieldName, this.Predicate, this.Comparand);
+        }
+
+        public override int GetHashCode()
+        {
+            throw new InvalidOperationException("Hash calculation is not supported.");
+        }
+
         private static bool Equals(FilterInfo left, FilterInfo right)
         {
             return string.Equals(left.FieldName, right.FieldName, StringComparison.Ordinal) && left.Predicate == right.Predicate
-                  && string.Equals(left.Comparand, right.Comparand, StringComparison.Ordinal);
+                   && string.Equals(left.Comparand, right.Comparand, StringComparison.Ordinal);
         }
+
         #endregion
     }
 }

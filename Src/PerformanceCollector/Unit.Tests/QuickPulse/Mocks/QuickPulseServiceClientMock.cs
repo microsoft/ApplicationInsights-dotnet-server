@@ -21,7 +21,9 @@
 
         public bool? ReturnValueFromPing { private get; set; }
 
-        public CollectionConfigurationInfo ConfigurationInfo { private get; set; }
+        public CollectionConfigurationInfo CollectionConfigurationInfo { private get; set; }
+
+        public string[] CollectionConfigurationErrors { get; private set; }
 
         public bool? ReturnValueFromSubmitSample { private get; set; }
 
@@ -79,7 +81,7 @@
                     throw new InvalidOperationException("Mock is set to always throw");
                 }
 
-                configurationInfo = this.ConfigurationInfo;
+                configurationInfo = this.CollectionConfigurationInfo?.ETag == configurationETag ? null : this.CollectionConfigurationInfo;
 
                 return this.ReturnValueFromPing;
             }
@@ -104,7 +106,8 @@
                     throw new InvalidOperationException("Mock is set to always throw");
                 }
 
-                configurationInfo = this.ConfigurationInfo;
+                configurationInfo = this.CollectionConfigurationInfo?.ETag == configurationETag ? null : this.CollectionConfigurationInfo;
+                this.CollectionConfigurationErrors = collectionConfigurationErrors;
 
                 return this.ReturnValueFromSubmitSample;
             }

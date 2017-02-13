@@ -415,13 +415,14 @@
                 // collect operationalized metrics
 
                 // get a local reference, the accumulator might get swapped out a any time
-                // in case wel continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
-                QuickPulseDataAccumulator accumulatorLocal = this.dataAccumulatorManager.CurrentDataAccumulator;
+                // in case we continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
+                CollectionConfigurationAccumulator configurationAccumulatorLocal = this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
 
+                //!!! better solution?
                 // if the accumulator is swapped out, a sample is created and sent out - all while between these two lines, this telemetry item gets lost
                 // however, that is not likely to happen
 
-                Interlocked.Increment(ref accumulatorLocal.CollectionConfigurationAccumulator.ReferenceCount);
+                Interlocked.Increment(ref configurationAccumulatorLocal.ReferenceCount);
                 try
                 {
                     var telemetryAsEvent = telemetry as EventTelemetry;
@@ -433,8 +434,8 @@
                     if (telemetryAsRequest != null)
                     {
                         QuickPulseTelemetryProcessor.ProcessMetrics(
-                            accumulatorLocal,
-                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.RequestMetrics,
+                            configurationAccumulatorLocal,
+                            configurationAccumulatorLocal.CollectionConfiguration.RequestMetrics,
                             telemetryAsRequest,
                             out filteringErrors,
                             ref projectionError);
@@ -442,8 +443,8 @@
                     else if (telemetryAsDependency != null)
                     {
                         QuickPulseTelemetryProcessor.ProcessMetrics(
-                            accumulatorLocal,
-                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.DependencyMetrics,
+                            configurationAccumulatorLocal,
+                            configurationAccumulatorLocal.CollectionConfiguration.DependencyMetrics,
                             telemetryAsDependency,
                             out filteringErrors,
                             ref projectionError);
@@ -451,8 +452,8 @@
                     else if (telemetryAsException != null)
                     {
                         QuickPulseTelemetryProcessor.ProcessMetrics(
-                            accumulatorLocal,
-                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.ExceptionMetrics,
+                            configurationAccumulatorLocal,
+                            configurationAccumulatorLocal.CollectionConfiguration.ExceptionMetrics,
                             telemetryAsException,
                             out filteringErrors,
                             ref projectionError);
@@ -460,8 +461,8 @@
                     else if (telemetryAsEvent != null)
                     {
                         QuickPulseTelemetryProcessor.ProcessMetrics(
-                            accumulatorLocal,
-                            accumulatorLocal.CollectionConfigurationAccumulator.CollectionConfiguration.EventMetrics,
+                            configurationAccumulatorLocal,
+                            configurationAccumulatorLocal.CollectionConfiguration.EventMetrics,
                             telemetryAsEvent,
                             out filteringErrors,
                             ref projectionError);
@@ -471,13 +472,13 @@
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref accumulatorLocal.CollectionConfigurationAccumulator.ReferenceCount);
+                    Interlocked.Decrement(ref configurationAccumulatorLocal.ReferenceCount);
                 }
             }
         }
 
         private static void ProcessMetrics<TTelemetry>(
-            QuickPulseDataAccumulator accumulatorLocal,
+            CollectionConfigurationAccumulator configurationAccumulatorLocal,
             IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
             TTelemetry telemetry,
             out string[] filteringErrors,
@@ -494,11 +495,11 @@
                     {
                         double projection = metric.Project(telemetry);
 
-                        // use the first id, all of them are present in the dictionary and point to the same accumulator
-                        accumulatorLocal.CollectionConfigurationAccumulator.MetricAccumulators[metric.IdsToReportUnder.First()].Value.Push(projection);
+                        configurationAccumulatorLocal.MetricAccumulators[metric.IdsToReportUnder.First()].Value.Push(projection);
                     }
                     catch (Exception e)
                     {
+                        // most likely the projection did not result in a value parsable by double.Parse()
                         projectionError = e.ToString();
                     }
                 }

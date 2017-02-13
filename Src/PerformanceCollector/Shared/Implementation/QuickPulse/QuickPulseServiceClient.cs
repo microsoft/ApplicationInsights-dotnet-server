@@ -52,10 +52,18 @@
 
         public Uri ServiceUri { get; }
 
-        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp, string configurationETag, out CollectionConfigurationInfo configurationInfo)
+        public bool? Ping(
+            string instrumentationKey,
+            DateTimeOffset timestamp,
+            string configurationETag,
+            out CollectionConfigurationInfo configurationInfo)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "ping?ikey={0}", Uri.EscapeUriString(instrumentationKey));
-            HttpWebResponse response = this.SendRequest(WebRequestMethods.Http.Post, path, configurationETag, stream => this.WritePingData(timestamp, stream));
+            HttpWebResponse response = this.SendRequest(
+                WebRequestMethods.Http.Post,
+                path,
+                configurationETag,
+                stream => this.WritePingData(timestamp, stream));
 
             if (response == null)
             {
@@ -66,7 +74,12 @@
             return this.ProcessResponse(response, configurationETag, out configurationInfo);
         }
 
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, string configurationETag, out CollectionConfigurationInfo configurationInfo, string[] collectionConfigurationErrors)
+        public bool? SubmitSamples(
+            IEnumerable<QuickPulseDataSample> samples,
+            string instrumentationKey,
+            string configurationETag,
+            out CollectionConfigurationInfo configurationInfo,
+            string[] collectionConfigurationErrors)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "post?ikey={0}", Uri.EscapeUriString(instrumentationKey));
             HttpWebResponse response = this.SendRequest(
@@ -209,18 +222,18 @@
                     {
                         double[] accumulatedValues = metricAccumulator.Value.Value.ToArray();
 
-                        var metricPoint = new MetricPoint
-                                              {
-                                                  Name = metricAccumulator.Key.Item1,
-                                                  SessionId = metricAccumulator.Key.Item2,
-                                                  Value =
-                                                      OperationalizedMetric<int>.Aggregate(
-                                                          accumulatedValues,
-                                                          metricAccumulator.Value.AggregationType),
-                                                  Weight = accumulatedValues.Length
-                                              };
-
-                        metricPoints.Add(metricPoint);
+                        // report the accumulator under all its ids
+                        metricPoints.AddRange(
+                            metricAccumulator.Value.MetricIds.Select(
+                                metricId =>
+                                new MetricPoint
+                                    {
+                                        SessionId = metricId.Item1,
+                                        Name = metricId.Item2,
+                                        Value =
+                                            OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulator.Value.AggregationType),
+                                        Weight = accumulatedValues.Length
+                                    }));
                     }
                     catch (Exception e)
                     {

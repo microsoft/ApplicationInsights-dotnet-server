@@ -428,6 +428,205 @@
             Assert.AreEqual(false, manager.IsCollectingData);
         }
 
+        [TestMethod]
+        public void QuickPulseCollectionStateManagerUpdatesCollectionConfigurationWhenNoConfigurationPreviously()
+        {
+            // ARRANGE
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+
+            var actions = new List<string>();
+            var collectionConfigurationInfos = new List<CollectionConfigurationInfo>();
+            var manager = CreateManager(serviceClient, new Clock(), actions, collectionConfigurationInfos: collectionConfigurationInfos);
+
+            var filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } };
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session0",
+                                          Id = "Metric0",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = filters
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = filters
+                                      }
+                              };
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
+
+            // ACT
+            manager.UpdateState("empty iKey");
+
+            // ASSERT
+            CollectionConfigurationInfo receivedCollectionConfigurationInfo = collectionConfigurationInfos.Single();
+            Assert.AreEqual("1", receivedCollectionConfigurationInfo.ETag);
+            Assert.AreEqual(2, receivedCollectionConfigurationInfo.Metrics.Length);
+
+            Assert.AreEqual(metrics[0].ToString(), receivedCollectionConfigurationInfo.Metrics[0].ToString());
+            Assert.AreEqual(metrics[0].SessionId, receivedCollectionConfigurationInfo.Metrics[0].SessionId);
+            Assert.AreEqual(metrics[0].Id, receivedCollectionConfigurationInfo.Metrics[0].Id);
+
+            Assert.AreEqual(metrics[1].ToString(), receivedCollectionConfigurationInfo.Metrics[1].ToString());
+            Assert.AreEqual(metrics[1].SessionId, receivedCollectionConfigurationInfo.Metrics[1].SessionId);
+            Assert.AreEqual(metrics[1].Id, receivedCollectionConfigurationInfo.Metrics[1].Id);
+        }
+
+        [TestMethod]
+        public void QuickPulseCollectionStateManagerUpdatesCollectionConfigurationWhenETagChanges()
+        {
+            // ARRANGE
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+
+            var actions = new List<string>();
+            var collectionConfigurationInfos = new List<CollectionConfigurationInfo>();
+            var manager = CreateManager(serviceClient, new Clock(), actions, collectionConfigurationInfos: collectionConfigurationInfos);
+
+            var filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } };
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session0",
+                                          Id = "Metric0",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = filters
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = filters
+                                      }
+                              };
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
+
+            manager.UpdateState("empty iKey");
+            collectionConfigurationInfos.Clear();
+
+            // ACT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "2", Metrics = metrics };
+            manager.UpdateState("empty iKey");
+
+            // ASSERT
+            CollectionConfigurationInfo receivedCollectionConfigurationInfo = collectionConfigurationInfos.Single();
+            Assert.AreEqual("2", receivedCollectionConfigurationInfo.ETag);
+            Assert.AreEqual(2, receivedCollectionConfigurationInfo.Metrics.Length);
+
+            Assert.AreEqual(metrics[0].ToString(), receivedCollectionConfigurationInfo.Metrics[0].ToString());
+            Assert.AreEqual(metrics[0].SessionId, receivedCollectionConfigurationInfo.Metrics[0].SessionId);
+            Assert.AreEqual(metrics[0].Id, receivedCollectionConfigurationInfo.Metrics[0].Id);
+
+            Assert.AreEqual(metrics[1].ToString(), receivedCollectionConfigurationInfo.Metrics[1].ToString());
+            Assert.AreEqual(metrics[1].SessionId, receivedCollectionConfigurationInfo.Metrics[1].SessionId);
+            Assert.AreEqual(metrics[1].Id, receivedCollectionConfigurationInfo.Metrics[1].Id);
+        }
+
+        [TestMethod]
+        public void QuickPulseCollectionStateManagerDoesNotUpdateCollectionConfigurationWhenETagIsTheSame()
+        {
+            // ARRANGE
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+
+            var actions = new List<string>();
+            var collectionConfigurationInfos = new List<CollectionConfigurationInfo>();
+            var manager = CreateManager(serviceClient, new Clock(), actions, collectionConfigurationInfos: collectionConfigurationInfos);
+
+            var filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } };
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session0",
+                                          Id = "Metric0",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = filters
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = filters
+                                      }
+                              };
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
+
+            manager.UpdateState("empty iKey");
+            collectionConfigurationInfos.Clear();
+
+            // ACT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = new OperationalizedMetricInfo[0] };
+            manager.UpdateState("empty iKey");
+
+            // ASSERT
+            Assert.AreEqual(0, collectionConfigurationInfos.Count);
+        }
+
+        [TestMethod]
+        public void QuickPulseCollectionStateManagerMergesAndReportsErrorsInCollectionConfiguration()
+        {
+            // ARRANGE
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+
+            var actions = new List<string>();
+            var collectionConfigurationInfos = new List<CollectionConfigurationInfo>();
+            var manager = CreateManager(serviceClient, new Clock(), actions, collectionConfigurationInfos: collectionConfigurationInfos);
+
+            var filter = new FilterInfo() { FieldName = "NonExistentNameInFilter", Predicate = Predicate.Equal, Comparand = "Request1" };
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session0",
+                                          Id = "Metric0",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "NoneExistentNameInProjection",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = new[] { filter, filter }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = new[] { filter }
+                                      }
+                              };
+
+            // ACT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
+
+            // ping
+            manager.UpdateState("empty iKey");
+
+            // post
+            manager.UpdateState("empty iKey");
+
+            // ASSERT
+            Assert.AreEqual(2, serviceClient.CollectionConfigurationErrors.Length);
+            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[0].Contains("NonExistentNameInFilter"));
+            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[1].Contains("NoneExistentNameInProjection"));
+        }
+
         #region Helpers
 
         private static QuickPulseCollectionStateManager CreateManager(
@@ -435,7 +634,8 @@
             Clock timeProvider,
             List<string> actions,
             List<QuickPulseDataSample> returnedSamples = null,
-            QuickPulseTimings timings = null)
+            QuickPulseTimings timings = null,
+            List<CollectionConfigurationInfo> collectionConfigurationInfos = null)
         {
             var manager = new QuickPulseCollectionStateManager(
                 serviceClient,
@@ -468,10 +668,14 @@
                     {
                         returnedSamples?.AddRange(samples);
                     },
-                configuration =>
+                collectionConfigurationInfo =>
                     {
                         actions.Add(UpdatedConfigurationMessage);
-                        return null;
+                        collectionConfigurationInfos?.Add(collectionConfigurationInfo);
+
+                        string[] errors;
+                        new CollectionConfiguration(collectionConfigurationInfo, out errors);
+                        return errors;
                     });
 
             return manager;

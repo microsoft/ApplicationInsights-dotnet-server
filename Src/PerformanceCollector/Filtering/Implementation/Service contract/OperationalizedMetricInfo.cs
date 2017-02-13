@@ -14,7 +14,7 @@
 
         [DataMember]
         public string Id { get; set; }
-        
+
         [DataMember]
         public TelemetryType TelemetryType { get; set; }
 
@@ -28,6 +28,7 @@
         public AggregationType Aggregation { get; set; }
 
         #region Comparability overloads
+
         public static bool operator ==(OperationalizedMetricInfo left, OperationalizedMetricInfo right)
         {
             if (ReferenceEquals(left, right))
@@ -35,7 +36,7 @@
                 return true;
             }
 
-            if (left == null || right == null)
+            if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
             {
                 return false;
             }
@@ -69,7 +70,12 @@
         {
             OperationalizedMetricInfo arg = obj as OperationalizedMetricInfo;
 
-            return arg != null && OperationalizedMetricInfo.Equals(this, arg);
+            return !ReferenceEquals(arg, null) && OperationalizedMetricInfo.Equals(this, arg);
+        }
+
+        public bool Equals(OperationalizedMetricInfo arg)
+        {
+            return !ReferenceEquals(arg, null) && OperationalizedMetricInfo.Equals(this, arg);
         }
 
         private static bool Equals(OperationalizedMetricInfo left, OperationalizedMetricInfo right)
@@ -83,6 +89,7 @@
         {
             return left.OrderBy(filter => filter.ToString()).SequenceEqual(right.OrderBy(filter => filter.ToString()));
         }
+
         #endregion
     }
 }

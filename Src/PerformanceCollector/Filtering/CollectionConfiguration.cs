@@ -6,14 +6,11 @@
     using System.Linq;
 
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
 
     internal class CollectionConfiguration
     {
-        private readonly CollectionConfigurationInfo info;
+        private CollectionConfigurationInfo info;
 
-        //!!! replace HashSet<Tuple<string,string>> with a separate class
-        
         private readonly Dictionary<string, OperationalizedMetric<RequestTelemetry>> requestTelemetryMetrics =
             new Dictionary<string, OperationalizedMetric<RequestTelemetry>>();
 
@@ -26,7 +23,7 @@
         private readonly Dictionary<string, OperationalizedMetric<EventTelemetry>> eventTelemetryMetrics =
             new Dictionary<string, OperationalizedMetric<EventTelemetry>>();
 
-        private readonly List<HashSet<Tuple<string, string>>> allMetricIds = new List<HashSet<Tuple<string, string>>>();
+        private readonly List<Tuple<MetricIdCollection, AggregationType>> metricMetadata = new List<Tuple<MetricIdCollection, AggregationType>>();
 
         public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics.Values;
 
@@ -36,7 +33,9 @@
 
         public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics.Values;
 
-        public IEnumerable<HashSet<Tuple<string, string>>> AllMetricIds => this.allMetricIds;
+        public IEnumerable<Tuple<MetricIdCollection, AggregationType>> MetricMetadata => this.metricMetadata;
+
+        public string ETag => this.info.ETag;
 
         public CollectionConfiguration(CollectionConfigurationInfo info, out string[] errors)
         {
@@ -47,55 +46,55 @@
 
             this.info = info;
 
+            // create metrics based on descriptions in info
+            this.CreateMetrics(info, out errors);
+
+            // maintain a separate collection of all (SessionId, Id) pairs with some additional data - to allow for uniform access to all types of metrics
+            this.CreateMetricMetadata();
+        }
+
+        private void CreateMetricMetadata()
+        {
+            foreach (var metricIds in
+                this.requestTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType))
+                    .Concat(this.dependencyTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType)))
+                    .Concat(this.exceptionTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType)))
+                    .Concat(this.eventTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType))))
+            {
+                this.metricMetadata.Add(metricIds);
+            }
+        }
+
+        private void CreateMetrics(CollectionConfigurationInfo info, out string[] errors)
+        {
             var errorList = new List<string>();
 
-            foreach (OperationalizedMetricInfo metricInfo in this.info.Metrics)
+            foreach (OperationalizedMetricInfo metricInfo in info.Metrics ?? new OperationalizedMetricInfo[0])
             {
+                string[] localErrors = null;
                 switch (metricInfo.TelemetryType)
                 {
                     case TelemetryType.Request:
-                        CollectionConfiguration.MergeMetric(metricInfo, this.requestTelemetryMetrics, out errors);
+                        CollectionConfiguration.MergeMetric(metricInfo, this.requestTelemetryMetrics, out localErrors);
                         break;
                     case TelemetryType.Dependency:
-                        CollectionConfiguration.MergeMetric(metricInfo, this.dependencyTelemetryMetrics, out errors);
+                        CollectionConfiguration.MergeMetric(metricInfo, this.dependencyTelemetryMetrics, out localErrors);
                         break;
                     case TelemetryType.Exception:
-                        CollectionConfiguration.MergeMetric(metricInfo, this.exceptionTelemetryMetrics, out errors);
+                        CollectionConfiguration.MergeMetric(metricInfo, this.exceptionTelemetryMetrics, out localErrors);
                         break;
                     case TelemetryType.Event:
-                        CollectionConfiguration.MergeMetric(metricInfo, this.eventTelemetryMetrics, out errors);
+                        CollectionConfiguration.MergeMetric(metricInfo, this.eventTelemetryMetrics, out localErrors);
                         break;
                     default:
                         errorList.Add(string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType));
                         break;
                 }
+
+                errorList.AddRange(localErrors ?? new string[0]);
             }
 
             errors = errorList.ToArray();
-
-            foreach (var metricIds in
-                this.requestTelemetryMetrics.Values.Select(metric => metric.IdsToReportUnder)
-                    .Concat(this.dependencyTelemetryMetrics.Values.Select(metric => metric.IdsToReportUnder))
-                    .Concat(this.exceptionTelemetryMetrics.Values.Select(metric => metric.IdsToReportUnder))
-                    .Concat(this.eventTelemetryMetrics.Values.Select(metric => metric.IdsToReportUnder)))
-            {
-                this.allMetricIds.Add(metricIds);
-            }
-        }
-
-        public AggregationType GetAggregationType(Tuple<string, string> metricIds)
-        {
-            try
-            {
-                return this.info.Metrics.Single(metric => Tuple.Create(metric.Id, metric.SessionId).Equals(metricIds)).Aggregation;
-            }
-            catch (Exception)
-            {
-                // couldn't find the metric for some reason, this is unexpected
-                QuickPulseEventSource.Log.UnknownErrorEvent("Unable to find a metric for the accumulator's id.");
-
-                throw;
-            }
         }
 
         private static void MergeMetric<TTelemetry>(
@@ -109,12 +108,29 @@
             if (metrics.TryGetValue(metricInfo.ToString(), out existingEquivalentRequestMetric))
             {
                 // an equivalent metric already exists, update it
-                existingEquivalentRequestMetric.IdsToReportUnder.Add(Tuple.Create(metricInfo.Id, metricInfo.SessionId));
+                existingEquivalentRequestMetric.IdsToReportUnder.Add(Tuple.Create(metricInfo.SessionId, metricInfo.Id));
             }
             else
             {
                 // no equivalent metrics exist
-                metrics.Add(metricInfo.ToString(), new OperationalizedMetric<TTelemetry>(metricInfo, out errors));
+                try
+                {
+                    metrics.Add(metricInfo.ToString(), new OperationalizedMetric<TTelemetry>(metricInfo, out errors));
+                }
+                catch (Exception e)
+                {
+                    // error creating the metric
+                    errors =
+                        errors.Concat(
+                            new[]
+                                {
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        "Failed to create metric {0}. Error message: {1}",
+                                        metricInfo.ToString(),
+                                        e.ToString())
+                                }).ToArray();
+                }
             }
         }
     }

@@ -557,6 +557,40 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryModuleUpdatesCollectionConfiguration()
+        {
+            // ARRANGE
+            var pollingInterval = TimeSpan.FromMilliseconds(200);
+            var collectionInterval = TimeSpan.FromMilliseconds(80);
+            var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
+            var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+            var performanceCollector = new PerformanceCollectorMock();
+            var topCpuCollector = new QuickPulseTopCpuCollectorMock();
+
+            var module = new QuickPulseTelemetryModule(
+                collectionTimeSlotManager,
+                null,
+                serviceClient,
+                performanceCollector,
+                topCpuCollector,
+                timings);
+
+            // ACT & ASSERT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1" };
+
+            module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
+
+            Thread.Sleep(pollingInterval);
+            Thread.Sleep((int)(2.5 * collectionInterval.TotalMilliseconds));
+            Assert.AreEqual("ETag1", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2" };
+            Thread.Sleep((int)(10 * collectionInterval.TotalMilliseconds));
+            Assert.AreEqual("ETag2", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryModuleResendsFailedSamples()
         {
             // ARRANGE

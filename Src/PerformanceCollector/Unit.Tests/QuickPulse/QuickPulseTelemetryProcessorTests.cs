@@ -20,14 +20,14 @@
     [TestClass]
     public class QuickPulseTelemetryProcessorTests
     {
-        private static string[] errors;
-
+        const int MaxFieldLength = 32768;
+        
         private static readonly CollectionConfiguration EmptyCollectionConfiguration =
             new CollectionConfiguration(
                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
                 out errors);
 
-        const int MaxFieldLength = 32768;
+        private static string[] errors;
 
         [TestInitialize]
         public void TestInitialize()
