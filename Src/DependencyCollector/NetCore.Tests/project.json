@@ -3,6 +3,12 @@
 
   "testRunner": "mstest",
 
+  "buildOptions": {
+    "keyFile": "../../../Keys/35MSSharedLib1024.snk",
+    "delaySign": true,
+    "xmlDoc": true
+  },
+
   "dependencies": {
     "dotnet-test-mstest": "1.1.2-preview",
     "Microsoft.NETCore.App": {
@@ -10,7 +16,10 @@
       "version": "1.0.1"
     },
     "MSTest.TestFramework": "1.0.8-rc2",
-    "NetStandard": "1.0.0-*"
+    "NetCore": {
+      "target": "project",
+      "version": "1.0.0-*"
+    }
   },
 
   "frameworks": {

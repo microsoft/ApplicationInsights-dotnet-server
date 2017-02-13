@@ -116,14 +116,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0828A19C-C62C-4B5E-9160-5A6F992F2000}"
 	ProjectSection(SolutionItems) = preProject
 		..\CHANGELOG.md = ..\CHANGELOG.md
-		..\global.json = ..\global.json
 	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Common", "Common\Common.shproj", "{CCAB7A34-8DC5-4A6F-B637-46CEBA93C687}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetStandard.Tests", "DependencyCollector\NetStandard.Tests\DependencyCollector.NetStandard.Tests.xproj", "{8124FF96-0884-4F72-867F-CA32568B2260}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore", "DependencyCollector\NetCore\DependencyCollector.NetCore.xproj", "{1D40941A-6018-4505-AD0B-C739B094B2BE}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetStandard", "DependencyCollector\NetStandard\DependencyCollector.NetStandard.xproj", "{1D40941A-6018-4505-AD0B-C739B094B2BE}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore.Tests", "DependencyCollector\NetCore.Tests\DependencyCollector.NetCore.Tests.xproj", "{8124FF96-0884-4F72-867F-CA32568B2260}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

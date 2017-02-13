@@ -4,29 +4,25 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
+  <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)', 'Product.props'))\Product.props" />
-  <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
-  <PropertyGroup Label="Globals">
+
+  <PropertyGroup>
     <ProjectGuid>1d40941a-6018-4505-ad0b-c739b094b2be</ProjectGuid>
+
     <RootNamespace>Microsoft.ApplicationInsights.DependencyCollector</RootNamespace>
-    <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">.\obj</BaseIntermediateOutputPath>
-    <OutputPath Condition="'$(OutputPath)'=='' ">.\bin\</OutputPath>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <Language>C#</Language>
 
-    <OutputPath>$(BinRoot)\$(Configuration)</OutputPath>
+    <OutputPath>$(BinRoot)\$(Configuration)\Src\DependencyCollector\</OutputPath>
     <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <SchemaVersion>2.0</SchemaVersion>
-  </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
 
-  <!--<PropertyGroup>
-    <CopyFromFolder>$(OutDir)\Src\DependencyCollector\NetCore\bin\$(Configuration)\netstandard1.6</CopyFromFolder>
-    <CopyToFolder>$(OutDir.TrimEnd('\'))</CopyToFolder>
+  <PropertyGroup>
+    <CopyFromFolder>$(OutputPath)NetCore\bin\$(Configuration)\netstandard1.6</CopyFromFolder>
+    <CopyToFolder>$(OutputPath)NetCore</CopyToFolder>
     <CopyToFileName>Microsoft.AI.DependencyCollector</CopyToFileName>
   </PropertyGroup>
   <ItemGroup>
@@ -44,5 +40,5 @@
   </ItemGroup>
   <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build" Inputs="@(CopyFrom)" Outputs="@(CopyTo)">
     <Copy SourceFiles="@(CopyFrom)" DestinationFiles="@(CopyTo)" />
-  </Target>-->
+  </Target>
 </Project>

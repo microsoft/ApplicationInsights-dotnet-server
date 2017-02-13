@@ -25,6 +25,11 @@ namespace FuncTest.Helpers
         public const string Aspx451AppFolderWin32 = ".\\Aspx451Win32";
 
         /// <summary>
+        /// Folder for ASPX Core test application deployment.
+        /// </summary>        
+        // public const string AspxCoreAppFolder = ".\\AspxCore";
+
+        /// <summary>
         /// Sleep time to give SDK some time to send events.
         /// </summary>
         public const int SleepTimeForSdkToSendEvents = 10 * 1000;
@@ -44,6 +49,8 @@ namespace FuncTest.Helpers
 
         private const int Aspx451PortWin32 = 790;
 
+        // private const int AspxCorePort = 791;
+
         private static readonly object lockObj = new object();
 
         private static bool isInitialized;
@@ -55,6 +62,8 @@ namespace FuncTest.Helpers
         public static TestWebApplication Aspx451TestWebApplication { get; private set; }
 
         public static TestWebApplication Aspx451TestWebApplicationWin32 { get; private set; }
+
+        // public static TestWebApplication AspxCoreTestWebApplication { get; private set; }
 
         public static EtwEventSessionRdd EtwSession { get; private set; }
 
@@ -83,6 +92,13 @@ namespace FuncTest.Helpers
                             IsRedFieldApp = false
                         };
 
+                        // AspxCoreTestWebApplication = new TestWebApplication
+                        // {
+                        //     AppName = "AspxCore",
+                        //     Port = AspxCorePort,
+                        //     IsRedFieldApp = false
+                        // };
+
                         // this makes all traces have a timestamp so it's easier to troubleshoot timing issues
                         // looking for the better approach...
                         foreach (TraceListener listener in Trace.Listeners)
@@ -97,6 +113,7 @@ namespace FuncTest.Helpers
 
                         Aspx451TestWebApplication.Deploy();
                         Aspx451TestWebApplicationWin32.Deploy(true);
+                        // AspxCoreTestWebApplication.Deploy();
 
                         if (RegistryCheck.IsNet46Installed)
                         {

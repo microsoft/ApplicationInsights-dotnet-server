@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
@@ -7,7 +6,7 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("DependencyCollector.NetCore")]
+[assembly: AssemblyProduct("DependencyCollector.NetCore.Tests")]
 [assembly: AssemblyTrademark("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
@@ -16,6 +15,4 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("1d40941a-6018-4505-ad0b-c739b094b2be")]
-
-[assembly: InternalsVisibleTo("NetStandard.Tests")]
+[assembly: Guid("8124ff96-0884-4f72-867f-ca32568b2260")]

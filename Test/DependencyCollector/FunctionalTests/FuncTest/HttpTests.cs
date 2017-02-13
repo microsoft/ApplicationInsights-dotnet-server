@@ -8,9 +8,10 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
-    /// Tests RDD Functionality for a ASP.NET WebApplication in DOTNET 4.5.1 and DOTNET 4.6
+    /// Tests RDD Functionality for a ASP.NET WebApplication in DOTNET 4.5.1, DOTNET 4.6,
+    /// and DOTNET Core.
     /// ASPX451 refers to the test application throughout the functional test context.
-    /// The same app is used for testsing 4.5.1 and 4.6 scenarios.
+    /// The same app is used for testing 4.5.1 4.6, and Core scenarios.
     /// </summary>
     [TestClass]
     public class HttpTests
@@ -153,212 +154,337 @@
 
         #region 451
 
-        [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
-        public void TestRddForSyncHttpAspx451()
+        private const string Aspx451TestAppFolder = "..\\TestApps\\ASPX451\\App\\";
+
+        private static void EnsureNet451Installed()
         {
             if (!RegistryCheck.IsNet451Installed)
             {
                 Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
             }
+        }
+
+        [TestMethod]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
+        public void TestRddForSyncHttpAspx451()
+        {
+            EnsureNet451Installed();
 
             // Execute and verify calls which succeeds            
             this.ExecuteSyncHttpTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true, 1, AccessTimeMaxHttpNormal);            
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForSyncHttpPostCallAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             // Execute and verify calls which succeeds            
             this.ExecuteSyncHttpPostTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true, 1, AccessTimeMaxHttpNormal);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForSyncHttpFailedAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             // Execute and verify calls which fails.            
             this.ExecuteSyncHttpTests(DeploymentAndValidationTools.Aspx451TestWebApplication, false, 1, AccessTimeMaxHttpInitial);            
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync1HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }            
+            EnsureNet451Installed();
+
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync1);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForHttpAspx451WithHttpClient()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteSyncHttpClientTests(DeploymentAndValidationTools.Aspx451TestWebApplication, AccessTimeMaxHttpNormal);
         }
 
         [TestMethod]
         [Description("Verify RDD is collected for failed Async Http Calls in ASPX 4.5.1 application")]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync1HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync1Failed);            
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync2HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
+
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync2);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync2HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync2Failed);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync3HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
+
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync3);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync3HttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncTests(DeploymentAndValidationTools.Aspx451TestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync3Failed);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsyncWithCallBackHttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncWithCallbackTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsyncAwaitHttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.Aspx451TestWebApplication, true);
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsyncAwaitHttpAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.Aspx451TestWebApplication, false);
         }        
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkBlobAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAzureSDKTests(DeploymentAndValidationTools.Aspx451TestWebApplication, 1, "blob", "http://127.0.0.1:11000");           
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkQueueAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAzureSDKTests(DeploymentAndValidationTools.Aspx451TestWebApplication, 1, "queue", "http://127.0.0.1:11001");           
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolder)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkTableAspx451()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
 
             this.ExecuteAzureSDKTests(DeploymentAndValidationTools.Aspx451TestWebApplication, 1, "table", "http://127.0.0.1:11002");           
         }
 
         [TestMethod]
-        [DeploymentItem("..\\TestApps\\ASPX451\\App\\", DeploymentAndValidationTools.Aspx451AppFolderWin32)]
+        [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolderWin32)]
         public void TestRddForWin32ApplicationPool()
         {
-            if (!RegistryCheck.IsNet451Installed)
-            {
-                Assert.Inconclusive(".Net Framework 4.5.1 is not installed");
-            }
+            EnsureNet451Installed();
+
             this.ExecuteSyncHttpTests(DeploymentAndValidationTools.Aspx451TestWebApplicationWin32, true, 1, AccessTimeMaxHttpInitial);
         }
 
         #endregion 451
-                          
+
+        // #region Core
+
+        // private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
+
+        // private static void EnsureNetCoreInstalled()
+        // {
+        //     //if (!RegistryCheck.IsNetCoreInstalled)
+        //     //{
+        //     //    Assert.Inconclusive(".Net Core Framework is not installed");
+        //     //}
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForSyncHttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     // Execute and verify calls which succeeds            
+        //     this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForSyncHttpPostCallAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     // Execute and verify calls which succeeds            
+        //     this.ExecuteSyncHttpPostTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForSyncHttpFailedAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     // Execute and verify calls which fails.            
+        //     this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAsync1HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync1);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForHttpAspxCoreWithHttpClient()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteSyncHttpClientTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, AccessTimeMaxHttpNormal);
+        // }
+
+        // [TestMethod]
+        // [Description("Verify RDD is collected for failed Async Http Calls in ASPX 4.5.1 application")]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForFailedAsync1HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync1Failed);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAsync2HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync2);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForFailedAsync2HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync2Failed);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAsync3HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync3);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForFailedAsync3HttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync3Failed);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAsyncWithCallBackHttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncWithCallbackTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAsyncAwaitHttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForFailedAsyncAwaitHttpAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false);
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAzureSdkBlobAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "blob", "http://127.0.0.1:11000");
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAzureSdkQueueAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "queue", "http://127.0.0.1:11001");
+        // }
+
+        // [TestMethod]
+        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        // public void TestRddForAzureSdkTableAspxCore()
+        // {
+        //     EnsureNetCoreInstalled();
+
+        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "table", "http://127.0.0.1:11002");
+        // }
+
+        // #endregion Core
+
         #region helpers
 
         /// <summary>
