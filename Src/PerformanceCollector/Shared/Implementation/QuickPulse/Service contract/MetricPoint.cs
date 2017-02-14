@@ -8,7 +8,7 @@
         [DataMember]
         public string Name { get; set; }
 
-        [DataMember]
+        [DataMember(EmitDefaultValue = false)]
         public string SessionId { get; set; }
 
         [DataMember]
