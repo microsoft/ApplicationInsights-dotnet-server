@@ -535,8 +535,8 @@
                                                                   new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
                                                           };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
@@ -582,8 +582,8 @@
                                                                   new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
                                                           };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
@@ -622,8 +622,8 @@
                                                                   new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
                                                           };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
@@ -670,8 +670,8 @@
                                                                   new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
                                                           };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
@@ -706,8 +706,8 @@
 
                     var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2", Metrics = null };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
@@ -748,8 +748,8 @@
 
                     var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2", Metrics = null };
 
-                    var serializerDataPoint = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
-                    serializerDataPoint.WriteObject(r.OutputStream, collectionConfigurationInfo);
+                    var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+                    serializer.WriteObject(r.OutputStream, collectionConfigurationInfo);
                 };
 
             // ACT
