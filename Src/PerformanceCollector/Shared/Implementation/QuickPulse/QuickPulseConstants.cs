@@ -19,5 +19,20 @@
         /// Configuration etag header.
         /// </summary>
         internal const string XMsQpsConfigurationETagHeaderName = "x-ms-qps-configuration-etag";
+
+        /// <summary>
+        /// Instance name header.
+        /// </summary>
+        internal const string XMsQpsInstanceNameHeaderName = "x-ms-qps-instance-name";
+
+        /// <summary>
+        /// Stream id header.
+        /// </summary>
+        internal const string XMsQpsStreamIdHeaderName = "x-ms-qps-stream-id";
+
+        /// <summary>
+        /// Machine name header.
+        /// </summary>
+        internal const string XMsQpsMachineNameHeaderName = "x-ms-qps-machine-name";
     }
 }

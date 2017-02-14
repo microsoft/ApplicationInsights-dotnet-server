@@ -62,9 +62,10 @@
             HttpWebResponse response = this.SendRequest(
                 WebRequestMethods.Http.Post,
                 path,
+                true,
                 configurationETag,
                 stream => this.WritePingData(timestamp, stream));
-
+            
             if (response == null)
             {
                 configurationInfo = null;
@@ -85,6 +86,7 @@
             HttpWebResponse response = this.SendRequest(
                 WebRequestMethods.Http.Post,
                 path,
+                false,
                 configurationETag,
                 stream => this.WriteSamples(samples, instrumentationKey, stream, collectionConfigurationErrors));
 
@@ -280,7 +282,7 @@
                        };
         }
 
-        private HttpWebResponse SendRequest(string httpVerb, string path, string configurationETag, Action<Stream> onWriteBody)
+        private HttpWebResponse SendRequest(string httpVerb, string path, bool includeHeaders, string configurationETag, Action<Stream> onWriteBody)
         {
             var requestUri = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", this.ServiceUri.AbsoluteUri.TrimEnd('/'), path.TrimStart('/'));
 
@@ -291,6 +293,13 @@
                 request.Timeout = (int)this.timeout.TotalMilliseconds;
                 request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
                 request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
+
+                if (includeHeaders)
+                {
+                    request.Headers.Add(QuickPulseConstants.XMsQpsInstanceNameHeaderName, this.instanceName);
+                    request.Headers.Add(QuickPulseConstants.XMsQpsStreamIdHeaderName, this.streamId);
+                    request.Headers.Add(QuickPulseConstants.XMsQpsMachineNameHeaderName, this.machineName);
+                }
 
                 onWriteBody?.Invoke(request.GetRequestStream());
 
