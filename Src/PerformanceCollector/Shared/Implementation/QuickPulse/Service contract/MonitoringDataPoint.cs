@@ -13,7 +13,7 @@
          * 4 - adding errors for extended backchannel
          * 3 - adding TopCpuProcesses
         */
-        public const int CurrentInvariantVersion = 3;
+        public const int CurrentInvariantVersion = 4;
 
         [DataMember]
         public string Version { get; set; }

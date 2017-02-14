@@ -156,91 +156,13 @@
 
             foreach (var sample in samples)
             {
-                var metricPoints = new List<MetricPoint>
-                                       {
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Requests/Sec",
-                                                   Value = Round(sample.AIRequestsPerSecond),
-                                                   Weight = 1
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Request Duration",
-                                                   Value = Round(sample.AIRequestDurationAveInMs),
-                                                   Weight = sample.AIRequests
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Requests Failed/Sec",
-                                                   Value = Round(sample.AIRequestsFailedPerSecond),
-                                                   Weight = 1
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Requests Succeeded/Sec",
-                                                   Value = Round(sample.AIRequestsSucceededPerSecond),
-                                                   Weight = 1
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Dependency Calls/Sec",
-                                                   Value = Round(sample.AIDependencyCallsPerSecond),
-                                                   Weight = 1
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Dependency Call Duration",
-                                                   Value = Round(sample.AIDependencyCallDurationAveInMs),
-                                                   Weight = sample.AIDependencyCalls
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Dependency Calls Failed/Sec",
-                                                   Value = Round(sample.AIDependencyCallsFailedPerSecond),
-                                                   Weight = 1
-                                               },
-                                           new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Dependency Calls Succeeded/Sec",
-                                                   Value = Round(sample.AIDependencyCallsSucceededPerSecond),
-                                                   Weight = 1
-                                               },
-                                            new MetricPoint
-                                               {
-                                                   Name = @"\ApplicationInsights\Exceptions/Sec",
-                                                   Value = Round(sample.AIExceptionsPerSecond),
-                                                   Weight = 1
-                                               }
-                                       };
+                var metricPoints = new List<MetricPoint>();
+
+                metricPoints.AddRange(CreateDefaultMetrics(sample));
 
                 metricPoints.AddRange(sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
 
-                foreach (KeyValuePair<Tuple<string, string>, AccumulatedValue> metricAccumulator in sample.CollectionConfigurationAccumulator.MetricAccumulators)
-                {
-                    try
-                    {
-                        double[] accumulatedValues = metricAccumulator.Value.Value.ToArray();
-
-                        // report the accumulator under all its ids
-                        metricPoints.AddRange(
-                            metricAccumulator.Value.MetricIds.Select(
-                                metricId =>
-                                new MetricPoint
-                                    {
-                                        SessionId = metricId.Item1,
-                                        Name = metricId.Item2,
-                                        Value =
-                                            OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulator.Value.AggregationType),
-                                        Weight = accumulatedValues.Length
-                                    }));
-                    }
-                    catch (Exception e)
-                    {
-                        // skip this metric
-                        QuickPulseEventSource.Log.UnknownErrorEvent(e.ToString());
-                    }
-                }
+                metricPoints.AddRange(CreateOperationalizedMetrics(sample));
                 
                 ITelemetryDocument[] documents = sample.TelemetryDocuments.ToArray();
                 Array.Reverse(documents);
@@ -269,6 +191,93 @@
             }
 
             this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
+        }
+
+        private static IEnumerable<MetricPoint> CreateOperationalizedMetrics(QuickPulseDataSample sample)
+        {
+            var metrics = new List<MetricPoint>();
+
+            foreach (KeyValuePair<Tuple<string, string>, AccumulatedValue> metricAccumulator in sample.CollectionConfigurationAccumulator.MetricAccumulators)
+            {
+                try
+                {
+                    double[] accumulatedValues = metricAccumulator.Value.Value.ToArray();
+
+                    // report the accumulator under all its ids
+                    metrics.AddRange(
+                        metricAccumulator.Value.MetricIds.Select(
+                            metricId =>
+                            new MetricPoint
+                                {
+                                    SessionId = metricId.Item1,
+                                    Name = metricId.Item2,
+                                    Value = OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulator.Value.AggregationType),
+                                    Weight = accumulatedValues.Length
+                                }));
+                }
+                catch (Exception e)
+                {
+                    // skip this metric
+                    QuickPulseEventSource.Log.UnknownErrorEvent(e.ToString());
+                }
+            }
+
+            return metrics;
+        }
+
+        private static IEnumerable<MetricPoint> CreateDefaultMetrics(QuickPulseDataSample sample)
+        {
+            return new[]
+                       {
+                           new MetricPoint { Name = @"\ApplicationInsights\Requests/Sec",
+                               Value = Round(sample.AIRequestsPerSecond),
+                               Weight = 1 },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Request Duration",
+                                   Value = Round(sample.AIRequestDurationAveInMs),
+                                   Weight = sample.AIRequests
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Requests Failed/Sec",
+                                   Value = Round(sample.AIRequestsFailedPerSecond),
+                                   Weight = 1
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Requests Succeeded/Sec",
+                                   Value = Round(sample.AIRequestsSucceededPerSecond),
+                                   Weight = 1
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Dependency Calls/Sec",
+                                   Value = Round(sample.AIDependencyCallsPerSecond),
+                                   Weight = 1
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Dependency Call Duration",
+                                   Value = Round(sample.AIDependencyCallDurationAveInMs),
+                                   Weight = sample.AIDependencyCalls
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Dependency Calls Failed/Sec",
+                                   Value = Round(sample.AIDependencyCallsFailedPerSecond),
+                                   Weight = 1
+                               },
+                           new MetricPoint
+                               {
+                                   Name = @"\ApplicationInsights\Dependency Calls Succeeded/Sec",
+                                   Value = Round(sample.AIDependencyCallsSucceededPerSecond),
+                                   Weight = 1
+                               },
+                           new MetricPoint { Name = @"\ApplicationInsights\Exceptions/Sec",
+                               Value = Round(sample.AIExceptionsPerSecond),
+                               Weight = 1 }
+                       };
         }
 
         private HttpWebResponse SendRequest(string httpVerb, string path, string configurationETag, Action<Stream> onWriteBody)
