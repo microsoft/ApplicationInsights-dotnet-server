@@ -981,7 +981,8 @@
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, timeProvider, false);
 
             // ACT
-            serviceClient.Ping(Guid.NewGuid().ToString(), timeProvider.UtcNow);
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping(Guid.NewGuid().ToString(), timeProvider.UtcNow, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -996,14 +997,20 @@
             // ARRANGE
             var timeProvider = new ClockMock();
             var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, timeProvider, false);
-            var sample = new QuickPulseDataSample(
-                new QuickPulseDataAccumulator { StartTimestamp = timeProvider.UtcNow, EndTimestamp = timeProvider.UtcNow.AddSeconds(1) },
-                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
-                Enumerable.Empty<Tuple<string, int>>(),
-                false);
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration)
+                        {
+                            StartTimestamp = timeProvider.UtcNow,
+                            EndTimestamp = timeProvider.UtcNow.AddSeconds(1)
+                        },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
 
             // ACT
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty);
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
