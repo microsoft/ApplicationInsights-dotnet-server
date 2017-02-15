@@ -18,7 +18,6 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
     using Microsoft.ApplicationInsights.Web.Implementation;
-    using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
     /// <summary>
     /// Telemetry module for collecting QuickPulse data.
@@ -70,6 +69,8 @@
         private IQuickPulseTopCpuCollector topCpuCollector = null;
 
         private CollectionConfiguration collectionConfiguration;
+
+        private QuickPulseMetricProcessor metricProcessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryModule"/> class.
@@ -168,8 +169,11 @@
                                 out errors);
                         this.dataAccumulatorManager = this.dataAccumulatorManager ?? new QuickPulseDataAccumulatorManager(this.collectionConfiguration);
 
-                        this.InitializeServiceClient(configuration);
+                        this.metricProcessor = new QuickPulseMetricProcessor();
+                        this.config.MetricProcessors.Add(this.metricProcessor);
 
+                        this.InitializeServiceClient(configuration);
+                        
                         this.stateManager = new QuickPulseCollectionStateManager(
                             this.serviceClient,
                             this.timeProvider,
@@ -274,6 +278,11 @@
             if (configuration.TelemetryProcessors == null)
             {
                 throw new ArgumentNullException(nameof(configuration.TelemetryProcessors));
+            }
+
+            if (configuration.MetricProcessors == null)
+            {
+                throw new ArgumentNullException(nameof(configuration.MetricProcessors));
             }
         }
 
@@ -540,6 +549,8 @@
                 }
             }
 
+            this.metricProcessor.StartCollection(this.dataAccumulatorManager);
+
             this.CreateCollectionThread();
         }
 
@@ -571,6 +582,8 @@
                     telemetryProcessor.StopCollection();
                 }
             }
+
+            this.metricProcessor.StopCollection();
 
             lock (this.collectedSamplesLock)
             {

@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.Filtering
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -21,7 +20,7 @@
 
         /// <summary>
         /// (metric.SessionId, metric.Id) => AccumulatedValue
-        /// If a metric is being reported under more than one id pair, the same AccumulatedValue object will be associated with multiple keys in the dictionary.
+        /// AccumulatedValue will contain all ids to report under if more than one.
         /// </summary>
         public Dictionary<Tuple<string, string>, AccumulatedValue> MetricAccumulators { get; } =
             new Dictionary<Tuple<string, string>, AccumulatedValue>();
@@ -33,9 +32,9 @@
             this.CollectionConfiguration = collectionConfiguration;
 
             // prepare the accumulators based on the collection configuration
-            foreach (
-                Tuple<MetricIdCollection, AggregationType> metricIds in
-                    collectionConfiguration?.MetricMetadata ?? Enumerable.Empty<Tuple<MetricIdCollection, AggregationType>>())
+            foreach (Tuple<MetricIdCollection, AggregationType> metricIds in
+                collectionConfiguration?.TelemetryMetadata.Concat(collectionConfiguration.MetricMetadata)
+                ?? Enumerable.Empty<Tuple<MetricIdCollection, AggregationType>>())
             {
                 var accumulatedValue = new AccumulatedValue(metricIds.Item1, metricIds.Item2);
 

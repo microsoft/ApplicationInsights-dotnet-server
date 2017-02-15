@@ -467,7 +467,7 @@
             }
         }
 
-        private static void ProcessMetrics<TTelemetry>(
+        internal static void ProcessMetrics<TTelemetry>(
             CollectionConfigurationAccumulator configurationAccumulatorLocal,
             IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
             TTelemetry telemetry,

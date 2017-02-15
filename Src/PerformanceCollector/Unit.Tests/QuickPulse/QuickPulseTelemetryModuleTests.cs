@@ -187,11 +187,35 @@
         public void QuickPulseTelemetryModuleCollectsData()
         {
             // ARRANGE
-            var pause = TimeSpan.FromMilliseconds(100);
+            var pause = TimeSpan.FromMilliseconds(150);
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
+            var filter1 = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } };
+            var filter2 = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } };
+            var metrics = new[]
+                              {
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session0",
+                                          Id = "Metric0",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Id",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = filter1
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session1",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Metric,
+                                          Projection = "Value",
+                                          Aggregation = AggregationType.Sum,
+                                          Filters = filter2
+                                      }
+                              };
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock()
                                       {
@@ -204,12 +228,18 @@
             module.RegisterTelemetryProcessor(telemetryProcessor);
 
             // ACT
-            module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
+            var telemetryConfiguration = new TelemetryConfiguration() { InstrumentationKey = "some ikey" };
+            module.Initialize(telemetryConfiguration);
+
+            QuickPulseMetricProcessor metricProcessor = (QuickPulseMetricProcessor)telemetryConfiguration.MetricProcessors.Single();
+            Metric metric = new MetricManager().CreateMetric("Metric1");
 
             Thread.Sleep(pause);
 
-            telemetryProcessor.Process(new RequestTelemetry() { Context = { InstrumentationKey = "some ikey" } });
+            telemetryProcessor.Process(new RequestTelemetry() { Id = "1", Name = "Request1", Context = { InstrumentationKey = "some ikey" } });
             telemetryProcessor.Process(new DependencyTelemetry() { Context = { InstrumentationKey = "some ikey" } });
+
+            metricProcessor.Track(metric, 5.0d);
 
             Thread.Sleep(pause);
 
@@ -229,6 +259,22 @@
 
             Assert.IsTrue(
                 serviceClient.SnappedSamples.TrueForAll(s => s.TopCpuData.Single().Item1 == "Process1" && s.TopCpuData.Single().Item2 == 25));
+
+            Assert.IsTrue(
+                serviceClient.SnappedSamples.Any(
+                    s =>
+                    s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
+                        a =>
+                        a.Value.MetricIds.First().Equals(Tuple.Create("Session0", "Metric0"))
+                        && (a.Value.Value.Count() > 0 && a.Value.Value.Single() == 1.0d))));
+
+            Assert.IsTrue(
+                serviceClient.SnappedSamples.Any(
+                    s =>
+                    s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
+                        a =>
+                        a.Value.MetricIds.First().Equals(Tuple.Create("Session1", "Metric1")) && a.Value.Value.Count() > 0
+                        && a.Value.Value.Single() == 5.0d)));
         }
 
         [TestMethod]

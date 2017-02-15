@@ -37,6 +37,33 @@
         }
 
         [TestMethod]
+        public void CollectionConfigurationAccumulatorPreparesMetricAccumulatorsForMetricsTest()
+        {
+            // ARRANGE
+            string[] error;
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                SessionId = "Session1",
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Metric,
+                Projection = "Value",
+                Aggregation = AggregationType.Min,
+                Filters = new FilterInfo[0]
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo() { Metrics = new[] { metricInfo } };
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out error);
+
+            // ACT
+            var accumulator = new CollectionConfigurationAccumulator(collectionConfiguration);
+
+            // ASSERT
+            Assert.AreSame(collectionConfiguration, accumulator.CollectionConfiguration);
+            Assert.IsTrue(Tuple.Create("Session1", "Metric1").Equals(accumulator.MetricAccumulators.Single().Key));
+            Assert.AreEqual(AggregationType.Min, accumulator.MetricAccumulators.Single().Value.AggregationType);
+        }
+
+        [TestMethod]
         public void CollectionConfigurationAccumulatorPreparesSingleMetricAccumulatorForMetricWithManyIdsTest()
         {
             // ARRANGE

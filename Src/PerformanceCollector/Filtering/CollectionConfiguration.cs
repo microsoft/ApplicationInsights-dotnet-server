@@ -9,7 +9,7 @@
 
     internal class CollectionConfiguration
     {
-        private CollectionConfigurationInfo info;
+        private readonly CollectionConfigurationInfo info;
 
         private readonly Dictionary<string, OperationalizedMetric<RequestTelemetry>> requestTelemetryMetrics =
             new Dictionary<string, OperationalizedMetric<RequestTelemetry>>();
@@ -23,6 +23,11 @@
         private readonly Dictionary<string, OperationalizedMetric<EventTelemetry>> eventTelemetryMetrics =
             new Dictionary<string, OperationalizedMetric<EventTelemetry>>();
 
+        private readonly Dictionary<string, OperationalizedMetric<MetricValue>> metricMetrics =
+            new Dictionary<string, OperationalizedMetric<MetricValue>>();
+
+        private readonly List<Tuple<MetricIdCollection, AggregationType>> telemetryMetadata = new List<Tuple<MetricIdCollection, AggregationType>>();
+
         private readonly List<Tuple<MetricIdCollection, AggregationType>> metricMetadata = new List<Tuple<MetricIdCollection, AggregationType>>();
 
         public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics.Values;
@@ -33,6 +38,16 @@
 
         public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics.Values;
 
+        public IEnumerable<OperationalizedMetric<MetricValue>> MetricMetrics => this.metricMetrics.Values;
+
+        /// <summary>
+        /// Telemetry types only (handled by QuickPulseTelemetryProcessor)
+        /// </summary>
+        public IEnumerable<Tuple<MetricIdCollection, AggregationType>> TelemetryMetadata => this.telemetryMetadata;
+
+        /// <summary>
+        /// Metric type only (handled by QuickPulseMetricProcessor)
+        /// </summary>
         public IEnumerable<Tuple<MetricIdCollection, AggregationType>> MetricMetadata => this.metricMetadata;
 
         public string ETag => this.info.ETag;
@@ -50,16 +65,21 @@
             this.CreateMetrics(info, out errors);
 
             // maintain a separate collection of all (SessionId, Id) pairs with some additional data - to allow for uniform access to all types of metrics
-            this.CreateMetricMetadata();
+            this.CreateMetadata();
         }
 
-        private void CreateMetricMetadata()
+        private void CreateMetadata()
         {
             foreach (var metricIds in
                 this.requestTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType))
                     .Concat(this.dependencyTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType)))
                     .Concat(this.exceptionTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType)))
                     .Concat(this.eventTelemetryMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType))))
+            {
+                this.telemetryMetadata.Add(metricIds);
+            }
+
+            foreach (var metricIds in this.metricMetrics.Values.Select(metric => Tuple.Create(metric.IdsToReportUnder, metric.AggregationType)))
             {
                 this.metricMetadata.Add(metricIds);
             }
@@ -85,6 +105,9 @@
                         break;
                     case TelemetryType.Event:
                         CollectionConfiguration.MergeMetric(metricInfo, this.eventTelemetryMetrics, out localErrors);
+                        break;
+                    case TelemetryType.Metric:
+                        CollectionConfiguration.MergeMetric(metricInfo, this.metricMetrics, out localErrors);
                         break;
                     default:
                         errorList.Add(string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType));

@@ -76,6 +76,15 @@
                                           Projection = "Name",
                                           Aggregation = AggregationType.Avg,
                                           Filters = filters
+                                      },
+                                    new OperationalizedMetricInfo()
+                                      {
+                                          SessionId = "Session4",
+                                          Id = "Metric5",
+                                          TelemetryType = TelemetryType.Metric,
+                                          Projection = "Value",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = filters
                                       }
                               };
 
@@ -88,9 +97,11 @@
             Assert.AreEqual(Tuple.Create("Session2", "Metric2"), collectionConfiguration.DependencyMetrics.Single().IdsToReportUnder.Single());
             Assert.AreEqual(Tuple.Create("Session3", "Metric3"), collectionConfiguration.ExceptionMetrics.Single().IdsToReportUnder.Single());
             Assert.AreEqual(Tuple.Create("Session4", "Metric4"), collectionConfiguration.EventMetrics.Single().IdsToReportUnder.Single());
+            Assert.AreEqual(Tuple.Create("Session4", "Metric5"), collectionConfiguration.MetricMetrics.Single().IdsToReportUnder.Single());
 
-            Assert.AreEqual(5, collectionConfiguration.MetricMetadata.Count());
-            Assert.IsTrue(collectionConfiguration.MetricMetadata.All(ids => ids.Item1.Count == 1));
+            Assert.AreEqual(5, collectionConfiguration.TelemetryMetadata.Count());
+            Assert.IsTrue(collectionConfiguration.TelemetryMetadata.All(ids => ids.Item1.Count == 1));
+            Assert.IsTrue(collectionConfiguration.MetricMetrics.Single().IdsToReportUnder.Single().Equals(Tuple.Create("Session4", "Metric5")));
         }
 
         [TestMethod]
@@ -129,7 +140,7 @@
             Assert.AreEqual(1, collectionConfiguration.RequestMetrics.Count());
 
             var expectedIds = new MetricIdCollection(new[] { Tuple.Create("Session1", "Metric1"), Tuple.Create("Session2", "Metric2") });
-            Assert.IsTrue(expectedIds.SetEquals(collectionConfiguration.MetricMetadata.Single().Item1));
+            Assert.IsTrue(expectedIds.SetEquals(collectionConfiguration.TelemetryMetadata.Single().Item1));
         }
 
         [TestMethod]
@@ -156,7 +167,7 @@
 
             // ASSERT
             Assert.AreEqual(1, collectionConfiguration.RequestMetrics.Count());
-            Assert.AreEqual(1, collectionConfiguration.MetricMetadata.Count());
+            Assert.AreEqual(1, collectionConfiguration.TelemetryMetadata.Count());
             Assert.IsTrue(errors.Single().Contains("NonExistentFieldName"));
         }
 
@@ -184,7 +195,7 @@
 
             // ASSERT
             Assert.AreEqual(0, collectionConfiguration.RequestMetrics.Count());
-            Assert.AreEqual(0, collectionConfiguration.MetricMetadata.Count());
+            Assert.AreEqual(0, collectionConfiguration.TelemetryMetadata.Count());
             Assert.IsTrue(errors.Single().Contains("NonExistentFieldName"));
         }
 
@@ -222,7 +233,7 @@
 
             // ASSERT
             Assert.AreEqual(0, collectionConfiguration.RequestMetrics.Count());
-            Assert.AreEqual(0, collectionConfiguration.MetricMetadata.Count());
+            Assert.AreEqual(0, collectionConfiguration.TelemetryMetadata.Count());
 
             Assert.AreEqual(6, errors.Length);
             Assert.IsTrue(errors[0].Contains("NonExistentFilterFieldName1"));
