@@ -34,13 +34,17 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 OnSend = sentTelemetry.Add
             };
 
-            listener = new DependencyCollectorDiagnosticListener(
-                new TelemetryClient(
+            TelemetryClient client = new TelemetryClient(
                     new TelemetryConfiguration()
                     {
                         TelemetryChannel = telemetryChannel,
                         InstrumentationKey = instrumentationKey,
-                    }));
+                    });
+            // You'd think that the constructor would set the instrumentation key is the
+            // configuration had a instrumentation key, but it doesn't, so we have to set it here.
+            client.InstrumentationKey = instrumentationKey;
+
+            listener = new DependencyCollectorDiagnosticListener(client);
         }
 
         [TestMethod]

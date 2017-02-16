@@ -38,11 +38,15 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         internal const string StandardRootIdHeader = "x-ms-request-root-id";
 
         private readonly TelemetryClient client;
-        private readonly ConcurrentDictionary<Guid, DependencyTelemetry> requestTelemetry = new ConcurrentDictionary<Guid, DependencyTelemetry>();
+        private readonly ConcurrentDictionary<Guid, DependencyTelemetry> pendingTelemetry = new ConcurrentDictionary<Guid, DependencyTelemetry>();
 
         public DependencyCollectorDiagnosticListener()
             : this(new TelemetryClient(TelemetryConfiguration.Active))
         {
+            this.client = new TelemetryClient(TelemetryConfiguration.Active);
+            // You'd think that the constructor would set the instrumentation key is the
+            // configuration had a instrumentation key, but it doesn't, so we have to set it here.
+            this.client.InstrumentationKey = TelemetryConfiguration.Active.InstrumentationKey;
         }
 
         public DependencyCollectorDiagnosticListener(TelemetryClient client)
@@ -55,7 +59,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         /// </summary>
         internal IEnumerable<DependencyTelemetry> PendingDependencyTelemetry
         {
-            get { return requestTelemetry.Values; }
+            get { return pendingTelemetry.Values; }
         }
 
         private static HttpRequestMessage GetRequest(object value)
@@ -100,18 +104,17 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     }
 
                     DependencyTelemetry telemetry = new DependencyTelemetry();
-                    telemetry.Start();
                     this.client.Initialize(telemetry);
-
+                    telemetry.Start();
                     telemetry.Name = resourceName;
                     telemetry.Target = requestUri.Host;
                     telemetry.Type = "Http";
                     telemetry.Data = requestUri.OriginalString;
+                    this.pendingTelemetry.TryAdd(loggingRequestId.Value, telemetry);
 
-                    // Add the source instrumentation key header if collection is enabled, the request host is not in the excluded list and the same header doesn't already exist
-                    if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !request.Headers.Contains(SourceInstrumentationKeyHeader))
+                    if (!request.Headers.Contains(SourceInstrumentationKeyHeader))
                     {
-                        request.Headers.Add(SourceInstrumentationKeyHeader, InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey));
+                        request.Headers.Add(SourceInstrumentationKeyHeader, InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(this.client.InstrumentationKey));
                     }
 
                     // Add the root ID
@@ -127,8 +130,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     {
                         request.Headers.Add(StandardParentIdHeader, parentId);
                     }
-
-                    this.requestTelemetry.TryAdd(loggingRequestId.Value, telemetry);
                 }
             }
             else if (value.Key == "System.Net.Http.Response")
@@ -138,14 +139,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 if (response != null && loggingRequestId != null)
                 {
                     DependencyTelemetry telemetry;
-                    if (this.requestTelemetry.TryRemove(loggingRequestId.Value, out telemetry))
+                    if (this.pendingTelemetry.TryRemove(loggingRequestId.Value, out telemetry))
                     {
                         if (response.Headers.Contains(TargetInstrumentationKeyHeader))
                         {
                             string targetInstrumentationKeyHash = response.Headers.GetValues(TargetInstrumentationKeyHeader).SingleOrDefault();
 
-                            // We only add the cross component correlation key if the key does not remain the current component.
-                            if (!string.IsNullOrEmpty(targetInstrumentationKeyHash) && targetInstrumentationKeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey))
+                            // We only add the cross component correlation key if the key does not represent the current component.
+                            if (!string.IsNullOrEmpty(targetInstrumentationKeyHash) && targetInstrumentationKeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(this.client.InstrumentationKey))
                             {
                                 telemetry.Type = "Application Insights";
                                 telemetry.Target += " | " + targetInstrumentationKeyHash;
