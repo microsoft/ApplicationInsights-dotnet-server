@@ -43,6 +43,8 @@ namespace FuncTest.Helpers
         /// <summary>Gets or sets the app name.</summary>
         internal string AppName { get; set; }
 
+        internal string ExternalCallsPath { get; set; } = "ExternalCalls.aspx";
+
         /// <summary>Gets the external call.</summary>
         internal string ExternalCall { get; private set; }
 
@@ -103,7 +105,7 @@ namespace FuncTest.Helpers
             {
                 this.Pool = new IisApplicationPool(this.PoolName, enable32BitAppOnWin64: enableWin32Mode);
                 this.WebSite = new IisWebSite(this.WebSiteName, this.AppFolder, this.Port, this.Pool);
-                this.ExternalCall = string.Format("http://localhost:{0}/ExternalCalls.aspx", this.Port);
+                this.ExternalCall = string.Format("http://localhost:{0}/{1}", this.Port, this.ExternalCallsPath);
                 this.IsFirstTest = true;
                 if (Directory.Exists(this.AppFolder))
                     ACLTools.GetEveryoneAccessToPath(this.AppFolder);

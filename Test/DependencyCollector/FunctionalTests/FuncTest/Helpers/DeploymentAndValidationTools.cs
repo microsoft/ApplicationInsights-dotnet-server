@@ -27,7 +27,7 @@ namespace FuncTest.Helpers
         /// <summary>
         /// Folder for ASPX Core test application deployment.
         /// </summary>        
-        // public const string AspxCoreAppFolder = ".\\AspxCore";
+        public const string AspxCoreAppFolder = ".\\AspxCore";
 
         /// <summary>
         /// Sleep time to give SDK some time to send events.
@@ -49,7 +49,7 @@ namespace FuncTest.Helpers
 
         private const int Aspx451PortWin32 = 790;
 
-        // private const int AspxCorePort = 791;
+        private const int AspxCorePort = 791;
 
         private static readonly object lockObj = new object();
 
@@ -63,7 +63,7 @@ namespace FuncTest.Helpers
 
         public static TestWebApplication Aspx451TestWebApplicationWin32 { get; private set; }
 
-        // public static TestWebApplication AspxCoreTestWebApplication { get; private set; }
+        public static TestWebApplication AspxCoreTestWebApplication { get; private set; }
 
         public static EtwEventSessionRdd EtwSession { get; private set; }
 
@@ -92,12 +92,13 @@ namespace FuncTest.Helpers
                             IsRedFieldApp = false
                         };
 
-                        // AspxCoreTestWebApplication = new TestWebApplication
-                        // {
-                        //     AppName = "AspxCore",
-                        //     Port = AspxCorePort,
-                        //     IsRedFieldApp = false
-                        // };
+                        AspxCoreTestWebApplication = new TestWebApplication
+                        {
+                            AppName = "AspxCore",
+                            Port = AspxCorePort,
+                            IsRedFieldApp = false,
+                            ExternalCallsPath = "external/calls"
+                        };
 
                         // this makes all traces have a timestamp so it's easier to troubleshoot timing issues
                         // looking for the better approach...
@@ -113,7 +114,7 @@ namespace FuncTest.Helpers
 
                         Aspx451TestWebApplication.Deploy();
                         Aspx451TestWebApplicationWin32.Deploy(true);
-                        // AspxCoreTestWebApplication.Deploy();
+                        AspxCoreTestWebApplication.Deploy();
 
                         if (RegistryCheck.IsNet46Installed)
                         {
@@ -187,6 +188,7 @@ namespace FuncTest.Helpers
 
                         Aspx451TestWebApplication.Remove();
                         Aspx451TestWebApplicationWin32.Remove();
+                        AspxCoreTestWebApplication.Remove();
 
                         if (RegistryCheck.IsNet46Installed)
                         {

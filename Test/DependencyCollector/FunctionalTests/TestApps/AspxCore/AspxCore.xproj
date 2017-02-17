@@ -25,4 +25,15 @@
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet.Web\Microsoft.DotNet.Web.targets" Condition="'$(VSToolsPath)' != ''" />
+
+  <PropertyGroup>
+    <CopyFromFolder>$(OutputPath)AspxCore\bin\$(Configuration)\netcoreapp1.0</CopyFromFolder>
+    <CopyToFolder>$(OutputPath)AspxCore</CopyToFolder>
+  </PropertyGroup>
+  <ItemGroup>
+    <CopyFrom Include="$(CopyFromFolder)\*" />
+  </ItemGroup>
+  <Target Name="CopyBinariesToExpectedDeployFromLocation" AfterTargets="Build">
+    <Copy SourceFiles="@(CopyFrom)" DestinationFolder="$(CopyToFolder)" />
+  </Target>
 </Project>

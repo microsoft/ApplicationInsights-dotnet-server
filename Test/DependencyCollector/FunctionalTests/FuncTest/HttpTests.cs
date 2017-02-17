@@ -165,6 +165,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForSyncHttpAspx451()
         {
@@ -175,6 +176,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForSyncHttpPostCallAspx451()
         {
@@ -185,6 +187,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForSyncHttpFailedAspx451()
         {
@@ -195,6 +198,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync1HttpAspx451()
         {
@@ -204,6 +208,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForHttpAspx451WithHttpClient()
         {
@@ -214,6 +219,7 @@
 
         [TestMethod]
         [Description("Verify RDD is collected for failed Async Http Calls in ASPX 4.5.1 application")]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync1HttpAspx451()
         {
@@ -223,6 +229,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync2HttpAspx451()
         {
@@ -232,6 +239,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync2HttpAspx451()
         {
@@ -241,6 +249,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsync3HttpAspx451()
         {
@@ -250,6 +259,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsync3HttpAspx451()
         {
@@ -259,6 +269,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsyncWithCallBackHttpAspx451()
         {
@@ -268,6 +279,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAsyncAwaitHttpAspx451()
         {
@@ -277,6 +289,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForFailedAsyncAwaitHttpAspx451()
         {
@@ -286,6 +299,7 @@
         }        
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkBlobAspx451()
         {
@@ -295,6 +309,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkQueueAspx451()
         {
@@ -304,6 +319,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestRddForAzureSdkTableAspx451()
         {
@@ -313,6 +329,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolderWin32)]
         public void TestRddForWin32ApplicationPool()
         {
@@ -323,27 +340,28 @@
 
         #endregion 451
 
-        // #region Core
+        #region Core
 
-        // private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
+        private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
 
-        // private static void EnsureNetCoreInstalled()
-        // {
-        //     //if (!RegistryCheck.IsNetCoreInstalled)
-        //     //{
-        //     //    Assert.Inconclusive(".Net Core Framework is not installed");
-        //     //}
-        // }
+        private static void EnsureNetCoreInstalled()
+        {
+            //if (!RegistryCheck.IsNetCoreInstalled)
+            //{
+            //    Assert.Inconclusive(".Net Core Framework is not installed");
+            //}
+        }
 
-        // [TestMethod]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForSyncHttpAspxCore()
-        // {
-        //     EnsureNetCoreInstalled();
+        [TestMethod]
+        [TestCategory(TestCategory.NetCore)]
+        [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
+        public void TestRddForSyncHttpAspxCore()
+        {
+            EnsureNetCoreInstalled();
 
-        //     // Execute and verify calls which succeeds            
-        //     this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal);
-        // }
+            // Execute and verify calls which succeeds            
+            this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal);
+        }
 
         // [TestMethod]
         // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
@@ -483,7 +501,7 @@
         //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "table", "http://127.0.0.1:11002");
         // }
 
-        // #endregion Core
+        #endregion Core
 
         #region helpers
 
