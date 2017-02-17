@@ -51,7 +51,7 @@ namespace FW45Shared
         {
             for (int i = 0; i < count; i++)
             {
-                Uri ourUri = new Uri("http://www.zzkaodkoakdahdjghejajdnad.com");
+                Uri ourUri = new Uri("http://google.com/404");
                 WebRequest wr = WebRequest.Create(ourUri);
                 var response = await wr.GetResponseAsync();
                 using (var stm = response.GetResponseStream())

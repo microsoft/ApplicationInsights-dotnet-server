@@ -29,9 +29,14 @@ namespace FW40Shared
     public class HttpHelper40
     {
         /// <summary>
-        /// Invalid Hostname to trigger exception being thrown
+        /// Invalid endpoint to trigger exception being thrown
         /// </summary>
-        private const string InvalidHostName = "http://www.zzkaodkoakdahdjghejajdnad.com";
+        private const string InvalidHostName = "http://google.com/404";
+
+        /// <summary>
+        /// Invalid endpoint to trigger exception being thrown at DNS resolution
+        /// </summary>
+        private const string NonexistentHostName = "http://abcdefzzzzeeeeadadad.com";
 
         /// <summary>
         /// Make sync http calls
@@ -109,11 +114,11 @@ namespace FW40Shared
         /// </summary>        
         /// <param name="count">no of calls to be made</param>                
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Reviewed manually")]
-        public static void MakeHttpCallSyncFailed(int count)
+        public static void MakeHttpCallSyncFailed(int count, bool simulateFailureAtDns = false)
         {
             try
             {
-                Uri ourUri = new Uri(InvalidHostName);
+                Uri ourUri = new Uri(simulateFailureAtDns? NonexistentHostName : InvalidHostName);
                 HttpWebRequest myHttpWebRequest = null;
                 HttpWebResponse myHttpWebResponse = null;
                 for (int i = 0; i < count; i++)
