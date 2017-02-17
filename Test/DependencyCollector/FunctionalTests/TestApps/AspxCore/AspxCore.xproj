@@ -7,7 +7,7 @@
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.Props" Condition="'$(VSToolsPath)' != ''" />
-  
+
   <PropertyGroup Label="Globals">
     <ProjectGuid>0e1b7739-c7b9-4303-99ef-9da03a00bcfb</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -20,7 +20,7 @@
     <OutputPath>$(BinRoot)\$(Configuration)\Test\DependencyCollector\FunctionalTests\TestApps\</OutputPath>
     <OutputPath>$([System.IO.Path]::GetFullPath( $(OutputPath) ))\</OutputPath>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
@@ -28,6 +28,8 @@
 
   <PropertyGroup>
     <CopyFromFolder>$(OutputPath)AspxCore\bin\$(Configuration)\netcoreapp1.0</CopyFromFolder>
+    <CopyFromFolder>$([System.IO.Path]::GetFullPath( $(CopyFromFolder) ))\</CopyFromFolder>
+
     <CopyToFolder>$(OutputPath)AspxCore</CopyToFolder>
   </PropertyGroup>
   <ItemGroup>

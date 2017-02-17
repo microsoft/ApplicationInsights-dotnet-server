@@ -18,162 +18,162 @@ namespace AspxCore.Controllers
         [HttpGet]
         public string Get()
         {
+            string result;
+
             string type = GetQueryValue("type");
             string countStr = GetQueryValue("count");
-            bool success = true;
-            bool.TryParse(GetQueryValue("success"), out success);
-            string sqlQueryToUse = success ? ValidSqlQueryToApmDatabase : InvalidSqlQueryToApmDatabase;
+
+            //bool success = true;
+            //bool.TryParse(GetQueryValue("success"), out success);
+            //string sqlQueryToUse = success ? ValidSqlQueryToApmDatabase : InvalidSqlQueryToApmDatabase;
+
             int count = 1;
             int.TryParse(countStr, out count);
 
-            try
+            switch (type)
             {
-                switch (type)
-                {
-                    case "http":
-                        MakeHttpCallSync(count, "bing");
-                        break;
-                    //case "httpClient":
-                    //    HttpHelper40.MakeHttpCallUsingHttpClient("http://www.google.com/404");
-                    //    break;
-                    //case "httppost":
-                    //    HttpHelper40.MakeHttpPostCallSync(count, "bing");
-                    //    break;
-                    //case "failedhttp":
-                    //    HttpHelper40.MakeHttpCallSyncFailed(count);
-                    //    break;
-                    //case "httpasync1":
-                    //    HttpHelper40.MakeHttpCallAsync1(count, "bing");
-                    //    break;
-                    //case "failedhttpasync1":
-                    //    HttpHelper40.MakeHttpCallAsync1Failed(count);
-                    //    break;
-                    //case "httpasync2":
-                    //    HttpHelper40.MakeHttpCallAsync2(count, "bing");
-                    //    break;
-                    //case "failedhttpasync2":
-                    //    HttpHelper40.MakeHttpCallAsync2Failed(count);
-                    //    break;
-                    //case "httpasync3":
-                    //    HttpHelper40.MakeHttpCallAsync3(count, "bing");
-                    //    break;
-                    //case "failedhttpasync3":
-                    //    HttpHelper40.MakeHttpCallAsync3Failed(count);
-                    //    break;
-                    //case "httpasync4":
-                    //    HttpHelper40.MakeHttpCallAsync4(count, "bing");
-                    //    break;
-                    //case "failedhttpasync4":
-                    //    HttpHelper40.MakeHttpCallAsync4Failed(count);
-                    //    break;
-                    //case "httpasyncawait1":
-                    //    HttpHelper45.MakeHttpCallAsyncAwait1(count, "bing");
-                    //    break;
-                    //case "failedhttpasyncawait1":
-                    //    HttpHelper45.MakeHttpCallAsyncAwait1Failed(count);
-                    //    break;
-                    //case "sql":
-                    //    this.MakeSQLCallSync(count);
-                    //    break;
-                    //case "azuresdkblob":
-                    //    HttpHelper40.MakeAzureCallToReadBlobWithSdk(count);
-                    //    break;
-                    //case "azuresdkqueue":
-                    //    HttpHelper40.MakeAzureCallToWriteQueueWithSdk(count);
-                    //    break;
-                    //case "azuresdktable":
-                    //    HttpHelper40.MakeAzureCallToWriteTableWithSdk(count);
-                    //    HttpHelper40.MakeAzureCallToReadTableWithSdk(count);
-                    //    break;
-                    //case "ExecuteReaderAsync":
-                    //    SqlCommandHelper.ExecuteReaderAsync(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "ExecuteScalarAsync":
-                    //    SqlCommandHelper.ExecuteScalarAsync(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "ExecuteReaderStoredProcedureAsync":
-                    //    this.ExecuteReaderStoredProcedureAsync();
-                    //    break;
-                    //case "TestExecuteReaderTwice":
-                    //    SqlCommandHelper.TestExecuteReaderTwice(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "BeginExecuteReader0":
-                    //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 0);
-                    //    break;
-                    //case "BeginExecuteReader1":
-                    //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 1);
-                    //    break;
-                    //case "BeginExecuteReader2":
-                    //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 2);
-                    //    break;
-                    //case "BeginExecuteReader3":
-                    //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 3);
-                    //    break;
-                    //case "TestExecuteReaderTwiceInSequence":
-                    //    SqlCommandHelper.TestExecuteReaderTwiceInSequence(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "TestExecuteReaderTwiceWithTasks":
-                    //    SqlCommandHelper.AsyncExecuteReaderInTasks(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "ExecuteNonQueryAsync":
-                    //    SqlCommandHelper.ExecuteNonQueryAsync(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "BeginExecuteNonQuery0":
-                    //    SqlCommandHelper.BeginExecuteNonQuery(ConnectionString, sqlQueryTouse, 0);
-                    //    break;
-                    //case "BeginExecuteNonQuery2":
-                    //    SqlCommandHelper.BeginExecuteNonQuery(ConnectionString, sqlQueryTouse, 2);
-                    //    break;
-                    //case "ExecuteXmlReaderAsync":
-                    //    sqlQueryTouse += " FOR XML AUTO";
-                    //    SqlCommandHelper.ExecuteXmlReaderAsync(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "BeginExecuteXmlReader":
-                    //    SqlCommandHelper.BeginExecuteXmlReader(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "SqlCommandExecuteScalar":
-                    //    sqlQueryTouse = (success == true)
-                    //                    ? ValidSqlQueryCountToApmDatabase
-                    //                    : InvalidSqlQueryToApmDatabase;
-                    //    SqlCommandHelper.ExecuteScalar(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "SqlCommandExecuteNonQuery":
-                    //    sqlQueryTouse = (success == true)
-                    //           ? ValidSqlQueryCountToApmDatabase
-                    //           : InvalidSqlQueryToApmDatabase;
-                    //    SqlCommandHelper.ExecuteNonQuery(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "SqlCommandExecuteReader0":
-                    //    SqlCommandHelper.ExecuteReader(ConnectionString, sqlQueryTouse, 0);
-                    //    break;
-                    //case "SqlCommandExecuteReader1":
-                    //    SqlCommandHelper.ExecuteReader(ConnectionString, sqlQueryTouse, 1);
-                    //    break;
-                    //case "SqlCommandExecuteXmlReader":
-                    //    sqlQueryTouse += " FOR XML AUTO";
-                    //    SqlCommandHelper.ExecuteXmlReader(ConnectionString, sqlQueryTouse);
-                    //    break;
-                    //case "SqlConnectionOpen":
-                    //    sqlQueryTouse = "Open";
-                    //    SqlCommandHelper.OpenConnection(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
-                    //    break;
-                    //case "SqlConnectionOpenAsync":
-                    //    sqlQueryTouse = "Open";
-                    //    SqlCommandHelper.OpenConnectionAsync(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
-                    //    break;
-                    //case "SqlConnectionOpenAsyncAwait":
-                    //    sqlQueryTouse = "Open";
-                    //    SqlCommandHelper.OpenConnectionAsyncAwait(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
-                    //    break;
-                    default:
-                        throw new ArgumentOutOfRangeException("Request Parameter type is not mapped to an action: " + type);
-                }
-            }
-            catch (Exception)
-            {
+                case "http":
+                    result = "Made Sync HTTP call to bing";
+                    MakeHttpCallSync(count, "bing");
+                    break;
+                //case "httpClient":
+                //    HttpHelper40.MakeHttpCallUsingHttpClient("http://www.google.com/404");
+                //    break;
+                //case "httppost":
+                //    HttpHelper40.MakeHttpPostCallSync(count, "bing");
+                //    break;
+                //case "failedhttp":
+                //    HttpHelper40.MakeHttpCallSyncFailed(count);
+                //    break;
+                //case "httpasync1":
+                //    HttpHelper40.MakeHttpCallAsync1(count, "bing");
+                //    break;
+                //case "failedhttpasync1":
+                //    HttpHelper40.MakeHttpCallAsync1Failed(count);
+                //    break;
+                //case "httpasync2":
+                //    HttpHelper40.MakeHttpCallAsync2(count, "bing");
+                //    break;
+                //case "failedhttpasync2":
+                //    HttpHelper40.MakeHttpCallAsync2Failed(count);
+                //    break;
+                //case "httpasync3":
+                //    HttpHelper40.MakeHttpCallAsync3(count, "bing");
+                //    break;
+                //case "failedhttpasync3":
+                //    HttpHelper40.MakeHttpCallAsync3Failed(count);
+                //    break;
+                //case "httpasync4":
+                //    HttpHelper40.MakeHttpCallAsync4(count, "bing");
+                //    break;
+                //case "failedhttpasync4":
+                //    HttpHelper40.MakeHttpCallAsync4Failed(count);
+                //    break;
+                //case "httpasyncawait1":
+                //    HttpHelper45.MakeHttpCallAsyncAwait1(count, "bing");
+                //    break;
+                //case "failedhttpasyncawait1":
+                //    HttpHelper45.MakeHttpCallAsyncAwait1Failed(count);
+                //    break;
+                //case "sql":
+                //    this.MakeSQLCallSync(count);
+                //    break;
+                //case "azuresdkblob":
+                //    HttpHelper40.MakeAzureCallToReadBlobWithSdk(count);
+                //    break;
+                //case "azuresdkqueue":
+                //    HttpHelper40.MakeAzureCallToWriteQueueWithSdk(count);
+                //    break;
+                //case "azuresdktable":
+                //    HttpHelper40.MakeAzureCallToWriteTableWithSdk(count);
+                //    HttpHelper40.MakeAzureCallToReadTableWithSdk(count);
+                //    break;
+                //case "ExecuteReaderAsync":
+                //    SqlCommandHelper.ExecuteReaderAsync(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "ExecuteScalarAsync":
+                //    SqlCommandHelper.ExecuteScalarAsync(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "ExecuteReaderStoredProcedureAsync":
+                //    this.ExecuteReaderStoredProcedureAsync();
+                //    break;
+                //case "TestExecuteReaderTwice":
+                //    SqlCommandHelper.TestExecuteReaderTwice(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "BeginExecuteReader0":
+                //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 0);
+                //    break;
+                //case "BeginExecuteReader1":
+                //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 1);
+                //    break;
+                //case "BeginExecuteReader2":
+                //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 2);
+                //    break;
+                //case "BeginExecuteReader3":
+                //    SqlCommandHelper.BeginExecuteReader(ConnectionString, sqlQueryTouse, 3);
+                //    break;
+                //case "TestExecuteReaderTwiceInSequence":
+                //    SqlCommandHelper.TestExecuteReaderTwiceInSequence(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "TestExecuteReaderTwiceWithTasks":
+                //    SqlCommandHelper.AsyncExecuteReaderInTasks(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "ExecuteNonQueryAsync":
+                //    SqlCommandHelper.ExecuteNonQueryAsync(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "BeginExecuteNonQuery0":
+                //    SqlCommandHelper.BeginExecuteNonQuery(ConnectionString, sqlQueryTouse, 0);
+                //    break;
+                //case "BeginExecuteNonQuery2":
+                //    SqlCommandHelper.BeginExecuteNonQuery(ConnectionString, sqlQueryTouse, 2);
+                //    break;
+                //case "ExecuteXmlReaderAsync":
+                //    sqlQueryTouse += " FOR XML AUTO";
+                //    SqlCommandHelper.ExecuteXmlReaderAsync(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "BeginExecuteXmlReader":
+                //    SqlCommandHelper.BeginExecuteXmlReader(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "SqlCommandExecuteScalar":
+                //    sqlQueryTouse = (success == true)
+                //                    ? ValidSqlQueryCountToApmDatabase
+                //                    : InvalidSqlQueryToApmDatabase;
+                //    SqlCommandHelper.ExecuteScalar(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "SqlCommandExecuteNonQuery":
+                //    sqlQueryTouse = (success == true)
+                //           ? ValidSqlQueryCountToApmDatabase
+                //           : InvalidSqlQueryToApmDatabase;
+                //    SqlCommandHelper.ExecuteNonQuery(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "SqlCommandExecuteReader0":
+                //    SqlCommandHelper.ExecuteReader(ConnectionString, sqlQueryTouse, 0);
+                //    break;
+                //case "SqlCommandExecuteReader1":
+                //    SqlCommandHelper.ExecuteReader(ConnectionString, sqlQueryTouse, 1);
+                //    break;
+                //case "SqlCommandExecuteXmlReader":
+                //    sqlQueryTouse += " FOR XML AUTO";
+                //    SqlCommandHelper.ExecuteXmlReader(ConnectionString, sqlQueryTouse);
+                //    break;
+                //case "SqlConnectionOpen":
+                //    sqlQueryTouse = "Open";
+                //    SqlCommandHelper.OpenConnection(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
+                //    break;
+                //case "SqlConnectionOpenAsync":
+                //    sqlQueryTouse = "Open";
+                //    SqlCommandHelper.OpenConnectionAsync(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
+                //    break;
+                //case "SqlConnectionOpenAsyncAwait":
+                //    sqlQueryTouse = "Open";
+                //    SqlCommandHelper.OpenConnectionAsyncAwait(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
+                //    break;
+                default:
+                    result = $"Unrecognized request type '{type}'";
+                    break;
             }
 
-            return QueryToExecuteLabel + sqlQueryToUse;
+            return result;
         }
 
         /// <summary>
