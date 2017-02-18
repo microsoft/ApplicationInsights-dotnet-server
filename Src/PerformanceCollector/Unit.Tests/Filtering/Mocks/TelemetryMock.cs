@@ -1,6 +1,8 @@
 ﻿namespace Unit.Tests
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
@@ -18,6 +20,10 @@
         public string StringField { get; set; }
 
         public TimeSpan TimeSpanField { get; set; }
+
+        public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
+        
+        public IDictionary<string, double> Metrics { get; } = new Dictionary<string, double>();
         
         public DateTimeOffset Timestamp { get; set; }
 

@@ -12,6 +12,8 @@
     /// </summary>
     internal class OperationalizedMetric<TTelemetry>
     {
+        private static string ProjectionCount = "Count()";
+
         private static readonly MethodInfo DoubleParseMethodInfo = typeof(double).GetMethod(
             "Parse",
             new[] { typeof(string), typeof(IFormatProvider) });
@@ -144,7 +146,19 @@
 
             try
             {
-                MemberExpression fieldExpression = Expression.Property(documentExpression, this.info.Projection);
+                Expression fieldExpression;
+
+                if (string.Equals(this.info.Projection, ProjectionCount, StringComparison.OrdinalIgnoreCase))
+                {
+                    fieldExpression = Expression.Constant(1, typeof(int));
+                }
+                else
+                {
+                    bool isCustomDimension;
+                    bool isCustomMetric;
+                    Filter<TTelemetry>.GetFieldType(this.info.Projection, out isCustomDimension, out isCustomMetric);
+                    fieldExpression = Filter<TTelemetry>.ProduceFieldExpression(documentExpression, this.info.Projection, isCustomDimension, isCustomMetric);
+                }
 
                 // double.Parse(((object)fieldExpression).ToString());
                 Expression fieldAsObjectExpression = Expression.ConvertChecked(fieldExpression, typeof(object));

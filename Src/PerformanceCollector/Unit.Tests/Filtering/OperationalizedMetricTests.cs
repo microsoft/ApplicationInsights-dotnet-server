@@ -11,7 +11,7 @@
     public class OperationalizedMetricTests
     {
         [TestMethod]
-        public void OperationalizedMetricFiltersCorrectlyTest()
+        public void OperationalizedMetricFiltersCorrectly()
         {
             // ARRANGE
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "dog" };
@@ -47,7 +47,7 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyTest()
+        public void OperationalizedMetricProjectsCorrectly()
         {
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
@@ -73,7 +73,85 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricAggregatesCorrectlyTest()
+        public void OperationalizedMetricProjectsCorrectlyWhenCustomDimension()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "CustomDimensions.Dimension1",
+                Aggregation = AggregationType.Sum,
+                Filters = new FilterInfo[0]
+            };
+
+            var telemetry = new RequestTelemetry() { Properties = { ["Dimension1"] = "1.5" } };
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            double projection = metric.Project(telemetry);
+
+            // ASSERT
+            Assert.AreEqual(AggregationType.Sum, metric.AggregationType);
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(1.5d, projection);
+        }
+
+        [TestMethod]
+        public void OperationalizedMetricProjectsCorrectlyWhenCustomMetric()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "CustomMetrics.Metric1",
+                Aggregation = AggregationType.Sum,
+                Filters = new FilterInfo[0]
+            };
+
+            var telemetry = new RequestTelemetry() { Metrics = { ["Metric1"] = 1.75d } };
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            double projection = metric.Project(telemetry);
+
+            // ASSERT
+            Assert.AreEqual(AggregationType.Sum, metric.AggregationType);
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(1.75d, projection);
+        }
+
+        [TestMethod]
+        public void OperationalizedMetricProjectsCorrectlyWhenCount()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "COUNT()",
+                Aggregation = AggregationType.Sum,
+                Filters = new FilterInfo[0]
+            };
+
+            var telemetry = new RequestTelemetry();
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            double projection = metric.Project(telemetry);
+
+            // ASSERT
+            Assert.AreEqual(AggregationType.Sum, metric.AggregationType);
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(1d, projection);
+        }
+
+        [TestMethod]
+        public void OperationalizedMetricAggregatesCorrectly()
         {
             // ARRANGE
             double[] accumulatedValues = { 1d, 3d };
@@ -92,7 +170,7 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricAggregatesCorrectlyForEmptyDataSetTest()
+        public void OperationalizedMetricAggregatesCorrectlyForEmptyDataSet()
         {
             // ARRANGE
             double[] accumulatedValues = { };
@@ -111,7 +189,7 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricReportsErrorsForInvalidFiltersTest()
+        public void OperationalizedMetricReportsErrorsForInvalidFilters()
         {
             // ARRANGE
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Sky" };
@@ -142,7 +220,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void OperationalizedMetricThrowsWhenInvalidProjectionTest()
+        public void OperationalizedMetricThrowsWhenInvalidProjection()
         {
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
@@ -162,7 +240,7 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricReportsErrorWhenProjectionIsNotDoubleTest()
+        public void OperationalizedMetricReportsErrorWhenProjectionIsNotDouble()
         {
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()

@@ -17,7 +17,7 @@
         #region Input validation
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void FilterThrowsWhenComparandIsNullTest()
+        public void FilterThrowsWhenComparandIsNull()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.Equal, Comparand = null };
@@ -30,7 +30,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void FilterThrowsWhenFieldNameIsEmptyTest()
+        public void FilterThrowsWhenFieldNameIsEmpty()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = string.Empty, Predicate = Predicate.Equal, Comparand = "abc" };
@@ -43,7 +43,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterThrowsWhenFieldNameDoesNotExistInTypeTest()
+        public void FilterThrowsWhenFieldNameDoesNotExistInType()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NonExistentFieldName", Predicate = Predicate.Equal, Comparand = "abc" };
@@ -55,12 +55,12 @@
         }
         #endregion
 
-        #region Generic filtering
+        #region Filtering
 
         #region Boolean
 
         [TestMethod]
-        public void FilterBooleanEqualTest()
+        public void FilterBooleanEqual()
         {
             // ARRANGE
             var equalsTrue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.Equal, Comparand = "true" };
@@ -75,7 +75,7 @@
         }
 
         [TestMethod]
-        public void FilterBooleanNotEqualTest()
+        public void FilterBooleanNotEqual()
         {
             // ARRANGE
             var notEqualTrue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.NotEqual, Comparand = "true" };
@@ -91,7 +91,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanGreaterThanTest()
+        public void FilterBooleanGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.GreaterThan, Comparand = "true" };
@@ -104,7 +104,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanLessThanTest()
+        public void FilterBooleanLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.LessThan, Comparand = "true" };
@@ -117,7 +117,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanGreaterThanOrEqualTest()
+        public void FilterBooleanGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "true" };
@@ -130,7 +130,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanLessThanOrEqualTest()
+        public void FilterBooleanLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.LessThanOrEqual, Comparand = "true" };
@@ -143,7 +143,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanContainsTest()
+        public void FilterBooleanContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.Contains, Comparand = "true" };
@@ -156,7 +156,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanDoesNotContainTest()
+        public void FilterBooleanDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.DoesNotContain, Comparand = "true" };
@@ -169,7 +169,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterBooleanGarbageComparandTest()
+        public void FilterBooleanGarbageComparand()
         {
             // ARRANGE
             var notEqualTrue = new FilterInfo() { FieldName = "BooleanField", Predicate = Predicate.Equal, Comparand = "garbage" };
@@ -185,7 +185,7 @@
         #region Nullable<Boolean>
 
         [TestMethod]
-        public void FilterNullableBooleanEqualTest()
+        public void FilterNullableBooleanEqual()
         {
             // ARRANGE
             var equalsTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "true" };
@@ -202,7 +202,7 @@
         }
 
         [TestMethod]
-        public void FilterNullableBooleanNotEqualTest()
+        public void FilterNullableBooleanNotEqual()
         {
             // ARRANGE
             var notEqualTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.NotEqual, Comparand = "true" };
@@ -220,7 +220,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanGreaterThanTest()
+        public void FilterNullableBooleanGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.GreaterThan, Comparand = "true" };
@@ -233,7 +233,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanLessThanTest()
+        public void FilterNullableBooleanLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.LessThan, Comparand = "true" };
@@ -246,7 +246,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanGreaterThanOrEqualTest()
+        public void FilterNullableBooleanGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "true" };
@@ -259,7 +259,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanLessThanOrEqualTest()
+        public void FilterNullableBooleanLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.LessThanOrEqual, Comparand = "true" };
@@ -272,7 +272,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanContainsTest()
+        public void FilterNullableBooleanContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Contains, Comparand = "true" };
@@ -285,7 +285,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanDoesNotContainTest()
+        public void FilterNullableBooleanDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.DoesNotContain, Comparand = "true" };
@@ -298,7 +298,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterNullableBooleanGarbageComparandTest()
+        public void FilterNullableBooleanGarbageComparand()
         {
             // ARRANGE
             var notEqualTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "garbage" };
@@ -310,7 +310,7 @@
         }
 
         [TestMethod]
-        public void FilterNullableBooleanNullEqualTest()
+        public void FilterNullableBooleanNullEqual()
         {
             // ARRANGE
             var equalsTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "NULL" };
@@ -330,7 +330,7 @@
         #region Int
 
         [TestMethod]
-        public void FilterIntEqualTest()
+        public void FilterIntEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.Equal, Comparand = "123.0" };
@@ -345,7 +345,7 @@
         }
 
         [TestMethod]
-        public void FilterIntNotEqualTest()
+        public void FilterIntNotEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.NotEqual, Comparand = "123.0" };
@@ -360,7 +360,7 @@
         }
 
         [TestMethod]
-        public void FilterIntGreaterThanTest()
+        public void FilterIntGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
@@ -377,7 +377,7 @@
         }
 
         [TestMethod]
-        public void FilterIntLessThanTest()
+        public void FilterIntLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.LessThan, Comparand = "123.0" };
@@ -394,7 +394,7 @@
         }
 
         [TestMethod]
-        public void FilterIntGreaterThanOrEqualTest()
+        public void FilterIntGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
@@ -411,7 +411,7 @@
         }
 
         [TestMethod]
-        public void FilterIntLessThanOrEqualTest()
+        public void FilterIntLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
@@ -428,7 +428,7 @@
         }
 
         [TestMethod]
-        public void FilterIntContainsTest()
+        public void FilterIntContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.Contains, Comparand = "2" };
@@ -443,7 +443,7 @@
         }
 
         [TestMethod]
-        public void FilterIntDoesNotContainTest()
+        public void FilterIntDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
@@ -459,7 +459,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterIntGarbageComparandTest()
+        public void FilterIntGarbageComparand()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "IntField", Predicate = Predicate.Equal, Comparand = "garbage" };
@@ -475,7 +475,7 @@
         #region Double
 
         [TestMethod]
-        public void FilterDoubleEqualTest()
+        public void FilterDoubleEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Equal, Comparand = "123.0" };
@@ -490,7 +490,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleNotEqualTest()
+        public void FilterDoubleNotEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.NotEqual, Comparand = "123.0" };
@@ -505,7 +505,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleGreaterThanTest()
+        public void FilterDoubleGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
@@ -522,7 +522,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleLessThanTest()
+        public void FilterDoubleLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.LessThan, Comparand = "123.0" };
@@ -539,7 +539,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleGreaterThanOrEqualTest()
+        public void FilterDoubleGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
@@ -556,7 +556,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleLessThanOrEqualTest()
+        public void FilterDoubleLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
@@ -573,7 +573,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleContainsTest()
+        public void FilterDoubleContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Contains, Comparand = "2" };
@@ -588,7 +588,7 @@
         }
 
         [TestMethod]
-        public void FilterDoubleDoesNotContainTest()
+        public void FilterDoubleDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
@@ -604,7 +604,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
-        public void FilterDoubleGarbageComparandTest()
+        public void FilterDoubleGarbageComparand()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Equal, Comparand = "garbage" };
@@ -620,7 +620,7 @@
         #region TimeSpan
 
         [TestMethod]
-        public void FilterTimeSpanEqualTest()
+        public void FilterTimeSpanEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.Equal, Comparand = "123" };
@@ -635,7 +635,7 @@
         }
 
         [TestMethod]
-        public void FilterTimeSpanNotEqualTest()
+        public void FilterTimeSpanNotEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.NotEqual, Comparand = "123" };
@@ -650,7 +650,7 @@
         }
 
         [TestMethod]
-        public void FilterTimeSpanGreaterThanTest()
+        public void FilterTimeSpanGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.GreaterThan, Comparand = "123" };
@@ -667,7 +667,7 @@
         }
 
         [TestMethod]
-        public void FilterTimeSpanLessThanTest()
+        public void FilterTimeSpanLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.LessThan, Comparand = "123" };
@@ -684,7 +684,7 @@
         }
 
         [TestMethod]
-        public void FilterTimeSpanGreaterThanOrEqualTest()
+        public void FilterTimeSpanGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123" };
@@ -701,7 +701,7 @@
         }
 
         [TestMethod]
-        public void FilterTimeSpanLessThanOrEqualTest()
+        public void FilterTimeSpanLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.LessThanOrEqual, Comparand = "123" };
@@ -719,7 +719,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterTimeSpanContainsTest()
+        public void FilterTimeSpanContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.Contains, Comparand = "2" };
@@ -732,7 +732,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterTimeSpanDoesNotContainTest()
+        public void FilterTimeSpanDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "TimeSpanField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
@@ -745,7 +745,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterTimeSpanGarbageComparandTest()
+        public void FilterTimeSpanGarbageComparand()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Equal, Comparand = "garbage" };
@@ -761,7 +761,7 @@
         #region String
 
         [TestMethod]
-        public void FilterStringEqualTest()
+        public void FilterStringEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.Equal, Comparand = "abc" };
@@ -778,7 +778,7 @@
         }
 
         [TestMethod]
-        public void FilterStringNotEqualTest()
+        public void FilterStringNotEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.NotEqual, Comparand = "abc" };
@@ -795,7 +795,7 @@
         }
 
         [TestMethod]
-        public void FilterStringGreaterThanTest()
+        public void FilterStringGreaterThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
@@ -812,7 +812,7 @@
         }
 
         [TestMethod]
-        public void FilterStringLessThanTest()
+        public void FilterStringLessThan()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "123.0" };
@@ -829,7 +829,7 @@
         }
 
         [TestMethod]
-        public void FilterStringGreaterThanOrEqualTest()
+        public void FilterStringGreaterThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
@@ -846,7 +846,7 @@
         }
 
         [TestMethod]
-        public void FilterStringLessThanOrEqualTest()
+        public void FilterStringLessThanOrEqual()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
@@ -863,7 +863,7 @@
         }
 
         [TestMethod]
-        public void FilterStringContainsTest()
+        public void FilterStringContains()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.Contains, Comparand = "abc" };
@@ -880,7 +880,7 @@
         }
 
         [TestMethod]
-        public void FilterStringDoesNotContainTest()
+        public void FilterStringDoesNotContain()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.DoesNotContain, Comparand = "abc" };
@@ -898,7 +898,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
-        public void FilterStringGarbageFieldValueTest()
+        public void FilterStringGarbageFieldValue()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "123.0" };
@@ -911,7 +911,7 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterStringGarbageComparandValueTest()
+        public void FilterStringGarbageComparandValue()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "Not a number at all" };
@@ -924,13 +924,49 @@
 
         #endregion
 
+        #region Custom dimensions
+        [TestMethod]
+        public void FilterCustomDimensions()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "CustomDimensions.Dimension.1", Predicate = Predicate.Equal, Comparand = "abc" };
+            
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Properties = { ["Dimension.1"] = "abc" } });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Properties = { ["Dimension.1"] = "abcd" } });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock());
+            
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterCustomMetrics()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "CustomMetrics.Metric.1", Predicate = Predicate.Equal, Comparand = "1.5" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Metrics = { ["Metric.1"] = 1.5d } });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Metrics = { ["Metric.1"] = 1.6d } });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+        #endregion
+
         #endregion
 
         #region Support for actual telemetry types
 
         //!!! enumerate real telemetry type's properties through reflection and explicitly state which ones we don't support
         [TestMethod]
-        public void FilterSupportsRequestTelemetryTest()
+        public void FilterSupportsRequestTelemetry()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "request name" };
