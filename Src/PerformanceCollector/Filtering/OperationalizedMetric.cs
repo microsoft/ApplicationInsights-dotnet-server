@@ -26,7 +26,7 @@
 
         private readonly List<Filter<TTelemetry>> filters = new List<Filter<TTelemetry>>();
 
-        public MetricIdCollection IdsToReportUnder { get; } = new MetricIdCollection();
+        public string Id => this.info.Id;
 
         public AggregationType AggregationType => this.info.Aggregation;
 
@@ -38,9 +38,6 @@
             }
 
             this.info = info;
-
-            // only has a single Id for now
-            this.IdsToReportUnder.Add(Tuple.Create(info.SessionId, info.Id));
 
             this.CreateFilters(out errors);
 

@@ -443,7 +443,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -452,7 +451,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -471,11 +469,9 @@
             Assert.AreEqual(2, receivedCollectionConfigurationInfo.Metrics.Length);
 
             Assert.AreEqual(metrics[0].ToString(), receivedCollectionConfigurationInfo.Metrics[0].ToString());
-            Assert.AreEqual(metrics[0].SessionId, receivedCollectionConfigurationInfo.Metrics[0].SessionId);
             Assert.AreEqual(metrics[0].Id, receivedCollectionConfigurationInfo.Metrics[0].Id);
 
             Assert.AreEqual(metrics[1].ToString(), receivedCollectionConfigurationInfo.Metrics[1].ToString());
-            Assert.AreEqual(metrics[1].SessionId, receivedCollectionConfigurationInfo.Metrics[1].SessionId);
             Assert.AreEqual(metrics[1].Id, receivedCollectionConfigurationInfo.Metrics[1].Id);
         }
 
@@ -494,7 +490,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -503,7 +498,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -526,11 +520,9 @@
             Assert.AreEqual(2, receivedCollectionConfigurationInfo.Metrics.Length);
 
             Assert.AreEqual(metrics[0].ToString(), receivedCollectionConfigurationInfo.Metrics[0].ToString());
-            Assert.AreEqual(metrics[0].SessionId, receivedCollectionConfigurationInfo.Metrics[0].SessionId);
             Assert.AreEqual(metrics[0].Id, receivedCollectionConfigurationInfo.Metrics[0].Id);
 
             Assert.AreEqual(metrics[1].ToString(), receivedCollectionConfigurationInfo.Metrics[1].ToString());
-            Assert.AreEqual(metrics[1].SessionId, receivedCollectionConfigurationInfo.Metrics[1].SessionId);
             Assert.AreEqual(metrics[1].Id, receivedCollectionConfigurationInfo.Metrics[1].Id);
         }
 
@@ -549,7 +541,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -558,7 +549,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -594,7 +584,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "NoneExistentNameInProjection",
@@ -603,7 +592,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",

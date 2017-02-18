@@ -780,17 +780,7 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters = new FilterInfo[0]
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          SessionId = "Session2",
-                                          Id = "Metric2",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Avg,
@@ -798,8 +788,7 @@
                                       },
                                    new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session3",
-                                          Id = "Metric3",
+                                          Id = "Metric2",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Sum,
@@ -817,11 +806,11 @@
                     Enumerable.Empty<Tuple<string, int>>(),
                     false);
 
-            var accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators[Tuple.Create("Session1", "Metric1")];
+            var accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators["Metric1"];
             accumulator.Value.Push(1.0d);
             accumulator.Value.Push(2.0d);
 
-            accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators[Tuple.Create("Session3", "Metric3")];
+            accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators["Metric2"];
             accumulator.Value.Push(1.0d);
             accumulator.Value.Push(2.0d);
 
@@ -832,16 +821,13 @@
             // ASSERT
             this.listener.Stop();
 
-            MetricPoint metric1 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session1" && m.Name == "Metric1");
-            MetricPoint metric2 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session2" && m.Name == "Metric2");
-            MetricPoint metric3 = this.samples.Single().Item3.Metrics.Single(m => m.SessionId == "Session3" && m.Name == "Metric3");
-
+            MetricPoint metric1 = this.samples.Single().Item3.Metrics.Single(m => m.Name == "Metric1");
+            MetricPoint metric2 = this.samples.Single().Item3.Metrics.Single(m => m.Name == "Metric2");
+            
             Assert.AreEqual(1.5d, metric1.Value);
             Assert.AreEqual(2, metric1.Weight);
-            Assert.AreEqual(1.5d, metric2.Value);
+            Assert.AreEqual(3.0d, metric2.Value);
             Assert.AreEqual(2, metric2.Weight);
-            Assert.AreEqual(3.0d, metric3.Value);
-            Assert.AreEqual(2, metric3.Weight);
         }
 
         [TestMethod]

@@ -199,23 +199,23 @@
         {
             var metrics = new List<MetricPoint>();
 
-            foreach (KeyValuePair<Tuple<string, string>, AccumulatedValue> metricAccumulator in sample.CollectionConfigurationAccumulator.MetricAccumulators)
+            foreach (AccumulatedValue metricAccumulatedValue in
+                sample.CollectionConfigurationAccumulator.MetricAccumulators.Values)
             {
                 try
                 {
-                    double[] accumulatedValues = metricAccumulator.Value.Value.ToArray();
+                    double[] accumulatedValues = metricAccumulatedValue.Value.ToArray();
 
-                    // report the accumulator under all its ids
-                    metrics.AddRange(
-                        metricAccumulator.Value.MetricIds.Select(
-                            metricId =>
-                            new MetricPoint
-                                {
-                                    SessionId = metricId.Item1,
-                                    Name = metricId.Item2,
-                                    Value = OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulator.Value.AggregationType),
-                                    Weight = accumulatedValues.Length
-                                }));
+                    MetricPoint metricPoint = new MetricPoint
+                                                  {
+                                                      Name = metricAccumulatedValue.MetricId,
+                                                      Value =
+                                                          OperationalizedMetric<int>.Aggregate(
+                                                              accumulatedValues,
+                                                              metricAccumulatedValue.AggregationType),
+                                                      Weight = accumulatedValues.Length
+                                                  };
+                    metrics.Add(metricPoint);
                 }
                 catch (Exception e)
                 {

@@ -18,7 +18,6 @@
             var filterInfo2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "cat" };
             var metricInfo = new OperationalizedMetricInfo()
                                  {
-                                     SessionId = "Session1",
                                      Id = "Metric1",
                                      TelemetryType = TelemetryType.Request,
                                      Projection = "Name",
@@ -53,7 +52,6 @@
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
             {
-                SessionId = "Session1",
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
                 Projection = "Id",
@@ -120,7 +118,6 @@
             var filterInfo2 = new FilterInfo() { FieldName = "NonExistentField", Predicate = Predicate.Equal, Comparand = "Comparand" };
             var metricInfo = new OperationalizedMetricInfo()
                                  {
-                                     SessionId = "Session1",
                                      Id = "Metric1",
                                      TelemetryType = TelemetryType.Request,
                                      Projection = "Name",
@@ -150,7 +147,6 @@
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
                                  {
-                                     SessionId = "Session1",
                                      Id = "Metric1",
                                      TelemetryType = TelemetryType.Request,
                                      Projection = "NonExistentFieldName",
@@ -171,7 +167,6 @@
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
             {
-                SessionId = "Session1",
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
                 Projection = "Id",

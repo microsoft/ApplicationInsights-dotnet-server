@@ -13,15 +13,14 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
     using Microsoft.ApplicationInsights.Web.Helpers;
-    using Microsoft.Diagnostics.Tracing;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class QuickPulseTelemetryProcessorTests
     {
-        const int MaxFieldLength = 32768;
-        
+        private const int MaxFieldLength = 32768;
+
         private static readonly CollectionConfiguration EmptyCollectionConfiguration =
             new CollectionConfiguration(
                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
@@ -41,7 +40,7 @@
         {
             new QuickPulseTelemetryProcessor(null);
         }
-        
+
         [TestMethod]
         public void QuickPulseTelemetryProcessorRegistersWithModule()
         {
@@ -199,7 +198,7 @@
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var endpoint = new Uri("http://microsoft.com");
             var config = new TelemetryConfiguration() { InstrumentationKey = "some ikey" };
-            
+
             // ACT
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(accumulatorManager, endpoint, config);
             telemetryProcessor.Process(new RequestTelemetry() { Context = { InstrumentationKey = "some ikey" } });
@@ -304,17 +303,11 @@
             // ACT
             var serviceEndpoint = new Uri("http://microsoft.com");
             var config = new TelemetryConfiguration() { InstrumentationKey = "some ikey" };
-            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
-                accumulatorManager1,
-                serviceEndpoint,
-                config);
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(accumulatorManager1, serviceEndpoint, config);
             telemetryProcessor.Process(new RequestTelemetry() { Context = { InstrumentationKey = "some ikey" } });
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StopCollection();
 
-            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
-                accumulatorManager2,
-                serviceEndpoint,
-                config);
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(accumulatorManager2, serviceEndpoint, config);
             telemetryProcessor.Process(new DependencyTelemetry() { Context = { InstrumentationKey = "some ikey" } });
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StopCollection();
 
@@ -384,7 +377,7 @@
             // ARRANGE
             var simpleTelemetryProcessorSpy = new SimpleTelemetryProcessorSpy();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(simpleTelemetryProcessorSpy);
-            
+
             // ACT
             telemetryProcessor.Process(new DependencyTelemetry() { Name = "http://microsoft.ru" });
             telemetryProcessor.Process(new DependencyTelemetry() { Name = "http://rt.services.visualstudio.com/blabla" });
@@ -424,13 +417,26 @@
                                      Name = Guid.NewGuid().ToString(),
                                      Success = false,
                                      Duration = TimeSpan.FromSeconds(1),
-                                     Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" }, { "ErrorMessage", "EMValue" } },
+                                     Properties =
+                                         {
+                                             { "Prop1", "Val1" },
+                                             { "Prop2", "Val2" },
+                                             { "Prop3", "Val3" },
+                                             { "Prop4", "Val4" },
+                                             { "ErrorMessage", "EMValue" }
+                                         },
                                      Context = { InstrumentationKey = instrumentationKey }
                                  };
-            
+
             var exception = new ExceptionTelemetry(new ArgumentNullException())
                                 {
-                                    Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                                    Properties =
+                                        {
+                                            { "Prop1", "Val1" },
+                                            { "Prop2", "Val2" },
+                                            { "Prop3", "Val3" },
+                                            { "Prop4", "Val4" }
+                                        },
                                     Context = { InstrumentationKey = instrumentationKey }
                                 };
 
@@ -448,12 +454,15 @@
             Assert.AreEqual(3, collectedTelemetry[0].Properties.Length);
 
             Assert.IsTrue(collectedTelemetry[0].Properties.ToList().TrueForAll(pair => pair.Key.Contains("Prop") && pair.Value.Contains("Val")));
-            
+
             Assert.AreEqual(TelemetryDocumentType.RemoteDependency, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[1].DocumentType));
             Assert.AreEqual(dependency.Name, ((DependencyTelemetryDocument)collectedTelemetry[1]).Name);
             Assert.AreEqual(3 + 1, collectedTelemetry[1].Properties.Length);
 
-            Assert.IsTrue(collectedTelemetry[1].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val")) || (pair.Key == "ErrorMessage" && pair.Value == "EMValue")));
+            Assert.IsTrue(
+                collectedTelemetry[1].Properties.ToList()
+                    .TrueForAll(
+                        pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val")) || (pair.Key == "ErrorMessage" && pair.Value == "EMValue")));
 
             Assert.AreEqual(TelemetryDocumentType.Exception, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[2].DocumentType));
             Assert.AreEqual(exception.Exception.ToString(), ((ExceptionTelemetryDocument)collectedTelemetry[2]).Exception);
@@ -475,19 +484,19 @@
 
             // ACT
             var request = new RequestTelemetry()
-            {
-                Success = true,
-                ResponseCode = "200",
-                Duration = TimeSpan.FromSeconds(1),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                              {
+                                  Success = true,
+                                  ResponseCode = "200",
+                                  Duration = TimeSpan.FromSeconds(1),
+                                  Context = { InstrumentationKey = instrumentationKey }
+                              };
 
             var dependency = new DependencyTelemetry()
-            {
-                Success = true,
-                Duration = TimeSpan.FromSeconds(1),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                 {
+                                     Success = true,
+                                     Duration = TimeSpan.FromSeconds(1),
+                                     Context = { InstrumentationKey = instrumentationKey }
+                                 };
 
             var exception = new ExceptionTelemetry(new ArgumentException("bla")) { Context = { InstrumentationKey = instrumentationKey } };
 
@@ -535,18 +544,19 @@
             for (int i = 0; i < 100; i++)
             {
                 var request = new RequestTelemetry()
-                {
-                    Success = false,
-                    ResponseCode = "400",
-                    Duration = TimeSpan.FromSeconds(counter++),
-                    Context = { InstrumentationKey = instrumentationKey }
-                };
+                                  {
+                                      Success = false,
+                                      ResponseCode = "400",
+                                      Duration = TimeSpan.FromSeconds(counter++),
+                                      Context = { InstrumentationKey = instrumentationKey }
+                                  };
 
                 telemetryProcessor.Process(request);
             }
 
             // ASSERT
-            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<RequestTelemetryDocument>().ToArray();
+            var collectedTelemetry =
+                accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<RequestTelemetryDocument>().ToArray();
 
             Assert.AreEqual(5 + 30, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
@@ -581,11 +591,11 @@
             for (int i = 0; i < 100; i++)
             {
                 var dependency = new DependencyTelemetry()
-                {
-                    Success = false,
-                    Duration = TimeSpan.FromSeconds(counter++),
-                    Context = { InstrumentationKey = instrumentationKey }
-                };
+                                     {
+                                         Success = false,
+                                         Duration = TimeSpan.FromSeconds(counter++),
+                                         Context = { InstrumentationKey = instrumentationKey }
+                                     };
 
                 telemetryProcessor.Process(dependency);
             }
@@ -595,17 +605,18 @@
             for (int i = 0; i < 100; i++)
             {
                 var dependency = new DependencyTelemetry()
-                {
-                    Success = false,
-                    Duration = TimeSpan.FromSeconds(counter++),
-                    Context = { InstrumentationKey = instrumentationKey }
-                };
+                                     {
+                                         Success = false,
+                                         Duration = TimeSpan.FromSeconds(counter++),
+                                         Context = { InstrumentationKey = instrumentationKey }
+                                     };
 
                 telemetryProcessor.Process(dependency);
             }
 
             // ASSERT
-            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<DependencyTelemetryDocument>().ToArray();
+            var collectedTelemetry =
+                accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<DependencyTelemetryDocument>().ToArray();
 
             Assert.AreEqual(5 + 30, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
@@ -641,7 +652,12 @@
             {
                 var exception = new ExceptionTelemetry(new Exception((counter++).ToString(CultureInfo.InvariantCulture)))
                                     {
-                                        Context = { InstrumentationKey = instrumentationKey }
+                                        Context =
+                                            {
+                                                InstrumentationKey
+                                                    =
+                                                    instrumentationKey
+                                            }
                                     };
 
                 telemetryProcessor.Process(exception);
@@ -653,14 +669,20 @@
             {
                 var exception = new ExceptionTelemetry(new Exception((counter++).ToString(CultureInfo.InvariantCulture)))
                                     {
-                                        Context = { InstrumentationKey = instrumentationKey }
+                                        Context =
+                                            {
+                                                InstrumentationKey
+                                                    =
+                                                    instrumentationKey
+                                            }
                                     };
 
                 telemetryProcessor.Process(exception);
             }
 
             // ASSERT
-            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<ExceptionTelemetryDocument>().ToArray();
+            var collectedTelemetry =
+                accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<ExceptionTelemetryDocument>().ToArray();
 
             Assert.AreEqual(5 + 30, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
@@ -692,19 +714,19 @@
 
             // ACT
             var request = new RequestTelemetry()
-            {
-                Success = false,
-                ResponseCode = "500",
-                Duration = TimeSpan.FromSeconds(1),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                              {
+                                  Success = false,
+                                  ResponseCode = "500",
+                                  Duration = TimeSpan.FromSeconds(1),
+                                  Context = { InstrumentationKey = instrumentationKey }
+                              };
 
             var dependency = new DependencyTelemetry()
-            {
-                Success = false,
-                Duration = TimeSpan.FromSeconds(1),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                 {
+                                     Success = false,
+                                     Duration = TimeSpan.FromSeconds(1),
+                                     Context = { InstrumentationKey = instrumentationKey }
+                                 };
 
             var exception = new ExceptionTelemetry(new ArgumentException("bla")) { Context = { InstrumentationKey = instrumentationKey } };
 
@@ -730,9 +752,25 @@
 
             // ACT
             var requestShort = new RequestTelemetry(new string('r', MaxFieldLength), DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                { Context = { InstrumentationKey = instrumentationKey } };
+                                   {
+                                       Context
+                                           =
+                                           {
+                                               InstrumentationKey
+                                                   =
+                                                   instrumentationKey
+                                           }
+                                   };
             var requestLong = new RequestTelemetry(new string('r', MaxFieldLength + 1), DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                { Context = { InstrumentationKey = instrumentationKey } };
+                                  {
+                                      Context
+                                          =
+                                          {
+                                              InstrumentationKey
+                                                  =
+                                                  instrumentationKey
+                                          }
+                                  };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(requestLong);
@@ -759,16 +797,52 @@
 
             // ACT
             var requestShort = new RequestTelemetry("requestShort", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-            {
-                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                   {
+                                       Properties =
+                                           {
+                                               {
+                                                   new string
+                                                   (
+                                                   'p',
+                                                   MaxFieldLength),
+                                                   new string
+                                                   (
+                                                   'v',
+                                                   MaxFieldLength)
+                                               }
+                                           },
+                                       Context =
+                                           {
+                                               InstrumentationKey
+                                                   =
+                                                   instrumentationKey
+                                           }
+                                   };
 
             var requestLong = new RequestTelemetry("requestLong", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-            {
-                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                  {
+                                      Properties =
+                                          {
+                                              {
+                                                  new string
+                                                  (
+                                                  'p',
+                                                  MaxFieldLength
+                                                  + 1),
+                                                  new string
+                                                  (
+                                                  'v',
+                                                  MaxFieldLength
+                                                  + 1)
+                                              }
+                                          },
+                                      Context =
+                                          {
+                                              InstrumentationKey
+                                                  =
+                                                  instrumentationKey
+                                          }
+                                  };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(requestLong);
@@ -852,8 +926,7 @@
                 DateTimeOffset.Now,
                 TimeSpan.FromSeconds(1),
                 new string('c', MaxFieldLength),
-                false)
-            { Context = { InstrumentationKey = instrumentationKey } };
+                false) { Context = { InstrumentationKey = instrumentationKey } };
 
             var dependencyLong = new DependencyTelemetry(
                 new string('c', MaxFieldLength + 1),
@@ -863,8 +936,7 @@
                 DateTimeOffset.Now,
                 TimeSpan.FromSeconds(1),
                 new string('c', MaxFieldLength + 1),
-                false)
-            { Context = { InstrumentationKey = instrumentationKey } };
+                false) { Context = { InstrumentationKey = instrumentationKey } };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(dependencyLong);
@@ -899,10 +971,10 @@
                 TimeSpan.FromSeconds(1),
                 "dependencyShort",
                 false)
-            {
-                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                      {
+                                          Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
+                                          Context = { InstrumentationKey = instrumentationKey }
+                                      };
 
             var dependencyLong = new DependencyTelemetry(
                 "dependencyLong",
@@ -913,10 +985,10 @@
                 TimeSpan.FromSeconds(1),
                 "dependencyLong",
                 false)
-            {
-                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                     {
+                                         Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
+                                         Context = { InstrumentationKey = instrumentationKey }
+                                     };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(dependencyLong);
@@ -949,19 +1021,28 @@
 
             // ACT
             var exceptionShort = new ExceptionTelemetry(new ArgumentException(new string('m', MaxFieldLength)))
-            {
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                     {
+                                         Context =
+                                             {
+                                                 InstrumentationKey =
+                                                     instrumentationKey
+                                             }
+                                     };
 
             var exceptionLong = new ExceptionTelemetry(new ArgumentException(new string('m', MaxFieldLength + 1)))
-            {
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                    {
+                                        Context =
+                                            {
+                                                InstrumentationKey
+                                                    =
+                                                    instrumentationKey
+                                            }
+                                    };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(exceptionLong);
             telemetryProcessor.Process(exceptionShort);
-            
+
             // ASSERT
             var telemetryDocuments = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Cast<ExceptionTelemetryDocument>().ToList();
 
@@ -983,18 +1064,30 @@
 
             // ACT
             var exceptionShort = new ExceptionTelemetry(new ArgumentException())
-            {
-                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
-                Message = new string('m', MaxFieldLength),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                     {
+                                         Properties =
+                                             {
+                                                 {
+                                                     new string('p', MaxFieldLength),
+                                                     new string('v', MaxFieldLength)
+                                                 }
+                                             },
+                                         Message = new string('m', MaxFieldLength),
+                                         Context = { InstrumentationKey = instrumentationKey }
+                                     };
 
             var exceptionLong = new ExceptionTelemetry(new ArgumentException())
-            {
-                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
-                Message = new string('m', MaxFieldLength),
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                    {
+                                        Properties =
+                                            {
+                                                {
+                                                    new string('p', MaxFieldLength + 1),
+                                                    new string('v', MaxFieldLength + 1)
+                                                }
+                                            },
+                                        Message = new string('m', MaxFieldLength),
+                                        Context = { InstrumentationKey = instrumentationKey }
+                                    };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(exceptionLong);
@@ -1027,18 +1120,18 @@
 
             // ACT
             var exception = new ExceptionTelemetry(new ArgumentException())
-            {
-                Properties =
-                {
-                    { new string('p', MaxFieldLength + 1), "Val1" },
-                    { new string('p', MaxFieldLength + 2), "Val2" }
-                },
-                Message = "Message",
-                Context = { InstrumentationKey = instrumentationKey }
-            };
+                                {
+                                    Properties =
+                                        {
+                                            { new string('p', MaxFieldLength + 1), "Val1" },
+                                            { new string('p', MaxFieldLength + 2), "Val2" }
+                                        },
+                                    Message = "Message",
+                                    Context = { InstrumentationKey = instrumentationKey }
+                                };
 
             telemetryProcessor.Process(exception);
-            
+
             // ASSERT
             var telemetryDocuments = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Cast<ExceptionTelemetryDocument>().ToList();
 
@@ -1221,7 +1314,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "AverageIdOfFailedRequestsGreaterThanOrEqualTo500",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -1231,7 +1323,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "SumIdsOfSuccessfulRequestsEqualTo201",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -1269,12 +1360,15 @@
             Array.ForEach(requests, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
+                accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("2, 4", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedRequestsGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
-            Assert.AreEqual("7", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulRequestsEqualTo201")].Value.Reverse().ToArray()));
+            Assert.AreEqual(
+                "2, 4",
+                string.Join(", ", calculatedMetrics["AverageIdOfFailedRequestsGreaterThanOrEqualTo500"].Value.Reverse().ToArray()));
+            Assert.AreEqual("7", string.Join(", ", calculatedMetrics["SumIdsOfSuccessfulRequestsEqualTo201"].Value.Reverse().ToArray()));
         }
 
         [TestMethod]
@@ -1295,17 +1389,14 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500",
                                           TelemetryType = TelemetryType.Dependency,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Avg,
-                                          Filters =
-                                              new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed }
+                                          Filters = new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed }
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "SumIdsOfSuccessfulDependenciesEqualTo201",
                                           TelemetryType = TelemetryType.Dependency,
                                           Projection = "Id",
@@ -1325,30 +1416,33 @@
 
             // ACT
             var dependencies = new[]
-                               {
-                                   new DependencyTelemetry() { Id = "1", Success = true, Data = "500" },
-                                   new DependencyTelemetry() { Id = "2", Success = false, Data = "500" },
-                                   new DependencyTelemetry() { Id = "3", Success = true, Data = "501" },
-                                   new DependencyTelemetry() { Id = "4", Success = false, Data = "501" },
-                                   new DependencyTelemetry() { Id = "5", Success = true, Data = "499" },
-                                   new DependencyTelemetry() { Id = "6", Success = false, Data = "499" },
-                                   new DependencyTelemetry() { Id = "7", Success = true, Data = "201" },
-                                   new DependencyTelemetry() { Id = "8", Success = false, Data = "201" },
-                                   new DependencyTelemetry() { Id = "9", Success = true, Data = "blah" },
-                                   new DependencyTelemetry() { Id = "10", Success = false, Data = "blah" },
-                               };
+                                   {
+                                       new DependencyTelemetry() { Id = "1", Success = true, Data = "500" },
+                                       new DependencyTelemetry() { Id = "2", Success = false, Data = "500" },
+                                       new DependencyTelemetry() { Id = "3", Success = true, Data = "501" },
+                                       new DependencyTelemetry() { Id = "4", Success = false, Data = "501" },
+                                       new DependencyTelemetry() { Id = "5", Success = true, Data = "499" },
+                                       new DependencyTelemetry() { Id = "6", Success = false, Data = "499" },
+                                       new DependencyTelemetry() { Id = "7", Success = true, Data = "201" },
+                                       new DependencyTelemetry() { Id = "8", Success = false, Data = "201" },
+                                       new DependencyTelemetry() { Id = "9", Success = true, Data = "blah" },
+                                       new DependencyTelemetry() { Id = "10", Success = false, Data = "blah" },
+                                   };
 
             Array.ForEach(dependencies, d => d.Context.InstrumentationKey = instrumentationKey);
 
             Array.ForEach(dependencies, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
+                accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("2, 4", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
-            Assert.AreEqual("7", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulDependenciesEqualTo201")].Value.Reverse().ToArray()));
+            Assert.AreEqual(
+                "2, 4",
+                string.Join(", ", calculatedMetrics["AverageIdOfFailedDependenciesGreaterThanOrEqualTo500"].Value.Reverse().ToArray()));
+            Assert.AreEqual("7", string.Join(", ", calculatedMetrics["SumIdsOfSuccessfulDependenciesEqualTo201"].Value.Reverse().ToArray()));
         }
 
         [TestMethod]
@@ -1356,11 +1450,11 @@
         {
             // ARRANGE
             var filterInfoMessageGreaterThanOrEqualTo500 = new FilterInfo()
-            {
-                FieldName = "Message",
-                Predicate = Predicate.GreaterThanOrEqual,
-                Comparand = "500"
-            };
+                                                               {
+                                                                   FieldName = "Message",
+                                                                   Predicate = Predicate.GreaterThanOrEqual,
+                                                                   Comparand = "500"
+                                                               };
             var filterInfoMessage200 = new FilterInfo() { FieldName = "Message", Predicate = Predicate.Equal, Comparand = "201" };
             var filterInfoSuccessful = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "true" };
             var filterInfoFailed = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "false" };
@@ -1369,17 +1463,14 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "AverageIdOfFailedMessageGreaterThanOrEqualTo500",
                                           TelemetryType = TelemetryType.Exception,
                                           Projection = "Message",
                                           Aggregation = AggregationType.Avg,
-                                          Filters =
-                                              new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed }
+                                          Filters = new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed }
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "SumIdsOfSuccessfulMessageEqualTo201",
                                           TelemetryType = TelemetryType.Exception,
                                           Projection = "Message",
@@ -1399,30 +1490,33 @@
 
             // ACT
             var exceptions = new[]
-                               {
-                                   new ExceptionTelemetry() { Sequence = "true", Message = "500" },
-                                   new ExceptionTelemetry() { Sequence = "false", Message = "500" },
-                                   new ExceptionTelemetry() { Sequence = "true", Message = "501" },
-                                   new ExceptionTelemetry() { Sequence = "false", Message = "501" },
-                                   new ExceptionTelemetry() { Sequence = "true", Message = "499" },
-                                   new ExceptionTelemetry() { Sequence = "false", Message = "499" },
-                                   new ExceptionTelemetry() { Sequence = "true", Message = "201" },
-                                   new ExceptionTelemetry() { Sequence = "false", Message = "201" },
-                                   new ExceptionTelemetry() { Sequence = "true", Message = "blah" },
-                                   new ExceptionTelemetry() { Sequence = "false", Message = "blah" },
-                               };
+                                 {
+                                     new ExceptionTelemetry() { Sequence = "true", Message = "500" },
+                                     new ExceptionTelemetry() { Sequence = "false", Message = "500" },
+                                     new ExceptionTelemetry() { Sequence = "true", Message = "501" },
+                                     new ExceptionTelemetry() { Sequence = "false", Message = "501" },
+                                     new ExceptionTelemetry() { Sequence = "true", Message = "499" },
+                                     new ExceptionTelemetry() { Sequence = "false", Message = "499" },
+                                     new ExceptionTelemetry() { Sequence = "true", Message = "201" },
+                                     new ExceptionTelemetry() { Sequence = "false", Message = "201" },
+                                     new ExceptionTelemetry() { Sequence = "true", Message = "blah" },
+                                     new ExceptionTelemetry() { Sequence = "false", Message = "blah" },
+                                 };
 
             Array.ForEach(exceptions, e => e.Context.InstrumentationKey = instrumentationKey);
 
             Array.ForEach(exceptions, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
+                accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("500, 501", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedMessageGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
-            Assert.AreEqual("201", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulMessageEqualTo201")].Value.Reverse().ToArray()));
+            Assert.AreEqual(
+                "500, 501",
+                string.Join(", ", calculatedMetrics["AverageIdOfFailedMessageGreaterThanOrEqualTo500"].Value.Reverse().ToArray()));
+            Assert.AreEqual("201", string.Join(", ", calculatedMetrics["SumIdsOfSuccessfulMessageEqualTo201"].Value.Reverse().ToArray()));
         }
 
         [TestMethod]
@@ -1443,17 +1537,14 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "AverageIdOfFailedEventsGreaterThanOrEqualTo500",
                                           TelemetryType = TelemetryType.Event,
                                           Projection = "Name",
                                           Aggregation = AggregationType.Avg,
-                                          Filters =
-                                              new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed }
+                                          Filters = new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed }
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "SumIdsOfSuccessfulEventsEqualTo201",
                                           TelemetryType = TelemetryType.Event,
                                           Projection = "Name",
@@ -1473,30 +1564,28 @@
 
             // ACT
             var events = new[]
-                              {
-                                   new EventTelemetry() { Sequence = "true", Name = "500" },
-                                   new EventTelemetry() { Sequence = "false", Name = "500" },
-                                   new EventTelemetry() { Sequence = "true", Name = "501" },
-                                   new EventTelemetry() { Sequence = "false", Name = "501" },
-                                   new EventTelemetry() { Sequence = "true", Name = "499" },
-                                   new EventTelemetry() { Sequence = "false", Name = "499" },
-                                   new EventTelemetry() { Sequence = "true", Name = "201" },
-                                   new EventTelemetry() { Sequence = "false", Name = "201" },
-                                   new EventTelemetry() { Sequence = "true", Name = "blah" },
-                                   new EventTelemetry() { Sequence = "false", Name = "blah" },
-                               };
+                             {
+                                 new EventTelemetry() { Sequence = "true", Name = "500" }, new EventTelemetry() { Sequence = "false", Name = "500" },
+                                 new EventTelemetry() { Sequence = "true", Name = "501" }, new EventTelemetry() { Sequence = "false", Name = "501" },
+                                 new EventTelemetry() { Sequence = "true", Name = "499" }, new EventTelemetry() { Sequence = "false", Name = "499" },
+                                 new EventTelemetry() { Sequence = "true", Name = "201" }, new EventTelemetry() { Sequence = "false", Name = "201" },
+                                 new EventTelemetry() { Sequence = "true", Name = "blah" }, new EventTelemetry() { Sequence = "false", Name = "blah" },
+                             };
 
             Array.ForEach(events, e => e.Context.InstrumentationKey = instrumentationKey);
 
             Array.ForEach(events, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
+                accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("500, 501", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "AverageIdOfFailedEventsGreaterThanOrEqualTo500")].Value.Reverse().ToArray()));
-            Assert.AreEqual("201", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "SumIdsOfSuccessfulEventsEqualTo201")].Value.Reverse().ToArray()));
+            Assert.AreEqual(
+                "500, 501",
+                string.Join(", ", calculatedMetrics["AverageIdOfFailedEventsGreaterThanOrEqualTo500"].Value.Reverse().ToArray()));
+            Assert.AreEqual("201", string.Join(", ", calculatedMetrics["SumIdsOfSuccessfulEventsEqualTo201"].Value.Reverse().ToArray()));
         }
 
         [TestMethod]
@@ -1507,7 +1596,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -1537,11 +1625,11 @@
             Array.ForEach(requests, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
+                accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(1, calculatedMetrics.Count);
-
-            Assert.AreEqual(1.0d, calculatedMetrics[Tuple.Create("Session1", "Metric1")].Value.Single());
+            Assert.AreEqual(1.0d, calculatedMetrics["Metric1"].Value.Single());
         }
 
         [TestMethod]
@@ -1554,12 +1642,11 @@
             var filterInfoAllFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
             var filterInfoAllFast = new FilterInfo() { FieldName = "Duration", Predicate = Predicate.LessThan, Comparand = "5000" };
             var filterInfoAllSlow = new FilterInfo() { FieldName = "Duration", Predicate = Predicate.GreaterThanOrEqual, Comparand = "5000" };
-            
+
             var metrics1 = new[]
                                {
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllGood1",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1568,7 +1655,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllBad1",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1577,7 +1663,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllGoodFast1",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1586,7 +1671,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllBadSlow1",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1599,7 +1683,6 @@
                                {
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllGood2",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1608,7 +1691,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllBad2",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1617,7 +1699,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllGoodFast2",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1626,7 +1707,6 @@
                                        },
                                    new OperationalizedMetricInfo()
                                        {
-                                           SessionId = "Session1",
                                            Id = "AllBadSlow2",
                                            TelemetryType = TelemetryType.Request,
                                            Projection = "Id",
@@ -1705,15 +1785,15 @@
             var allBadSlow2 = new List<double>();
             foreach (var accumulator in accumulators)
             {
-                Dictionary<Tuple<string, string>, AccumulatedValue> metricsValues = accumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+                Dictionary<string, AccumulatedValue> metricsValues = accumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
                 try
                 {
                     // configuration 1
-                    allGood1.AddRange(metricsValues[Tuple.Create("Session1", "AllGood1")].Value.Reverse().ToArray());
-                    allBad1.AddRange(metricsValues[Tuple.Create("Session1", "AllBad1")].Value.Reverse().ToArray());
-                    allGoodFast1.AddRange(metricsValues[Tuple.Create("Session1", "AllGoodFast1")].Value.Reverse().ToArray());
-                    allBadSlow1.AddRange(metricsValues[Tuple.Create("Session1", "AllBadSlow1")].Value.Reverse().ToArray());
+                    allGood1.AddRange(metricsValues["AllGood1"].Value.Reverse().ToArray());
+                    allBad1.AddRange(metricsValues["AllBad1"].Value.Reverse().ToArray());
+                    allGoodFast1.AddRange(metricsValues["AllGoodFast1"].Value.Reverse().ToArray());
+                    allBadSlow1.AddRange(metricsValues["AllBadSlow1"].Value.Reverse().ToArray());
                 }
                 catch
                 {
@@ -1723,10 +1803,10 @@
                 try
                 {
                     // configuration 2
-                    allGood2.AddRange(metricsValues[Tuple.Create("Session1", "AllGood2")].Value.Reverse().ToArray());
-                    allBad2.AddRange(metricsValues[Tuple.Create("Session1", "AllBad2")].Value.Reverse().ToArray());
-                    allGoodFast2.AddRange(metricsValues[Tuple.Create("Session1", "AllGoodFast2")].Value.Reverse().ToArray());
-                    allBadSlow2.AddRange(metricsValues[Tuple.Create("Session1", "AllBadSlow2")].Value.Reverse().ToArray());
+                    allGood2.AddRange(metricsValues["AllGood2"].Value.Reverse().ToArray());
+                    allBad2.AddRange(metricsValues["AllBad2"].Value.Reverse().ToArray());
+                    allGoodFast2.AddRange(metricsValues["AllGoodFast2"].Value.Reverse().ToArray());
+                    allBadSlow2.AddRange(metricsValues["AllBadSlow2"].Value.Reverse().ToArray());
                 }
                 catch
                 {

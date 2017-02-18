@@ -14,7 +14,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CollectionConfigurationInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionConfiguration.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MetricValue.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)MetricIdCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OperationalizedMetric.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Filter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\OperationalizedMetricInfo.cs" />

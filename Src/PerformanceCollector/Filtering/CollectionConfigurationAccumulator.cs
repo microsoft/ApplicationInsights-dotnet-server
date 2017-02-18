@@ -19,11 +19,9 @@
         public long ReferenceCount = 0;
 
         /// <summary>
-        /// (metric.SessionId, metric.Id) => AccumulatedValue
-        /// AccumulatedValue will contain all ids to report under if more than one.
+        /// metricId => AccumulatedValue
         /// </summary>
-        public Dictionary<Tuple<string, string>, AccumulatedValue> MetricAccumulators { get; } =
-            new Dictionary<Tuple<string, string>, AccumulatedValue>();
+        public Dictionary<string, AccumulatedValue> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValue>();
 
         public CollectionConfiguration CollectionConfiguration { get; }
 
@@ -32,14 +30,13 @@
             this.CollectionConfiguration = collectionConfiguration;
 
             // prepare the accumulators based on the collection configuration
-            foreach (Tuple<MetricIdCollection, AggregationType> metricIds in
+            foreach (Tuple<string, AggregationType> metricId in
                 collectionConfiguration?.TelemetryMetadata.Concat(collectionConfiguration.MetricMetadata)
-                ?? Enumerable.Empty<Tuple<MetricIdCollection, AggregationType>>())
+                ?? Enumerable.Empty<Tuple<string, AggregationType>>())
             {
-                var accumulatedValue = new AccumulatedValue(metricIds.Item1, metricIds.Item2);
+                var accumulatedValue = new AccumulatedValue(metricId.Item1, metricId.Item2);
 
-                // when reporting the same metric under multiple id pairs, use the same accumulator for all
-                this.MetricAccumulators.Add(metricIds.Item1.First(), accumulatedValue);
+                this.MetricAccumulators.Add(metricId.Item1, accumulatedValue);
             }
         }
     }

@@ -8,9 +8,6 @@
         [DataMember]
         public string Name { get; set; }
 
-        [DataMember(EmitDefaultValue = false)]
-        public string SessionId { get; set; }
-
         [DataMember]
         public double Value { get; set; }
 

@@ -13,7 +13,7 @@
     {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void CollectionConfigurationThrowsOnNullInputTest()
+        public void CollectionConfigurationThrowsOnNullInput()
         {
             // ARRANGE
             
@@ -25,7 +25,7 @@
         }
 
         [TestMethod]
-        public void CollectionConfigurationCreatesMetricsTest()
+        public void CollectionConfigurationCreatesMetrics()
         {
             // ARRANGE
             string[] errors;
@@ -34,7 +34,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -43,7 +42,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -52,7 +50,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session2",
                                           Id = "Metric2",
                                           TelemetryType = TelemetryType.Dependency,
                                           Projection = "Name",
@@ -61,7 +58,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session3",
                                           Id = "Metric3",
                                           TelemetryType = TelemetryType.Exception,
                                           Projection = "Message",
@@ -70,7 +66,6 @@
                                       },
                                    new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session4",
                                           Id = "Metric4",
                                           TelemetryType = TelemetryType.Event,
                                           Projection = "Name",
@@ -79,7 +74,6 @@
                                       },
                                     new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session4",
                                           Id = "Metric5",
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
@@ -92,20 +86,19 @@
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
 
             // ASSERT
-            Assert.AreEqual(Tuple.Create("Session0", "Metric0"), collectionConfiguration.RequestMetrics.First().IdsToReportUnder.Single());
-            Assert.AreEqual(Tuple.Create("Session1", "Metric1"), collectionConfiguration.RequestMetrics.Last().IdsToReportUnder.Single());
-            Assert.AreEqual(Tuple.Create("Session2", "Metric2"), collectionConfiguration.DependencyMetrics.Single().IdsToReportUnder.Single());
-            Assert.AreEqual(Tuple.Create("Session3", "Metric3"), collectionConfiguration.ExceptionMetrics.Single().IdsToReportUnder.Single());
-            Assert.AreEqual(Tuple.Create("Session4", "Metric4"), collectionConfiguration.EventMetrics.Single().IdsToReportUnder.Single());
-            Assert.AreEqual(Tuple.Create("Session4", "Metric5"), collectionConfiguration.MetricMetrics.Single().IdsToReportUnder.Single());
+            Assert.AreEqual("Metric0", collectionConfiguration.RequestMetrics.First().Id);
+            Assert.AreEqual("Metric1", collectionConfiguration.RequestMetrics.Last().Id);
+            Assert.AreEqual("Metric2", collectionConfiguration.DependencyMetrics.Single().Id);
+            Assert.AreEqual("Metric3", collectionConfiguration.ExceptionMetrics.Single().Id);
+            Assert.AreEqual("Metric4", collectionConfiguration.EventMetrics.Single().Id);
+            Assert.AreEqual("Metric5", collectionConfiguration.MetricMetrics.Single().Id);
 
             Assert.AreEqual(5, collectionConfiguration.TelemetryMetadata.Count());
-            Assert.IsTrue(collectionConfiguration.TelemetryMetadata.All(ids => ids.Item1.Count == 1));
-            Assert.IsTrue(collectionConfiguration.MetricMetrics.Single().IdsToReportUnder.Single().Equals(Tuple.Create("Session4", "Metric5")));
+            Assert.AreEqual("Metric5", collectionConfiguration.MetricMetrics.Single().Id);
         }
 
         [TestMethod]
-        public void CollectionConfigurationMergesMetricsCorrectlyTest()
+        public void CollectionConfigurationReportsMetricsWithDuplicateIds()
         {
             // ARRANGE
             string[] errors;
@@ -115,7 +108,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -124,7 +116,14 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session2",
+                                          Id = "Metric1",
+                                          TelemetryType = TelemetryType.Request,
+                                          Projection = "Name",
+                                          Aggregation = AggregationType.Avg,
+                                          Filters = new[] { filter2 }
+                                      },
+                                  new OperationalizedMetricInfo()
+                                      {
                                           Id = "Metric2",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -137,14 +136,14 @@
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
 
             // ASSERT
-            Assert.AreEqual(1, collectionConfiguration.RequestMetrics.Count());
-
-            var expectedIds = new MetricIdCollection(new[] { Tuple.Create("Session1", "Metric1"), Tuple.Create("Session2", "Metric2") });
-            Assert.IsTrue(expectedIds.SetEquals(collectionConfiguration.TelemetryMetadata.Single().Item1));
+            Assert.AreEqual(2, collectionConfiguration.RequestMetrics.Count());
+            Assert.AreEqual("Metric1", collectionConfiguration.TelemetryMetadata.First().Item1);
+            Assert.AreEqual("Metric2", collectionConfiguration.TelemetryMetadata.Last().Item1);
+            Assert.IsTrue(errors.Single().Contains("Metric1"));
         }
 
         [TestMethod]
-        public void CollectionConfigurationReportsInvalidFilterTest()
+        public void CollectionConfigurationReportsInvalidFilter()
         {
             // ARRANGE
             string[] errors;
@@ -153,7 +152,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Name",
@@ -172,7 +170,7 @@
         }
 
         [TestMethod]
-        public void CollectionConfigurationReportsInvalidMetricTest()
+        public void CollectionConfigurationReportsInvalidMetric()
         {
             // ARRANGE
             string[] errors;
@@ -181,7 +179,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "NonExistentFieldName",
@@ -200,7 +197,7 @@
         }
 
         [TestMethod]
-        public void CollectionConfigurationReportsMultipleInvalidFiltersAndMetricsTest()
+        public void CollectionConfigurationReportsMultipleInvalidFiltersAndMetrics()
         {
             // ARRANGE
             string[] errors;
@@ -210,7 +207,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "NonExistentProjectionName1",
@@ -219,7 +215,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session2",
                                           Id = "Metric2",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "NonExistentProjectionName2",

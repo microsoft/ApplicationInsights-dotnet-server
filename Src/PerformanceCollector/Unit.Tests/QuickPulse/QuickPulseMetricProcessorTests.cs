@@ -33,7 +33,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
@@ -42,7 +41,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric2",
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
@@ -67,13 +65,13 @@
             metricProcessor.StopCollection();
 
             // ASSERT
-            Dictionary<Tuple<string, string>, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValue> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "Metric1")].Value.Reverse().ToArray()));
-            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics[Tuple.Create("Session1", "Metric2")].Value.Reverse().ToArray()));
+            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics["Metric1"].Value.Reverse().ToArray()));
+            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics["Metric2"].Value.Reverse().ToArray()));
         }
     }
 }

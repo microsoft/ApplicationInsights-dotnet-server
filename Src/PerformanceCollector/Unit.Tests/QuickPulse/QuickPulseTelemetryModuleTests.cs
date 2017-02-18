@@ -197,7 +197,6 @@
                               {
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session0",
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
@@ -206,7 +205,6 @@
                                       },
                                   new OperationalizedMetricInfo()
                                       {
-                                          SessionId = "Session1",
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
@@ -264,17 +262,13 @@
                 serviceClient.SnappedSamples.Any(
                     s =>
                     s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
-                        a =>
-                        a.Value.MetricIds.First().Equals(Tuple.Create("Session0", "Metric0"))
-                        && (a.Value.Value.Count() > 0 && a.Value.Value.Single() == 1.0d))));
+                        a => a.Value.MetricId == "Metric0" && (a.Value.Value.Any() && a.Value.Value.Single() == 1.0d))));
 
             Assert.IsTrue(
                 serviceClient.SnappedSamples.Any(
                     s =>
                     s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
-                        a =>
-                        a.Value.MetricIds.First().Equals(Tuple.Create("Session1", "Metric1")) && a.Value.Value.Count() > 0
-                        && a.Value.Value.Single() == 5.0d)));
+                        a => a.Value.MetricId == "Metric1" && a.Value.Value.Any() && a.Value.Value.Single() == 5.0d)));
         }
 
         [TestMethod]

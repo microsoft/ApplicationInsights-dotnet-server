@@ -74,7 +74,6 @@
     <Compile Include="Filtering\CollectionConfigurationAccumulatorTests.cs" />
     <Compile Include="Filtering\CollectionConfigurationTests.cs" />
     <Compile Include="Filtering\OperationalizedMetricTests.cs" />
-    <Compile Include="Filtering\OperationalizedMetricInfoTests.cs" />
     <Compile Include="Filtering\FilterInfoTests.cs" />
     <Compile Include="Filtering\FilterTests.cs" />
     <Compile Include="Filtering\Mocks\TelemetryMock.cs" />

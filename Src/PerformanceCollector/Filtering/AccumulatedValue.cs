@@ -8,14 +8,14 @@
     internal class AccumulatedValue
     {
         public readonly ConcurrentStack<double> Value = new ConcurrentStack<double>();
-        
-        public AccumulatedValue(MetricIdCollection metricIds, AggregationType aggregationType)
+
+        public AccumulatedValue(string metricId, AggregationType aggregationType)
         {
-            this.MetricIds = metricIds;
+            this.MetricId = metricId;
             this.AggregationType = aggregationType;
         }
 
-        public MetricIdCollection MetricIds { get; }
+        public string MetricId { get; }
 
         public AggregationType AggregationType { get; }
     }
