@@ -15,10 +15,7 @@
         
         [DataMember(EmitDefaultValue = false)]
         public string SeverityLevel { get; set; }
-
-        [DataMember(EmitDefaultValue = false)]
-        public string HandledAt { get; set; }
-
+        
         [DataMember(EmitDefaultValue = false)]
         public string Exception { get; set; }
 

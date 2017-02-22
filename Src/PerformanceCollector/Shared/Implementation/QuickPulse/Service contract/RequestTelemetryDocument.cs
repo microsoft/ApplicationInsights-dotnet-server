@@ -23,9 +23,6 @@
         public string Name { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
-        public DateTimeOffset StartTime { get; set; }
-        
-        [DataMember(EmitDefaultValue = false)]
         public bool? Success { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
@@ -36,10 +33,7 @@
 
         [DataMember(EmitDefaultValue = false)]
         public Uri Url { get; set; }
-
-        [DataMember(EmitDefaultValue = false)]
-        public string HttpMethod { get; set; }
-
+        
         [DataMember(EmitDefaultValue = false)]
         public KeyValuePair<string, string>[] Properties { get; set; }
 

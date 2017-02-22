@@ -39,10 +39,7 @@
 
         [DataMember(EmitDefaultValue = false)]
         public string DependencyTypeName { get; set; }
-
-        [DataMember(EmitDefaultValue = false)]
-        public string DependencyKind { get; set; }
-
+        
         [DataMember(EmitDefaultValue = false)]
         public KeyValuePair<string, string>[] Properties { get; set; }
 
