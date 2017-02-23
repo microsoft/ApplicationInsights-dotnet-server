@@ -36,13 +36,16 @@
             return response;
         }
 
-        /// <summary>The deploy.</summary>
-        internal abstract void Deploy();
-
         /// <summary>The do test.</summary>
         /// <param name="action">The action.</param>
         /// <param name="instrumentRedApp">Whether red app needs to be instrumented or not.</param>
-        internal abstract void DoTest(Action<TestWebApplication> action);
+        internal virtual void DoTest(Action<TestWebApplication> action)
+        {
+            action(this);
+        }
+
+        /// <summary>The deploy.</summary>
+        internal abstract void Deploy();
 
         /// <summary>The remove.</summary>
         internal abstract void Remove();

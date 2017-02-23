@@ -59,11 +59,11 @@ namespace FuncTest.Helpers
 
         public static HttpListenerObservable SdkEventListener { get; private set; }
 
-        public static TestWebApplication Aspx451TestWebApplication { get; private set; }
+        public static IISTestWebApplication Aspx451TestWebApplication { get; private set; }
 
-        public static TestWebApplication Aspx451TestWebApplicationWin32 { get; private set; }
+        public static IISTestWebApplication Aspx451TestWebApplicationWin32 { get; private set; }
 
-        public static TestWebApplication AspxCoreTestWebApplication { get; private set; }
+        public static DotNetCoreTestWebApplication AspxCoreTestWebApplication { get; private set; }
 
         public static EtwEventSessionRdd EtwSession { get; private set; }
 

@@ -345,13 +345,18 @@
 
         private static void EnsureDotNetCoreInstalled()
         {
-            if (!DotNetCore.IsInstalled())
+            string error = "";
+            DotNetCoreProcess process = new DotNetCoreProcess("--version")
+                .RedirectStandardErrorTo((string errorMessage) => error += errorMessage)
+                .Run();
+
+            if (process.ExitCode.Value != 0 || !string.IsNullOrEmpty(error))
             {
                 Assert.Inconclusive(".Net Core is not installed");
             }
         }
 
-        private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
+        private const string AspxCoreTestAppFolder = "..\\TestApps\\AspxCore\\";
 
         [TestMethod]
         [TestCategory(TestCategory.NetCore)]

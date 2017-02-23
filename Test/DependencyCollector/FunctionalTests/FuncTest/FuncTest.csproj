@@ -105,7 +105,7 @@
     <Compile Include="Helpers\AzureStorageHelper.cs" />
     <Compile Include="Helpers\DataItem.cs" />
     <Compile Include="Helpers\DeploymentAndValidationTools.cs" />
-    <Compile Include="Helpers\DotNetCore.cs" />
+    <Compile Include="Helpers\DotNetCoreProcess.cs" />
     <Compile Include="Helpers\DotNetCoreTestWebApplication.cs" />
     <Compile Include="Helpers\DotNetVersionCheck.cs" />
     <Compile Include="Helpers\EtwEventSessionRdd.cs" />

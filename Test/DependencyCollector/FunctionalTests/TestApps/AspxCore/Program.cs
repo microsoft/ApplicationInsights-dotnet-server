@@ -8,12 +8,19 @@
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            IWebHostBuilder builder = new WebHostBuilder()
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
+                .UseStartup<Startup>();
+
+            int portNumber;
+            if (args.Length >= 1 && int.TryParse(args[0], out portNumber))
+            {
+                builder = builder.UseUrls($"http://localhost:{portNumber}/");
+            }
+
+            IWebHost host = builder.Build();
 
             host.Run();
         }
