@@ -1,11 +1,12 @@
 ﻿namespace FuncTest
 {
     using System;
-    using System.Linq;    
+    using System.Linq;
     using FuncTest.Helpers;
     using FuncTest.Serialization;
     using AI;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using System.Diagnostics;
 
     /// <summary>
     /// Tests RDD Functionality for a ASP.NET WebApplication in DOTNET 4.5.1, DOTNET 4.6,
@@ -342,22 +343,22 @@
 
         #region Core
 
-        private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
-
-        private static void EnsureNetCoreInstalled()
+        private static void EnsureDotNetCoreInstalled()
         {
-            //if (!RegistryCheck.IsNetCoreInstalled)
-            //{
-            //    Assert.Inconclusive(".Net Core Framework is not installed");
-            //}
+            if (!DotNetCore.IsInstalled())
+            {
+                Assert.Inconclusive(".Net Core is not installed");
+            }
         }
+
+        private const string AspxCoreTestAppFolder = "..\\TestApps\\ASPXCore\\App\\";
 
         [TestMethod]
         [TestCategory(TestCategory.NetCore)]
         [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
         public void TestRddForSyncHttpAspxCore()
         {
-            EnsureNetCoreInstalled();
+            EnsureDotNetCoreInstalled();
 
             // Execute and verify calls which succeeds            
             this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal);

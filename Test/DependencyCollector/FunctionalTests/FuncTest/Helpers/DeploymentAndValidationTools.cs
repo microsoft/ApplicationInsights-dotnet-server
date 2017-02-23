@@ -78,26 +78,23 @@ namespace FuncTest.Helpers
                 {
                     if (!isInitialized)
                     {
-                        Aspx451TestWebApplication = new TestWebApplication
+                        Aspx451TestWebApplication = new IISTestWebApplication
                         {
                             AppName = "Aspx451",
                             Port = Aspx451Port,
-                            IsRedFieldApp = false
                         };
 
-                        Aspx451TestWebApplicationWin32 = new TestWebApplication
+                        Aspx451TestWebApplicationWin32 = new IISTestWebApplication
                         {
                             AppName = "Aspx451Win32",
                             Port = Aspx451PortWin32,
-                            IsRedFieldApp = false
+                            EnableWin32Mode = true,
                         };
 
-                        AspxCoreTestWebApplication = new TestWebApplication
+                        AspxCoreTestWebApplication = new DotNetCoreTestWebApplication
                         {
                             AppName = "AspxCore",
                             Port = AspxCorePort,
-                            IsRedFieldApp = false,
-                            ExternalCallsPath = "external/calls"
                         };
 
                         // this makes all traces have a timestamp so it's easier to troubleshoot timing issues
@@ -113,7 +110,7 @@ namespace FuncTest.Helpers
                         EtwSession.Start();
 
                         Aspx451TestWebApplication.Deploy();
-                        Aspx451TestWebApplicationWin32.Deploy(true);
+                        Aspx451TestWebApplicationWin32.Deploy();
                         AspxCoreTestWebApplication.Deploy();
 
                         if (RegistryCheck.IsNet46Installed)
