@@ -21,6 +21,8 @@
 
         public TimeSpan TimeSpanField { get; set; }
 
+        public Uri UriField { get; set; }
+
         public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
         
         public IDictionary<string, double> Metrics { get; } = new Dictionary<string, double>();

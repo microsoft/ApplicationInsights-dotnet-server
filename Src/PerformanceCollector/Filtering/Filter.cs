@@ -20,6 +20,8 @@
 
         private static readonly MethodInfo StringToStringMethodInfo = GetMethodInfo<double, string>(x => x.ToString(CultureInfo.InvariantCulture));
 
+        private static readonly MethodInfo UriToStringMethodInfo = GetMethodInfo<Uri, string>(x => x.ToString());
+
         private static readonly MethodInfo StringIndexOfMethodInfo =
             GetMethodInfo<string, string, int>((x, y) => x.IndexOf(y, StringComparison.OrdinalIgnoreCase));
 
@@ -478,10 +480,55 @@
                                 break;
                         }
                     }
+                    else if (this.fieldType == typeof(Uri))
+                    {
+                        Expression toStringCall = Expression.Call(fieldExpression, UriToStringMethodInfo);
+
+                        Expression fieldValueOrEmptyString = Expression.Condition(
+                            Expression.Equal(fieldExpression, Expression.Constant(null)),
+                            Expression.Constant(string.Empty),
+                            toStringCall);
+
+                        Expression indexOfCall = Expression.Call(
+                            fieldValueOrEmptyString,
+                            StringIndexOfMethodInfo,
+                            Expression.Constant(this.comparand),
+                            Expression.Constant(StringComparison.OrdinalIgnoreCase));
+
+                        switch (this.predicate)
+                        {
+                            case Predicate.Equal:
+                                // (fieldValue?.ToString() ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase)
+                                return Expression.Call(
+                                    fieldValueOrEmptyString,
+                                    StringEqualsMethodInfo,
+                                    Expression.Constant(this.comparand),
+                                    Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                            case Predicate.NotEqual:
+                                // !(fieldValue?.ToString() ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase)
+                                return
+                                    Expression.Not(
+                                        Expression.Call(
+                                            fieldValueOrEmptyString,
+                                            StringEqualsMethodInfo,
+                                            Expression.Constant(this.comparand),
+                                            Expression.Constant(StringComparison.OrdinalIgnoreCase)));
+                            case Predicate.Contains:
+                                // fieldValue => (fieldValue?.ToString() ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
+                                return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
+                            case Predicate.DoesNotContain:
+                                // fieldValue => (fieldValue?.ToString() ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1;
+                                return Expression.Equal(indexOfCall, Expression.Constant(-1));
+                            default:
+                                this.ThrowOnInvalidFilter();
+                                break;
+                        }
+                    }
                     else
                     {
                         this.ThrowOnInvalidFilter();
                     }
+
                     break;
             }
 

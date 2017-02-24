@@ -924,6 +924,159 @@
 
         #endregion
 
+        #region Uri
+
+        [TestMethod]
+        public void FilterUriEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.Equal, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://micrOSOft.com/a") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a/b") });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterUriNotEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.NotEqual, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://micrOSOft.com/a") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a/b") });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterUriGreaterThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.GreaterThan, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterUriLessThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.LessThan, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterUriLessThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.LessThanOrEqual, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterUriGreaterThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "http://microsoft.com/a" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        [TestMethod]
+        public void FilterUriContains()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.Contains, Comparand = "microsoft" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://micrOSOft.com/a") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://a.com") });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterUriDoesNotContain()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.DoesNotContain, Comparand = "microsoft" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a") });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://micrOSOft.com/a") });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://a.com") });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterUriGarbageFieldValue()
+        {
+            // ARRANGE
+            var doesNotContainValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.Contains, Comparand = "microsoft" };
+            var containsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.Contains, Comparand = string.Empty };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(doesNotContainValue).Check(new TelemetryMock() { UriField = null });
+            bool result2 = new Filter<TelemetryMock>(containsValue).Check(new TelemetryMock() { UriField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+        }
+
+        [TestMethod]
+        public void FilterUriGarbageComparandValue()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "UriField", Predicate = Predicate.Contains, Comparand = "Not at all a URI" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/a") });
+            
+            // ASSERT
+            Assert.IsFalse(result1);
+        }
+
+        #endregion
+
         #region Custom dimensions
         [TestMethod]
         public void FilterCustomDimensions()
