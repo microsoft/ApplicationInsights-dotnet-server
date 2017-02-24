@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.ApplicationInsights.DependencyCollector;
 
 namespace AspxCore
 {
@@ -36,6 +37,8 @@ namespace AspxCore
         {
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
+
+            services.AddSingleton<DependencyCollectorDiagnosticListener>();
 
             services.AddMvc();
         }

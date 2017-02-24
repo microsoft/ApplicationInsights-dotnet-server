@@ -12,31 +12,35 @@ namespace FuncTest.Helpers
 
         internal override void Deploy()
         {
-            string arguments = $"\"{Path.Combine(this.AppFolder, this.AppName + ".dll")}\" {this.Port}";
-            string output = "";
-            string error = "";
-
-            process = new DotNetCoreProcess(arguments)
-                .RedirectStandardOutputTo((string outputMessage) => output += outputMessage)
-                .RedirectStandardErrorTo((string errorMessage) => error += errorMessage)
-                .Start();
-
-            bool serverStarted = false;
-            while (!serverStarted)
+            string applicationDllPath = Path.Combine(this.AppFolder, this.AppName + ".dll");
+            if (File.Exists(applicationDllPath))
             {
-                if (!string.IsNullOrEmpty(error))
+                string arguments = $"\"{applicationDllPath}\" {this.Port}";
+                string output = "";
+                string error = "";
+
+                process = new DotNetCoreProcess(arguments)
+                    .RedirectStandardOutputTo((string outputMessage) => output += outputMessage)
+                    .RedirectStandardErrorTo((string errorMessage) => error += errorMessage)
+                    .Start();
+
+                bool serverStarted = false;
+                while (!serverStarted)
                 {
-                    process.WaitForExit();
-                    Assert.Inconclusive($"Failed to start .NET Core server using command 'dotnet.exe {arguments}': {error}");
-                }
-                else if (output.Contains("Now listening on"))
-                {
-                    serverStarted = true;
-                }
-                else
-                {
-                    // Let someone else run with the hope that the dotnet.exe process will run.
-                    Thread.Yield();
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        process.WaitForExit();
+                        Assert.Inconclusive($"Failed to start .NET Core server using command 'dotnet.exe {arguments}': {error}");
+                    }
+                    else if (output.Contains("Now listening on"))
+                    {
+                        serverStarted = true;
+                    }
+                    else
+                    {
+                        // Let someone else run with the hope that the dotnet.exe process will run.
+                        Thread.Yield();
+                    }
                 }
             }
         }
