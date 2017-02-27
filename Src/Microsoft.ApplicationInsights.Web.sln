@@ -49,9 +49,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.Net45",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.Net45.Tests", "DependencyCollector\Net45.Tests\DependencyCollector.Net45.Tests.csproj", "{257FCE5A-0779-45A5-B541-0CE43D79D009}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore", "DependencyCollector\NetCore\DependencyCollector.NetCore.xproj", "{1D40941A-6018-4505-AD0B-C739B094B2BE}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore", "DependencyCollector\Microsoft.AI.DependencyCollector\DependencyCollector.NetCore.xproj", "{1D40941A-6018-4505-AD0B-C739B094B2BE}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore.Tests", "DependencyCollector\NetCore.Tests\DependencyCollector.NetCore.Tests.xproj", "{8124FF96-0884-4F72-867F-CA32568B2260}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "DependencyCollector.NetCore.Tests", "DependencyCollector\Microsoft.AI.DependencyCollector.Tests\DependencyCollector.NetCore.Tests.xproj", "{8124FF96-0884-4F72-867F-CA32568B2260}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.NuGet", "DependencyCollector\NuGet\DependencyCollector.NuGet.csproj", "{AD6E4937-CEEE-4F10-9460-A1E4C7449D51}"
 	ProjectSection(ProjectDependencies) = postProject

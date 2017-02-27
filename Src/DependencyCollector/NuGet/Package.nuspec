@@ -45,8 +45,8 @@
     <file src="$configuration$\Src\DependencyCollector\Net45\Microsoft.AI.DependencyCollector.xml" target="lib\net45" />
 
     <!-- For .NET Core App 1.0 projects -->
-    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.dll" target="lib\netcoreapp1.0" />
-    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.pdb" target="lib\netcoreapp1.0" />
-    <file src="$configuration$\Src\DependencyCollector\NetCore\Microsoft.AI.DependencyCollector.xml" target="lib\netcoreapp1.0" />
+    <file src="$configuration$\Src\DependencyCollector\Microsoft.AI.DependencyCollector\Microsoft.AI.DependencyCollector.dll" target="lib\netcoreapp1.0" />
+    <file src="$configuration$\Src\DependencyCollector\Microsoft.AI.DependencyCollector\Microsoft.AI.DependencyCollector.pdb" target="lib\netcoreapp1.0" />
+    <file src="$configuration$\Src\DependencyCollector\Microsoft.AI.DependencyCollector\Microsoft.AI.DependencyCollector.xml" target="lib\netcoreapp1.0" />
   </files>
 </package>

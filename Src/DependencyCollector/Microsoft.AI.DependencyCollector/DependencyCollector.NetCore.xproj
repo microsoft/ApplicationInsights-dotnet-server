@@ -20,25 +20,10 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
 
-  <PropertyGroup>
-    <CopyFromFolder>$(OutputPath)NetCore\bin\$(Configuration)\netstandard1.6</CopyFromFolder>
-    <CopyToFolder>$(OutputPath)NetCore</CopyToFolder>
-    <CopyToFileName>Microsoft.AI.DependencyCollector</CopyToFileName>
-  </PropertyGroup>
-  <ItemGroup>
-    <CopyFrom Include="$(CopyFromFolder)\NetCore.deps.json" />
-    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).deps.json" />
-
-    <CopyFrom Include="$(CopyFromFolder)\NetCore.dll" />
-    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).dll" />
-
-    <CopyFrom Include="$(CopyFromFolder)\NetCore.pdb" />
-    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).pdb" />
-
-    <CopyFrom Include="$(CopyFromFolder)\NetCore.xml" />
-    <CopyTo Include="$(CopyToFolder)\$(CopyToFileName).xml" />
-  </ItemGroup>
-  <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build" Inputs="@(CopyFrom)" Outputs="@(CopyTo)">
-    <Copy SourceFiles="@(CopyFrom)" DestinationFiles="@(CopyTo)" />
+  <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build">
+    <ItemGroup>
+      <CopyFrom Include="$(OutputPath)Microsoft.AI.DependencyCollector\bin\$(Configuration)\netstandard1.6\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CopyFrom)" DestinationFolder="$(OutputPath)Microsoft.AI.DependencyCollector" />
   </Target>
 </Project>

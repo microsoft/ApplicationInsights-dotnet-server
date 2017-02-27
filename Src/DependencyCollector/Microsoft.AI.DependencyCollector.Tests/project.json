@@ -16,9 +16,9 @@
       "version": "1.0.1"
     },
     "MSTest.TestFramework": "1.0.8-rc2",
-    "NetCore": {
+    "Microsoft.AI.DependencyCollector": {
       "target": "project",
-      "version": "1.0.0-*"
+      "version": "2.3.0-beta2"
     }
   },
 
