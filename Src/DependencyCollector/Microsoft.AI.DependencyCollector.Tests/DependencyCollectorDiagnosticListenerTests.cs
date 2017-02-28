@@ -48,75 +48,19 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithNullValue()
+        public void OnRequestWithRequestEventWithNoRequestUri()
         {
-            listener.OnNext(new KeyValuePair<string, object>("test event name", null));
+            listener.OnRequest(new HttpRequestMessage(), Guid.NewGuid());
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
         }
 
         [TestMethod]
-        public void OnNextWithNullKey()
-        {
-            listener.OnNext(new KeyValuePair<string, object>(null, "test event value"));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithUnrecognizedEvent()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("test event name", "test event value"));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEventWithNullValue()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", null));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEventWithNoRequestOrLoggingRequestId()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEventWithNoRequest()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = Guid.NewGuid() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEventWithNoLoggingRequestId()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { Request = new HttpRequestMessage() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEventWithNoRequestUri()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = Guid.NewGuid(), Request = new HttpRequestMessage() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithRequestEvent()
+        public void OnRequestWithRequestEvent()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
 
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             DependencyTelemetry telemetry = listener.PendingDependencyTelemetry.Single();
@@ -140,51 +84,19 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithResponseEventWithNullValue()
+        public void OnResponseWithResponseEventButNoMatchingRequest()
         {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", null));
+            listener.OnResponse(new HttpResponseMessage(), Guid.NewGuid());
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
         }
 
         [TestMethod]
-        public void OnNextWithResponseEventWithNoResponseOrLoggingRequestId()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithResponseEventWithNoLoggingRequestId()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { Response = new HttpResponseMessage() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithResponseEventWithNoResponse()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = Guid.NewGuid() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithResponseEventButNoMatchingRequest()
-        {
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = Guid.NewGuid(), Response = new HttpResponseMessage() }));
-            Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
-            Assert.AreEqual(0, sentTelemetry.Count);
-        }
-
-        [TestMethod]
-        public void OnNextWithSuccessfulResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
+        public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -193,7 +105,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(true, telemetry.Success);
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
@@ -205,11 +117,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithFailedResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
+        public void OnResponseWithFailedResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -218,7 +130,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(true, telemetry.Success);
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.NotFound);
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
@@ -230,11 +142,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithSuccessfulResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
+        public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -246,7 +158,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             string targetInstrumentationKeyHash = InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(instrumentationKey);
             response.Headers.Add(DependencyCollectorDiagnosticListener.TargetInstrumentationKeyHeader, targetInstrumentationKeyHash);
 
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
@@ -258,11 +170,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithFailedResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
+        public void OnResponseWithFailedResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -274,7 +186,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             string targetInstrumentationKeyHash = InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(instrumentationKey);
             response.Headers.Add(DependencyCollectorDiagnosticListener.TargetInstrumentationKeyHeader, targetInstrumentationKeyHash);
 
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
@@ -286,11 +198,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithSuccessfulResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
+        public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -302,7 +214,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             string targetInstrumentationKeyHash = InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(Guid.NewGuid().ToString());
             response.Headers.Add(DependencyCollectorDiagnosticListener.TargetInstrumentationKeyHeader, targetInstrumentationKeyHash);
 
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
@@ -314,11 +226,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         [TestMethod]
-        public void OnNextWithFailedResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
+        public void OnResponseWithFailedResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://www.example.com");
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Request", new { LoggingRequestId = loggingRequestId, Request = request }));
+            listener.OnRequest(request, loggingRequestId);
             Assert.AreEqual(1, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(0, sentTelemetry.Count);
 
@@ -330,7 +242,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             string targetInstrumentationKeyHash = InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(Guid.NewGuid().ToString());
             response.Headers.Add(DependencyCollectorDiagnosticListener.TargetInstrumentationKeyHeader, targetInstrumentationKeyHash);
 
-            listener.OnNext(new KeyValuePair<string, object>("System.Net.Http.Response", new { LoggingRequestId = loggingRequestId, Response = response }));
+            listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());

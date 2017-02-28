@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.ApplicationInsights.DependencyCollector;
+using System.Diagnostics;
 
 namespace AspxCore
 {
@@ -38,9 +39,9 @@ namespace AspxCore
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddSingleton<DependencyCollectorDiagnosticListener>();
-
             services.AddMvc();
+
+            DiagnosticListener.AllListeners.AddApplicationInsightsDependencyCollector();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
