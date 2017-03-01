@@ -13,15 +13,22 @@
         private readonly Process process;
         private bool hasStarted;
 
-        public DotNetCoreProcess(string arguments)
+        public DotNetCoreProcess(string arguments, string workingDirectory = null)
         {
+            ProcessStartInfo startInfo = new ProcessStartInfo("dotnet.exe", arguments)
+            {
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            if (!string.IsNullOrWhiteSpace(workingDirectory))
+            {
+                startInfo.WorkingDirectory = workingDirectory;
+            }
+
             process = new Process()
             {
-                StartInfo = new ProcessStartInfo("dotnet.exe", arguments)
-                {
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                },
+                StartInfo = startInfo
             };
         }
 

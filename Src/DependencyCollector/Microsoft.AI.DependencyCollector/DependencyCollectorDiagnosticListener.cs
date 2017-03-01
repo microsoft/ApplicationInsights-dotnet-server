@@ -12,8 +12,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
+    using System.Reflection;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.Extensions.DiagnosticAdapter;
 
     public static class DependencyCollectorExtensions
@@ -105,21 +108,30 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         /// </summary>
         internal const string StandardRootIdHeader = "x-ms-request-root-id";
 
+        private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
         private readonly TelemetryClient client;
         private readonly ConcurrentDictionary<Guid, DependencyTelemetry> pendingTelemetry = new ConcurrentDictionary<Guid, DependencyTelemetry>();
 
         public DependencyCollectorDiagnosticListener()
-            : this(new TelemetryClient(TelemetryConfiguration.Active))
+            : this(TelemetryConfiguration.Active)
         {
-            this.client = new TelemetryClient(TelemetryConfiguration.Active);
-            // You'd think that the constructor would set the instrumentation key is the
-            // configuration had a instrumentation key, but it doesn't, so we have to set it here.
-            this.client.InstrumentationKey = TelemetryConfiguration.Active.InstrumentationKey;
         }
 
-        public DependencyCollectorDiagnosticListener(TelemetryClient client)
+        public DependencyCollectorDiagnosticListener(TelemetryConfiguration configuration)
         {
-            this.client = client;
+            this.client = new TelemetryClient(configuration);
+
+            // Since dependencySource is no longer set, sdk version is prepended with information which can identify whether RDD was collected by profiler/framework
+            // For directly using TrackDependency(), version will be simply what is set by core
+            string versionStr = typeof(DependencyCollectorDiagnosticListener).GetTypeInfo().Assembly.GetCustomAttributes()
+                    .OfType<AssemblyFileVersionAttribute>()
+                    .First()
+                    .Version;
+
+            Version version = new Version(versionStr);
+            this.client.Context.GetInternalContext().SdkVersion = "rddf" + version.ToString(3) + "-" + version.Revision;
+
+            this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
         }
 
         public string ListenerName
@@ -129,7 +141,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         /// <summary>
-        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency.
+        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
         /// </summary>
         internal IEnumerable<DependencyTelemetry> PendingDependencyTelemetry
         {
@@ -142,8 +154,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         [DiagnosticName("System.Net.Http.Request")]
         public void OnRequest(HttpRequestMessage request, Guid loggingRequestId)
         {
-            Console.WriteLine("DASCHULT - OnRequest() - Enter");
-            if (request != null && request.RequestUri != null)
+            if (request != null && request.RequestUri != null && !this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri.ToString()))
             {
                 string httpMethod = request.Method.Method;
                 Uri requestUri = request.RequestUri;
@@ -164,7 +175,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
 
                 if (!request.Headers.Contains(SourceInstrumentationKeyHeader))
                 {
-                    request.Headers.Add(SourceInstrumentationKeyHeader, InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(this.client.InstrumentationKey));
+                    request.Headers.Add(SourceInstrumentationKeyHeader, InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey));
                 }
 
                 // Add the root ID
@@ -181,7 +192,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     request.Headers.Add(StandardParentIdHeader, parentId);
                 }
             }
-            Console.WriteLine("DASCHULT - OnRequest() - Exit");
         }
 
         /// <summary>
@@ -191,7 +201,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         [DiagnosticName("System.Net.Http.Response")]
         public void OnResponse(HttpResponseMessage response, Guid loggingRequestId)
         {
-            Console.WriteLine("DASCHULT - OnResponse() - Enter");
             if (response != null)
             {
                 DependencyTelemetry telemetry;
@@ -202,7 +211,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                         string targetInstrumentationKeyHash = response.Headers.GetValues(TargetInstrumentationKeyHeader).SingleOrDefault();
 
                         // We only add the cross component correlation key if the key does not represent the current component.
-                        if (!string.IsNullOrEmpty(targetInstrumentationKeyHash) && targetInstrumentationKeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(this.client.InstrumentationKey))
+                        if (!string.IsNullOrEmpty(targetInstrumentationKeyHash) && targetInstrumentationKeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey))
                         {
                             telemetry.Type = "Application Insights";
                             telemetry.Target += " | " + targetInstrumentationKeyHash;
@@ -217,7 +226,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     this.client.Track(telemetry);
                 }
             }
-            Console.WriteLine("DASCHULT - OnResponse() - Exit");
         }
     }
 }

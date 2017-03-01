@@ -20,8 +20,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     {
         private string instrumentationKey;
         private StubTelemetryChannel telemetryChannel;
-        private List<ITelemetry> sentTelemetry = new List<ITelemetry>();
         private DependencyCollectorDiagnosticListener listener;
+
+        private List<ITelemetry> sentTelemetry = new List<ITelemetry>();
 
         [TestInitialize]
         public void Initialize()
@@ -34,17 +35,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 OnSend = sentTelemetry.Add
             };
 
-            TelemetryClient client = new TelemetryClient(
-                    new TelemetryConfiguration()
-                    {
-                        TelemetryChannel = telemetryChannel,
-                        InstrumentationKey = instrumentationKey,
-                    });
-            // You'd think that the constructor would set the instrumentation key is the
-            // configuration had a instrumentation key, but it doesn't, so we have to set it here.
-            client.InstrumentationKey = instrumentationKey;
-
-            listener = new DependencyCollectorDiagnosticListener(client);
+            listener = new DependencyCollectorDiagnosticListener(new TelemetryConfiguration()
+            {
+                TelemetryChannel = telemetryChannel,
+                InstrumentationKey = instrumentationKey,
+            });
         }
 
         [TestMethod]

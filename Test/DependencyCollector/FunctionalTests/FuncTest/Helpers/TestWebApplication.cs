@@ -12,6 +12,8 @@
         /// <summary>Gets or sets the port.</summary>
         internal int Port { get; set; }
 
+        internal string ExternalCallPath { get; set; } = "ExternalCalls.aspx";
+
         /// <summary>Gets the app folder.</summary>
         internal string AppFolder
         {
@@ -29,7 +31,7 @@
         /// <param name="queryString">The query string.</param>
         internal string ExecuteAnonymousRequest(string queryString)
         {
-            string url = string.Format("http://localhost:{0}/ExternalCalls.aspx{1}", this.Port, queryString);
+            string url = string.Format("http://{0}:{1}/{2}{3}", Environment.MachineName, this.Port, this.ExternalCallPath, queryString);
 
             string response;
             RequestHelper.ExecuteAnonymousRequest(url, out response);

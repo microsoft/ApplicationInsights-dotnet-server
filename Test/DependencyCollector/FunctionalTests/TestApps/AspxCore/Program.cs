@@ -2,6 +2,7 @@
 {
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
+    using System;
     using System.IO;
 
     public class Program
@@ -17,7 +18,9 @@
             int portNumber;
             if (args.Length >= 1 && int.TryParse(args[0], out portNumber))
             {
-                builder = builder.UseUrls($"http://localhost:{portNumber}/");
+                builder = builder.UseUrls(
+                    $"http://localhost:{portNumber}/",
+                    $"http://{Environment.MachineName}:{portNumber}/");
             }
 
             IWebHost host = builder.Build();

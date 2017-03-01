@@ -7,7 +7,12 @@
   "buildOptions": {
     "keyFile": "../../../Keys/35MSSharedLib1024.snk",
     "delaySign": true,
-    "xmlDoc": true
+    "xmlDoc": true,
+    "compile": {
+      "include": [
+        "../Shared/Implementation/ApplicationInsightsUrlFilter.cs"
+      ]
+    }
   },
 
   "dependencies": {

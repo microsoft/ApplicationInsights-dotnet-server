@@ -20,7 +20,13 @@
 
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
 
-  <Target Name="CopyBinariesToExpectedNuGetLocation" AfterTargets="Build">
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      CopyBinariesToExpectedNuGetLocation
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="CopyBinariesToExpectedNuGetLocation">
     <ItemGroup>
       <CopyFrom Include="$(OutputPath)Microsoft.AI.DependencyCollector\bin\$(Configuration)\netstandard1.6\*" />
     </ItemGroup>

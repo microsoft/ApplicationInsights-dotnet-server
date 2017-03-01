@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.IO;
-using System.Net;
 using System.Threading.Tasks;
+using System.Net.Http;
 
 namespace AspxCore.Controllers
 {
@@ -18,7 +17,8 @@ namespace AspxCore.Controllers
         [HttpGet]
         public string Get()
         {
-            string result;
+            string title = "(No title set)";
+            string response = "(No response set)";
 
             string type = GetQueryValue("type");
             string countStr = GetQueryValue("count");
@@ -27,14 +27,17 @@ namespace AspxCore.Controllers
             //bool.TryParse(GetQueryValue("success"), out success);
             //string sqlQueryToUse = success ? ValidSqlQueryToApmDatabase : InvalidSqlQueryToApmDatabase;
 
-            int count = 1;
-            int.TryParse(countStr, out count);
+            int count;
+            if (!int.TryParse(countStr, out count))
+            {
+                count = 1;
+            }
 
             switch (type)
             {
                 case "http":
-                    result = "Made Sync HTTP call to bing";
-                    MakeHttpCallSync(count, "bing");
+                    title = "Made Sync HTTP call to bing";
+                    response = MakeHttpCallSync(count, "bing");
                     break;
                 //case "httpClient":
                 //    HttpHelper40.MakeHttpCallUsingHttpClient("http://www.google.com/404");
@@ -169,47 +172,48 @@ namespace AspxCore.Controllers
                 //    SqlCommandHelper.OpenConnectionAsyncAwait(this.GetConnectionString(success, Request.QueryString["exceptionType"]));
                 //    break;
                 default:
-                    result = $"Unrecognized request type '{type}'";
+                    title = $"Unrecognized request type '{type}'";
+                    response = "";
                     break;
             }
 
-            return result;
+            return $"<HTML><BODY>{title}<BR/>{response}</BODY></HTML>";
         }
 
-        /// <summary>
-        /// Connection string to APM Development database.
-        /// </summary> 
-        private const string ConnectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=RDDTestDatabase;Integrated Security=True";
+        ///// <summary>
+        ///// Connection string to APM Development database.
+        ///// </summary> 
+        //private const string ConnectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=RDDTestDatabase;Integrated Security=True";
 
-        /// <summary>
-        /// Invalid connection string to database.
-        /// </summary> 
-        private const string InvalidConnectionString = @"Data Source=invalid\SQLEXPRESS;Initial Catalog=RDDTestDatabase;Integrated Security=True";
+        ///// <summary>
+        ///// Invalid connection string to database.
+        ///// </summary> 
+        //private const string InvalidConnectionString = @"Data Source=invalid\SQLEXPRESS;Initial Catalog=RDDTestDatabase;Integrated Security=True";
 
-        /// <summary>
-        /// Connection string to database with invalid account.
-        /// </summary> 
-        private const string InvalidAccountConnectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=RDDTestDatabase;User ID = AiUser;Password=Some";
+        ///// <summary>
+        ///// Connection string to database with invalid account.
+        ///// </summary> 
+        //private const string InvalidAccountConnectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=RDDTestDatabase;User ID = AiUser;Password=Some";
 
-        /// <summary>
-        /// Valid SQL Query. The wait for delay of 6msec is used to prevent access time of less than 1msec. SQL is not accurate below 3, so used 6 msec delay.
-        /// </summary> 
-        private const string ValidSqlQueryToApmDatabase = "WAITFOR DELAY '00:00:00:006'; select * from dbo.Messages";
+        ///// <summary>
+        ///// Valid SQL Query. The wait for delay of 6msec is used to prevent access time of less than 1msec. SQL is not accurate below 3, so used 6 msec delay.
+        ///// </summary> 
+        //private const string ValidSqlQueryToApmDatabase = "WAITFOR DELAY '00:00:00:006'; select * from dbo.Messages";
 
-        /// <summary>
-        /// Valid SQL Query to get count.
-        /// </summary> 
-        private const string ValidSqlQueryCountToApmDatabase = "WAITFOR DELAY '00:00:00:006'; SELECT count(*) FROM dbo.Messages";
+        ///// <summary>
+        ///// Valid SQL Query to get count.
+        ///// </summary> 
+        //private const string ValidSqlQueryCountToApmDatabase = "WAITFOR DELAY '00:00:00:006'; SELECT count(*) FROM dbo.Messages";
 
-        /// <summary>
-        /// Invalid SQL Query.
-        /// </summary> 
-        private const string InvalidSqlQueryToApmDatabase = "SELECT TOP 2 * FROM apm.[Database1212121]";
+        ///// <summary>
+        ///// Invalid SQL Query.
+        ///// </summary> 
+        //private const string InvalidSqlQueryToApmDatabase = "SELECT TOP 2 * FROM apm.[Database1212121]";
 
-        /// <summary>
-        /// Label used to identify the query being executed.
-        /// </summary> 
-        private const string QueryToExecuteLabel = "Query Executed:";
+        ///// <summary>
+        ///// Label used to identify the query being executed.
+        ///// </summary> 
+        //private const string QueryToExecuteLabel = "Query Executed:";
 
         /// <summary>
         /// Make sync http calls
@@ -217,27 +221,55 @@ namespace AspxCore.Controllers
         /// <param name="count">no of calls to be made</param>        
         /// <param name="hostname">the call will be made to http://www.hostname.com</param>        
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Reviewed manually")]
-        public static void MakeHttpCallSync(int count, string hostname)
+        public string MakeHttpCallSync(int count, string hostname)
         {
+            string result = "";
+
             Uri ourUri = new Uri(string.Format("http://www.{0}.com", hostname));
-            HttpWebRequest myHttpWebRequest = null;
-            HttpWebResponse myHttpWebResponse = null;
+            HttpClient client = new HttpClient();
             for (int i = 0; i < count; i++)
             {
-                myHttpWebRequest = (HttpWebRequest)WebRequest.Create(ourUri);
-
-                Task<WebResponse> responseTask = myHttpWebRequest.GetResponseAsync();
-                responseTask.RunSynchronously();
-                myHttpWebResponse = (HttpWebResponse)responseTask.Result;
-
-                using (var stm = myHttpWebResponse.GetResponseStream())
-                using (var reader = new StreamReader(stm))
+                string responseContents = ToSync(async () =>
                 {
-                    var content = reader.ReadToEnd();
-                }
-
-                myHttpWebResponse.Dispose();
+                    HttpResponseMessage response = await client.GetAsync(ourUri);
+                    return await response.Content.ReadAsStringAsync();
+                });
+                result += $"Request {i + 1}:<BR/>{responseContents}<BR/>";
             }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Run the provided asynchronous function synchronously.
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="asyncFunction"></param>
+        /// <returns></returns>
+        private static TResult ToSync<TResult>(Func<Task<TResult>> asyncFunction)
+        {
+            TResult result = default(TResult);
+
+            try
+            {
+                Task.Run(async () =>
+                {
+                    result = await asyncFunction.Invoke().ConfigureAwait(false);
+                }).Wait();
+            }
+            catch (AggregateException e)
+            {
+                if (e.InnerExceptions.Count == 1)
+                {
+                    throw e.InnerException;
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+
+            return result;
         }
 
         //private string GetConnectionString(bool success, string exceptionType)

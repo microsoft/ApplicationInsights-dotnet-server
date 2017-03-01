@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +14,7 @@ namespace AspxCore
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
             if (env.IsEnvironment("Development"))
             {
@@ -40,8 +35,6 @@ namespace AspxCore
             services.AddApplicationInsightsTelemetry(Configuration);
 
             services.AddMvc();
-
-            DiagnosticListener.AllListeners.AddApplicationInsightsDependencyCollector();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
@@ -55,6 +48,8 @@ namespace AspxCore
             app.UseApplicationInsightsExceptionTelemetry();
 
             app.UseMvc();
+
+            DiagnosticListener.AllListeners.AddApplicationInsightsDependencyCollector();
         }
     }
 }
