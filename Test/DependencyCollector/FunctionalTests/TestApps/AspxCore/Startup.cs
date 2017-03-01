@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.ApplicationInsights.DependencyCollector;
-using System.Diagnostics;
-
-namespace AspxCore
+﻿namespace AspxCore
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+
     public class Startup
     {
         public Startup(IHostingEnvironment env)
@@ -49,7 +48,7 @@ namespace AspxCore
 
             app.UseMvc();
 
-            DiagnosticListener.AllListeners.AddApplicationInsightsDependencyCollector();
+            DependencyCollectorDiagnosticListener.Enable();
         }
     }
 }

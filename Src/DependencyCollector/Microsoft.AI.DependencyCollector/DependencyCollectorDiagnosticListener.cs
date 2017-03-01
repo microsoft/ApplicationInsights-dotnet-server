@@ -19,75 +19,27 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.Extensions.DiagnosticAdapter;
 
-    public static class DependencyCollectorExtensions
-    {
-        /// <summary>
-        /// Adds Application Insights Dependency Collector services into service collection.
-        /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/> insance.</param>
-        /// <param name="options">The action used to configure the options.</param>
-        /// <returns>
-        /// The <see cref="IServiceCollection"/>.
-        /// </returns>
-        public static void AddApplicationInsightsDependencyCollector(this IObservable<DiagnosticListener> diagnosticListeners)
-        {
-            diagnosticListeners.Subscribe(new DependencyCollectorInitializer(new DependencyCollectorDiagnosticListener()));
-        }
-    }
-
-    /// <summary>
-    /// Class used to initialize Application Insights Dependency Collector diagnostic listeners.
-    /// </summary>
-    internal class DependencyCollectorInitializer : IObserver<DiagnosticListener>, IDisposable
-    {
-        private readonly List<IDisposable> subscriptions;
-        private readonly DependencyCollectorDiagnosticListener diagnosticListener;
-
-        internal DependencyCollectorInitializer(DependencyCollectorDiagnosticListener diagnosticListener)
-        {
-            this.subscriptions = new List<IDisposable>();
-            this.diagnosticListener = diagnosticListener;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            this.Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                foreach (IDisposable subscription in this.subscriptions)
-                {
-                    subscription.Dispose();
-                }
-            }
-        }
-
-        public void OnNext(DiagnosticListener value)
-        {
-            if (diagnosticListener.ListenerName == value.Name)
-            {
-                this.subscriptions.Add(value.SubscribeWithAdapter(diagnosticListener));
-            }
-        }
-
-        public void OnCompleted()
-        {
-        }
-
-        public void OnError(Exception error)
-        {
-        }
-    }
-
     /// <summary>
     /// Diagnostic listener implementation that listens for events specific to outgoing depedency requests.
     /// </summary>
-    public class DependencyCollectorDiagnosticListener
+    public class DependencyCollectorDiagnosticListener : IObserver<DiagnosticListener>
     {
+        /// <summary>
+        /// Add Application Insights Dependency Collector services to this .NET Core application.
+        /// </summary>
+        /// <returns>
+        /// An IDisposable that can be disposed to disable the DependencyCollectorDiagnosticListener.
+        /// </returns>
+        public static IDisposable Enable(TelemetryConfiguration configuration = null)
+        {
+            if (configuration == null)
+            {
+                configuration = TelemetryConfiguration.Active;
+            }
+
+            return DiagnosticListener.AllListeners.Subscribe(new DependencyCollectorDiagnosticListener(configuration));
+        }
+
         /// <summary>
         /// Source instrumentation header that is added by an application while making http requests and retrieved by the other application when processing incoming requests.
         /// </summary>
@@ -112,12 +64,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         private readonly TelemetryClient client;
         private readonly ConcurrentDictionary<Guid, DependencyTelemetry> pendingTelemetry = new ConcurrentDictionary<Guid, DependencyTelemetry>();
 
-        public DependencyCollectorDiagnosticListener()
-            : this(TelemetryConfiguration.Active)
-        {
-        }
-
-        public DependencyCollectorDiagnosticListener(TelemetryConfiguration configuration)
+        internal DependencyCollectorDiagnosticListener(TelemetryConfiguration configuration)
         {
             this.client = new TelemetryClient(configuration);
 
@@ -134,10 +81,21 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
         }
 
-        public string ListenerName
+        public void OnNext(DiagnosticListener value)
         {
             // Comes from https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs#L12
-            get { return "HttpHandlerDiagnosticListener"; }
+            if (value.Name == "HttpHandlerDiagnosticListener")
+            {
+                value.SubscribeWithAdapter(this);
+            }
+        }
+
+        public void OnCompleted()
+        {
+        }
+
+        public void OnError(Exception error)
+        {
         }
 
         /// <summary>

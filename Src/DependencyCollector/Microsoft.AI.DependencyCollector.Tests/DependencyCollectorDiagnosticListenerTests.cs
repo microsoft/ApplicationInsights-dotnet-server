@@ -5,9 +5,9 @@
 
 namespace Microsoft.ApplicationInsights.DependencyCollector
 {
-    using Channel;
-    using DataContracts;
-    using Extensibility;
+    using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System;
     using System.Collections.Generic;
