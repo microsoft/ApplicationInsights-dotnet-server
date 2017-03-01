@@ -381,6 +381,7 @@
         }
 
         [TestMethod]
+        [Ignore] // Don't run this test until .NET Core writes diagnostic events for failed HTTP requests
         [TestCategory(TestCategory.NetCore)]
         [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
         public void TestRddForSyncHttpFailedAspxCore()
@@ -390,137 +391,6 @@
             // Execute and verify calls which fails.            
             this.ExecuteSyncHttpTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial);
         }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAsync1HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync1);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForHttpAspxCoreWithHttpClient()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteSyncHttpClientTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, AccessTimeMaxHttpNormal);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [Description("Verify RDD is collected for failed Async Http Calls in ASPX 4.5.1 application")]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForFailedAsync1HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync1Failed);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAsync2HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync2);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForFailedAsync2HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync2Failed);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAsync3HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true, 1, AccessTimeMaxHttpNormal, QueryStringOutboundHttpAsync3);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForFailedAsync3HttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false, 1, AccessTimeMaxHttpInitial, QueryStringOutboundHttpAsync3Failed);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAsyncWithCallBackHttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncWithCallbackTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAsyncAwaitHttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, true);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForFailedAsyncAwaitHttpAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAsyncAwaitTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, false);
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAzureSdkBlobAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "blob", "http://127.0.0.1:11000");
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAzureSdkQueueAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "queue", "http://127.0.0.1:11001");
-        // }
-
-        // [TestMethod]
-        // [TestCategory(TestCategory.NetCore)]
-        // [DeploymentItem(AspxCoreTestAppFolder, DeploymentAndValidationTools.AspxCoreAppFolder)]
-        // public void TestRddForAzureSdkTableAspxCore()
-        // {
-        //     EnsureDotNetCoreInstalled();
-
-        //     this.ExecuteAzureSDKTests(DeploymentAndValidationTools.AspxCoreTestWebApplication, 1, "table", "http://127.0.0.1:11002");
-        // }
 
         #endregion Core
 
