@@ -43,7 +43,7 @@ namespace FuncTest.Helpers
         /// The fake endpoint to which SDK tries to sent Events for the test app ASPX 4.5.1. This should match the one used in
         /// ApplicationInsights.config for the test app being tested.
         /// </summary>
-        private const string Aspx451FakeDataPlatformEndpoint = "http://daschultD2:8789/";
+        private const string Aspx451FakeDataPlatformEndpoint = "http://localHost:8789/";
 
         private const int Aspx451Port = 789;
 

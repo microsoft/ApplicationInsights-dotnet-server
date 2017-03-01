@@ -19,7 +19,7 @@
       "commandName": "Project",
       "commandLineArgs": "791",
       "launchBrowser": true,
-      "launchUrl": "http://daschultD2:791/external/calls?type=http&count=1",
+      "launchUrl": "http://localhost:791/external/calls?type=http&count=1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -18,9 +18,7 @@
             int portNumber;
             if (args.Length >= 1 && int.TryParse(args[0], out portNumber))
             {
-                builder = builder.UseUrls(
-                    $"http://localhost:{portNumber}/",
-                    $"http://{Environment.MachineName}:{portNumber}/");
+                builder = builder.UseUrls($"http://localhost:{portNumber}/");
             }
 
             IWebHost host = builder.Build();

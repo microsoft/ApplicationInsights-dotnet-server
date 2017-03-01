@@ -31,7 +31,7 @@
         /// <param name="queryString">The query string.</param>
         internal string ExecuteAnonymousRequest(string queryString)
         {
-            string url = string.Format("http://{0}:{1}/{2}{3}", Environment.MachineName, this.Port, this.ExternalCallPath, queryString);
+            string url = string.Format("http://localhost:{0}/{1}{2}", this.Port, this.ExternalCallPath, queryString);
 
             string response;
             RequestHelper.ExecuteAnonymousRequest(url, out response);
