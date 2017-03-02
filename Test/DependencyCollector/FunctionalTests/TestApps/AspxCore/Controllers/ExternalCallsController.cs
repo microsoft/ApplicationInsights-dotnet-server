@@ -61,7 +61,6 @@ namespace AspxCore.Controllers
         /// </summary>        
         /// <param name="count">no of GET calls to be made</param>        
         /// <param name="hostname">the GET call will be made to http://www.hostname.com</param>        
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Reviewed manually")]
         private static string MakeHttpGetCallSync(int count, string hostname)
         {
             string result = "";
@@ -81,7 +80,6 @@ namespace AspxCore.Controllers
         /// </summary>        
         /// <param name="count">no of POST calls to be made</param>        
         /// <param name="hostname">the POST call will be made to http://www.hostname.com</param>        
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Reviewed manually")]
         private static string MakeHttpPostCallSync(int count, string hostname)
         {
             string result = "";
@@ -101,7 +99,6 @@ namespace AspxCore.Controllers
         /// Make sync http calls which fails
         /// </summary>        
         /// <param name="count">no of calls to be made</param>                
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Reviewed manually")]
         private static string MakeHttpCallSyncFailed(int count)
         {
             string result = "";

@@ -41,7 +41,7 @@ namespace FuncTest.Helpers
             catch (Exception ex)
             {
                 Trace.TraceError("Exception occured while attempting to deploy application {0}: {1}. Tests will not continue as they are guaranteed to fail.", this.AppName, ex);
-                throw ex;
+                throw;
             }
         }
 

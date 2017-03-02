@@ -13,6 +13,8 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.Extensions.DiagnosticAdapter;
+    using Web.Implementation;
+    using Common;
 
     /// <summary>
     /// Diagnostic listener implementation that listens for events specific to outgoing depedency requests.
@@ -62,16 +64,7 @@
         internal DependencyCollectorDiagnosticListener(TelemetryConfiguration configuration)
         {
             this.client = new TelemetryClient(configuration);
-
-            // Since dependencySource is no longer set, sdk version is prepended with information which can identify whether RDD was collected by profiler/framework
-            // For directly using TrackDependency(), version will be simply what is set by core
-            string versionStr = typeof(DependencyCollectorDiagnosticListener).GetTypeInfo().Assembly.GetCustomAttributes()
-                    .OfType<AssemblyFileVersionAttribute>()
-                    .First()
-                    .Version;
-
-            Version version = new Version(versionStr);
-            this.client.Context.GetInternalContext().SdkVersion = "rddf" + version.ToString(3) + "-" + version.Revision;
+            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rddf");
 
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
         }

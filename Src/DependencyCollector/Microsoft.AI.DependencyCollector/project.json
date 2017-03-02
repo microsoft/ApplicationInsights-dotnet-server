@@ -10,7 +10,9 @@
     "xmlDoc": true,
     "compile": {
       "include": [
-        "../Shared/Implementation/ApplicationInsightsUrlFilter.cs"
+        "../Shared/Implementation/ApplicationInsightsUrlFilter.cs",
+        "../../Common/InstrumentationKeyHashLookupHelper.cs",
+        "../../Web/Web.Net45/Implementation/SdkVersionUtils.cs"
       ]
     }
   },
@@ -24,7 +26,10 @@
 
   "frameworks": {
     "netstandard1.6": {
-      "imports": "dnxcore50"
+      "imports": "dnxcore50",
+      "buildOptions": {
+        "define": [ "NETCORE" ]
+      }
     }
   }
 }
