@@ -38,8 +38,14 @@
         /// </summary>
         public Action<ITelemetry> OnSend { get; set; }
 
+        /// <summary>
+        /// Gets or sets the callback invoked by the <see cref="Flush"/> method.
+        /// </summary>
         public Action OnFlush { get; set; }
 
+        /// <summary>
+        /// Gets or sets the callback invoked by the <see cref="Dispose"/> method.
+        /// </summary>
         public Action OnDispose { get; set; }
 
         /// <summary>

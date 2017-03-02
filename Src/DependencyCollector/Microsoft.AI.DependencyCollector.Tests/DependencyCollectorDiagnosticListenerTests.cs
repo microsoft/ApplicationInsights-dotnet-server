@@ -10,6 +10,9 @@
     using System.Net;
     using System.Net.Http;
 
+    /// <summary>
+    /// Unit tests for DependencyCollectorDiagnosticListener.
+    /// </summary>
     [TestClass]
     public class DependencyCollectorDiagnosticListenerTests
     {
@@ -31,6 +34,9 @@
 
         private List<ITelemetry> sentTelemetry = new List<ITelemetry>();
 
+        /// <summary>
+        /// Initialize function that gets called once before any tests in this class are run.
+        /// </summary>
         [TestInitialize]
         public void Initialize()
         {
@@ -49,6 +55,9 @@
             });
         }
 
+        /// <summary>
+        /// Call OnRequest() with no uri in the HttpRequestMessage.
+        /// </summary>
         [TestMethod]
         public void OnRequestWithRequestEventWithNoRequestUri()
         {
@@ -57,6 +66,9 @@
             Assert.AreEqual(0, sentTelemetry.Count);
         }
 
+        /// <summary>
+        /// Call OnRequest() with valid arguments.
+        /// </summary>
         [TestMethod]
         public void OnRequestWithRequestEvent()
         {
@@ -85,6 +97,9 @@
             return request != null && request.Headers != null && request.Headers.Contains(headerName) ? request.Headers.GetValues(headerName) : Enumerable.Empty<string>();
         }
 
+        /// <summary>
+        /// Call OnResponse() when no matching OnRequest() call has been made.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithResponseEventButNoMatchingRequest()
         {
@@ -93,6 +108,9 @@
             Assert.AreEqual(0, sentTelemetry.Count);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a successful request but no target instrumentation key in the response headers.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
         {
@@ -118,8 +136,11 @@
             Assert.AreEqual(true, telemetry.Success);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a not found request result but no target instrumentation key in the response headers.
+        /// </summary>
         [TestMethod]
-        public void OnResponseWithFailedResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
+        public void OnResponseWithNotFoundResponseEventWithMatchingRequestAndNoTargetInstrumentationKeyHasHeader()
         {
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUrlWithScheme);
@@ -143,6 +164,9 @@
             Assert.AreEqual(false, telemetry.Success);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a successful request and same target instrumentation key in the response headers as the source instrumentation key.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
         {
@@ -171,6 +195,9 @@
             Assert.AreEqual(true, telemetry.Success);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a not found request result code and same target instrumentation key in the response headers as the source instrumentation key.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithFailedResponseEventWithMatchingRequestAndSameTargetInstrumentationKeyHashHeader()
         {
@@ -199,6 +226,9 @@
             Assert.AreEqual(false, telemetry.Success);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a successful request and different target instrumentation key in the response headers than the source instrumentation key.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithSuccessfulResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
         {
@@ -227,6 +257,9 @@
             Assert.AreEqual(true, telemetry.Success);
         }
 
+        /// <summary>
+        /// Call OnResponse() with a not found request result code and different target instrumentation key in the response headers than the source instrumentation key.
+        /// </summary>
         [TestMethod]
         public void OnResponseWithFailedResponseEventWithMatchingRequestAndDifferentTargetInstrumentationKeyHashHeader()
         {

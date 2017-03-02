@@ -11,7 +11,6 @@
     internal class DotNetCoreProcess
     {
         private readonly Process process;
-        private bool hasStarted;
 
         public DotNetCoreProcess(string arguments, string workingDirectory = null)
         {
