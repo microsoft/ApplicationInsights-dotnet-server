@@ -345,14 +345,28 @@
 
         private static void EnsureDotNetCoreInstalled()
         {
+            string output = "";
             string error = "";
             DotNetCoreProcess process = new DotNetCoreProcess("--version")
+                .RedirectStandardOutputTo((string outputMessage) => output += outputMessage)
                 .RedirectStandardErrorTo((string errorMessage) => error += errorMessage)
                 .Run();
 
             if (process.ExitCode.Value != 0 || !string.IsNullOrEmpty(error))
             {
                 Assert.Inconclusive(".Net Core is not installed");
+            }
+            else
+            {
+                // Look for first dash to get semantic version. (for example: 1.0.0-preview2-003156)
+                int dashIndex = output.IndexOf('-');
+                Version version = new Version(dashIndex == -1 ? output : output.Substring(0, dashIndex));
+
+                Version minVersion = new Version("1.0.0");
+                if (version < minVersion)
+                {
+                    Assert.Inconclusive($".Net Core version ({output}) must be greater than or equal to {minVersion}.");
+                }
             }
         }
 
