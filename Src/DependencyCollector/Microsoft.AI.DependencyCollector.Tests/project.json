@@ -17,8 +17,7 @@
     },
     "MSTest.TestFramework": "1.0.8-rc2",
     "Microsoft.AI.DependencyCollector": {
-      "target": "project",
-      "version": "2.3.0-beta2"
+      "target": "project"
     }
   },
 
