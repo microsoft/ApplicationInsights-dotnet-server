@@ -351,6 +351,7 @@
         }
 
         [TestMethod]
+        [TestCategory(TestCategory.Net451)]
         [Description("Validates that DependencyModule collects telemety for outbound connections to non existent hosts. This request is expected to fail at DNS resolution stage, and hence will not contain http code in result.")]
         [DeploymentItem(Aspx451TestAppFolder, DeploymentAndValidationTools.Aspx451AppFolder)]
         public void TestDependencyCollectionForFailedRequestAtDnsResolution()
