@@ -42,8 +42,6 @@
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            app.UseApplicationInsightsExceptionTelemetry();
-
             app.UseMvc();
 
             DependencyCollectorDiagnosticListener.Enable();

@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <Solution Include="$(SolutionThatCreatesNuGetPackage)" />
-    <Solution Include="Test\DependencyCollector\FunctionalTests.sln" /> 
+    <Solution Include="Test\DependencyCollector\FunctionalTests.sln" />
     <Solution Include="Test\PerformanceCollector\FunctionalTests.sln" />
     <Solution Include="Test\Web\FunctionalTests.sln" />
   </ItemGroup>
@@ -28,12 +28,25 @@
   </Target>
 
   <Target Name="RestoreAndBuildSolution">
-    <Exec Condition="'$(SolutionToBuild)' == '$(SolutionThatCreatesNuGetPackage)'" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsPackages -ConfigFile NuGet.config'/>
+    <PropertyGroup>
+      <BuildingSolutionThatCreatesNuGetPackage Condition="'$(SolutionToBuild)' == '$(SolutionThatCreatesNuGetPackage)'">true</BuildingSolutionThatCreatesNuGetPackage>
+      <BuildingSolutionThatCreatesNuGetPackage Condition="'$(BuildingSolutionThatCreatesNuGetPackage)' == ''">false</BuildingSolutionThatCreatesNuGetPackage>
+
+      <DisableLocalDebugNuget Condition="$(BuildingSolutionThatCreatesNuGetPackage) Or '$(Configuration)' == 'Release'">true</DisableLocalDebugNuget>
+      <DisableLocalDebugNuget Condition="'$(DisableLocalDebugNuget)' == ''">false</DisableLocalDebugNuget>
+
+      <DisableLocalReleaseNuget Condition="$(BuildingSolutionThatCreatesNuGetPackage) Or '$(Configuration)' == 'Debug'">true</DisableLocalReleaseNuget>
+      <DisableLocalReleaseNuget Condition="'$(DisableLocalReleaseNuget)' == ''">false</DisableLocalReleaseNuget>
+    </PropertyGroup>
+
+    <Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
+    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>
 
     <Exec Command='IF EXIST "$(SolutionToBuild)" nuget.exe restore "$(SolutionToBuild)" -NonInteractive' ContinueOnError="ErrorAndStop"/>
 
     <MSBuild Projects="$(SolutionToBuild)" ContinueOnError="ErrorAndStop"/>
 
-    <Exec Condition="'$(SolutionToBuild)' == '$(SolutionThatCreatesNuGetPackage)'" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsPackages -ConfigFile NuGet.config'/>
+    <Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
+    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>
   </Target>
 </Project>
