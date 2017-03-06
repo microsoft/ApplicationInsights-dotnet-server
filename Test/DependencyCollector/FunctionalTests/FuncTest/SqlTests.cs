@@ -632,7 +632,7 @@
                 }
             }
 
-            DeploymentAndValidationTools.Validate(itemToValidate, accessTimeMax, successFlagExpected);
+            DeploymentAndValidationTools.Validate(itemToValidate, accessTimeMax, successFlagExpected, sqlErrorCodeExpected);
         }
 
         private void Validate(TelemetryItem<RemoteDependencyData> itemToValidate,
