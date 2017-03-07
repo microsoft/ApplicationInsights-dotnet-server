@@ -46,10 +46,7 @@
                         }
                         catch (InvalidOperationException e)
                         {
-                            if (onReadingFailure != null)
-                            {
-                                onReadingFailure(counter.Item1.OriginalString, e);
-                            }
+                            onReadingFailure?.Invoke(counter.Item1.OriginalString, e);
 
                             return new Tuple<PerformanceCounterData, double>[] { };
                         }
@@ -67,7 +64,7 @@
                 this.PerformanceCounters.Where(pc => pc.IsInBadState)
                     .ToList();
 
-            countersToRefresh.ForEach(pcd => this.RefreshPerformanceCounter(pcd));
+            countersToRefresh.ForEach(this.RefreshPerformanceCounter);
 
             PerformanceCollectorEventSource.Log.CountersRefreshedEvent(countersToRefresh.Count.ToString(CultureInfo.InvariantCulture));
         }
@@ -108,6 +105,22 @@
                     e.Message,
                     perfCounter);
                 error = e.Message;
+            }
+        }
+
+        /// <summary>
+        /// Removes a counter.
+        /// </summary>
+        /// <param name="perfCounter">Name of the performance counter to remove.</param>
+        public void RemoveCounter(string perfCounter)
+        {
+            Tuple<PerformanceCounterData, ICounterValue> keyToRemove =
+                this.performanceCounters.FirstOrDefault(
+                    pair => string.Equals(pair.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
+
+            if (keyToRemove != null)
+            {
+                this.performanceCounters.Remove(keyToRemove);
             }
         }
 

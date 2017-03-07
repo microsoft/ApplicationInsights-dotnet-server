@@ -16,9 +16,14 @@
         internal const string XMsQpsTransmissionTimeHeaderName = "x-ms-qps-transmission-time";
 
         /// <summary>
-        /// Configuration etag header.
+        /// Configuration ETag header.
         /// </summary>
         internal const string XMsQpsConfigurationETagHeaderName = "x-ms-qps-configuration-etag";
+
+        /// <summary>
+        /// Authentication API key.
+        /// </summary>
+        internal const string XMsQpsAuthApiKeyHeaderName = "x-ms-qps-auth-api-key";
 
         /// <summary>
         /// Instance name header.

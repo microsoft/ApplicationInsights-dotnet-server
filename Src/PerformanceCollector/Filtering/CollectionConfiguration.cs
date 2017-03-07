@@ -27,6 +27,8 @@
 
         private readonly List<Tuple<string, AggregationType>> metricMetadata = new List<Tuple<string, AggregationType>>();
 
+        private readonly List<DocumentStream> documentStreams = new List<DocumentStream>(); 
+
         public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
 
         public IEnumerable<OperationalizedMetric<DependencyTelemetry>> DependencyMetrics => this.dependencyTelemetryMetrics;
@@ -47,7 +49,25 @@
         /// </summary>
         public IEnumerable<Tuple<string, AggregationType>> MetricMetadata => this.metricMetadata;
 
+        /// <summary>
+        /// Document streams (handled by QuickPulseTelemetryProcessor)
+        /// </summary>
+        public IEnumerable<DocumentStream> DocumentStreams => this.documentStreams; 
+        
         public string ETag => this.info.ETag;
+
+        /// <remarks>
+        ///  Performance counter name is stored in OperationalizedMetricInfo.Projection
+        /// </remarks>
+        public IEnumerable<string> PerformanceCounters
+        {
+            get
+            {
+                return
+                    (this.info.Metrics ?? new OperationalizedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.PerformanceCounter)
+                        .Select(metric => metric.Projection);
+            }
+        }
 
         public CollectionConfiguration(CollectionConfigurationInfo info, out string[] errors)
         {
@@ -59,10 +79,57 @@
             this.info = info;
 
             // create metrics based on descriptions in info
-            this.CreateMetrics(info, out errors);
+            string[] metricErrors;
+            this.CreateMetrics(info, out metricErrors);
 
             // maintain a separate collection of all (Id, AggregationType) pairs with some additional data - to allow for uniform access to all types of metrics
             this.CreateMetadata();
+
+            // create document streams based on description in info
+            string[] documentStreamErrors;
+            this.CreateDocumentStreams(out documentStreamErrors);
+
+            errors = metricErrors.Concat(documentStreamErrors).ToArray();
+        }
+
+        private void CreateDocumentStreams(out string[] errors)
+        {
+            var errorList = new List<string>();
+            var documentStreamIds = new HashSet<string>();
+
+            foreach (DocumentStreamInfo documentStreamInfo in info.DocumentStreams ?? new DocumentStreamInfo[0])
+            {
+                if (documentStreamIds.Contains(documentStreamInfo.Id))
+                {
+                    // there must not be streams with duplicate ids
+                    errorList.Add(
+                        string.Format(CultureInfo.InvariantCulture, "Document stream with a duplicate id ignored: {0}", documentStreamInfo.Id));
+
+                    continue;
+                }
+
+                try
+                {
+                    string[] localErrors;
+                    DocumentStream documentStream = new DocumentStream(documentStreamInfo, out localErrors);
+
+                    errorList.AddRange(localErrors ?? new string[0]);
+                    documentStreamIds.Add(documentStreamInfo.Id);
+
+                    this.documentStreams.Add(documentStream);
+                }
+                catch (Exception e)
+                {
+                    errorList.Add(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Failed to create document stream {0}. Error message: {1}",
+                            documentStreamInfo.ToString(),
+                            e.ToString()));
+                }
+            }
+
+            errors = errorList.ToArray();
         }
 
         private void CreateMetrics(CollectionConfigurationInfo info, out string[] errors)
@@ -97,6 +164,10 @@
                     case TelemetryType.Metric:
                         CollectionConfiguration.AddMetric(metricInfo, this.metricMetrics, out localErrors);
                         break;
+                    case TelemetryType.PerformanceCounter:
+                        // no need to create a wrapper, we rely on the underlying CollectionConfigurationInfo to provide data about performance counters
+                        // move on to the next metric
+                        continue;
                     default:
                         errorList.Add(string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType));
                         break;
@@ -152,7 +223,6 @@
                                     e.ToString())
                             }).ToArray();
             }
-
         }
     }
 }

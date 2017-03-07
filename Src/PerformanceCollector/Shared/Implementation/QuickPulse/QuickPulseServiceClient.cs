@@ -56,6 +56,7 @@
             string instrumentationKey,
             DateTimeOffset timestamp,
             string configurationETag,
+            string authApiKey,
             out CollectionConfigurationInfo configurationInfo)
         {
             var path = string.Format(CultureInfo.InvariantCulture, "ping?ikey={0}", Uri.EscapeUriString(instrumentationKey));
@@ -64,6 +65,7 @@
                 path,
                 true,
                 configurationETag,
+                authApiKey,
                 stream => this.WritePingData(timestamp, stream));
             
             if (response == null)
@@ -79,6 +81,7 @@
             IEnumerable<QuickPulseDataSample> samples,
             string instrumentationKey,
             string configurationETag,
+            string authApiKey,
             out CollectionConfigurationInfo configurationInfo,
             string[] collectionConfigurationErrors)
         {
@@ -88,6 +91,7 @@
                 path,
                 false,
                 configurationETag,
+                authApiKey,
                 stream => this.WriteSamples(samples, instrumentationKey, stream, collectionConfigurationErrors));
 
             if (response == null)
@@ -282,7 +286,7 @@
                        };
         }
 
-        private HttpWebResponse SendRequest(string httpVerb, string path, bool includeHeaders, string configurationETag, Action<Stream> onWriteBody)
+        private HttpWebResponse SendRequest(string httpVerb, string path, bool includeHeaders, string configurationETag, string authApiKey, Action<Stream> onWriteBody)
         {
             var requestUri = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", this.ServiceUri.AbsoluteUri.TrimEnd('/'), path.TrimStart('/'));
 
@@ -293,6 +297,7 @@
                 request.Timeout = (int)this.timeout.TotalMilliseconds;
                 request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
                 request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
+                request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
 
                 if (includeHeaders)
                 {

@@ -20,7 +20,11 @@
     /// </summary>
     public class QuickPulseTelemetryProcessor : ITelemetryProcessor, ITelemetryModule, IQuickPulseTelemetryProcessor
     {
-        private const string TelemetryDocumentContractVersion = "1.0";
+        /// <summary>
+        /// 1.0 - initial release
+        /// 1.1 - added DocumentStreamId, EventTelemetryDocument
+        /// </summary>
+        private const string TelemetryDocumentContractVersion = "1.1";
 
         private const int MaxTelemetryQuota = 30;
 
@@ -44,11 +48,15 @@
 
         private bool disableFullTelemetryItems = false;
 
-        private readonly QuickPulseQuotaTracker requestQuotaTracker = null;
+        private readonly QuickPulseQuotaTracker requestQuotaTracker;
 
-        private readonly QuickPulseQuotaTracker dependencyQuotaTracker = null;
+        private readonly QuickPulseQuotaTracker dependencyQuotaTracker;
 
-        private readonly QuickPulseQuotaTracker exceptionQuotaTracker = null;
+        private readonly QuickPulseQuotaTracker exceptionQuotaTracker;
+
+        private readonly QuickPulseQuotaTracker eventQuotaTracker;
+
+        //!!! implement outgoing overall quota and report is violations
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryProcessor"/> class.
@@ -94,6 +102,11 @@
                 initialTelemetryQuota ?? InitialTelemetryQuota);
 
             this.exceptionQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider,
+                maxTelemetryQuota ?? MaxTelemetryQuota,
+                initialTelemetryQuota ?? InitialTelemetryQuota);
+
+            this.eventQuotaTracker = new QuickPulseQuotaTracker(
                 timeProvider,
                 maxTelemetryQuota ?? MaxTelemetryQuota,
                 initialTelemetryQuota ?? InitialTelemetryQuota);
@@ -243,6 +256,19 @@
                        };
         }
 
+        private static ITelemetryDocument ConvertEventToTelemetryDocument(EventTelemetry eventTelemetry)
+        {
+            return new EventTelemetryDocument()
+            {
+                Id = Guid.NewGuid(),
+                Version = TelemetryDocumentContractVersion,
+                Timestamp = eventTelemetry.Timestamp,
+                OperationId = TruncateValue(eventTelemetry.Context?.Operation?.Id),
+                Name = TruncateValue(eventTelemetry.Name),
+                Properties = GetProperties(eventTelemetry)
+            };
+        }
+
         private static string ExpandExceptionMessage(ExceptionTelemetry exceptionTelemetry)
         {
             Exception exception = exceptionTelemetry.Exception;
@@ -371,6 +397,7 @@
                 var telemetryAsRequest = telemetry as RequestTelemetry;
                 var telemetryAsDependency = telemetry as DependencyTelemetry;
                 var telemetryAsException = telemetry as ExceptionTelemetry;
+                var telemetryAsEvent = telemetry as EventTelemetry;
 
                 // update aggregates
                 if (telemetryAsRequest != null)
@@ -386,38 +413,71 @@
                     this.UpdateExceptionAggregates();
                 }
 
-                // collect full telemetry items
-                if (!this.disableFullTelemetryItems)
-                {
-                    if (telemetryAsRequest != null && !IsRequestSuccessful(telemetryAsRequest))
-                    {
-                        this.CollectRequest(telemetryAsRequest);
-                    }
-                    else if (telemetryAsDependency != null && telemetryAsDependency.Success == false)
-                    {
-                        this.CollectDependency(telemetryAsDependency);
-                    }
-                    else if (telemetryAsException != null)
-                    {
-                        this.CollectException(telemetryAsException);
-                    }
-                }
-
-                // collect operationalized metrics
-
                 // get a local reference, the accumulator might get swapped out a any time
                 // in case we continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
-                CollectionConfigurationAccumulator configurationAccumulatorLocal = this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
+                CollectionConfigurationAccumulator configurationAccumulatorLocal =
+                    this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
 
                 //!!! better solution?
                 // if the accumulator is swapped out, a sample is created and sent out - all while between these two lines, this telemetry item gets lost
                 // however, that is not likely to happen
-
                 Interlocked.Increment(ref configurationAccumulatorLocal.ReferenceCount);
+
                 try
                 {
-                    var telemetryAsEvent = telemetry as EventTelemetry;
+                    // collect full telemetry items
+                    if (!this.disableFullTelemetryItems)
+                    {
+                        ITelemetryDocument telemetryDocument = null;
+                        IEnumerable<DocumentStream> documentStreams = configurationAccumulatorLocal.CollectionConfiguration.DocumentStreams;
 
+                        //!!! report runtime errors for filter groups?
+                        string[] groupErrors;
+
+                        if (telemetryAsRequest != null)
+                        {
+                            telemetryDocument = CreateTelemetryDocument(
+                                telemetryAsRequest,
+                                documentStreams,
+                                this.requestQuotaTracker,
+                                ConvertRequestToTelemetryDocument,
+                                documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors));
+                        }
+                        else if (telemetryAsDependency != null)
+                        {
+                            telemetryDocument = CreateTelemetryDocument(
+                                telemetryAsDependency,
+                                documentStreams,
+                                this.dependencyQuotaTracker,
+                                ConvertDependencyToTelemetryDocument,
+                                documentStream => documentStream.CheckFilters(telemetryAsDependency, out groupErrors));
+                        }
+                        else if (telemetryAsException != null)
+                        {
+                            telemetryDocument = CreateTelemetryDocument(
+                                telemetryAsException,
+                                documentStreams,
+                                this.exceptionQuotaTracker,
+                                ConvertExceptionToTelemetryDocument,
+                                documentStream => documentStream.CheckFilters(telemetryAsException, out groupErrors));
+                        }
+                        else if (telemetryAsEvent != null)
+                        {
+                            telemetryDocument = CreateTelemetryDocument(
+                                telemetryAsEvent,
+                                documentStreams,
+                                this.eventQuotaTracker,
+                                ConvertEventToTelemetryDocument,
+                                documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors));
+                        }
+
+                        if (telemetryDocument != null)
+                        {
+                            this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
+                        }
+                    }
+
+                    // collect operationalized metrics
                     string[] filteringErrors;
                     string projectionError = null;
 
@@ -467,6 +527,28 @@
             }
         }
 
+        private static ITelemetryDocument CreateTelemetryDocument<TTelemetry>(
+            TTelemetry telemetry,
+            IEnumerable<DocumentStream> documentStreams,
+            QuickPulseQuotaTracker quotaTracker,
+            Func<TTelemetry, ITelemetryDocument> convertTelemetryToTelemetryDocument,
+            Func<DocumentStream, bool> checkDocumentStreamFilters)
+        {
+            ITelemetryDocument telemetryDocument = null;
+
+            // check which document streams are interested in this telemetry
+            var matchingDocumentStreamIds = documentStreams.Where(checkDocumentStreamFilters).Select(documentStream => documentStream.Id).ToList();
+
+            // take only 1 quota for any number of document streams that will include this telemetry
+            if (matchingDocumentStreamIds.Count > 0 && quotaTracker.ApplyQuota())
+            {
+                telemetryDocument = convertTelemetryToTelemetryDocument(telemetry);
+                telemetryDocument.DocumentStreamIds = matchingDocumentStreamIds.ToArray();
+            }
+
+            return telemetryDocument;
+        }
+
         internal static void ProcessMetrics<TTelemetry>(
             CollectionConfigurationAccumulator configurationAccumulatorLocal,
             IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
@@ -493,36 +575,6 @@
                         projectionError = e.ToString();
                     }
                 }
-            }
-        }
-
-        private void CollectRequest(RequestTelemetry requestTelemetry)
-        {
-            if (this.requestQuotaTracker.ApplyQuota())
-            {
-                ITelemetryDocument telemetryDocument = ConvertRequestToTelemetryDocument(requestTelemetry);
-
-                this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
-            }
-        }
-        
-        private void CollectDependency(DependencyTelemetry dependencyTelemetry)
-        {
-            if (this.dependencyQuotaTracker.ApplyQuota())
-            {
-                ITelemetryDocument telemetryDocument = ConvertDependencyToTelemetryDocument(dependencyTelemetry);
-
-                this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
-            }
-        }
-
-        private void CollectException(ExceptionTelemetry exceptionTelemetry)
-        {
-            if (this.exceptionQuotaTracker.ApplyQuota())
-            {
-                ITelemetryDocument telemetryDocument = ConvertExceptionToTelemetryDocument(exceptionTelemetry);
-
-                this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
             }
         }
 

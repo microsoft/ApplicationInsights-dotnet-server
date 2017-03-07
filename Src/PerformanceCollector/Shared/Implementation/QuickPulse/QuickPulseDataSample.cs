@@ -70,7 +70,7 @@
             this.AIExceptionsPerSecond = sampleDuration.TotalSeconds > 0 ? accumulator.AIExceptionCount / sampleDuration.TotalSeconds : 0;
 
             this.PerfCountersLookup = perfData.ToDictionary(
-                p => (QuickPulseDefaults.CounterOriginalStringMapping.ContainsKey(p.Value.Item1.OriginalString) ? QuickPulseDefaults.CounterOriginalStringMapping[p.Value.Item1.OriginalString] : p.Value.Item1.OriginalString), 
+                p => (QuickPulseDefaults.DefaultCounterOriginalStringMapping.ContainsKey(p.Value.Item1.OriginalString) ? QuickPulseDefaults.DefaultCounterOriginalStringMapping[p.Value.Item1.OriginalString] : p.Value.Item1.OriginalString), 
                 p => p.Value.Item2);
 
             this.TopCpuData = topCpuData.ToArray();

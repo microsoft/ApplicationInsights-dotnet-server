@@ -17,13 +17,13 @@
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "dog" };
             var filterInfo2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "cat" };
             var metricInfo = new OperationalizedMetricInfo()
-                                 {
-                                     Id = "Metric1",
-                                     TelemetryType = TelemetryType.Request,
-                                     Projection = "Name",
-                                     Aggregation = AggregationType.Sum,
-                                     Filters = new[] { filterInfo1, filterInfo2 }
-                                 };
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Name",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
+            };
 
             var telemetryThatMustPass = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies both filters" };
             var telemetryThatMustFail1 = new RequestTelemetry() { Name = "This value only contains the word 'dog', but not the other one" };
@@ -47,6 +47,87 @@
         }
 
         [TestMethod]
+        public void OperationalizedMetricHandlesNoFiltersCorrectly()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Name",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = new FilterConjunctionGroupInfo[0]
+            };
+
+            var telemetryThatMustPass = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies both filters" };
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+
+            // ASSERT
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsTrue(metric.CheckFilters(telemetryThatMustPass, out errors));
+            Assert.AreEqual(0, errors.Length);
+        }
+
+        [TestMethod]
+        public void OperationalizedMetricPerformsLogicalConnectionsBetweenFiltersCorrectly()
+        {
+            // ARRANGE
+            var filterInfoDog = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "dog" };
+            var filterInfoCat = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "cat" };
+            var filterInfoApple = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "apple" };
+            var filterInfoOrange = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "orange" };
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Name",
+                Aggregation = AggregationType.Sum,
+                FilterGroups =
+                    new[]
+                    {
+                        new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoDog, filterInfoCat } },
+                        new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoApple, filterInfoOrange } }
+                    }
+            };
+
+            var telemetryThatMustPass1 = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies the first OR." };
+            var telemetryThatMustPass2 = new RequestTelemetry() { Name = "Both the words 'apple' and 'ORANGE' are here, which satisfies the second OR." };
+            var telemetryThatMustPass3 = new RequestTelemetry() { Name = "All four words are here: 'dog', 'cat', 'apple', and 'orange'!" };
+            var telemetryThatMustFail1 = new RequestTelemetry() { Name = "This value only contains the words 'dog' and 'apple', which is not enough to satisfy any of the OR conditions." };
+            var telemetryThatMustFail2 = new RequestTelemetry() { Name = "This value only contains the word 'cat' and 'orange', which is not enough to satisfy any of the OR conditions." };
+            var telemetryThatMustFail3 = new RequestTelemetry() { Name = "None of the words are here!" };
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+
+            // ASSERT
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsTrue(metric.CheckFilters(telemetryThatMustPass1, out errors));
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsTrue(metric.CheckFilters(telemetryThatMustPass2, out errors));
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsTrue(metric.CheckFilters(telemetryThatMustPass3, out errors));
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsFalse(metric.CheckFilters(telemetryThatMustFail1, out errors));
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsFalse(metric.CheckFilters(telemetryThatMustFail2, out errors));
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsFalse(metric.CheckFilters(telemetryThatMustFail3, out errors));
+            Assert.AreEqual(0, errors.Length);
+        }
+
+        [TestMethod]
         public void OperationalizedMetricProjectsCorrectly()
         {
             // ARRANGE
@@ -56,11 +137,11 @@
                 TelemetryType = TelemetryType.Request,
                 Projection = "Id",
                 Aggregation = AggregationType.Sum,
-                Filters = new FilterInfo[0]
+                FilterGroups = new FilterConjunctionGroupInfo[0]
             };
 
             var telemetry = new RequestTelemetry() { Name = "1.23", Id = "5.67" };
-            
+
             // ACT
             string[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
@@ -82,7 +163,7 @@
                 TelemetryType = TelemetryType.Request,
                 Projection = "CustomDimensions.Dimension1",
                 Aggregation = AggregationType.Sum,
-                Filters = new FilterInfo[0]
+                FilterGroups = new FilterConjunctionGroupInfo[0]
             };
 
             var telemetry = new RequestTelemetry() { Properties = { ["Dimension1"] = "1.5" } };
@@ -108,7 +189,7 @@
                 TelemetryType = TelemetryType.Request,
                 Projection = "CustomMetrics.Metric1",
                 Aggregation = AggregationType.Sum,
-                Filters = new FilterInfo[0]
+                FilterGroups = new FilterConjunctionGroupInfo[0]
             };
 
             var telemetry = new RequestTelemetry() { Metrics = { ["Metric1"] = 1.75d } };
@@ -134,7 +215,7 @@
                 TelemetryType = TelemetryType.Request,
                 Projection = "COUNT()",
                 Aggregation = AggregationType.Sum,
-                Filters = new FilterInfo[0]
+                FilterGroups = new FilterConjunctionGroupInfo[0]
             };
 
             var telemetry = new RequestTelemetry();
@@ -195,13 +276,13 @@
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Sky" };
             var filterInfo2 = new FilterInfo() { FieldName = "NonExistentField", Predicate = Predicate.Equal, Comparand = "Comparand" };
             var metricInfo = new OperationalizedMetricInfo()
-                                 {
-                                     Id = "Metric1",
-                                     TelemetryType = TelemetryType.Request,
-                                     Projection = "Name",
-                                     Aggregation = AggregationType.Avg,
-                                     Filters = new[] { filterInfo1, filterInfo2 }
-                                 };
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Name",
+                Aggregation = AggregationType.Avg,
+                FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
+            };
 
             // ACT
             string[] errors;
@@ -224,13 +305,13 @@
         {
             // ARRANGE
             var metricInfo = new OperationalizedMetricInfo()
-                                 {
-                                     Id = "Metric1",
-                                     TelemetryType = TelemetryType.Request,
-                                     Projection = "NonExistentFieldName",
-                                     Aggregation = AggregationType.Sum,
-                                     Filters = new FilterInfo[0]
-                                 };
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "NonExistentFieldName",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = new FilterConjunctionGroupInfo[0]
+            };
 
             // ACT
             string[] errors;
@@ -249,7 +330,7 @@
                 TelemetryType = TelemetryType.Request,
                 Projection = "Id",
                 Aggregation = AggregationType.Sum,
-                Filters = new FilterInfo[0]
+                FilterGroups = new FilterConjunctionGroupInfo[0]
             };
 
             var telemetry = new RequestTelemetry() { Id = "NotDoubleValue" };

@@ -31,14 +31,15 @@
 
         #region Infra init - success
 
-        [Event(1, Level = EventLevel.Informational, Message = @"QuickPulse infrastructure is being initialized. QuickPulseServiceEndpoint: '{0}', DisableFullTelemetryItems: '{1}', DisableTopCpuProcesses: '{2}' ")]
+        [Event(1, Level = EventLevel.Informational, Message = @"QuickPulse infrastructure is being initialized. QuickPulseServiceEndpoint: '{0}', DisableFullTelemetryItems: '{1}', DisableTopCpuProcesses: '{2}', AuthApiKey: '{3}' ")]
         public void ModuleIsBeingInitializedEvent(
             string serviceEndpoint,
             bool disableFullTelemetryItems,
             bool disableTopCpuProcesses,
+            string authApiKey,
             string applicationName = "dummy")
         {
-            this.WriteEvent(1, serviceEndpoint ?? string.Empty, disableFullTelemetryItems, disableTopCpuProcesses, this.ApplicationName);
+            this.WriteEvent(1, serviceEndpoint ?? string.Empty, disableFullTelemetryItems, disableTopCpuProcesses, authApiKey, this.ApplicationName);
         }
 
         [Event(3, Level = EventLevel.Informational, Message = @"Performance counter {0} has been successfully registered with QuickPulse performance collector.")]

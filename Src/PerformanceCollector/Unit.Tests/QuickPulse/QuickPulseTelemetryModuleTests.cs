@@ -191,8 +191,8 @@
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            var filter1 = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } };
-            var filter2 = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } };
+            var filter1 = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } } } };
+            var filter2 = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } } } };
             var metrics = new[]
                               {
                                   new OperationalizedMetricInfo()
@@ -201,7 +201,7 @@
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Avg,
-                                          Filters = filter1
+                                          FilterGroups = filter1
                                       },
                                   new OperationalizedMetricInfo()
                                       {
@@ -209,7 +209,7 @@
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
                                           Aggregation = AggregationType.Sum,
-                                          Filters = filter2
+                                          FilterGroups = filter2
                                       }
                               };
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
@@ -628,6 +628,160 @@
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag2" };
             Thread.Sleep((int)(10 * collectionInterval.TotalMilliseconds));
             Assert.AreEqual("ETag2", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryModuleUpdatesPerformanceCollectorWhenUpdatingCollectionConfiguration()
+        {
+            // ARRANGE
+            var pollingInterval = TimeSpan.FromMilliseconds(200);
+            var collectionInterval = TimeSpan.FromMilliseconds(80);
+            var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
+            var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+            var performanceCollector = new PerformanceCollectorMock();
+            var topCpuCollector = new QuickPulseTopCpuCollectorMock();
+
+            var module = new QuickPulseTelemetryModule(
+                collectionTimeSlotManager,
+                null,
+                serviceClient,
+                performanceCollector,
+                topCpuCollector,
+                timings);
+
+            // ACT & ASSERT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                            {
+                                                                ETag = "ETag1",
+                                                                Metrics =
+                                                                    new[]
+                                                                        {
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter1",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\Memory\Cache Bytes"
+                                                                                },
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter2",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\Memory\Cache Bytes Peak"
+                                                                                }
+                                                                        }
+                                                            };
+
+            module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
+
+            Thread.Sleep(pollingInterval);
+            Thread.Sleep((int)(2.5 * collectionInterval.TotalMilliseconds));
+
+            Assert.AreEqual("ETag1", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+
+            // 2 default + 2 configured
+            Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
+                                                            {
+                                                                ETag = "ETag2",
+                                                                Metrics =
+                                                                    new[]
+                                                                        {
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter3",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\MEMORY\Cache Bytes"
+                                                                                },
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter4",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\Memory\Commit Limit"
+                                                                                }
+                                                                        }
+                                                            };
+            Thread.Sleep((int)(10 * collectionInterval.TotalMilliseconds));
+
+            Assert.AreEqual("ETag2", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+
+            // 2 default + 1 configured remaining + 1 configured new
+            Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Commit Limit", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryModuleReportsErrorsFromPerformanceCollectorWhenUpdatingCollectionConfiguration()
+        {
+            // ARRANGE
+            var pollingInterval = TimeSpan.FromMilliseconds(200);
+            var collectionInterval = TimeSpan.FromMilliseconds(80);
+            var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
+            var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
+            var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
+            var performanceCollector = new PerformanceCollectorMock();
+            var topCpuCollector = new QuickPulseTopCpuCollectorMock();
+
+            var module = new QuickPulseTelemetryModule(
+                collectionTimeSlotManager,
+                null,
+                serviceClient,
+                performanceCollector,
+                topCpuCollector,
+                timings);
+
+            // ACT & ASSERT
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                                                                    ETag = "ETag1",
+                                                                    Metrics =
+                                                                    new[]
+                                                                        {
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter1",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\SomeCategory(SomeInstance)\SomeCounter"
+                                                                                },
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter2",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"\Memory\Cache Bytes Peak"
+                                                                                },
+                                                                            new OperationalizedMetricInfo()
+                                                                                {
+                                                                                    Id = "PerformanceCounter2",
+                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
+                                                                                    Projection = @"NonParseable"
+                                                                                }
+                                                                        }
+            };
+
+            module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
+
+            Thread.Sleep(pollingInterval);
+            Thread.Sleep((int)(2.5 * collectionInterval.TotalMilliseconds));
+
+            Assert.AreEqual("ETag1", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
+
+            // 2 default + 1 configured + 1 non-existent
+            Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"\SomeCategory(SomeInstance)\SomeCounter", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+
+            Assert.AreEqual(1, serviceClient.CollectionConfigurationErrors.Count());
+            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[0].Contains("NonParseable"));
         }
 
         [TestMethod]

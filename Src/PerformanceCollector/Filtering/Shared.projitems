@@ -11,9 +11,14 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AccumulatedValue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionConfigurationAccumulator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FilterConjunctionGroup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CollectionConfigurationInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\DocumentFilterConjunctionGroupInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\DocumentStreamInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\FilterConjunctionGroupInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MetricValue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DocumentStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OperationalizedMetric.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Filter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\OperationalizedMetricInfo.cs" />

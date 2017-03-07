@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using Microsoft.ApplicationInsights.DataContracts;
+
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
 
     using CounterData = System.Tuple<Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.PerformanceCounterData, System.Collections.Generic.List<double>>;
@@ -93,6 +93,11 @@
             {
                 this.RegisterCounter(perfCounterName, reportAs, pc, isCustomCounter, usesInstanceNamePlaceholder, out error);
             }
+        }
+
+        public void RemoveCounter(string perfCounter)
+        {
+            this.counters.RemoveAll(counter => string.Equals(counter.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
         }
 
         public PerformanceCounter CreateCounter(

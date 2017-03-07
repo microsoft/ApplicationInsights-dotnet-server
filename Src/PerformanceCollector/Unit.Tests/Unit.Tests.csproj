@@ -72,9 +72,10 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Filtering\CollectionConfigurationAccumulatorTests.cs" />
+    <Compile Include="Filtering\DocumentStreamTests.cs" />
+    <Compile Include="Filtering\FilterConjunctionGroupTests.cs" />
     <Compile Include="Filtering\CollectionConfigurationTests.cs" />
     <Compile Include="Filtering\OperationalizedMetricTests.cs" />
-    <Compile Include="Filtering\FilterInfoTests.cs" />
     <Compile Include="Filtering\FilterTests.cs" />
     <Compile Include="Filtering\Mocks\TelemetryMock.cs" />
     <Compile Include="Mocks\PerformanceCollectorMock.cs" />

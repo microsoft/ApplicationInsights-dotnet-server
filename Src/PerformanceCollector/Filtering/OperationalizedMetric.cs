@@ -26,7 +26,10 @@
 
         private readonly OperationalizedMetricInfo info;
 
-        private readonly List<Filter<TTelemetry>> filters = new List<Filter<TTelemetry>>();
+        /// <summary>
+        /// OR-connected collection of AND-connected filter groups.
+        /// </summary>
+        private readonly List<FilterConjunctionGroup<TTelemetry>> filterGroups = new List<FilterConjunctionGroup<TTelemetry>>();
 
         public string Id => this.info.Id;
 
@@ -48,32 +51,32 @@
         
         public bool CheckFilters(TTelemetry document, out string[] errors)
         {
-            // AND filters
-            var errorList = new List<string>(this.filters.Count);
-            foreach (Filter<TTelemetry> filter in this.filters)
+            if (this.filterGroups.Count < 1)
             {
-                bool filterPassed;
-                try
-                {
-                    filterPassed = filter.Check(document);
-                }
-                catch (Exception e)
-                {
-                    // the filter has failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out
-                    errorList.Add(e.ToString());
-                    filterPassed = false;
-                }
+                errors = new string[0];
+                return true;
+            }
 
-                if (!filterPassed)
+            var errorList = new List<string>(this.filterGroups.Count);
+
+            // iterate over OR-connected groups
+            foreach (FilterConjunctionGroup<TTelemetry> conjunctionFilterGroup in this.filterGroups)
+            {
+                string[] groupErrors;
+                bool groupPassed = conjunctionFilterGroup.CheckFilters(document, out groupErrors);
+
+                errorList.AddRange(groupErrors);
+
+                if (groupPassed)
                 {
+                    // one group has passed, we don't care about others
                     errors = errorList.ToArray();
-                    return false;
+                    return true;
                 }
             }
 
             errors = errorList.ToArray();
-
-            return true;
+            return false;
         }
 
         public double Project(TTelemetry document)
@@ -120,18 +123,25 @@
         private void CreateFilters(out string[] errors)
         {
             var errorList = new List<string>();
-            foreach (FilterInfo filterInfo in this.info.Filters)
+            foreach (FilterConjunctionGroupInfo filterConjunctionGroupInfo in this.info.FilterGroups)
             {
                 try
                 {
-                    var filter = new Filter<TTelemetry>(filterInfo);
+                    string[] groupErrors;
+                    var conjunctionFilterGroup = new FilterConjunctionGroup<TTelemetry>(filterConjunctionGroupInfo, out groupErrors);
 
-                    this.filters.Add(filter);
+                    errorList.AddRange(groupErrors);
+
+                    this.filterGroups.Add(conjunctionFilterGroup);
                 }
                 catch (Exception e)
                 {
                     errorList.Add(
-                        string.Format(CultureInfo.InvariantCulture, "Failed to create a filter {0}. Error message: {1}", filterInfo.ToString(), e.ToString()));
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Failed to create a filter group {0}. Error message: {1}",
+                            filterConjunctionGroupInfo.ToString(),
+                            e.ToString()));
                 }
             }
 

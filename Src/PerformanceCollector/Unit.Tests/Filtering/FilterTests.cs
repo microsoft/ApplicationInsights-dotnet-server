@@ -1,9 +1,7 @@
 ﻿namespace Unit.Tests
 {
     using System;
-    using System.Collections.Generic;
 
-    using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.VisualStudio.TestTools.UnitTesting;

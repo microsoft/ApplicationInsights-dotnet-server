@@ -48,6 +48,8 @@
 
         private string lastVersion;
 
+        private string lastAuthApiKey;
+
         private bool emulateTimeout;
 
         public QuickPulseServiceClientTests()
@@ -67,6 +69,7 @@
             this.lastPingTimestamp = null;
             this.lastPingInstance = string.Empty;
             this.lastVersion = string.Empty;
+            this.lastAuthApiKey = string.Empty;
             this.samples.Clear();
             this.emulateTimeout = false;
 
@@ -107,9 +110,9 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(string.Empty, timestamp, string.Empty, out configurationInfo);
-            serviceClient.Ping(string.Empty, timestamp, string.Empty, out configurationInfo);
-            serviceClient.Ping(string.Empty, timestamp, string.Empty, out configurationInfo);
+            serviceClient.Ping(string.Empty, timestamp, string.Empty, string.Empty, out configurationInfo);
+            serviceClient.Ping(string.Empty, timestamp, string.Empty, string.Empty, out configurationInfo);
+            serviceClient.Ping(string.Empty, timestamp, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             Assert.AreEqual(3, this.pingCount);
@@ -148,6 +151,7 @@
             CollectionConfigurationInfo configurationInfo;
             bool? sendMore = serviceClient.SubmitSamples(
                 new[] { sample1, sample2, sample3 },
+                string.Empty,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -198,7 +202,7 @@
             // ACT
             timeProvider.FastForward(TimeSpan.FromSeconds(5));
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample1, sample2, sample3 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -225,7 +229,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -266,7 +270,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -286,24 +290,45 @@
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator(this.emptyCollectionConfiguration)
                     {
-                            StartTimestamp = now,
-                            EndTimestamp = now.AddSeconds(1),
-                            TelemetryDocuments =
-                                new ConcurrentStack<ITelemetryDocument>(
+                        StartTimestamp = now,
+                        EndTimestamp = now.AddSeconds(1),
+                        TelemetryDocuments =
+                            new ConcurrentStack<ITelemetryDocument>(
                                 new ITelemetryDocument[]
+                                {
+                                    new RequestTelemetryDocument()
                                     {
-                                        new RequestTelemetryDocument() { Name = "Request1", Properties = properties.ToArray() },
-                                        new DependencyTelemetryDocument() { Name = "Dependency1", Properties = properties.ToArray() },
-                                        new ExceptionTelemetryDocument() { Exception = "Exception1", Properties = properties.ToArray() }
-                                    })
-                        },
+                                        DocumentStreamIds = new[] { "Stream1" },
+                                        Name = "Request1",
+                                        Properties = properties.ToArray()
+                                    },
+                                    new DependencyTelemetryDocument()
+                                    {
+                                        DocumentStreamIds = new[] { "Stream1" },
+                                        Name = "Dependency1",
+                                        Properties = properties.ToArray()
+                                    },
+                                    new ExceptionTelemetryDocument()
+                                    {
+                                        DocumentStreamIds = new[] { "Stream1" },
+                                        Exception = "Exception1",
+                                        Properties = properties.ToArray()
+                                    },
+                                    new EventTelemetryDocument()
+                                    {
+                                        DocumentStreamIds = new[] { "Stream1" },
+                                        Name = "Event1",
+                                        Properties = properties.ToArray()
+                                    }
+                                })
+                    },
                     new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
-                    Enumerable.Empty<Tuple<string, int>>(), 
+                    Enumerable.Empty<Tuple<string, int>>(),
                     false);
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -319,6 +344,10 @@
             Assert.AreEqual("Exception1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Exception);
             Assert.AreEqual("Prop1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Key);
             Assert.AreEqual("Val1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Value);
+
+            Assert.AreEqual("Event1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Name);
+            Assert.AreEqual("Prop1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Key);
+            Assert.AreEqual("Val1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Value);
         }
 
         [TestMethod]
@@ -330,7 +359,7 @@
             // ACT
             this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString()); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -347,7 +376,7 @@
             // ACT
             this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString()); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -364,7 +393,7 @@
             // ACT
             this.pingResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, "bla"); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -381,7 +410,7 @@
             // ACT
             this.pingResponse = r => { };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            bool? response = serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -398,7 +427,7 @@
             // ACT
             this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString()); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -415,7 +444,7 @@
             // ACT
             this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, false.ToString()); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -432,7 +461,7 @@
             // ACT
             this.submitResponse = r => { r.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, "bla"); };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -449,7 +478,7 @@
             // ACT
             this.submitResponse = r => { };
             CollectionConfigurationInfo configurationInfo;
-            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            bool? response = serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -475,7 +504,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            serviceClient.Ping(string.Empty, DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -501,7 +530,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new QuickPulseDataSample[] { }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -541,7 +570,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping("ikey", now, "ETag1", out configurationInfo);
+            serviceClient.Ping("ikey", now, "ETag1", string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -588,7 +617,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -628,7 +657,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping("ikey", now, "ETag1", out configurationInfo);
+            serviceClient.Ping("ikey", now, "ETag1", string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -676,7 +705,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -712,7 +741,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping("ikey", now, "ETag2", out configurationInfo);
+            serviceClient.Ping("ikey", now, "ETag2", string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -754,7 +783,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -784,7 +813,7 @@
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Avg,
-                                          Filters = new FilterInfo[0]
+                                          FilterGroups = new FilterConjunctionGroupInfo[0]
                                       },
                                    new OperationalizedMetricInfo()
                                       {
@@ -792,7 +821,7 @@
                                           TelemetryType = TelemetryType.Request,
                                           Projection = "Id",
                                           Aggregation = AggregationType.Sum,
-                                          Filters = new FilterInfo[0]
+                                          FilterGroups = new FilterConjunctionGroupInfo[0]
                                       }
                               };
 
@@ -816,7 +845,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -839,7 +868,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -864,7 +893,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -882,7 +911,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -907,7 +936,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -925,7 +954,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, out configurationInfo);
+            serviceClient.Ping(Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -950,7 +979,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -968,7 +997,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping(Guid.NewGuid().ToString(), timeProvider.UtcNow, string.Empty, out configurationInfo);
+            serviceClient.Ping(Guid.NewGuid().ToString(), timeProvider.UtcNow, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -996,7 +1025,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1015,7 +1044,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.Ping("some ikey", now, string.Empty, out configurationInfo);
+            serviceClient.Ping("some ikey", now, string.Empty, string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -1039,7 +1068,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1047,6 +1076,49 @@
             Assert.AreEqual(1, this.samples.Count);
             Assert.AreEqual(version, this.samples[0].Item3.Version);
             Assert.AreEqual(MonitoringDataPoint.CurrentInvariantVersion, this.samples[0].Item3.InvariantVersion);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientSubmitsAuthApiKeyToServiceWithPing()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var authApiKey = "this api key";
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping("some ikey", now, string.Empty, authApiKey, out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(1, this.pingCount);
+            Assert.AreEqual(authApiKey, this.lastAuthApiKey);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientSubmitsAuthApiKeyToServiceWithSubmitSamples()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var authApiKey = "this api key";
+            var serviceClient = new QuickPulseServiceClient(this.serviceEndpoint, string.Empty, string.Empty, string.Empty, string.Empty, new Clock(), false);
+            var sample = new QuickPulseDataSample(
+                new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
+                new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                Enumerable.Empty<Tuple<string, int>>(),
+                false);
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, authApiKey, out configurationInfo, new string[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(1, this.samples.Count);
+            Assert.AreEqual(authApiKey, this.lastAuthApiKey);
         }
 
         [TestMethod]
@@ -1063,8 +1135,8 @@
             
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", out configurationInfo, new string[0]);
-            serviceClient.Ping(string.Empty, now, "ETag1", out configurationInfo);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.Ping(string.Empty, now, "ETag1", string.Empty, out configurationInfo);
 
             // ASSERT
             this.listener.Stop();
@@ -1088,7 +1160,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, out configurationInfo, collectionConfigurationErrors);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, collectionConfigurationErrors);
 
             // ASSERT
             this.listener.Stop();
@@ -1113,7 +1185,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1137,7 +1209,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1163,7 +1235,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1192,7 +1264,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1218,46 +1290,58 @@
                 HttpListenerContext context = listener.GetContext();
 
                 var request = context.Request;
-                if (request.Url.LocalPath == "/ping")
+
+                this.lastAuthApiKey = context.Request.Headers[QuickPulseConstants.XMsQpsAuthApiKeyHeaderName];
+
+                switch (request.Url.LocalPath)
                 {
-                    this.pingCount++;
+                    case "/ping":
+                        {
+                            this.pingCount++;
 
-                    this.pingResponse(context.Response);
+                            this.pingResponse(context.Response);
 
-                    var dataPoint = (MonitoringDataPoint)serializerDataPoint.ReadObject(context.Request.InputStream);
-                    var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
-                    var instanceName = context.Request.Headers[QuickPulseConstants.XMsQpsInstanceNameHeaderName];
-                    var machineName = context.Request.Headers[QuickPulseConstants.XMsQpsMachineNameHeaderName];
-                    var streamId = context.Request.Headers[QuickPulseConstants.XMsQpsStreamIdHeaderName];
-                    var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
+                            var dataPoint = (MonitoringDataPoint)serializerDataPoint.ReadObject(context.Request.InputStream);
+                            var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
+                            var instanceName = context.Request.Headers[QuickPulseConstants.XMsQpsInstanceNameHeaderName];
+                            var machineName = context.Request.Headers[QuickPulseConstants.XMsQpsMachineNameHeaderName];
+                            var streamId = context.Request.Headers[QuickPulseConstants.XMsQpsStreamIdHeaderName];
+                            var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
 
-                    this.pings.Add(
-                        Tuple.Create(
-                            new PingHeaders()
-                                {
-                                    TransmissionTime = new DateTimeOffset(transmissionTime, TimeSpan.Zero),
-                                    InstanceName = instanceName,
-                                    MachineName = machineName,
-                                    StreamId = streamId
-                                },
-                            collectionConfigurationETag,
-                            dataPoint));
+                            this.pings.Add(
+                                Tuple.Create(
+                                    new PingHeaders()
+                                        {
+                                            TransmissionTime = new DateTimeOffset(transmissionTime, TimeSpan.Zero),
+                                            InstanceName = instanceName,
+                                            MachineName = machineName,
+                                            StreamId = streamId
+                                        },
+                                    collectionConfigurationETag,
+                                    dataPoint));
 
-                    this.lastPingTimestamp = dataPoint.Timestamp;
-                    this.lastPingInstance = dataPoint.Instance;
-                    this.lastVersion = dataPoint.Version;
-                }
-                else if (request.Url.LocalPath == "/post")
-                {
-                    this.submitCount++;
+                            this.lastPingTimestamp = dataPoint.Timestamp;
+                            this.lastPingInstance = dataPoint.Instance;
+                            this.lastVersion = dataPoint.Version;
+                        }
 
-                    this.submitResponse(context.Response);
+                        break;
+                    case "/post":
+                        {
+                            this.submitCount++;
 
-                    var dataPoints = serializerDataPointArray.ReadObject(context.Request.InputStream) as MonitoringDataPoint[];
-                    var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
-                    var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
+                            this.submitResponse(context.Response);
 
-                    this.samples.AddRange(dataPoints.Select(dp => Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), collectionConfigurationETag, dp)));
+                            var dataPoints = serializerDataPointArray.ReadObject(context.Request.InputStream) as MonitoringDataPoint[];
+                            var transmissionTime = long.Parse(context.Request.Headers[QuickPulseConstants.XMsQpsTransmissionTimeHeaderName], CultureInfo.InvariantCulture);
+                            var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
+
+                            this.samples.AddRange(dataPoints.Select(dp => Tuple.Create(new DateTimeOffset(transmissionTime, TimeSpan.Zero), collectionConfigurationETag, dp)));
+                        }
+
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown request: " + request.Url.LocalPath);
                 }
 
                 if (!this.emulateTimeout)

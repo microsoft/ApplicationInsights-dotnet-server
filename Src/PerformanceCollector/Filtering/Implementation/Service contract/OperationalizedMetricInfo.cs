@@ -34,8 +34,11 @@
 
         public TelemetryType TelemetryType { get; set; }
 
+        /// <summary>
+        /// Gets or sets an OR-connected collection of FilterConjunctionGroupInfo objects.
+        /// </summary>
         [DataMember]
-        public FilterInfo[] Filters { get; set; }
+        public FilterConjunctionGroupInfo[] FilterGroups { get; set; }
 
         [DataMember]
         public string Projection { get; set; }

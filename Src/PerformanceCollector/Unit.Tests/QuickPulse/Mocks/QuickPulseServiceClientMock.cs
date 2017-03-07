@@ -33,6 +33,8 @@
 
         public DateTimeOffset? LastPingTimestamp { get; private set; }
 
+        public string LastAuthApiKey { get; private set; }
+
         public string LastPingInstance { get; private set; }
 
         public bool AlwaysThrow { get; set; } = false;
@@ -63,7 +65,12 @@
             }
         }
 
-        public bool? Ping(string instrumentationKey, DateTimeOffset timestamp, string configurationETag, out CollectionConfigurationInfo configurationInfo)
+        public bool? Ping(
+            string instrumentationKey,
+            DateTimeOffset timestamp,
+            string configurationETag,
+            string authApiKey,
+            out CollectionConfigurationInfo configurationInfo)
         {
             lock (this.ResponseLock)
             {
@@ -73,6 +80,7 @@
                     {
                         this.PingCount++;
                         this.LastPingTimestamp = timestamp;
+                        this.LastAuthApiKey = authApiKey;
                     }
                 }
 
@@ -87,7 +95,13 @@
             }
         }
 
-        public bool? SubmitSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, string configurationETag, out CollectionConfigurationInfo configurationInfo, string[] collectionConfigurationErrors)
+        public bool? SubmitSamples(
+            IEnumerable<QuickPulseDataSample> samples,
+            string instrumentationKey,
+            string configurationETag,
+            string authApiKey,
+            out CollectionConfigurationInfo configurationInfo,
+            string[] collectionConfigurationErrors)
         {
             lock (this.ResponseLock)
             {
@@ -98,6 +112,7 @@
                         this.batches.Add(samples.Count());
                         this.LastSampleBatchSize = samples.Count();
                         this.samples.AddRange(samples);
+                        this.LastAuthApiKey = authApiKey;
                     }
                 }
 

@@ -13,5 +13,8 @@
 
         [DataMember]
         public OperationalizedMetricInfo[] Metrics { get; set; }
+
+        [DataMember]
+        public DocumentStreamInfo[] DocumentStreams { get; set; }
     }
 }

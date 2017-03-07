@@ -86,52 +86,52 @@
             // ACT
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = false,
-                        ResponseCode = "200",
-                        Duration = TimeSpan.FromSeconds(1),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = false,
+                    ResponseCode = "200",
+                    Duration = TimeSpan.FromSeconds(1),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = true,
-                        ResponseCode = "200",
-                        Duration = TimeSpan.FromSeconds(2),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = true,
+                    ResponseCode = "200",
+                    Duration = TimeSpan.FromSeconds(2),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = false,
-                        ResponseCode = string.Empty,
-                        Duration = TimeSpan.FromSeconds(3),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = false,
+                    ResponseCode = string.Empty,
+                    Duration = TimeSpan.FromSeconds(3),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = null,
-                        ResponseCode = string.Empty,
-                        Duration = TimeSpan.FromSeconds(4),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = null,
+                    ResponseCode = string.Empty,
+                    Duration = TimeSpan.FromSeconds(4),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = true,
-                        ResponseCode = string.Empty,
-                        Duration = TimeSpan.FromSeconds(5),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = true,
+                    ResponseCode = string.Empty,
+                    Duration = TimeSpan.FromSeconds(5),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
             telemetryProcessor.Process(
                 new RequestTelemetry()
-                    {
-                        Success = null,
-                        ResponseCode = "404",
-                        Duration = TimeSpan.FromSeconds(6),
-                        Context = { InstrumentationKey = "some ikey" }
-                    });
+                {
+                    Success = null,
+                    ResponseCode = "404",
+                    Duration = TimeSpan.FromSeconds(6),
+                    Context = { InstrumentationKey = "some ikey" }
+                });
 
             // ASSERT
             Assert.AreEqual(6, accumulatorManager.CurrentDataAccumulator.AIRequestCount);
@@ -272,11 +272,11 @@
             for (int i = 0; i < taskCount; i++)
             {
                 var requestTelemetry = new RequestTelemetry()
-                                           {
-                                               ResponseCode = (i % 2 == 0) ? "200" : "500",
-                                               Duration = TimeSpan.FromMilliseconds(i),
-                                               Context = { InstrumentationKey = "some ikey" }
-                                           };
+                {
+                    ResponseCode = (i % 2 == 0) ? "200" : "500",
+                    Duration = TimeSpan.FromMilliseconds(i),
+                    Context = { InstrumentationKey = "some ikey" }
+                };
 
                 var task = new Task(() => telemetryProcessor.Process(requestTelemetry));
                 tasks.Add(task);
@@ -390,10 +390,96 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCollectsFullTelemetryItems()
+        public void QuickPulseTelemetryProcessorCollectsFullTelemetryItemsAndDistributesThemAmongDocumentStreamsCorrectly()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var requestsAndDependenciesDocumentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "StreamRequestsAndDependenciesAndExceptions",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "500" },
+                                            new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" }
+                                        }
+                                }
+                        },
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters = new[] { new FilterInfo { FieldName = "Duration", Predicate = Predicate.Equal, Comparand = "0.00:00:01" } }
+                                }
+                        },
+                         new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop1", Predicate = Predicate.Equal, Comparand = "Val1" },
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop2", Predicate = Predicate.Equal, Comparand = "Val2" }
+                                        }
+                                }
+                        },
+                    }
+            };
+
+            var exceptionsAndEventsDocumentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "StreamExceptionsAndEvents",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop1", Predicate = Predicate.Equal, Comparand = "Val1" },
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop2", Predicate = Predicate.Equal, Comparand = "Val2" }
+                                        }
+                                }
+                        },
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Event,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters = new[] { new FilterInfo { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Event1" } }
+                                }
+                        }
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { requestsAndDependenciesDocumentStreamInfo, exceptionsAndEventsDocumentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -403,62 +489,57 @@
 
             // ACT
             var request = new RequestTelemetry()
-                              {
-                                  Name = Guid.NewGuid().ToString(),
-                                  Success = false,
-                                  ResponseCode = "500",
-                                  Duration = TimeSpan.FromSeconds(1),
-                                  Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
-                                  Context = { InstrumentationKey = instrumentationKey }
-                              };
+            {
+                Name = Guid.NewGuid().ToString(),
+                Success = false,
+                ResponseCode = "500",
+                Duration = TimeSpan.FromSeconds(1),
+                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var dependency = new DependencyTelemetry()
-                                 {
-                                     Name = Guid.NewGuid().ToString(),
-                                     Success = false,
-                                     Duration = TimeSpan.FromSeconds(1),
-                                     Properties =
-                                         {
-                                             { "Prop1", "Val1" },
-                                             { "Prop2", "Val2" },
-                                             { "Prop3", "Val3" },
-                                             { "Prop4", "Val4" },
-                                             { "ErrorMessage", "EMValue" }
-                                         },
-                                     Context = { InstrumentationKey = instrumentationKey }
-                                 };
+            {
+                Name = Guid.NewGuid().ToString(),
+                Success = false,
+                Duration = TimeSpan.FromSeconds(1),
+                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" }, { "ErrorMessage", "EMValue" } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var exception = new ExceptionTelemetry(new ArgumentNullException())
-                                {
-                                    Properties =
-                                        {
-                                            { "Prop1", "Val1" },
-                                            { "Prop2", "Val2" },
-                                            { "Prop3", "Val3" },
-                                            { "Prop4", "Val4" }
-                                        },
-                                    Context = { InstrumentationKey = instrumentationKey }
-                                };
+            {
+                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            var @event = new EventTelemetry()
+            {
+                Name = "Event1",
+                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             telemetryProcessor.Process(request);
             telemetryProcessor.Process(dependency);
             telemetryProcessor.Process(exception);
+            telemetryProcessor.Process(@event);
 
             // ASSERT
             var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray();
 
-            Assert.AreEqual(3, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
+            Assert.AreEqual(4, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
             Assert.AreEqual(TelemetryDocumentType.Request, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[0].DocumentType));
             Assert.AreEqual(request.Name, ((RequestTelemetryDocument)collectedTelemetry[0]).Name);
             Assert.AreEqual(3, collectedTelemetry[0].Properties.Length);
-
+            Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[0].DocumentStreamIds.Single());
             Assert.IsTrue(collectedTelemetry[0].Properties.ToList().TrueForAll(pair => pair.Key.Contains("Prop") && pair.Value.Contains("Val")));
 
             Assert.AreEqual(TelemetryDocumentType.RemoteDependency, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[1].DocumentType));
             Assert.AreEqual(dependency.Name, ((DependencyTelemetryDocument)collectedTelemetry[1]).Name);
             Assert.AreEqual(3 + 1, collectedTelemetry[1].Properties.Length);
-
+            Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[1].DocumentStreamIds.Single());
             Assert.IsTrue(
                 collectedTelemetry[1].Properties.ToList()
                     .TrueForAll(
@@ -467,14 +548,41 @@
             Assert.AreEqual(TelemetryDocumentType.Exception, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[2].DocumentType));
             Assert.AreEqual(exception.Exception.ToString(), ((ExceptionTelemetryDocument)collectedTelemetry[2]).Exception);
             Assert.AreEqual(3, collectedTelemetry[2].Properties.Length);
+            Assert.AreEqual(2, collectedTelemetry[2].DocumentStreamIds.Length);
+            Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[2].DocumentStreamIds.First());
+            Assert.AreEqual("StreamExceptionsAndEvents", collectedTelemetry[2].DocumentStreamIds.Last());
             Assert.IsTrue(collectedTelemetry[2].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+
+            Assert.AreEqual(TelemetryDocumentType.Event, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[3].DocumentType));
+            Assert.AreEqual(@event.Name, ((EventTelemetryDocument)collectedTelemetry[3]).Name);
+            Assert.AreEqual(3, collectedTelemetry[3].Properties.Length);
+            Assert.AreEqual("StreamExceptionsAndEvents", collectedTelemetry[3].DocumentStreamIds.Single());
+            Assert.IsTrue(collectedTelemetry[3].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorDoesNotCollectSucceededFullTelemetryItems()
+        public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsIfTypeIsNotMentionedInDocumentStream()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo() { Filters = new FilterInfo[0] }
+                        }
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo() { DocumentStreams = new[] { documentStreamInfo }, ETag = "ETag1" };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -484,38 +592,49 @@
 
             // ACT
             var request = new RequestTelemetry()
-                              {
-                                  Success = true,
-                                  ResponseCode = "200",
-                                  Duration = TimeSpan.FromSeconds(1),
-                                  Context = { InstrumentationKey = instrumentationKey }
-                              };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var dependency = new DependencyTelemetry()
-                                 {
-                                     Success = true,
-                                     Duration = TimeSpan.FromSeconds(1),
-                                     Context = { InstrumentationKey = instrumentationKey }
-                                 };
-
-            var exception = new ExceptionTelemetry(new ArgumentException("bla")) { Context = { InstrumentationKey = instrumentationKey } };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             telemetryProcessor.Process(request);
             telemetryProcessor.Process(dependency);
-            telemetryProcessor.Process(exception);
-
+            
             // ASSERT
-            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray();
-
-            Assert.AreEqual(1, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
-            Assert.AreEqual(exception.Exception.ToString(), ((ExceptionTelemetryDocument)collectedTelemetry[0]).Exception);
+            Assert.AreEqual(TelemetryDocumentType.RemoteDependency.ToString(), accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray().Single().DocumentType);
         }
 
         [TestMethod]
         public void QuickPulseTelemetryProcessorDoesNotCollectFullRequestTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -529,12 +648,12 @@
             for (int i = 0; i < 100; i++)
             {
                 var request = new RequestTelemetry()
-                                  {
-                                      Success = false,
-                                      ResponseCode = "400",
-                                      Duration = TimeSpan.FromSeconds(counter++),
-                                      Context = { InstrumentationKey = instrumentationKey }
-                                  };
+                {
+                    Success = false,
+                    ResponseCode = "400",
+                    Duration = TimeSpan.FromSeconds(counter++),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(request);
             }
@@ -544,12 +663,12 @@
             for (int i = 0; i < 100; i++)
             {
                 var request = new RequestTelemetry()
-                                  {
-                                      Success = false,
-                                      ResponseCode = "400",
-                                      Duration = TimeSpan.FromSeconds(counter++),
-                                      Context = { InstrumentationKey = instrumentationKey }
-                                  };
+                {
+                    Success = false,
+                    ResponseCode = "400",
+                    Duration = TimeSpan.FromSeconds(counter++),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(request);
             }
@@ -577,7 +696,29 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullDependencyTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                    }
+            };
+            
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -591,11 +732,11 @@
             for (int i = 0; i < 100; i++)
             {
                 var dependency = new DependencyTelemetry()
-                                     {
-                                         Success = false,
-                                         Duration = TimeSpan.FromSeconds(counter++),
-                                         Context = { InstrumentationKey = instrumentationKey }
-                                     };
+                {
+                    Success = false,
+                    Duration = TimeSpan.FromSeconds(counter++),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(dependency);
             }
@@ -605,11 +746,11 @@
             for (int i = 0; i < 100; i++)
             {
                 var dependency = new DependencyTelemetry()
-                                     {
-                                         Success = false,
-                                         Duration = TimeSpan.FromSeconds(counter++),
-                                         Context = { InstrumentationKey = instrumentationKey }
-                                     };
+                {
+                    Success = false,
+                    Duration = TimeSpan.FromSeconds(counter++),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(dependency);
             }
@@ -637,7 +778,29 @@
         public void QuickPulseTelemetryProcessorDoesNotCollectFullExceptionTelemetryItemsOnceQuotaIsExhausted()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var timeProvider = new ClockMock();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
             var instrumentationKey = "some ikey";
@@ -651,14 +814,9 @@
             for (int i = 0; i < 100; i++)
             {
                 var exception = new ExceptionTelemetry(new Exception((counter++).ToString(CultureInfo.InvariantCulture)))
-                                    {
-                                        Context =
-                                            {
-                                                InstrumentationKey
-                                                    =
-                                                    instrumentationKey
-                                            }
-                                    };
+                {
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(exception);
             }
@@ -668,14 +826,9 @@
             for (int i = 0; i < 100; i++)
             {
                 var exception = new ExceptionTelemetry(new Exception((counter++).ToString(CultureInfo.InvariantCulture)))
-                                    {
-                                        Context =
-                                            {
-                                                InstrumentationKey
-                                                    =
-                                                    instrumentationKey
-                                            }
-                                    };
+                {
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
 
                 telemetryProcessor.Process(exception);
             }
@@ -700,6 +853,86 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryProcessorDoesNotCollectFullEventTelemetryItemsOnceQuotaIsExhausted()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Event,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var timeProvider = new ClockMock();
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy(), timeProvider, 60, 5);
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            int counter = 0;
+            for (int i = 0; i < 100; i++)
+            {
+                var request = new EventTelemetry()
+                {
+                    Name = TimeSpan.FromSeconds(counter++).ToString(),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
+
+                telemetryProcessor.Process(request);
+            }
+
+            timeProvider.FastForward(TimeSpan.FromSeconds(30));
+
+            for (int i = 0; i < 100; i++)
+            {
+                var request = new EventTelemetry()
+                {
+                    Name = TimeSpan.FromSeconds(counter++).ToString(),
+                    Context = { InstrumentationKey = instrumentationKey }
+                };
+
+                telemetryProcessor.Process(request);
+            }
+
+            // ASSERT
+            var collectedTelemetry =
+                accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().Cast<EventTelemetryDocument>().ToArray();
+
+            Assert.AreEqual(5 + 30, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
+
+            // out of the first 100 items we expect to see items 0 through 4 (the initial quota)
+            for (int i = 0; i < 5; i++)
+            {
+                Assert.AreEqual(i, TimeSpan.Parse(collectedTelemetry[i].Name).TotalSeconds);
+            }
+
+            // out of the second 100 items we expect to see items 100 through 129 (the new quota for 30 seconds)
+            for (int i = 5; i < 35; i++)
+            {
+                Assert.AreEqual(95 + i, TimeSpan.Parse(collectedTelemetry[i].Name).TotalSeconds);
+            }
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsWhenSwitchIsOff()
         {
             // ARRANGE
@@ -714,25 +947,28 @@
 
             // ACT
             var request = new RequestTelemetry()
-                              {
-                                  Success = false,
-                                  ResponseCode = "500",
-                                  Duration = TimeSpan.FromSeconds(1),
-                                  Context = { InstrumentationKey = instrumentationKey }
-                              };
+            {
+                Success = false,
+                ResponseCode = "500",
+                Duration = TimeSpan.FromSeconds(1),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var dependency = new DependencyTelemetry()
-                                 {
-                                     Success = false,
-                                     Duration = TimeSpan.FromSeconds(1),
-                                     Context = { InstrumentationKey = instrumentationKey }
-                                 };
+            {
+                Success = false,
+                Duration = TimeSpan.FromSeconds(1),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var exception = new ExceptionTelemetry(new ArgumentException("bla")) { Context = { InstrumentationKey = instrumentationKey } };
+
+            var @event = new EventTelemetry() { Context = { InstrumentationKey = instrumentationKey } };
 
             telemetryProcessor.Process(request);
             telemetryProcessor.Process(dependency);
             telemetryProcessor.Process(exception);
+            telemetryProcessor.Process(@event);
 
             // ASSERT
             Assert.AreEqual(0, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
@@ -742,7 +978,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullRequestTelemetryItemName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -752,25 +1010,13 @@
 
             // ACT
             var requestShort = new RequestTelemetry(new string('r', MaxFieldLength), DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                                   {
-                                       Context
-                                           =
-                                           {
-                                               InstrumentationKey
-                                                   =
-                                                   instrumentationKey
-                                           }
-                                   };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
             var requestLong = new RequestTelemetry(new string('r', MaxFieldLength + 1), DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                                  {
-                                      Context
-                                          =
-                                          {
-                                              InstrumentationKey
-                                                  =
-                                                  instrumentationKey
-                                          }
-                                  };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(requestLong);
@@ -787,7 +1033,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullRequestTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -797,52 +1065,16 @@
 
             // ACT
             var requestShort = new RequestTelemetry("requestShort", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                                   {
-                                       Properties =
-                                           {
-                                               {
-                                                   new string
-                                                   (
-                                                   'p',
-                                                   MaxFieldLength),
-                                                   new string
-                                                   (
-                                                   'v',
-                                                   MaxFieldLength)
-                                               }
-                                           },
-                                       Context =
-                                           {
-                                               InstrumentationKey
-                                                   =
-                                                   instrumentationKey
-                                           }
-                                   };
+            {
+                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var requestLong = new RequestTelemetry("requestLong", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
-                                  {
-                                      Properties =
-                                          {
-                                              {
-                                                  new string
-                                                  (
-                                                  'p',
-                                                  MaxFieldLength
-                                                  + 1),
-                                                  new string
-                                                  (
-                                                  'v',
-                                                  MaxFieldLength
-                                                  + 1)
-                                              }
-                                          },
-                                      Context =
-                                          {
-                                              InstrumentationKey
-                                                  =
-                                                  instrumentationKey
-                                          }
-                                  };
+            {
+                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(requestLong);
@@ -865,7 +1097,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemCommandName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -909,7 +1163,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemName()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -953,7 +1229,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -971,10 +1269,10 @@
                 TimeSpan.FromSeconds(1),
                 "dependencyShort",
                 false)
-                                      {
-                                          Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
-                                          Context = { InstrumentationKey = instrumentationKey }
-                                      };
+            {
+                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var dependencyLong = new DependencyTelemetry(
                 "dependencyLong",
@@ -985,10 +1283,10 @@
                 TimeSpan.FromSeconds(1),
                 "dependencyLong",
                 false)
-                                     {
-                                         Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
-                                         Context = { InstrumentationKey = instrumentationKey }
-                                     };
+            {
+                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(dependencyLong);
@@ -1011,7 +1309,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemMessage()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1021,23 +1341,14 @@
 
             // ACT
             var exceptionShort = new ExceptionTelemetry(new ArgumentException(new string('m', MaxFieldLength)))
-                                     {
-                                         Context =
-                                             {
-                                                 InstrumentationKey =
-                                                     instrumentationKey
-                                             }
-                                     };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var exceptionLong = new ExceptionTelemetry(new ArgumentException(new string('m', MaxFieldLength + 1)))
-                                    {
-                                        Context =
-                                            {
-                                                InstrumentationKey
-                                                    =
-                                                    instrumentationKey
-                                            }
-                                    };
+            {
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(exceptionLong);
@@ -1054,7 +1365,29 @@
         public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemProperties()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1064,30 +1397,18 @@
 
             // ACT
             var exceptionShort = new ExceptionTelemetry(new ArgumentException())
-                                     {
-                                         Properties =
-                                             {
-                                                 {
-                                                     new string('p', MaxFieldLength),
-                                                     new string('v', MaxFieldLength)
-                                                 }
-                                             },
-                                         Message = new string('m', MaxFieldLength),
-                                         Context = { InstrumentationKey = instrumentationKey }
-                                     };
+            {
+                Properties = { { new string('p', MaxFieldLength), new string('v', MaxFieldLength) } },
+                Message = new string('m', MaxFieldLength),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             var exceptionLong = new ExceptionTelemetry(new ArgumentException())
-                                    {
-                                        Properties =
-                                            {
-                                                {
-                                                    new string('p', MaxFieldLength + 1),
-                                                    new string('v', MaxFieldLength + 1)
-                                                }
-                                            },
-                                        Message = new string('m', MaxFieldLength),
-                                        Context = { InstrumentationKey = instrumentationKey }
-                                    };
+            {
+                Properties = { { new string('p', MaxFieldLength + 1), new string('v', MaxFieldLength + 1) } },
+                Message = new string('m', MaxFieldLength),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             // process in the opposite order to allow for an easier validation order
             telemetryProcessor.Process(exceptionLong);
@@ -1110,7 +1431,29 @@
         public void QuickPulseTelemetryProcessorHandlesDuplicatePropertyNamesDueToTruncation()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1120,15 +1463,11 @@
 
             // ACT
             var exception = new ExceptionTelemetry(new ArgumentException())
-                                {
-                                    Properties =
-                                        {
-                                            { new string('p', MaxFieldLength + 1), "Val1" },
-                                            { new string('p', MaxFieldLength + 2), "Val2" }
-                                        },
-                                    Message = "Message",
-                                    Context = { InstrumentationKey = instrumentationKey }
-                                };
+            {
+                Properties = { { new string('p', MaxFieldLength + 1), "Val1" }, { new string('p', MaxFieldLength + 2), "Val2" } },
+                Message = "Message",
+                Context = { InstrumentationKey = instrumentationKey }
+            };
 
             telemetryProcessor.Process(exception);
 
@@ -1143,7 +1482,29 @@
         public void QuickPulseTelemetryProcessorExpandsAggregateExceptionMessage()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1172,7 +1533,29 @@
         public void QuickPulseTelemetryProcessorExpandsAggregateExceptionMessageWhenEmpty()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1197,7 +1580,29 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenSingleInnerException()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1222,7 +1627,29 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenNoInnerExceptions()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1247,7 +1674,29 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessageWhenMultipleInnerExceptions()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1272,7 +1721,29 @@
         public void QuickPulseTelemetryProcessorExpandsExceptionMessagesAndDedupesThem()
         {
             // ARRANGE
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(EmptyCollectionConfiguration);
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                  new[]
+                  {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                  }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors);
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             var instrumentationKey = "some ikey";
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
@@ -1301,35 +1772,36 @@
         {
             // ARRANGE
             var filterInfoResponseCodeGreaterThanOrEqualTo500 = new FilterInfo()
-                                                                    {
-                                                                        FieldName = "ResponseCode",
-                                                                        Predicate = Predicate.GreaterThanOrEqual,
-                                                                        Comparand = "500"
-                                                                    };
+            {
+                FieldName = "ResponseCode",
+                Predicate = Predicate.GreaterThanOrEqual,
+                Comparand = "500"
+            };
             var filterInfoResponseCode200 = new FilterInfo() { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "201" };
             var filterInfoSuccessful = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "true" };
             var filterInfoFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
 
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "AverageIdOfFailedRequestsGreaterThanOrEqualTo500",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters =
-                                              new[] { filterInfoResponseCodeGreaterThanOrEqualTo500, filterInfoFailed }
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "SumIdsOfSuccessfulRequestsEqualTo201",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Sum,
-                                          Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful }
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AverageIdOfFailedRequestsGreaterThanOrEqualTo500",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[]
+                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoResponseCodeGreaterThanOrEqualTo500, filterInfoFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "SumIdsOfSuccessfulRequestsEqualTo201",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful } } }
+                }
+            };
 
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1342,18 +1814,18 @@
 
             // ACT
             var requests = new[]
-                               {
-                                   new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
-                                   new RequestTelemetry() { Id = "2", Success = false, ResponseCode = "500" },
-                                   new RequestTelemetry() { Id = "3", Success = true, ResponseCode = "501" },
-                                   new RequestTelemetry() { Id = "4", Success = false, ResponseCode = "501" },
-                                   new RequestTelemetry() { Id = "5", Success = true, ResponseCode = "499" },
-                                   new RequestTelemetry() { Id = "6", Success = false, ResponseCode = "499" },
-                                   new RequestTelemetry() { Id = "7", Success = true, ResponseCode = "201" },
-                                   new RequestTelemetry() { Id = "8", Success = false, ResponseCode = "201" },
-                                   new RequestTelemetry() { Id = "9", Success = true, ResponseCode = "blah" },
-                                   new RequestTelemetry() { Id = "10", Success = false, ResponseCode = "blah" },
-                               };
+            {
+                new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
+                new RequestTelemetry() { Id = "2", Success = false, ResponseCode = "500" },
+                new RequestTelemetry() { Id = "3", Success = true, ResponseCode = "501" },
+                new RequestTelemetry() { Id = "4", Success = false, ResponseCode = "501" },
+                new RequestTelemetry() { Id = "5", Success = true, ResponseCode = "499" },
+                new RequestTelemetry() { Id = "6", Success = false, ResponseCode = "499" },
+                new RequestTelemetry() { Id = "7", Success = true, ResponseCode = "201" },
+                new RequestTelemetry() { Id = "8", Success = false, ResponseCode = "201" },
+                new RequestTelemetry() { Id = "9", Success = true, ResponseCode = "blah" },
+                new RequestTelemetry() { Id = "10", Success = false, ResponseCode = "blah" },
+            };
 
             Array.ForEach(requests, r => r.Context.InstrumentationKey = instrumentationKey);
 
@@ -1376,34 +1848,35 @@
         {
             // ARRANGE
             var filterInfoDataGreaterThanOrEqualTo500 = new FilterInfo()
-                                                            {
-                                                                FieldName = "Data",
-                                                                Predicate = Predicate.GreaterThanOrEqual,
-                                                                Comparand = "500"
-                                                            };
+            {
+                FieldName = "Data",
+                Predicate = Predicate.GreaterThanOrEqual,
+                Comparand = "500"
+            };
             var filterInfoData200 = new FilterInfo() { FieldName = "Data", Predicate = Predicate.Equal, Comparand = "201" };
             var filterInfoSuccessful = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "true" };
             var filterInfoFailed = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "false" };
 
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500",
-                                          TelemetryType = TelemetryType.Dependency,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters = new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed }
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "SumIdsOfSuccessfulDependenciesEqualTo201",
-                                          TelemetryType = TelemetryType.Dependency,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Sum,
-                                          Filters = new[] { filterInfoData200, filterInfoSuccessful }
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500",
+                    TelemetryType = TelemetryType.Dependency,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "SumIdsOfSuccessfulDependenciesEqualTo201",
+                    TelemetryType = TelemetryType.Dependency,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoData200, filterInfoSuccessful } } }
+                }
+            };
 
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1416,18 +1889,18 @@
 
             // ACT
             var dependencies = new[]
-                                   {
-                                       new DependencyTelemetry() { Id = "1", Success = true, Data = "500" },
-                                       new DependencyTelemetry() { Id = "2", Success = false, Data = "500" },
-                                       new DependencyTelemetry() { Id = "3", Success = true, Data = "501" },
-                                       new DependencyTelemetry() { Id = "4", Success = false, Data = "501" },
-                                       new DependencyTelemetry() { Id = "5", Success = true, Data = "499" },
-                                       new DependencyTelemetry() { Id = "6", Success = false, Data = "499" },
-                                       new DependencyTelemetry() { Id = "7", Success = true, Data = "201" },
-                                       new DependencyTelemetry() { Id = "8", Success = false, Data = "201" },
-                                       new DependencyTelemetry() { Id = "9", Success = true, Data = "blah" },
-                                       new DependencyTelemetry() { Id = "10", Success = false, Data = "blah" },
-                                   };
+            {
+                new DependencyTelemetry() { Id = "1", Success = true, Data = "500" },
+                new DependencyTelemetry() { Id = "2", Success = false, Data = "500" },
+                new DependencyTelemetry() { Id = "3", Success = true, Data = "501" },
+                new DependencyTelemetry() { Id = "4", Success = false, Data = "501" },
+                new DependencyTelemetry() { Id = "5", Success = true, Data = "499" },
+                new DependencyTelemetry() { Id = "6", Success = false, Data = "499" },
+                new DependencyTelemetry() { Id = "7", Success = true, Data = "201" },
+                new DependencyTelemetry() { Id = "8", Success = false, Data = "201" },
+                new DependencyTelemetry() { Id = "9", Success = true, Data = "blah" },
+                new DependencyTelemetry() { Id = "10", Success = false, Data = "blah" },
+            };
 
             Array.ForEach(dependencies, d => d.Context.InstrumentationKey = instrumentationKey);
 
@@ -1450,34 +1923,35 @@
         {
             // ARRANGE
             var filterInfoMessageGreaterThanOrEqualTo500 = new FilterInfo()
-                                                               {
-                                                                   FieldName = "Message",
-                                                                   Predicate = Predicate.GreaterThanOrEqual,
-                                                                   Comparand = "500"
-                                                               };
+            {
+                FieldName = "Message",
+                Predicate = Predicate.GreaterThanOrEqual,
+                Comparand = "500"
+            };
             var filterInfoMessage200 = new FilterInfo() { FieldName = "Message", Predicate = Predicate.Equal, Comparand = "201" };
             var filterInfoSuccessful = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "true" };
             var filterInfoFailed = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "false" };
 
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "AverageIdOfFailedMessageGreaterThanOrEqualTo500",
-                                          TelemetryType = TelemetryType.Exception,
-                                          Projection = "Message",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters = new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed }
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "SumIdsOfSuccessfulMessageEqualTo201",
-                                          TelemetryType = TelemetryType.Exception,
-                                          Projection = "Message",
-                                          Aggregation = AggregationType.Sum,
-                                          Filters = new[] { filterInfoMessage200, filterInfoSuccessful }
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AverageIdOfFailedMessageGreaterThanOrEqualTo500",
+                    TelemetryType = TelemetryType.Exception,
+                    Projection = "Message",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "SumIdsOfSuccessfulMessageEqualTo201",
+                    TelemetryType = TelemetryType.Exception,
+                    Projection = "Message",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoMessage200, filterInfoSuccessful } } }
+                }
+            };
 
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1490,18 +1964,13 @@
 
             // ACT
             var exceptions = new[]
-                                 {
-                                     new ExceptionTelemetry() { Sequence = "true", Message = "500" },
-                                     new ExceptionTelemetry() { Sequence = "false", Message = "500" },
-                                     new ExceptionTelemetry() { Sequence = "true", Message = "501" },
-                                     new ExceptionTelemetry() { Sequence = "false", Message = "501" },
-                                     new ExceptionTelemetry() { Sequence = "true", Message = "499" },
-                                     new ExceptionTelemetry() { Sequence = "false", Message = "499" },
-                                     new ExceptionTelemetry() { Sequence = "true", Message = "201" },
-                                     new ExceptionTelemetry() { Sequence = "false", Message = "201" },
-                                     new ExceptionTelemetry() { Sequence = "true", Message = "blah" },
-                                     new ExceptionTelemetry() { Sequence = "false", Message = "blah" },
-                                 };
+            {
+                new ExceptionTelemetry() { Sequence = "true", Message = "500" }, new ExceptionTelemetry() { Sequence = "false", Message = "500" },
+                new ExceptionTelemetry() { Sequence = "true", Message = "501" }, new ExceptionTelemetry() { Sequence = "false", Message = "501" },
+                new ExceptionTelemetry() { Sequence = "true", Message = "499" }, new ExceptionTelemetry() { Sequence = "false", Message = "499" },
+                new ExceptionTelemetry() { Sequence = "true", Message = "201" }, new ExceptionTelemetry() { Sequence = "false", Message = "201" },
+                new ExceptionTelemetry() { Sequence = "true", Message = "blah" }, new ExceptionTelemetry() { Sequence = "false", Message = "blah" },
+            };
 
             Array.ForEach(exceptions, e => e.Context.InstrumentationKey = instrumentationKey);
 
@@ -1524,34 +1993,35 @@
         {
             // ARRANGE
             var filterInfoNameGreaterThanOrEqualTo500 = new FilterInfo()
-                                                            {
-                                                                FieldName = "Name",
-                                                                Predicate = Predicate.GreaterThanOrEqual,
-                                                                Comparand = "500"
-                                                            };
+            {
+                FieldName = "Name",
+                Predicate = Predicate.GreaterThanOrEqual,
+                Comparand = "500"
+            };
             var filterInfoResponseCode200 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "201" };
             var filterInfoSuccessful = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "true" };
             var filterInfoFailed = new FilterInfo() { FieldName = "Sequence", Predicate = Predicate.Equal, Comparand = "false" };
 
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "AverageIdOfFailedEventsGreaterThanOrEqualTo500",
-                                          TelemetryType = TelemetryType.Event,
-                                          Projection = "Name",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters = new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed }
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "SumIdsOfSuccessfulEventsEqualTo201",
-                                          TelemetryType = TelemetryType.Event,
-                                          Projection = "Name",
-                                          Aggregation = AggregationType.Sum,
-                                          Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful }
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AverageIdOfFailedEventsGreaterThanOrEqualTo500",
+                    TelemetryType = TelemetryType.Event,
+                    Projection = "Name",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "SumIdsOfSuccessfulEventsEqualTo201",
+                    TelemetryType = TelemetryType.Event,
+                    Projection = "Name",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoResponseCode200, filterInfoSuccessful } } }
+                }
+            };
 
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1564,13 +2034,13 @@
 
             // ACT
             var events = new[]
-                             {
-                                 new EventTelemetry() { Sequence = "true", Name = "500" }, new EventTelemetry() { Sequence = "false", Name = "500" },
-                                 new EventTelemetry() { Sequence = "true", Name = "501" }, new EventTelemetry() { Sequence = "false", Name = "501" },
-                                 new EventTelemetry() { Sequence = "true", Name = "499" }, new EventTelemetry() { Sequence = "false", Name = "499" },
-                                 new EventTelemetry() { Sequence = "true", Name = "201" }, new EventTelemetry() { Sequence = "false", Name = "201" },
-                                 new EventTelemetry() { Sequence = "true", Name = "blah" }, new EventTelemetry() { Sequence = "false", Name = "blah" },
-                             };
+            {
+                new EventTelemetry() { Sequence = "true", Name = "500" }, new EventTelemetry() { Sequence = "false", Name = "500" },
+                new EventTelemetry() { Sequence = "true", Name = "501" }, new EventTelemetry() { Sequence = "false", Name = "501" },
+                new EventTelemetry() { Sequence = "true", Name = "499" }, new EventTelemetry() { Sequence = "false", Name = "499" },
+                new EventTelemetry() { Sequence = "true", Name = "201" }, new EventTelemetry() { Sequence = "false", Name = "201" },
+                new EventTelemetry() { Sequence = "true", Name = "blah" }, new EventTelemetry() { Sequence = "false", Name = "blah" },
+            };
 
             Array.ForEach(events, e => e.Context.InstrumentationKey = instrumentationKey);
 
@@ -1593,16 +2063,16 @@
         {
             // ARRANGE
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "Metric1",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Avg,
-                                          Filters = new FilterInfo[0]
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new FilterConjunctionGroupInfo[0]
+                }
+            };
 
             var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1615,10 +2085,10 @@
 
             // ACT
             var requests = new[]
-                               {
-                                   new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
-                                   new RequestTelemetry() { Id = "Not even a number...", Success = false, ResponseCode = "500" }
-                               };
+            {
+                new RequestTelemetry() { Id = "1", Success = true, ResponseCode = "500" },
+                new RequestTelemetry() { Id = "Not even a number...", Success = false, ResponseCode = "500" }
+            };
 
             Array.ForEach(requests, r => r.Context.InstrumentationKey = instrumentationKey);
 
@@ -1644,76 +2114,82 @@
             var filterInfoAllSlow = new FilterInfo() { FieldName = "Duration", Predicate = Predicate.GreaterThanOrEqual, Comparand = "5000" };
 
             var metrics1 = new[]
-                               {
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllGood1",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllBad1",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllGoodFast1",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllBadSlow1",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow }
-                                       }
-                               };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllGood1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllBad1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllGoodFast1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[]
+                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllBadSlow1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow } } }
+                }
+            };
 
             var metrics2 = new[]
-                               {
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllGood2",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllBad2",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllGoodFast2",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
-                                       },
-                                   new OperationalizedMetricInfo()
-                                       {
-                                           Id = "AllBadSlow2",
-                                           TelemetryType = TelemetryType.Request,
-                                           Projection = "Id",
-                                           Aggregation = AggregationType.Avg,
-                                           Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow }
-                                       }
-                               };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllGood2",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllBad2",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllGoodFast2",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[]
+                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "AllBadSlow2",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups =
+                        new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed, filterInfoAllSlow } } }
+                }
+            };
 
             var collectionConfiguration1 = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics1 }, out errors);
             var collectionConfiguration2 = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics2 }, out errors);
@@ -1733,13 +2209,13 @@
             for (int i = 0; i < taskCount; i++)
             {
                 var requestTelemetry = new RequestTelemetry()
-                                           {
-                                               Id = i.ToString(),
-                                               ResponseCode = (i % 2 == 0) ? "200" : "500",
-                                               Success = i % 2 == 0,
-                                               Duration = TimeSpan.FromDays(i),
-                                               Context = { InstrumentationKey = "some ikey" }
-                                           };
+                {
+                    Id = i.ToString(),
+                    ResponseCode = (i % 2 == 0) ? "200" : "500",
+                    Success = i % 2 == 0,
+                    Duration = TimeSpan.FromDays(i),
+                    Context = { InstrumentationKey = "some ikey" }
+                };
 
                 var task = new Task(() => telemetryProcessor.Process(requestTelemetry));
                 tasks.Add(task);

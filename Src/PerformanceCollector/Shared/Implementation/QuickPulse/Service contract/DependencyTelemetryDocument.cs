@@ -55,5 +55,8 @@
             {
             }
         }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string[] DocumentStreamIds { get; set; }
     }
 }

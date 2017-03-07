@@ -2,12 +2,14 @@
 {
     internal enum TelemetryDocumentType
     {
-        Unknown,
+        Unknown = 0,
 
         Request,
 
         RemoteDependency,
 
-        Exception
+        Exception,
+
+        Event
     }
 }

@@ -37,7 +37,7 @@
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
                                           Aggregation = AggregationType.Avg,
-                                          Filters = new[] { filterInfo1, filterInfo2 }
+                                          FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
                                       },
                                   new OperationalizedMetricInfo()
                                       {
@@ -45,7 +45,7 @@
                                           TelemetryType = TelemetryType.Metric,
                                           Projection = "Value",
                                           Aggregation = AggregationType.Sum,
-                                          Filters = new[] { filterInfo1, filterInfo2 }
+                                          FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
                                       }
                               };
 

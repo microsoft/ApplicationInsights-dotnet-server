@@ -20,7 +20,7 @@
                                      TelemetryType = TelemetryType.Request,
                                      Projection = "Name",
                                      Aggregation = AggregationType.Min,
-                                     Filters = new FilterInfo[0]
+                                     FilterGroups = new FilterConjunctionGroupInfo[0]
                                  };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { Metrics = new[] { metricInfo } };
@@ -46,7 +46,7 @@
                                      TelemetryType = TelemetryType.Metric,
                                      Projection = "Value",
                                      Aggregation = AggregationType.Min,
-                                     Filters = new FilterInfo[0]
+                                     FilterGroups = new FilterConjunctionGroupInfo[0]
                                  };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { Metrics = new[] { metricInfo } };

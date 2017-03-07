@@ -121,7 +121,7 @@
             }
         }
 
-        public TimeSpan UpdateState(string instrumentationKey)
+        public TimeSpan UpdateState(string instrumentationKey, string authApiKey)
         {
             if (string.IsNullOrWhiteSpace(instrumentationKey))
             {
@@ -169,6 +169,7 @@
                     dataSamplesToSubmit,
                     instrumentationKey,
                     this.currentConfigurationETag,
+                    authApiKey,
                     out configurationInfo,
                     this.collectionConfigurationErrors.ToArray());
 
@@ -202,6 +203,7 @@
                     instrumentationKey,
                     this.timeProvider.UtcNow,
                     this.currentConfigurationETag,
+                    authApiKey,
                     out configurationInfo);
 
                 QuickPulseEventSource.Log.PingSentEvent(startCollection.ToString());

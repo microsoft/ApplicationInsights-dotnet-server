@@ -5,29 +5,23 @@
     using System.Runtime.Serialization;
 
     [DataContract]
-    internal struct ExceptionTelemetryDocument : ITelemetryDocument
+    internal struct EventTelemetryDocument : ITelemetryDocument
     {
         [DataMember(EmitDefaultValue = false)]
         public Guid Id { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
         public string Version { get; set; }
-        
-        [DataMember(EmitDefaultValue = false)]
-        public string SeverityLevel { get; set; }
-        
-        [DataMember(EmitDefaultValue = false)]
-        public string Exception { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
-        public string ExceptionType { get; set; }
-
-        [DataMember(EmitDefaultValue = false)]
-        public string ExceptionMessage { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
         public string OperationId { get; set; }
 
+        [DataMember(EmitDefaultValue = false)]
+        public string Name { get; set; }
+        
         [DataMember(EmitDefaultValue = false)]
         public KeyValuePair<string, string>[] Properties { get; set; }
 
@@ -36,7 +30,7 @@
         {
             get
             {
-                return TelemetryDocumentType.Exception.ToString();
+                return TelemetryDocumentType.Event.ToString();
             }
 
             private set
