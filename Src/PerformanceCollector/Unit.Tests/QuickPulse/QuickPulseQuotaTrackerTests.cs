@@ -32,6 +32,7 @@
             // Quota should be exhausted.
             counted = quotaTracker.ApplyQuota();
             Assert.IsFalse(counted);
+            Assert.AreEqual(0f, quotaTracker.CurrentQuota);
         }
 
         [TestMethod]
@@ -43,19 +44,27 @@
             bool counted;
 
             // ACT & ASSERT
+            Assert.AreEqual(0, quotaTracker.CurrentQuota);
+
             counted = quotaTracker.ApplyQuota();
             Assert.IsFalse(counted); // No quota yet
+            Assert.AreEqual(0, quotaTracker.CurrentQuota);
 
             mockTimeProvider.FastForward(TimeSpan.FromSeconds(1)); // 0.5 quota accumulated
+            
             counted = quotaTracker.ApplyQuota();
             Assert.IsFalse(counted); // No quota yet
+            Assert.AreEqual(0.5f, quotaTracker.CurrentQuota);
 
             mockTimeProvider.FastForward(TimeSpan.FromSeconds(1)); // 1 quota accumulated
+            
             counted = quotaTracker.ApplyQuota();
             Assert.IsTrue(counted);
+            Assert.AreEqual(0, quotaTracker.CurrentQuota);
 
             counted = quotaTracker.ApplyQuota();
             Assert.IsFalse(counted); // Quota was already exhausted.
+            Assert.AreEqual(0, quotaTracker.CurrentQuota);
         }
 
         [TestMethod]

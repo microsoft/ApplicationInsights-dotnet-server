@@ -39,7 +39,7 @@
                         }
                     }
             };
-            var documentStream = new DocumentStream(documentStreamInfo, out errors);
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var requests = new[]
             {
                 new RequestTelemetry() { Id = "apple" }, new RequestTelemetry() { Id = "orange" }, new RequestTelemetry() { Id = "mango" },
@@ -103,7 +103,7 @@
                         }
                     }
             };
-            var documentStream = new DocumentStream(documentStreamInfo, out errors);
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var dependencies = new[]
             {
                 new DependencyTelemetry() { Id = "apple" }, new DependencyTelemetry() { Id = "orange" }, new DependencyTelemetry() { Id = "mango" },
@@ -167,7 +167,7 @@
                         }
                     }
             };
-            var documentStream = new DocumentStream(documentStreamInfo, out errors);
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var exceptions = new[]
             {
                 new ExceptionTelemetry() { Message = "apple" }, new ExceptionTelemetry() { Message = "orange" },
@@ -231,7 +231,7 @@
                         }
                     }
             };
-            var documentStream = new DocumentStream(documentStreamInfo, out errors);
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var events = new[]
             {
                 new EventTelemetry() { Name = "apple" }, new EventTelemetry() { Name = "orange" }, new EventTelemetry() { Name = "mango" },
@@ -296,7 +296,7 @@
             };
 
             // ACT
-            new DocumentStream(documentStreamInfo, out errors);
+            new DocumentStream(documentStreamInfo, out errors, new ClockMock());
 
             // ASSERT
             Assert.AreEqual(3, errors.Length);

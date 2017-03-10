@@ -174,7 +174,8 @@
                         this.collectionConfiguration =
                             new CollectionConfiguration(
                                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                                out errors);
+                                out errors,
+                                this.timeProvider);
                         this.dataAccumulatorManager = this.dataAccumulatorManager ?? new QuickPulseDataAccumulatorManager(this.collectionConfiguration);
 
                         this.metricProcessor = new QuickPulseMetricProcessor();
@@ -658,10 +659,11 @@
 
         private string[] OnUpdatedConfiguration(CollectionConfigurationInfo configurationInfo)
         {
-            // the next accumulator that gets swapped in on the collection thread will be initialized with the new collection configuration
+            // we need to preserve the current quota for each document stream that still exists in the new configuration
             string[] errorsConfig;
-            var newCollectionConfiguration = new CollectionConfiguration(configurationInfo, out errorsConfig);
+            var newCollectionConfiguration = new CollectionConfiguration(configurationInfo, out errorsConfig, this.timeProvider, this.collectionConfiguration?.DocumentStreams);
 
+            // the next accumulator that gets swapped in on the collection thread will be initialized with the new collection configuration
             Interlocked.Exchange(ref this.collectionConfiguration, newCollectionConfiguration);
 
             string[] errorsPerformanceCounters;

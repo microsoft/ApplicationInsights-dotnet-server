@@ -24,7 +24,7 @@
                                  };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { Metrics = new[] { metricInfo } };
-            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out error);
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out error, new ClockMock());
 
             // ACT
             var accumulator = new CollectionConfigurationAccumulator(collectionConfiguration);
@@ -50,7 +50,7 @@
                                  };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { Metrics = new[] { metricInfo } };
-            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out error);
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out error, new ClockMock());
 
             // ACT
             var accumulator = new CollectionConfigurationAccumulator(collectionConfiguration);

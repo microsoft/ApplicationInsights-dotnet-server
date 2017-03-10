@@ -22,13 +22,13 @@
     {
         /// <summary>
         /// 1.0 - initial release
-        /// 1.1 - added DocumentStreamId, EventTelemetryDocument
+        /// 1.1 - added DocumentStreamId, EventTelemetryDocument, TraceTelemetryDocument //!!! add TraceTelemetryDocument
         /// </summary>
         private const string TelemetryDocumentContractVersion = "1.1";
 
-        private const int MaxTelemetryQuota = 30;
+        private const float MaxGlobalTelemetryQuota = 30f * 10f;
 
-        private const int InitialTelemetryQuota = 3;
+        private const float InitialGlobalTelemetryQuota = 3f * 10f;
 
         private const int MaxFieldLength = 32768;
 
@@ -48,15 +48,12 @@
 
         private bool disableFullTelemetryItems = false;
 
-        private readonly QuickPulseQuotaTracker requestQuotaTracker;
+        /// <summary>
+        /// An overall, cross-stream quota tracker
+        /// </summary>
+        private readonly QuickPulseQuotaTracker globalQuotaTracker;
 
-        private readonly QuickPulseQuotaTracker dependencyQuotaTracker;
-
-        private readonly QuickPulseQuotaTracker exceptionQuotaTracker;
-
-        private readonly QuickPulseQuotaTracker eventQuotaTracker;
-
-        //!!! implement outgoing overall quota and report is violations
+        //!!! implement outgoing overall quota (done) and report its violations (not done - implement it through the accumulator)
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryProcessor"/> class.
@@ -73,14 +70,14 @@
         /// </summary>
         /// <param name="next">The next TelemetryProcessor in the chain.</param>
         /// <param name="timeProvider">Time provider.</param>
-        /// <param name="maxTelemetryQuota">Max telemetry quota.</param>
-        /// <param name="initialTelemetryQuota">Initial telemetry quota.</param>
+        /// <param name="maxGlobalTelemetryQuota">Max overall telemetry quota.</param>
+        /// <param name="initialGlobalTelemetryQuota">Initial overall telemetry quota.</param>
         /// <exception cref="ArgumentNullException">Thrown if next is null.</exception>
         internal QuickPulseTelemetryProcessor(
             ITelemetryProcessor next,
             Clock timeProvider,
-            int? maxTelemetryQuota = null,
-            int? initialTelemetryQuota = null)
+            float? maxGlobalTelemetryQuota = null,
+            float? initialGlobalTelemetryQuota = null)
         {
             if (next == null)
             {
@@ -91,25 +88,10 @@
 
             this.Next = next;
 
-            this.requestQuotaTracker = new QuickPulseQuotaTracker(
+            this.globalQuotaTracker = new QuickPulseQuotaTracker(
                 timeProvider,
-                maxTelemetryQuota ?? MaxTelemetryQuota,
-                initialTelemetryQuota ?? InitialTelemetryQuota);
-
-            this.dependencyQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                maxTelemetryQuota ?? MaxTelemetryQuota,
-                initialTelemetryQuota ?? InitialTelemetryQuota);
-
-            this.exceptionQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                maxTelemetryQuota ?? MaxTelemetryQuota,
-                initialTelemetryQuota ?? InitialTelemetryQuota);
-
-            this.eventQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                maxTelemetryQuota ?? MaxTelemetryQuota,
-                initialTelemetryQuota ?? InitialTelemetryQuota);
+                maxGlobalTelemetryQuota ?? MaxGlobalTelemetryQuota,
+                initialGlobalTelemetryQuota ?? InitialGlobalTelemetryQuota);
         }
 
         private ITelemetryProcessor Next { get; }
@@ -200,60 +182,51 @@
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
             return new RequestTelemetryDocument()
-                       {
-                           Id = Guid.NewGuid(),
-                           Version = TelemetryDocumentContractVersion,
-                           Timestamp = requestTelemetry.Timestamp,
-                           OperationId = TruncateValue(requestTelemetry.Context?.Operation?.Id),
-                           Name = TruncateValue(requestTelemetry.Name),
-                           Success = IsRequestSuccessful(requestTelemetry),
-                           Duration = requestTelemetry.Duration,
-                           ResponseCode = requestTelemetry.ResponseCode,
-                           Url = requestTelemetry.Url,
-                           Properties = GetProperties(requestTelemetry)
-                       };
+            {
+                Id = Guid.NewGuid(),
+                Version = TelemetryDocumentContractVersion,
+                Timestamp = requestTelemetry.Timestamp,
+                OperationId = TruncateValue(requestTelemetry.Context?.Operation?.Id),
+                Name = TruncateValue(requestTelemetry.Name),
+                Success = IsRequestSuccessful(requestTelemetry),
+                Duration = requestTelemetry.Duration,
+                ResponseCode = requestTelemetry.ResponseCode,
+                Url = requestTelemetry.Url,
+                Properties = GetProperties(requestTelemetry)
+            };
         }
 
         private static ITelemetryDocument ConvertDependencyToTelemetryDocument(DependencyTelemetry dependencyTelemetry)
         {
             return new DependencyTelemetryDocument()
-                       {
-                           Id = Guid.NewGuid(),
-                           Version = TelemetryDocumentContractVersion,
-                           Timestamp = dependencyTelemetry.Timestamp,
-                           Name = TruncateValue(dependencyTelemetry.Name),
-                           Success = dependencyTelemetry.Success,
-                           Duration = dependencyTelemetry.Duration,
-                           OperationId = TruncateValue(dependencyTelemetry.Context?.Operation?.Id),
-                           ResultCode = dependencyTelemetry.ResultCode,
-                           CommandName = TruncateValue(dependencyTelemetry.Data),
-                           DependencyTypeName = dependencyTelemetry.Type,
-                           Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName)
-                       };
+            {
+                Id = Guid.NewGuid(),
+                Version = TelemetryDocumentContractVersion,
+                Timestamp = dependencyTelemetry.Timestamp,
+                Name = TruncateValue(dependencyTelemetry.Name),
+                Success = dependencyTelemetry.Success,
+                Duration = dependencyTelemetry.Duration,
+                OperationId = TruncateValue(dependencyTelemetry.Context?.Operation?.Id),
+                ResultCode = dependencyTelemetry.ResultCode,
+                CommandName = TruncateValue(dependencyTelemetry.Data),
+                DependencyTypeName = dependencyTelemetry.Type,
+                Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName)
+            };
         }
 
         private static ITelemetryDocument ConvertExceptionToTelemetryDocument(ExceptionTelemetry exceptionTelemetry)
         {
             return new ExceptionTelemetryDocument()
-                       {
-                           Id = Guid.NewGuid(),
-                           Version = TelemetryDocumentContractVersion,
-                           SeverityLevel =
-                               exceptionTelemetry.SeverityLevel != null
-                                   ? exceptionTelemetry.SeverityLevel.Value.ToString()
-                                   : null,
-                           Exception =
-                               exceptionTelemetry.Exception != null
-                                   ? TruncateValue(exceptionTelemetry.Exception.ToString())
-                                   : null,
-                           ExceptionType =
-                               exceptionTelemetry.Exception != null
-                                   ? TruncateValue(exceptionTelemetry.Exception.GetType().FullName)
-                                   : null,
-                           ExceptionMessage = TruncateValue(ExpandExceptionMessage(exceptionTelemetry)),
-                           OperationId = TruncateValue(exceptionTelemetry.Context?.Operation?.Id),
-                           Properties = GetProperties(exceptionTelemetry)
-                       };
+            {
+                Id = Guid.NewGuid(),
+                Version = TelemetryDocumentContractVersion,
+                SeverityLevel = exceptionTelemetry.SeverityLevel != null ? exceptionTelemetry.SeverityLevel.Value.ToString() : null,
+                Exception = exceptionTelemetry.Exception != null ? TruncateValue(exceptionTelemetry.Exception.ToString()) : null,
+                ExceptionType = exceptionTelemetry.Exception != null ? TruncateValue(exceptionTelemetry.Exception.GetType().FullName) : null,
+                ExceptionMessage = TruncateValue(ExpandExceptionMessage(exceptionTelemetry)),
+                OperationId = TruncateValue(exceptionTelemetry.Context?.Operation?.Id),
+                Properties = GetProperties(exceptionTelemetry)
+            };
         }
 
         private static ITelemetryDocument ConvertEventToTelemetryDocument(EventTelemetry eventTelemetry)
@@ -305,7 +278,7 @@
 
             return string.Join(ExceptionMessageSeparator, nonDuplicateMessages);
         }
-        
+
         private static IEnumerable<string> FlattenMessages(Exception exception)
         {
             var currentEx = exception;
@@ -326,9 +299,7 @@
                 properties = new Dictionary<string, string>(MaxPropertyCount + 1);
 
                 foreach (var prop in
-                    telemetry.Properties
-                    .Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal))
-                    .Take(MaxPropertyCount))
+                    telemetry.Properties.Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal)).Take(MaxPropertyCount))
                 {
                     string truncatedKey = TruncateValue(prop.Key);
 
@@ -439,36 +410,36 @@
                             telemetryDocument = CreateTelemetryDocument(
                                 telemetryAsRequest,
                                 documentStreams,
-                                this.requestQuotaTracker,
-                                ConvertRequestToTelemetryDocument,
-                                documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors));
+                                documentStream => documentStream.RequestQuotaTracker,
+                                documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
+                                ConvertRequestToTelemetryDocument);
                         }
                         else if (telemetryAsDependency != null)
                         {
                             telemetryDocument = CreateTelemetryDocument(
                                 telemetryAsDependency,
                                 documentStreams,
-                                this.dependencyQuotaTracker,
-                                ConvertDependencyToTelemetryDocument,
-                                documentStream => documentStream.CheckFilters(telemetryAsDependency, out groupErrors));
+                                documentStream => documentStream.DependencyQuotaTracker,
+                                documentStream => documentStream.CheckFilters(telemetryAsDependency, out groupErrors),
+                                ConvertDependencyToTelemetryDocument);
                         }
                         else if (telemetryAsException != null)
                         {
                             telemetryDocument = CreateTelemetryDocument(
                                 telemetryAsException,
                                 documentStreams,
-                                this.exceptionQuotaTracker,
-                                ConvertExceptionToTelemetryDocument,
-                                documentStream => documentStream.CheckFilters(telemetryAsException, out groupErrors));
+                                documentStream => documentStream.ExceptionQuotaTracker,
+                                documentStream => documentStream.CheckFilters(telemetryAsException, out groupErrors),
+                                ConvertExceptionToTelemetryDocument);
                         }
                         else if (telemetryAsEvent != null)
                         {
                             telemetryDocument = CreateTelemetryDocument(
                                 telemetryAsEvent,
                                 documentStreams,
-                                this.eventQuotaTracker,
-                                ConvertEventToTelemetryDocument,
-                                documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors));
+                                documentStream => documentStream.EventQuotaTracker,
+                                documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors),
+                                ConvertEventToTelemetryDocument);
                         }
 
                         if (telemetryDocument != null)
@@ -527,23 +498,35 @@
             }
         }
 
-        private static ITelemetryDocument CreateTelemetryDocument<TTelemetry>(
+        private ITelemetryDocument CreateTelemetryDocument<TTelemetry>(
             TTelemetry telemetry,
             IEnumerable<DocumentStream> documentStreams,
-            QuickPulseQuotaTracker quotaTracker,
-            Func<TTelemetry, ITelemetryDocument> convertTelemetryToTelemetryDocument,
-            Func<DocumentStream, bool> checkDocumentStreamFilters)
+            Func<DocumentStream, QuickPulseQuotaTracker> getQuotaTracker,
+            Func<DocumentStream, bool> checkDocumentStreamFilters,
+            Func<TTelemetry, ITelemetryDocument> convertTelemetryToTelemetryDocument)
         {
-            ITelemetryDocument telemetryDocument = null;
-
             // check which document streams are interested in this telemetry
-            var matchingDocumentStreamIds = documentStreams.Where(checkDocumentStreamFilters).Select(documentStream => documentStream.Id).ToList();
+            ITelemetryDocument telemetryDocument = null;
+            var matchingDocumentStreamIds = new List<string>();
 
-            // take only 1 quota for any number of document streams that will include this telemetry
-            if (matchingDocumentStreamIds.Count > 0 && quotaTracker.ApplyQuota())
+            foreach (DocumentStream matchingDocumentStream in documentStreams.Where(checkDocumentStreamFilters))
             {
-                telemetryDocument = convertTelemetryToTelemetryDocument(telemetry);
+                // for each interested document stream only let the document through if there's quota available for that stream
+                if (getQuotaTracker(matchingDocumentStream).ApplyQuota())
+                {
+                    // only create the telemetry document once
+                    telemetryDocument = telemetryDocument ?? convertTelemetryToTelemetryDocument(telemetry);
+
+                    matchingDocumentStreamIds.Add(matchingDocumentStream.Id);
+                }
+            }
+
+            if (telemetryDocument != null)
+            {
                 telemetryDocument.DocumentStreamIds = matchingDocumentStreamIds.ToArray();
+
+                // this document will count as 1 towards the global quota regardless of number of streams that are interested in it
+                telemetryDocument = this.globalQuotaTracker.ApplyQuota() ? telemetryDocument : null;
             }
 
             return telemetryDocument;
@@ -622,10 +605,7 @@
         private void Register()
         {
             var module = TelemetryModules.Instance.Modules.OfType<QuickPulseTelemetryModule>().SingleOrDefault();
-            if (module != null)
-            {
-                module.RegisterTelemetryProcessor(this);
-            }
+            module?.RegisterTelemetryProcessor(this);
         }
     }
 }

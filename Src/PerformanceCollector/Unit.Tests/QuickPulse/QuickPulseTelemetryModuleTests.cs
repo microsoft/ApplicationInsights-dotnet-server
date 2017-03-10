@@ -7,6 +7,7 @@
     using System.IO;
     using System.Linq;
     using System.Threading;
+
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -79,7 +80,7 @@
 
             // ACT
             module.Initialize(new TelemetryConfiguration());
-            
+
             // ASSERT
             Assert.IsInstanceOfType(QuickPulseTestHelper.GetPrivateField(module, "serviceClient"), typeof(QuickPulseServiceClient));
         }
@@ -93,7 +94,7 @@
             // ACT
             // do not provide module configuration, force default service client
             module.Initialize(new TelemetryConfiguration());
-            
+
             // ASSERT
             IQuickPulseServiceClient serviceClient = (IQuickPulseServiceClient)QuickPulseTestHelper.GetPrivateField(module, "serviceClient");
 
@@ -114,7 +115,7 @@
             var module = new QuickPulseTelemetryModule(null, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration());
-            
+
             // ACT
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
 
@@ -134,17 +135,11 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             var config = new TelemetryConfiguration();
             module.Initialize(config);
-            
+
             // ACT
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
             config.InstrumentationKey = "some ikey";
@@ -165,17 +160,11 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                null,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(null, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             // ACT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             // ASSERT
             Thread.Sleep((int)(interval.TotalMilliseconds * 100));
 
@@ -191,34 +180,46 @@
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            var filter1 = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } } } };
-            var filter2 = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } } } };
+            var filter1 = new[]
+            {
+                new FilterConjunctionGroupInfo()
+                {
+                    Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } }
+                }
+            };
+            var filter2 = new[]
+            {
+                new FilterConjunctionGroupInfo()
+                {
+                    Filters = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } }
+                }
+            };
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "Metric0",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Avg,
-                                          FilterGroups = filter1
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "Metric1",
-                                          TelemetryType = TelemetryType.Metric,
-                                          Projection = "Value",
-                                          Aggregation = AggregationType.Sum,
-                                          FilterGroups = filter2
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric0",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = filter1
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric1",
+                    TelemetryType = TelemetryType.Metric,
+                    Projection = "Value",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = filter2
+                }
+            };
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock()
-                                      {
-                                          TopProcesses = new List<Tuple<string, int>>() { Tuple.Create("Process1", 25) }
-                                      };
+            {
+                TopProcesses = new List<Tuple<string, int>>() { Tuple.Create("Process1", 25) }
+            };
 
             var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
@@ -288,7 +289,7 @@
 
             var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
             module.DisableTopCpuProcesses = true;
-            
+
             // ACT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -325,7 +326,7 @@
 
             // ACT
             var config = TelemetryConfiguration.Active;
-            
+
             // ASSERT
             var module = TelemetryModules.Instance.Modules.OfType<QuickPulseTelemetryModule>().SingleOrDefault();
             Assert.IsNotNull(module);
@@ -381,17 +382,18 @@
 
             // ACT & ASSERT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             Thread.Sleep((int)(interval.TotalMilliseconds * 100));
-            
+
             Assert.IsFalse(performanceCollector.PerformanceCounters.Any());
 
             serviceClient.ReturnValueFromPing = true;
-            
+
             Thread.Sleep((int)(interval.TotalMilliseconds * 100));
 
             Assert.IsTrue(performanceCollector.PerformanceCounters.Any());
-            Assert.IsTrue(serviceClient.SnappedSamples.All(s => Math.Abs(s.PerfCountersLookup[@"\Processor(_Total)\% Processor Time"]) > double.Epsilon));
+            Assert.IsTrue(
+                serviceClient.SnappedSamples.All(s => Math.Abs(s.PerfCountersLookup[@"\Processor(_Total)\% Processor Time"]) > double.Epsilon));
         }
 
         [TestMethod]
@@ -410,7 +412,7 @@
 
             // ACT
             module.Initialize(new TelemetryConfiguration());
-            
+
             Thread.Sleep((int)(interval.TotalMilliseconds * 100));
 
             // ASSERT
@@ -433,12 +435,19 @@
                 new QuickPulseDataAccumulatorManager(
                     new CollectionConfiguration(
                         new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                        out errors));
+                        out errors,
+                        new ClockMock()));
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, accumulatorManager, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(
+                collectionTimeSlotManager,
+                accumulatorManager,
+                serviceClient,
+                performanceCollector,
+                topCpuCollector,
+                timings);
 
             const int TelemetryProcessorCount = 4;
 
@@ -512,7 +521,7 @@
             File.WriteAllText(this.configFilePath, configXml);
 
             var config = TelemetryConfiguration.Active;
-            
+
             // ACT
             var telemetryProcessors = new List<IQuickPulseTelemetryProcessor>();
             const int TelemetryProcessorCount = 4;
@@ -530,7 +539,7 @@
             var module = TelemetryModules.Instance.Modules.OfType<QuickPulseTelemetryModule>().SingleOrDefault();
             var registeredProcessors = QuickPulseTestHelper.GetTelemetryProcessors(module);
 
-            Assert.AreEqual(TelemetryProcessorCount + 1, registeredProcessors.Count);  // one was there after the initial configuration loading
+            Assert.AreEqual(TelemetryProcessorCount + 1, registeredProcessors.Count); // one was there after the initial configuration loading
             Assert.IsTrue(telemetryProcessors.TrueForAll(registeredProcessors.Contains));
         }
 
@@ -546,21 +555,15 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             // initially, the module is in the polling state
             Thread.Sleep((int)(2.5 * pollingInterval.TotalMilliseconds));
             serviceClient.CountersEnabled = false;
-            
+
             // 2.5 polling intervals have elapsed, we must have pinged the service 3 times (the first time immediately upon initialization), but no samples yet
             Assert.AreEqual(3, serviceClient.PingCount, "Ping count 1");
             Assert.AreEqual(0, serviceClient.SnappedSamples.Count, "Sample count 1");
@@ -573,7 +576,7 @@
             serviceClient.CountersEnabled = true;
             Thread.Sleep((int)(5 * collectionInterval.TotalMilliseconds));
             serviceClient.CountersEnabled = false;
-            
+
             // a number of  collection intervals have elapsed, we must have pinged the service once, and then started sending samples
             Assert.AreEqual(1, serviceClient.PingCount, "Ping count 2");
             Assert.IsTrue(serviceClient.SnappedSamples.Count > 0, "Sample count 2");
@@ -587,10 +590,10 @@
                 serviceClient.Reset();
                 serviceClient.CountersEnabled = true;
             }
-            
+
             Thread.Sleep((int)(2.9 * pollingInterval.TotalMilliseconds));
             serviceClient.CountersEnabled = false;
-            
+
             // 2 polling intervals have elapsed, we must have submitted one batch of samples, stopped collecting and pinged the service twice afterwards
             Assert.AreEqual(1, serviceClient.SnappedSamples.Count / serviceClient.LastSampleBatchSize, "Sample count 3");
             Assert.AreEqual(2, serviceClient.PingCount, "Ping count 3");
@@ -608,13 +611,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1" };
@@ -642,35 +639,29 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
-                                                            {
-                                                                ETag = "ETag1",
-                                                                Metrics =
-                                                                    new[]
-                                                                        {
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter1",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\Memory\Cache Bytes"
-                                                                                },
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter2",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\Memory\Cache Bytes Peak"
-                                                                                }
-                                                                        }
-                                                            };
+            {
+                ETag = "ETag1",
+                Metrics =
+                    new[]
+                    {
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter1",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\Memory\Cache Bytes"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter2",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\Memory\Cache Bytes Peak"
+                        }
+                    }
+            };
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -687,25 +678,25 @@
             Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
 
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
-                                                            {
-                                                                ETag = "ETag2",
-                                                                Metrics =
-                                                                    new[]
-                                                                        {
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter3",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\MEMORY\Cache Bytes"
-                                                                                },
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter4",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\Memory\Commit Limit"
-                                                                                }
-                                                                        }
-                                                            };
+            {
+                ETag = "ETag2",
+                Metrics =
+                    new[]
+                    {
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter3",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\MEMORY\Cache Bytes"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter4",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\Memory\Commit Limit"
+                        }
+                    }
+            };
             Thread.Sleep((int)(10 * collectionInterval.TotalMilliseconds));
 
             Assert.AreEqual("ETag2", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
@@ -730,40 +721,34 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
             {
-                                                                    ETag = "ETag1",
-                                                                    Metrics =
-                                                                    new[]
-                                                                        {
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter1",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\SomeCategory(SomeInstance)\SomeCounter"
-                                                                                },
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter2",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"\Memory\Cache Bytes Peak"
-                                                                                },
-                                                                            new OperationalizedMetricInfo()
-                                                                                {
-                                                                                    Id = "PerformanceCounter2",
-                                                                                    TelemetryType = TelemetryType.PerformanceCounter,
-                                                                                    Projection = @"NonParseable"
-                                                                                }
-                                                                        }
+                ETag = "ETag1",
+                Metrics =
+                    new[]
+                    {
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter1",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\SomeCategory(SomeInstance)\SomeCounter"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter2",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\Memory\Cache Bytes Peak"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter2",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"NonParseable"
+                        }
+                    }
             };
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
@@ -795,16 +780,10 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             // ACT
             // below timeout should be sufficient for the module to get to the maximum storage capacity
             Thread.Sleep(TimeSpan.FromMilliseconds(300));
@@ -820,20 +799,19 @@
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval, interval, interval, interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            var serviceClient = new QuickPulseServiceClientMock { AlwaysThrow = true, ReturnValueFromPing = false, ReturnValueFromSubmitSample = null };
+            var serviceClient = new QuickPulseServiceClientMock
+            {
+                AlwaysThrow = true,
+                ReturnValueFromPing = false,
+                ReturnValueFromSubmitSample = null
+            };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             // ACT
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
 
@@ -853,16 +831,10 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
-            
+
             // ACT
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
 
@@ -877,19 +849,13 @@
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval, interval, interval, interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            
+
             // this will flip-flop between collection and no collection, creating and ending a collection thread each time
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = false };
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(
-                collectionTimeSlotManager,
-                null,
-                serviceClient,
-                performanceCollector,
-                topCpuCollector,
-                timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -897,11 +863,11 @@
 
             // ACT
             Thread.Sleep(TimeSpan.FromMilliseconds(300));
-            
+
             // ASSERT
             // we don't expect to find many more threads, even though other components might be spinning new ones up and down
             var threadDelta = Process.GetCurrentProcess().Threads.Count - initialThreadCount;
             Assert.IsTrue(Math.Abs(threadDelta) < 5, threadDelta.ToString(CultureInfo.InvariantCulture));
         }
-     }
+    }
 }

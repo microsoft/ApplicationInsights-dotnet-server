@@ -654,18 +654,19 @@
                         var now = DateTimeOffset.UtcNow;
                         return
                             new[]
-                                {
-                                    new QuickPulseDataSample(
-                                        new QuickPulseDataAccumulator(new CollectionConfiguration(EmptyCollectionConfigurationInfo, out errors))
-                                            {
-                                                AIRequestSuccessCount = 5,
-                                                StartTimestamp = now,
-                                                EndTimestamp = now.AddSeconds(1)
-                                            },
-                                        new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
-                                        Enumerable.Empty<Tuple<string, int>>(),
-                                        false)
-                                }.ToList();
+                            {
+                                new QuickPulseDataSample(
+                                    new QuickPulseDataAccumulator(
+                                        new CollectionConfiguration(EmptyCollectionConfigurationInfo, out errors, timeProvider))
+                                    {
+                                        AIRequestSuccessCount = 5,
+                                        StartTimestamp = now,
+                                        EndTimestamp = now.AddSeconds(1)
+                                    },
+                                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                                    Enumerable.Empty<Tuple<string, int>>(),
+                                    false)
+                            }.ToList();
                     },
                 samples =>
                     {
@@ -677,7 +678,7 @@
                         collectionConfigurationInfos?.Add(collectionConfigurationInfo);
 
                         string[] errors;
-                        new CollectionConfiguration(collectionConfigurationInfo, out errors);
+                        new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
                         return errors;
                     });
 

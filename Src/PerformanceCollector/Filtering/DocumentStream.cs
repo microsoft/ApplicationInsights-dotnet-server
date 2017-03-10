@@ -5,12 +5,17 @@
     using System.Globalization;
 
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
     /// <summary>
     /// Document stream defines a stream of full telemetry documents that need to be collected and reported.
     /// </summary>
     internal class DocumentStream
     {
+        private const float MaxTelemetryQuota = 30f;
+
+        private const float InitialTelemetryQuota = 3f;
+
         private readonly DocumentStreamInfo info;
 
         private readonly List<FilterConjunctionGroup<RequestTelemetry>> requestFilterGroups = new List<FilterConjunctionGroup<RequestTelemetry>>();
@@ -21,9 +26,24 @@
 
         private readonly List<FilterConjunctionGroup<EventTelemetry>> eventFilterGroups = new List<FilterConjunctionGroup<EventTelemetry>>();
 
+        public QuickPulseQuotaTracker RequestQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker DependencyQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker ExceptionQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker EventQuotaTracker { get; }
+
         public string Id => this.info.Id;
 
-        public DocumentStream(DocumentStreamInfo info, out string[] errors)
+        public DocumentStream(
+            DocumentStreamInfo info,
+            out string[] errors,
+            Clock timeProvider,
+            float? initialRequestQuota = null,
+            float? initialDependencyQuota = null,
+            float? initialExceptionQuota = null,
+            float? initialEventQuota = null)
         {
             if (info == null)
             {
@@ -33,6 +53,26 @@
             this.info = info;
 
             this.CreateFilters(out errors);
+
+            this.RequestQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider,
+                MaxTelemetryQuota,
+                initialRequestQuota ?? InitialTelemetryQuota);
+
+            this.DependencyQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider,
+                MaxTelemetryQuota,
+                initialDependencyQuota ?? InitialTelemetryQuota);
+
+            this.ExceptionQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider,
+                MaxTelemetryQuota,
+                initialExceptionQuota ?? InitialTelemetryQuota);
+
+            this.EventQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider,
+                MaxTelemetryQuota,
+                initialEventQuota ?? InitialTelemetryQuota);
         }
 
         public bool CheckFilters(RequestTelemetry document, out string[] errors)

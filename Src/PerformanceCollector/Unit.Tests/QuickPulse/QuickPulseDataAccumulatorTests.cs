@@ -84,7 +84,8 @@
                 new QuickPulseDataAccumulator(
                     new CollectionConfiguration(
                         new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                        out errors));
+                        out errors,
+                        new ClockMock()));
 
             // ACT
             var iterationCount = 1000;

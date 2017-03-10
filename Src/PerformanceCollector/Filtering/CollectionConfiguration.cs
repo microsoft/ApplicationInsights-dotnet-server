@@ -6,6 +6,7 @@
     using System.Linq;
 
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
     internal class CollectionConfiguration
     {
@@ -69,7 +70,11 @@
             }
         }
 
-        public CollectionConfiguration(CollectionConfigurationInfo info, out string[] errors)
+        public CollectionConfiguration(
+            CollectionConfigurationInfo info,
+            out string[] errors,
+            Clock timeProvider,
+            IEnumerable<DocumentStream> previousDocumentStreams = null)
         {
             if (info == null)
             {
@@ -87,15 +92,27 @@
 
             // create document streams based on description in info
             string[] documentStreamErrors;
-            this.CreateDocumentStreams(out documentStreamErrors);
+            this.CreateDocumentStreams(out documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
 
             errors = metricErrors.Concat(documentStreamErrors).ToArray();
         }
 
-        private void CreateDocumentStreams(out string[] errors)
+        private void CreateDocumentStreams(out string[] errors, Clock timeProvider, IEnumerable<DocumentStream> previousDocumentStreams)
         {
             var errorList = new List<string>();
             var documentStreamIds = new HashSet<string>();
+
+            // quota might be changing concurrently on the collection thread, but we don't need the exact value at any given time
+            // we will try to carry over the last known values to this new configuration
+            Dictionary<string, Tuple<float, float, float, float>> previousQuotasByStreamId =
+                previousDocumentStreams.ToDictionary(
+                    documentStream => documentStream.Id,
+                    documentStream =>
+                    Tuple.Create(
+                        documentStream.RequestQuotaTracker.CurrentQuota,
+                        documentStream.DependencyQuotaTracker.CurrentQuota,
+                        documentStream.ExceptionQuotaTracker.CurrentQuota,
+                        documentStream.EventQuotaTracker.CurrentQuota));
 
             foreach (DocumentStreamInfo documentStreamInfo in info.DocumentStreams ?? new DocumentStreamInfo[0])
             {
@@ -110,9 +127,19 @@
 
                 try
                 {
-                    string[] localErrors;
-                    DocumentStream documentStream = new DocumentStream(documentStreamInfo, out localErrors);
+                    Tuple<float, float, float, float> initialQuotas;
+                    previousQuotasByStreamId.TryGetValue(documentStreamInfo.Id, out initialQuotas);
 
+                    string[] localErrors;
+                    var documentStream = new DocumentStream(
+                        documentStreamInfo,
+                        out localErrors,
+                        timeProvider,
+                        initialQuotas?.Item1,
+                        initialQuotas?.Item2,
+                        initialQuotas?.Item3,
+                        initialQuotas?.Item4);
+                    
                     errorList.AddRange(localErrors ?? new string[0]);
                     documentStreamIds.Add(documentStreamInfo.Id);
 
