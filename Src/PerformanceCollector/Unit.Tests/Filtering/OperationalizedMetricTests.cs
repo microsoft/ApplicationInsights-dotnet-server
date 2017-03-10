@@ -73,6 +73,32 @@
         }
 
         [TestMethod]
+        public void OperationalizedMetricHandlesNullFiltersCorrectly()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Name",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = null
+            };
+
+            var telemetryThatMustPass = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies both filters" };
+
+            // ACT
+            string[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+
+            // ASSERT
+            Assert.AreEqual(0, errors.Length);
+
+            Assert.IsTrue(metric.CheckFilters(telemetryThatMustPass, out errors));
+            Assert.AreEqual(0, errors.Length);
+        }
+
+        [TestMethod]
         public void OperationalizedMetricPerformsLogicalConnectionsBetweenFiltersCorrectly()
         {
             // ARRANGE

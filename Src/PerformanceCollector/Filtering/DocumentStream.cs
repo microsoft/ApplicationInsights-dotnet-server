@@ -178,7 +178,7 @@
         private void CreateFilters(out string[] errors)
         {
             var errorList = new List<string>();
-            foreach (DocumentFilterConjunctionGroupInfo documentFilterConjunctionGroupInfo in this.info.DocumentFilterGroups)
+            foreach (DocumentFilterConjunctionGroupInfo documentFilterConjunctionGroupInfo in this.info.DocumentFilterGroups ?? new DocumentFilterConjunctionGroupInfo[0])
             {
                 try
                 {

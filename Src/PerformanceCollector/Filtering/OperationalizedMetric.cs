@@ -123,7 +123,7 @@
         private void CreateFilters(out string[] errors)
         {
             var errorList = new List<string>();
-            foreach (FilterConjunctionGroupInfo filterConjunctionGroupInfo in this.info.FilterGroups)
+            foreach (FilterConjunctionGroupInfo filterConjunctionGroupInfo in this.info.FilterGroups ?? new FilterConjunctionGroupInfo[0])
             {
                 try
                 {

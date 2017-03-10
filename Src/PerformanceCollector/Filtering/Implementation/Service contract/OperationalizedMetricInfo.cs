@@ -2,6 +2,7 @@
 {
     using System;
     using System.Globalization;
+    using System.Linq;
     using System.Runtime.Serialization;
 
     [DataContract]
@@ -66,5 +67,17 @@
         }
 
         public AggregationType Aggregation { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "Id: '{0}', TelemetryType: '{1}', Projection: '{2}', Aggregation: '{3}', FilterGroups: [{4}]",
+                this.Id,
+                this.TelemetryType,
+                this.Projection,
+                this.Aggregation,
+                string.Join(", ", (this.FilterGroups ?? new FilterConjunctionGroupInfo[0]).Select(filterGroup => filterGroup.ToString())));
+        }
     }
 }

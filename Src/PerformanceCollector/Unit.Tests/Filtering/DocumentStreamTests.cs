@@ -1,9 +1,6 @@
 ﻿namespace Unit.Tests
 {
-    using System;
-    using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.ExceptionServices;
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -12,6 +9,46 @@
     [TestClass]
     public class DocumentStreamTests
     {
+        [TestMethod]
+        public void DocumentStreamHandlesNoFiltersCorrectly()
+        {
+            // ARRANGE
+            string[] errors;
+            var documentStreamInfo = new DocumentStreamInfo() { DocumentFilterGroups = new DocumentFilterConjunctionGroupInfo[0] };
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
+            var request = new RequestTelemetry() { Id = "apple" };
+
+            // ACT
+            string[] runtimeErrors;
+            bool result = documentStream.CheckFilters(request, out runtimeErrors);
+            
+            // ASSERT
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(0, runtimeErrors.Length);
+
+            Assert.IsFalse(result);
+        }
+
+        [TestMethod]
+        public void DocumentStreamHandlesNullFiltersCorrectly()
+        {
+            // ARRANGE
+            string[] errors;
+            var documentStreamInfo = new DocumentStreamInfo() { DocumentFilterGroups = null };
+            var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
+            var request = new RequestTelemetry() { Id = "apple" };
+
+            // ACT
+            string[] runtimeErrors;
+            bool result = documentStream.CheckFilters(request, out runtimeErrors);
+
+            // ASSERT
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(0, runtimeErrors.Length);
+
+            Assert.IsFalse(result);
+        }
+
         [TestMethod]
         public void DocumentStreamFiltersRequestsCorrectly()
         {

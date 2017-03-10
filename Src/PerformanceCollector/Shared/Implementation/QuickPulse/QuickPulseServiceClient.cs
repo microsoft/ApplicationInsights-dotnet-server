@@ -6,6 +6,7 @@
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Net.Http;
     using System.Runtime.Serialization.Json;
     using Helpers;
 
@@ -38,6 +39,8 @@
 
         private readonly DataContractJsonSerializer deserializerServerResponse = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
 
+        private readonly HttpClient httpClient;
+
         public QuickPulseServiceClient(Uri serviceUri, string instanceName, string streamId, string machineName, string version, Clock timeProvider, bool isWebApp, TimeSpan? timeout = null)
         {
             this.ServiceUri = serviceUri;
@@ -48,6 +51,8 @@
             this.timeProvider = timeProvider;
             this.isWebApp = isWebApp;
             this.timeout = timeout ?? this.timeout;
+
+            this.httpClient = new HttpClient() { Timeout = this.timeout };
         }
 
         public Uri ServiceUri { get; }
@@ -59,22 +64,32 @@
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo)
         {
-            var path = string.Format(CultureInfo.InvariantCulture, "ping?ikey={0}", Uri.EscapeUriString(instrumentationKey));
-            HttpWebResponse response = this.SendRequest(
-                WebRequestMethods.Http.Post,
-                path,
-                true,
-                configurationETag,
-                authApiKey,
-                stream => this.WritePingData(timestamp, stream));
-            
-            if (response == null)
-            {
-                configurationInfo = null;
-                return null;
-            }
+            var requestUri = string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}/ping?ikey={1}",
+                this.ServiceUri.AbsoluteUri.TrimEnd('/'),
+                Uri.EscapeUriString(instrumentationKey));
 
-            return this.ProcessResponse(response, configurationETag, out configurationInfo);
+            using (var request = new HttpRequestMessage(HttpMethod.Post, requestUri))
+            {
+
+                using (
+                    HttpResponseMessage response = this.SendRequest(
+                        request,
+                        true,
+                        configurationETag,
+                        authApiKey,
+                        r => this.WritePingData(timestamp, r)))
+                {
+                    if (response == null)
+                    {
+                        configurationInfo = null;
+                        return null;
+                    }
+
+                    return this.ProcessResponse(response, configurationETag, out configurationInfo);
+                }
+            }
         }
 
         public bool? SubmitSamples(
@@ -85,50 +100,80 @@
             out CollectionConfigurationInfo configurationInfo,
             string[] collectionConfigurationErrors)
         {
-            var path = string.Format(CultureInfo.InvariantCulture, "post?ikey={0}", Uri.EscapeUriString(instrumentationKey));
-            HttpWebResponse response = this.SendRequest(
-                WebRequestMethods.Http.Post,
-                path,
-                false,
-                configurationETag,
-                authApiKey,
-                stream => this.WriteSamples(samples, instrumentationKey, stream, collectionConfigurationErrors));
+            var requestUri = string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}/post?ikey={1}",
+                this.ServiceUri.AbsoluteUri.TrimEnd('/'),
+                Uri.EscapeUriString(instrumentationKey));
 
-            if (response == null)
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUri))
             {
-                configurationInfo = null;
-                return null;
-            }
+                using (
+                    HttpResponseMessage response = this.SendRequest(
+                        request,
+                        false,
+                        configurationETag,
+                        authApiKey,
+                        r => this.WriteSamples(samples, instrumentationKey, r, collectionConfigurationErrors)))
+                {
 
-            return this.ProcessResponse(response, configurationETag, out configurationInfo);
+                    if (response == null)
+                    {
+                        configurationInfo = null;
+                        return null;
+                    }
+
+                    return this.ProcessResponse(response, configurationETag, out configurationInfo);
+                }
+            }
         }
 
-        private bool? ProcessResponse(HttpWebResponse response, string configurationETag, out CollectionConfigurationInfo configurationInfo)
+        private bool? ProcessResponse(HttpResponseMessage response, string configurationETag, out CollectionConfigurationInfo configurationInfo)
         {
             configurationInfo = null;
 
+            Dictionary<string, string> headers = response.Headers.Concat(response.Content.Headers)
+                .ToDictionary(pair => pair.Key, pair => pair.Value.FirstOrDefault());
+
+            string subscribedHeaderValue;
+            headers.TryGetValue(QuickPulseConstants.XMsQpsSubscribedHeaderName, out subscribedHeaderValue);
+
             bool isSubscribed;
-            if (!bool.TryParse(response.GetResponseHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName), out isSubscribed))
+            if (!bool.TryParse(subscribedHeaderValue, out isSubscribed))
             {
+                // read the response out to avoid issues with TCP connections not being disposed
+                try
+                {
+                    using (Stream responseStream = response.Content.ReadAsStreamAsync().Result)
+                    {
+                    }
+                }
+                catch (Exception)
+                {
+                    // we did our best, we don't care about the outcome anyway
+                }
+
                 return null;
             }
 
-            string latestConfigurationETag = response.GetResponseHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName);
+            string configurationETagHeaderValue;
+            headers.TryGetValue(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, out configurationETagHeaderValue);
 
-            if (isSubscribed && !string.Equals(latestConfigurationETag, configurationETag, StringComparison.Ordinal))
+            try
             {
-                try
+                using (Stream responseStream = response.Content.ReadAsStreamAsync().Result)
                 {
-                    using (var stream = response.GetResponseStream())
+                    if (isSubscribed && !string.IsNullOrEmpty(configurationETagHeaderValue)
+                        && !string.Equals(configurationETagHeaderValue, configurationETag, StringComparison.Ordinal))
                     {
-                        configurationInfo = this.deserializerServerResponse.ReadObject(stream) as CollectionConfigurationInfo;
+                        configurationInfo = this.deserializerServerResponse.ReadObject(responseStream) as CollectionConfigurationInfo;
                     }
                 }
-                catch (Exception e)
-                {
-                    // couldn't read or deserialize the response
-                    QuickPulseEventSource.Log.ServiceCommunicationFailedEvent(e.ToInvariantString());
-                }
+            }
+            catch (Exception e)
+            {
+                // couldn't read or deserialize the response
+                QuickPulseEventSource.Log.ServiceCommunicationFailedEvent(e.ToInvariantString());
             }
 
             return isSubscribed;
@@ -139,7 +184,7 @@
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
         }
 
-        private void WritePingData(DateTimeOffset timestamp, Stream stream)
+        private void WritePingData(DateTimeOffset timestamp, HttpRequestMessage request)
         {
             var dataPoint = new MonitoringDataPoint
             {
@@ -153,10 +198,14 @@
                 IsWebApp = this.isWebApp
             };
 
-            this.serializerDataPoint.WriteObject(stream, dataPoint);
+            var ms = new MemoryStream();
+            this.serializerDataPoint.WriteObject(ms, dataPoint);
+
+            ms.Position = 0;
+            request.Content = new StreamContent(ms);
         }
 
-        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream, string[] errors)
+        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, HttpRequestMessage request, string[] errors)
         {
             var monitoringPoints = new List<MonitoringDataPoint>();
 
@@ -166,10 +215,11 @@
 
                 metricPoints.AddRange(CreateDefaultMetrics(sample));
 
-                metricPoints.AddRange(sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
+                metricPoints.AddRange(
+                    sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
 
                 metricPoints.AddRange(CreateOperationalizedMetrics(sample));
-                
+
                 ITelemetryDocument[] documents = sample.TelemetryDocuments.ToArray();
                 Array.Reverse(documents);
 
@@ -177,26 +227,30 @@
                     sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 }).ToArray();
 
                 var dataPoint = new MonitoringDataPoint
-                                    {
-                                        Version = this.version,
-                                        InvariantVersion = MonitoringDataPoint.CurrentInvariantVersion,
-                                        InstrumentationKey = instrumentationKey,
-                                        Instance = this.instanceName,
-                                        StreamId = this.streamId,
-                                        MachineName = this.machineName,
-                                        Timestamp = sample.EndTimestamp.UtcDateTime,
-                                        IsWebApp = this.isWebApp,
-                                        Metrics = metricPoints.ToArray(),
-                                        Documents = documents,
-                                        TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
-                                        TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied,
-                                        CollectionConfigurationErrors = errors
-                                    };
+                {
+                    Version = this.version,
+                    InvariantVersion = MonitoringDataPoint.CurrentInvariantVersion,
+                    InstrumentationKey = instrumentationKey,
+                    Instance = this.instanceName,
+                    StreamId = this.streamId,
+                    MachineName = this.machineName,
+                    Timestamp = sample.EndTimestamp.UtcDateTime,
+                    IsWebApp = this.isWebApp,
+                    Metrics = metricPoints.ToArray(),
+                    Documents = documents,
+                    TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
+                    TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied,
+                    CollectionConfigurationErrors = errors
+                };
 
                 monitoringPoints.Add(dataPoint);
             }
 
-            this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
+            var ms = new MemoryStream();
+            this.serializerDataPointArray.WriteObject(ms, monitoringPoints.ToArray());
+
+            ms.Position = 0;
+            request.Content = new StreamContent(ms);
         }
 
         private static IEnumerable<MetricPoint> CreateOperationalizedMetrics(QuickPulseDataSample sample)
@@ -286,16 +340,18 @@
                        };
         }
 
-        private HttpWebResponse SendRequest(string httpVerb, string path, bool includeHeaders, string configurationETag, string authApiKey, Action<Stream> onWriteBody)
+        private HttpResponseMessage SendRequest(
+            HttpRequestMessage request,
+            bool includeHeaders,
+            string configurationETag,
+            string authApiKey,
+            Action<HttpRequestMessage> onWriteBody)
         {
-            var requestUri = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", this.ServiceUri.AbsoluteUri.TrimEnd('/'), path.TrimStart('/'));
-
             try
             {
-                var request = WebRequest.Create(requestUri) as HttpWebRequest;
-                request.Method = httpVerb;
-                request.Timeout = (int)this.timeout.TotalMilliseconds;
-                request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
+                request.Headers.Add(
+                    QuickPulseConstants.XMsQpsTransmissionTimeHeaderName,
+                    this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
                 request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
                 request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
 
@@ -306,13 +362,17 @@
                     request.Headers.Add(QuickPulseConstants.XMsQpsMachineNameHeaderName, this.machineName);
                 }
 
-                onWriteBody?.Invoke(request.GetRequestStream());
+                onWriteBody?.Invoke(request);
 
-                var response = request.GetResponse() as HttpWebResponse;
-                if (response != null)
+                HttpResponseMessage response = this.httpClient.SendAsync(request).Result;
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    return response;
+                    throw new WebException(
+                        string.Format(CultureInfo.InvariantCulture, "Unable to contact the server. Response code: {0}", (int)response.StatusCode));
                 }
+
+                return response;
             }
             catch (Exception e)
             {
