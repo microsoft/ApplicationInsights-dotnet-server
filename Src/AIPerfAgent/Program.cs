@@ -17,6 +17,7 @@ namespace AIPerfAgent
     {
         static void Main(string[] args)
         {
+            PerfCollectorViaNugetReference();
             QuickPulseViaNugetReference();
             Console.ReadLine();
         }
@@ -24,7 +25,7 @@ namespace AIPerfAgent
         private static void QuickPulseViaNugetReference()
         {
             TelemetryConfiguration configuration = new TelemetryConfiguration();
-            configuration.InstrumentationKey = "9d3ebb4f-7a11-4fb1-91ac-7ca8a17627eb";
+            configuration.InstrumentationKey = "2ef2a25f-73c6-4cf6-99bd-ba7cfe13d3c1";
 
             QuickPulseTelemetryProcessor processor = null;
 
@@ -40,21 +41,21 @@ namespace AIPerfAgent
             QuickPulse.Initialize(configuration);
             QuickPulse.RegisterTelemetryProcessor(processor);
 
-            Console.WriteLine("Started..");
-            Console.ReadLine();
+            Console.WriteLine("Started QP..");
+            //Console.ReadLine();
 
         }
 
         private static void PerfCollectorViaNugetReference()
         {
             TelemetryConfiguration configuration = new TelemetryConfiguration();
-            configuration.InstrumentationKey = "9d3ebb4f-7a11-4fb1-91ac-7ca8a17627eb";
+            configuration.InstrumentationKey = "2ef2a25f-73c6-4cf6-99bd-ba7cfe13d3c1";
 
             PerformanceCollectorModule perf = new PerformanceCollectorModule();
             perf.Initialize(configuration);
 
-            Console.WriteLine("Started..");
-            Console.ReadLine();
+            Console.WriteLine("Started PC..");
+            //Console.ReadLine();
               
 
         }
