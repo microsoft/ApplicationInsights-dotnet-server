@@ -108,6 +108,7 @@
             else
             {
                 TraceAssert.IsTrue(false, "Trace must have at least 1 parameter - appDomain name");
+                Trace.TraceInformation("Incorrect Trace Event name: {0}, Message: {1}", data.EventName, data.FormattedMessage);
                 this.FailureDetected = true;
             }
 
