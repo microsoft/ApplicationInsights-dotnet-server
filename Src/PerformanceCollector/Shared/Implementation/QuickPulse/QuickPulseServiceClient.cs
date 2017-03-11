@@ -8,6 +8,7 @@
     using System.Net;
     using System.Net.Http;
     using System.Runtime.Serialization.Json;
+
     using Helpers;
 
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -41,7 +42,15 @@
 
         private readonly HttpClient httpClient;
 
-        public QuickPulseServiceClient(Uri serviceUri, string instanceName, string streamId, string machineName, string version, Clock timeProvider, bool isWebApp, TimeSpan? timeout = null)
+        public QuickPulseServiceClient(
+            Uri serviceUri,
+            string instanceName,
+            string streamId,
+            string machineName,
+            string version,
+            Clock timeProvider,
+            bool isWebApp,
+            TimeSpan? timeout = null)
         {
             this.ServiceUri = serviceUri;
             this.instanceName = instanceName;
@@ -70,9 +79,8 @@
                 this.ServiceUri.AbsoluteUri.TrimEnd('/'),
                 Uri.EscapeUriString(instrumentationKey));
 
-            using (var request = new HttpRequestMessage(HttpMethod.Post, requestUri))
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUri))
             {
-
                 using (
                     HttpResponseMessage response = this.SendRequest(
                         request,
@@ -141,12 +149,10 @@
             bool isSubscribed;
             if (!bool.TryParse(subscribedHeaderValue, out isSubscribed))
             {
-                // read the response out to avoid issues with TCP connections not being disposed
+                // read the response out to avoid issues with TCP connections not being freed up
                 try
                 {
-                    using (Stream responseStream = response.Content.ReadAsStreamAsync().Result)
-                    {
-                    }
+                    var responseBytes = response.Content.ReadAsByteArrayAsync().Result;
                 }
                 catch (Exception)
                 {
@@ -265,14 +271,11 @@
                     double[] accumulatedValues = metricAccumulatedValue.Value.ToArray();
 
                     MetricPoint metricPoint = new MetricPoint
-                                                  {
-                                                      Name = metricAccumulatedValue.MetricId,
-                                                      Value =
-                                                          OperationalizedMetric<int>.Aggregate(
-                                                              accumulatedValues,
-                                                              metricAccumulatedValue.AggregationType),
-                                                      Weight = accumulatedValues.Length
-                                                  };
+                    {
+                        Name = metricAccumulatedValue.MetricId,
+                        Value = OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulatedValue.AggregationType),
+                        Weight = accumulatedValues.Length
+                    };
                     metrics.Add(metricPoint);
                 }
                 catch (Exception e)
@@ -288,56 +291,42 @@
         private static IEnumerable<MetricPoint> CreateDefaultMetrics(QuickPulseDataSample sample)
         {
             return new[]
-                       {
-                           new MetricPoint { Name = @"\ApplicationInsights\Requests/Sec",
-                               Value = Round(sample.AIRequestsPerSecond),
-                               Weight = 1 },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Request Duration",
-                                   Value = Round(sample.AIRequestDurationAveInMs),
-                                   Weight = sample.AIRequests
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Requests Failed/Sec",
-                                   Value = Round(sample.AIRequestsFailedPerSecond),
-                                   Weight = 1
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Requests Succeeded/Sec",
-                                   Value = Round(sample.AIRequestsSucceededPerSecond),
-                                   Weight = 1
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Dependency Calls/Sec",
-                                   Value = Round(sample.AIDependencyCallsPerSecond),
-                                   Weight = 1
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Dependency Call Duration",
-                                   Value = Round(sample.AIDependencyCallDurationAveInMs),
-                                   Weight = sample.AIDependencyCalls
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Dependency Calls Failed/Sec",
-                                   Value = Round(sample.AIDependencyCallsFailedPerSecond),
-                                   Weight = 1
-                               },
-                           new MetricPoint
-                               {
-                                   Name = @"\ApplicationInsights\Dependency Calls Succeeded/Sec",
-                                   Value = Round(sample.AIDependencyCallsSucceededPerSecond),
-                                   Weight = 1
-                               },
-                           new MetricPoint { Name = @"\ApplicationInsights\Exceptions/Sec",
-                               Value = Round(sample.AIExceptionsPerSecond),
-                               Weight = 1 }
-                       };
+            {
+                new MetricPoint { Name = @"\ApplicationInsights\Requests/Sec", Value = Round(sample.AIRequestsPerSecond), Weight = 1 },
+                new MetricPoint
+                {
+                    Name = @"\ApplicationInsights\Request Duration",
+                    Value = Round(sample.AIRequestDurationAveInMs),
+                    Weight = sample.AIRequests
+                },
+                new MetricPoint { Name = @"\ApplicationInsights\Requests Failed/Sec", Value = Round(sample.AIRequestsFailedPerSecond), Weight = 1 },
+                new MetricPoint
+                {
+                    Name = @"\ApplicationInsights\Requests Succeeded/Sec",
+                    Value = Round(sample.AIRequestsSucceededPerSecond),
+                    Weight = 1
+                },
+                new MetricPoint { Name = @"\ApplicationInsights\Dependency Calls/Sec", Value = Round(sample.AIDependencyCallsPerSecond), Weight = 1 },
+                new MetricPoint
+                {
+                    Name = @"\ApplicationInsights\Dependency Call Duration",
+                    Value = Round(sample.AIDependencyCallDurationAveInMs),
+                    Weight = sample.AIDependencyCalls
+                },
+                new MetricPoint
+                {
+                    Name = @"\ApplicationInsights\Dependency Calls Failed/Sec",
+                    Value = Round(sample.AIDependencyCallsFailedPerSecond),
+                    Weight = 1
+                },
+                new MetricPoint
+                {
+                    Name = @"\ApplicationInsights\Dependency Calls Succeeded/Sec",
+                    Value = Round(sample.AIDependencyCallsSucceededPerSecond),
+                    Weight = 1
+                },
+                new MetricPoint { Name = @"\ApplicationInsights\Exceptions/Sec", Value = Round(sample.AIExceptionsPerSecond), Weight = 1 }
+            };
         }
 
         private HttpResponseMessage SendRequest(

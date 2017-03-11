@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.Filtering
 {
     using System;
-    using System.Collections.Generic;
 
     /// <summary>
     /// A wrapper around a Metric and its value to make access to the metric's value easier.
