@@ -1,0 +1,190 @@
+namespace Microsoft.ApplicationInsights.DependencyCollector
+{
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.Linq;
+    using System.Net.Http;
+    using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Web.Implementation;
+    using Microsoft.Extensions.DiagnosticAdapter;
+
+    /// <summary>
+    /// Diagnostic listener implementation that listens for events specific to outgoing depedency requests.
+    /// </summary>
+    public class DependencyCollectorDiagnosticListener : IObserver<DiagnosticListener>
+    {
+        /// <summary>
+        /// Add Application Insights Dependency Collector services to this .NET Core application.
+        /// </summary>
+        /// <returns>
+        /// An IDisposable that can be disposed to disable the DependencyCollectorDiagnosticListener.
+        /// </returns>
+        public static IDisposable Enable(TelemetryConfiguration configuration = null)
+        {
+            if (configuration == null)
+            {
+                configuration = TelemetryConfiguration.Active;
+            }
+
+            return DiagnosticListener.AllListeners.Subscribe(new DependencyCollectorDiagnosticListener(configuration));
+        }
+
+        private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
+        private readonly TelemetryClient client;
+        private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
+        private readonly ConcurrentDictionary<Guid, DependencyTelemetry> pendingTelemetry = new ConcurrentDictionary<Guid, DependencyTelemetry>();
+
+        internal DependencyCollectorDiagnosticListener(TelemetryConfiguration configuration, ICorrelationIdLookupHelper correlationIdLookupHelper = null)
+        {
+            this.client = new TelemetryClient(configuration);
+            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rddf");
+
+            this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
+
+            if (correlationIdLookupHelper == null)
+            {
+                correlationIdLookupHelper = new CorrelationIdLookupHelper(configuration.TelemetryChannel.EndpointAddress);
+            }
+            this.correlationIdLookupHelper = correlationIdLookupHelper;
+        }
+
+        /// <summary>
+        /// This method gets called once for each existing DiagnosticListener when this
+        /// DiagnosticListener is added (<see cref="Enable(TelemetryConfiguration)"/> to the list
+        /// of DiagnosticListeners (<see cref="System.Diagnostics.DiagnosticListener.AllListeners"/>).
+        /// This method will also be called for each subsequent DiagnosticListener that is added to
+        /// the list of DiagnosticListeners.
+        /// <seealso cref="IObserver{T}.OnNext(T)"/>
+        /// </summary>
+        /// <param name="value">The DiagnosticListener that exists when this listener was added to
+        /// the list, or a DiagnosticListener that got added after this listener was added.</param>
+        public void OnNext(DiagnosticListener value)
+        {
+            // Comes from https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandlerLoggingStrings.cs#L12
+            if (value.Name == "HttpHandlerDiagnosticListener")
+            {
+                value.SubscribeWithAdapter(this);
+            }
+        }
+
+        /// <summary>
+        /// Notifies the observer that the provider has finished sending push-based notifications.
+        /// <seealso cref="IObserver{T}.OnCompleted()"/>
+        /// </summary>
+        public void OnCompleted()
+        {
+        }
+
+        /// <summary>
+        /// Notifies the observer that the provider has experienced an error condition.
+        /// <seealso cref="IObserver{T}.OnError(Exception)"/>
+        /// </summary>
+        /// <param name="error">An object that provides additional information about the error.</param>
+        public void OnError(Exception error)
+        {
+        }
+
+        /// <summary>
+        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
+        /// </summary>
+        internal IEnumerable<DependencyTelemetry> PendingDependencyTelemetry
+        {
+            get { return pendingTelemetry.Values; }
+        }
+
+        /// <summary>
+        /// Diagnostic event handler method for 'System.Net.Http.Request' event.
+        /// </summary>
+        [DiagnosticName("System.Net.Http.Request")]
+        public void OnRequest(HttpRequestMessage request, Guid loggingRequestId)
+        {
+            if (request != null && request.RequestUri != null && !this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri.ToString()))
+            {
+                string httpMethod = request.Method.Method;
+                Uri requestUri = request.RequestUri;
+                string resourceName = requestUri.AbsolutePath;
+                if (!string.IsNullOrEmpty(httpMethod))
+                {
+                    resourceName = httpMethod + " " + resourceName;
+                }
+
+                DependencyTelemetry telemetry = new DependencyTelemetry();
+                this.client.Initialize(telemetry);
+                telemetry.Start();
+                telemetry.Name = resourceName;
+                telemetry.Target = requestUri.Host;
+                telemetry.Type = "Http";
+                telemetry.Data = requestUri.OriginalString;
+                this.pendingTelemetry.TryAdd(loggingRequestId, telemetry);
+
+                if (!request.Headers.Contains(RequestResponseHeaders.RequestContextSourceKey))
+                {
+                    string sourceApplicationId;
+                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
+                    {
+                        request.Headers.Add(RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                    }
+                }
+
+                // Add the root ID
+                string rootId = telemetry.Context.Operation.Id;
+                if (!string.IsNullOrEmpty(rootId) && !request.Headers.Contains(RequestResponseHeaders.StandardRootIdHeader))
+                {
+                    request.Headers.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
+                }
+
+                // Add the parent ID
+                string parentId = telemetry.Id;
+                if (!string.IsNullOrEmpty(parentId) && !request.Headers.Contains(RequestResponseHeaders.StandardParentIdHeader))
+                {
+                    request.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Diagnostic event handler method for 'System.Net.Http.Response' event. Even in the case of an exception, this will still be called.
+        /// See https://github.com/dotnet/corefx/blob/master/src/System.Net.Http/src/System/Net/Http/DiagnosticsHandler.cs#L71 for more information.
+        /// </summary>
+        [DiagnosticName("System.Net.Http.Response")]
+        public void OnResponse(HttpResponseMessage response, Guid loggingRequestId)
+        {
+            if (response != null)
+            {
+                DependencyTelemetry telemetry;
+                if (this.pendingTelemetry.TryRemove(loggingRequestId, out telemetry))
+                {
+                    if (response.Headers.Contains(RequestResponseHeaders.RequestContextTargetKey))
+                    {
+                        string targetApplicationId = response.Headers.GetValues(RequestResponseHeaders.RequestContextTargetKey).SingleOrDefault();
+                        if (!string.IsNullOrEmpty(targetApplicationId))
+                        {
+                            // We only add the cross component correlation key if the key does not represent the current component.
+                            string sourceApplicationId;
+                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
+                                targetApplicationId != sourceApplicationId)
+                            {
+                                telemetry.Type = "Application Insights";
+                                telemetry.Target += " | " + targetApplicationId;
+                            }
+                        }
+                    }
+
+                    int statusCode = (int)response.StatusCode;
+                    telemetry.ResultCode = (0 < statusCode) ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
+                    telemetry.Success = (0 < statusCode) && (statusCode < 400);
+
+                    telemetry.Stop();
+                    this.client.Track(telemetry);
+                }
+            }
+        }
+    }
+}
