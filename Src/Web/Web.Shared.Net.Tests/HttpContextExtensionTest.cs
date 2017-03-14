@@ -25,11 +25,9 @@
         [TestMethod]
         public void GetRequestTelemetryReturnsRequestTelemetryFromItems()
         {
-            var expected = new RequestTelemetry();
-
             var context = HttpModuleHelper.GetFakeHttpContext();
-            context.Items.Add(RequestTrackingConstants.RequestTelemetryItemName, expected);
-            
+            var expected = context.CreateRequestTelemetryPrivate();
+         
             var actual = context.GetRequestTelemetry();
 
             Assert.AreSame(expected, actual);

@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.Web
+﻿using Microsoft.ApplicationInsights.Web.Implementation;
+
+namespace Microsoft.ApplicationInsights.Web
 {
     using System.Collections.Generic;
     using System.Web;
@@ -99,7 +101,6 @@
                 {
                     { "User-Agent", userAgent }
                 });
-
             source.Filters = this.botSubstrings;
 
             source.Initialize(eventTelemetry);
@@ -114,6 +115,12 @@
             public TestableSyntheticUserAgentTelemetryInitializer(IDictionary<string, string> headers = null)
             {
                 this.fakeContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                this.fakeContext.CreateRequestTelemetryPrivate();
+            }
+
+            public HttpContext FakeContext
+            {
+                get { return this.fakeContext; }
             }
 
             protected override HttpContext ResolvePlatformContext()

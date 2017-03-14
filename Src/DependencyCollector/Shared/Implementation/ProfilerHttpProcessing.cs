@@ -14,7 +14,6 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the calls backs
@@ -59,7 +58,7 @@
             // Since dependencySource is no longer set, sdk version is prepended with information which can identify whether RDD was collected by profiler/framework
             // For directly using TrackDependency(), version will be simply what is set by core
             string prefix = "rdd" + RddSource.Profiler + ":";
-            this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion(prefix);
+            this.telemetryClient.Context.GetInternalContext().SdkVersion = Web.Implementation.SdkVersionUtils.GetSdkVersion(prefix);
             if (!string.IsNullOrEmpty(agentVersion))
             {
                 this.telemetryClient.Context.GetInternalContext().AgentVersion = agentVersion;
@@ -278,7 +277,6 @@
                 bool isCustomCreated = false;
 
                 var telemetry = ClientServerDependencyTracker.BeginTracking(this.telemetryClient);
-
                 telemetry.Name = resourceName;
                 telemetry.Target = DependencyTargetNameHelper.GetDependencyTargetName(url);
                 telemetry.Type = RemoteDependencyConstants.HTTP;
@@ -323,9 +321,29 @@
 
                     // Add the parent ID
                     var parentId = telemetry.Id;
-                    if (!string.IsNullOrEmpty(parentId) && webRequest.Headers[RequestResponseHeaders.StandardParentIdHeader] == null)
+                    if (!string.IsNullOrEmpty(parentId))
                     {
-                        webRequest.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                        if (webRequest.Headers[RequestResponseHeaders.StandardParentIdHeader] == null)
+                        {
+                            webRequest.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                        }
+
+                        if (webRequest.Headers[RequestResponseHeaders.RequestIdHeader] == null)
+                        {
+                            webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);
+                        }
+
+                        if (webRequest.Headers[RequestResponseHeaders.CorrelationContextHeader] == null)
+                        {
+                            //TODO:
+                            /*if (telemetry.Context.CorrelationContext != null &&
+                                telemetry.Context.CorrelationContext.Count > 0)
+                            {
+                                webRequest.Headers.SetHeaderFromNameValueCollection(
+                                    RequestResponseHeaders.CorrelationContextHeader,
+                                    telemetry.Context.CorrelationContext);
+                            }*/
+                        }
                     }
                 }
             }

@@ -1,7 +1,7 @@
 ﻿namespace System.Web
 {
-    using System.Web;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
@@ -21,7 +21,17 @@
                 return null;
             }
 
-            return context.Items[RequestTrackingConstants.RequestTelemetryItemName] as RequestTelemetry;
+            var requestTelemetry = context.Items[RequestTrackingConstants.RequestTelemetryItemName] as RequestTelemetry;
+
+/*            if (requestTelemetry == null)
+            {
+                var operation =
+                    context.Items[RequestTrackingConstants.OperationItemName] as IOperationHolder<RequestTelemetry>;
+
+                return operation?.Telemetry;
+            }*/
+
+            return requestTelemetry;
         }
     }
 }

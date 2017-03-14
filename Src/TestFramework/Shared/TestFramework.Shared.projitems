@@ -20,6 +20,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)StubTelemetryInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StubTransmission.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TaskExceptionObserver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TelemetryContextExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TestEventListener.cs" />
   </ItemGroup>
 </Project>
