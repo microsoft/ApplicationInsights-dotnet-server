@@ -39,14 +39,14 @@
       <DisableLocalReleaseNuget Condition="'$(DisableLocalReleaseNuget)' == ''">false</DisableLocalReleaseNuget>
     </PropertyGroup>
 
-    <!--<Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
-    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>-->
+    <Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
+    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Disable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>
 
     <Exec Command='IF EXIST "$(SolutionToBuild)" nuget.exe restore "$(SolutionToBuild)" -NonInteractive' ContinueOnError="ErrorAndStop"/>
 
     <MSBuild Projects="$(SolutionToBuild)" ContinueOnError="ErrorAndStop"/>
 
-    <!--<Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
-    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>-->
+    <Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
+    <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>
   </Target>
 </Project>
