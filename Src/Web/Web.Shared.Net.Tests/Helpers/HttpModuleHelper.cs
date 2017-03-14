@@ -86,11 +86,11 @@
             return httpContext;
         }
 
-        public static HttpContext AddRequestTelemetry(this HttpContext context, RequestTelemetry requestTelemetry)
+        /*public static HttpContext AddRequestTelemetry(this HttpContext context, RequestTelemetry requestTelemetry)
         {
-            context.Items["Microsoft.ApplicationInsights.RequestTelemetry"] = requestTelemetry;
+            context.Items["Microsoft.ApplicationInsights.RequestTelemetry"] = new TestOperationHolder(requestTelemetry);
             return context;
-        }
+        }*/
 
         public static HttpContext AddRequestCookie(this HttpContext context, HttpCookie cookie)
         {

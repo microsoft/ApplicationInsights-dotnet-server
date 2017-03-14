@@ -45,33 +45,29 @@
             OperationContext parentContext = requestTelemetry.Context.Operation;
             HttpRequest currentRequest = platformContext.Request;
 
-            // Make sure that RequestTelemetry is initialized.
-            if (string.IsNullOrEmpty(parentContext.ParentId))
-            {
-                if (!string.IsNullOrWhiteSpace(this.ParentOperationIdHeaderName))
-                {
-                    var parentId = currentRequest.UnvalidatedGetHeader(this.ParentOperationIdHeaderName);
-                    if (!string.IsNullOrEmpty(parentId))
-                    {
-                        parentContext.ParentId = parentId;
-                    }
-                }
-            }
-
+            //We either have both root Id and parent Id or just rootId.
+            //having single parentId is inconsistent and invalid and we'll update it.
             if (string.IsNullOrEmpty(parentContext.Id))
             {
-                if (!string.IsNullOrWhiteSpace(this.RootOperationIdHeaderName))
+                string rootId, parentId, requestId;
+                if (
+                    TryParseStandardHeader(requestTelemetry, currentRequest, out rootId, out parentId,
+                        out requestId) ||
+                    TryParseCustomHeaders(requestTelemetry, currentRequest, out rootId, out parentId,
+                        out requestId))
                 {
-                    var rootId = currentRequest.UnvalidatedGetHeader(this.RootOperationIdHeaderName);
-                    if (!string.IsNullOrEmpty(rootId))
-                    {
-                        parentContext.Id = rootId;
-                    }
+                    //we managed to get something from headers
+                    requestTelemetry.Context.Operation.Id = rootId;
+                    requestTelemetry.Context.Operation.ParentId = parentId;
+                    requestTelemetry.Id = requestId;
                 }
-
-                if (string.IsNullOrEmpty(parentContext.Id))
+                else
                 {
-                    parentContext.Id = requestTelemetry.Id;
+                    //there was nothing in the headers.
+                    //Since ActivityAPI is not available on NET 4.5, we mimic it't behavior
+                    //TODO: move Id generation to Base SDK
+                    requestTelemetry.Id = AppInsightsActivity.GenerateNewId();
+                    requestTelemetry.Context.Operation.Id = AppInsightsActivity.GetRootId(requestTelemetry.Id);
                 }
             }
 
@@ -87,6 +83,49 @@
                     telemetry.Context.Operation.Id = parentContext.Id;
                 }
             }
+        }
+        private bool TryParseStandardHeader(
+            RequestTelemetry telemetry,
+            HttpRequest request,
+            out string rootId,
+            out string parentId,
+            out string requestId)
+        {
+            parentId = request.UnvalidatedGetHeader(RequestResponseHeaders.RequestIdHeader);
+            if (!string.IsNullOrEmpty(parentId))
+            {
+                rootId = AppInsightsActivity.GetRootId(parentId);
+                requestId = AppInsightsActivity.GenerateRequestId(parentId, telemetry.Id);
+                //TODO: Correlation-Context
+                return true;
+            }
+            rootId = null;
+            requestId = null;
+            return false;
+        }
+
+        private bool TryParseCustomHeaders(
+            RequestTelemetry telemetry,
+            HttpRequest request,
+            out string rootId,
+            out string parentId,
+            out string requestId)
+        {
+            parentId = request.UnvalidatedGetHeader(this.ParentOperationIdHeaderName);
+            rootId = request.UnvalidatedGetHeader(this.RootOperationIdHeaderName);
+            if (!string.IsNullOrEmpty(rootId))
+            {
+                requestId = AppInsightsActivity.GenerateRequestId(rootId, telemetry.Id);
+                return true;
+            }
+            if (!string.IsNullOrEmpty(parentId))
+            {
+                requestId = AppInsightsActivity.GenerateRequestId(parentId, telemetry.Id);
+                return true;
+            }
+
+            requestId = null;
+            return false;
         }
     }
 }

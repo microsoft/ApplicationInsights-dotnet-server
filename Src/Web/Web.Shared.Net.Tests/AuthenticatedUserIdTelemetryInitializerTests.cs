@@ -1,7 +1,5 @@
 ﻿namespace Microsoft.ApplicationInsights.Web
 {
-    using System;
-    using System.Globalization;
     using System.Web;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Web.Helpers;
@@ -33,7 +31,7 @@
             // Arrange
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableAuthenticatedUserIdTelemetryInitializer();
-            RequestTelemetry requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            RequestTelemetry requestTelemetry = source.Telemetry;
             requestTelemetry.Context.User.AuthenticatedUserId = "1";
 
             // Act
@@ -49,7 +47,7 @@
             // Arrange
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableAuthenticatedUserIdTelemetryInitializer();
-            RequestTelemetry requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            RequestTelemetry requestTelemetry = source.Telemetry;
             requestTelemetry.Context.User.AuthenticatedUserId = "1";
             eventTelemetry.Context.User.AuthenticatedUserId = "2";
 
@@ -153,10 +151,21 @@
         private class TestableAuthenticatedUserIdTelemetryInitializer : AuthenticatedUserIdTelemetryInitializer
         {
             private readonly HttpContext fakeContext = HttpModuleHelper.GetFakeHttpContext();
+            private readonly RequestTelemetry telemetry;
+
+            public TestableAuthenticatedUserIdTelemetryInitializer()
+            {
+                telemetry = fakeContext.SetOperationHolder().Telemetry;
+            }
 
             public HttpContext FakeContext
             {
                 get { return this.fakeContext; }
+            }
+
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
             }
 
             protected override HttpContext ResolvePlatformContext()

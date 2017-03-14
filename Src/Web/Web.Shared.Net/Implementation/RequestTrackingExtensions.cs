@@ -1,49 +1,62 @@
 ﻿namespace Microsoft.ApplicationInsights.Web.Implementation
 {
     using System;
-    using System.Globalization;
     using System.Linq;
     using System.Web;
-    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility;
 
     internal static class RequestTrackingExtensions
     {
-        internal static RequestTelemetry CreateRequestTelemetryPrivate(
-            this HttpContext platformContext)
+        internal static IOperationHolder<RequestTelemetry> StartOperationPrivate(
+            this HttpContext platformContext, TelemetryClient client)
         {
             if (platformContext == null)
             {
                 throw new ArgumentException("platformContext");
             }
 
-            var result = new RequestTelemetry();
-            result.GenerateOperationId();
+            RequestTelemetry requestTelemetry = new RequestTelemetry
+            {
+                Name = platformContext.CreateRequestNamePrivate()
+            };
 
+            var result = client.StartOperation(requestTelemetry);
             platformContext.Items.Add(RequestTrackingConstants.RequestTelemetryItemName, result);
             WebEventSource.Log.WebTelemetryModuleRequestTelemetryCreated();
 
             return result;
         }
 
-        internal static RequestTelemetry ReadOrCreateRequestTelemetryPrivate(
-            this HttpContext platformContext)
+        internal static IOperationHolder<RequestTelemetry> ReadOrStartOperationPrivate(
+            this HttpContext platformContext, TelemetryClient client)
         {
             if (platformContext == null)
             {
                 throw new ArgumentException("platformContext");
             }
 
-            var result = platformContext.GetRequestTelemetry() ??
-                         CreateRequestTelemetryPrivate(platformContext);
+            var result = platformContext.GetOperation() ??
+                         platformContext.StartOperationPrivate(client);
 
             return result;
         }
 
-        /// <summary>
-        /// Creates request name on the base of HttpContext.
-        /// </summary>
-        /// <returns>Controller/Action for MVC or path for other cases.</returns>
+        internal static IOperationHolder<RequestTelemetry> GetOperation(this HttpContext context)
+        {
+            if (context == null)
+            {
+                return null;
+            }
+
+            if (!context.Items.Contains(RequestTrackingConstants.RequestTelemetryItemName))
+            {
+                return null;
+            }
+
+            return context.Items[RequestTrackingConstants.RequestTelemetryItemName] as IOperationHolder<RequestTelemetry>;
+        }
+
         internal static string CreateRequestNamePrivate(this HttpContext platformContext)
         {
             var request = platformContext.Request;
@@ -56,7 +69,7 @@
 
                 if (routeValues != null && routeValues.Count > 0)
                 {
-                    object controller;                    
+                    object controller;
                     routeValues.TryGetValue("controller", out controller);
                     string controllerString = (controller == null) ? string.Empty : controller.ToString();
 

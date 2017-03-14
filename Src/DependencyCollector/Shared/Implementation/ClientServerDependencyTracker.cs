@@ -2,8 +2,10 @@
 {
     using System;
     using System.Data.SqlClient;
+    using System.Diagnostics;
     using System.Net;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Common;
 
     internal static class ClientServerDependencyTracker
     {
@@ -21,6 +23,11 @@
             var telemetry = new DependencyTelemetry();
             telemetry.Start();
             telemetryClient.Initialize(telemetry);
+
+            //TODO: move Id generation to Base SDK
+            telemetry.Id = AppInsightsActivity.GenerateDependencyId(telemetry.Context.Operation.ParentId, telemetry.Id);
+
+            Debug.WriteLine($"dependency id {telemetry.Id} parent { telemetry.Context.Operation.ParentId}, root {telemetry.Context.Operation.Id}");
             PretendProfilerIsAttached = false;
             return telemetry;
         }

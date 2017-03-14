@@ -7,6 +7,7 @@
 
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -79,14 +80,33 @@
                 return;
             }
 
-            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
+            var operation = context.ReadOrStartOperationPrivate(telemetryClient);
 
             // NB! Whatever is saved in RequestTelemetry on Begin is not guaranteed to be sent because Begin may not be called; Keep it in context
             // In WCF there will be 2 Begins and 1 End. We need time from the first one
-            if (requestTelemetry.Timestamp == DateTimeOffset.MinValue)
+            if (operation.Telemetry.Timestamp == DateTimeOffset.MinValue)
             {
-                requestTelemetry.Start();
+                operation.Telemetry.Start();
             }
+        }
+
+        /// <summary>
+        /// Implements on begin callback of http module.
+        /// </summary>
+        public void OnPreRequestHandlerExecute(HttpContext context)
+        {
+            if (this.telemetryClient == null)
+            {
+                throw new InvalidOperationException("Initialize has not been called on this module yet.");
+            }
+
+            if (context == null)
+            {
+                WebEventSource.Log.NoHttpContextWarning();
+                return;
+            }
+
+            //TODO: retore execution context
         }
 
         /// <summary>
@@ -104,8 +124,8 @@
                 return;
             }
 
-            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
-            requestTelemetry.Stop();
+            var operation = context.ReadOrStartOperationPrivate(telemetryClient);
+            RequestTelemetry requestTelemetry = operation.Telemetry;
 
             // Success will be set in Sanitize on the base of ResponseCode 
             if (string.IsNullOrEmpty(requestTelemetry.ResponseCode))
@@ -117,6 +137,7 @@
             {
                 requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
             }
+
 
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
@@ -157,8 +178,7 @@
                     requestTelemetry.Source = sourceAppId;
                 }
             }
-
-            this.telemetryClient.TrackRequest(requestTelemetry);
+            telemetryClient.StopOperation(operation);
         }
 
         /// <summary>

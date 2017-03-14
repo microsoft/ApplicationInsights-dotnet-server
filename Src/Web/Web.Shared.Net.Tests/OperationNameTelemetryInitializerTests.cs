@@ -94,8 +94,6 @@
         {
             var requestTelemetry = CreateRequestTelemetry();
             var source = new TestableOperationNameTelemetryInitializer();
-            source.FakeContext.CreateRequestTelemetryPrivate();
-
             source.Initialize(requestTelemetry);
 
             Assert.AreEqual("GET " + HttpModuleHelper.UrlPath, requestTelemetry.Name);
@@ -105,9 +103,7 @@
         public void InitializeSetsRequestOperationName()
         {
             var requestTelemetry = CreateRequestTelemetry();
-            var source = new TestableOperationNameTelemetryInitializer();
-            source.FakeContext.CreateRequestTelemetryPrivate();
-            
+            var source = new TestableOperationNameTelemetryInitializer(requestTelemetry);
             source.Initialize(requestTelemetry);
 
             Assert.AreEqual("GET " + HttpModuleHelper.UrlPath, requestTelemetry.Context.Operation.Name);
@@ -117,7 +113,7 @@
         public void InitializeSetsCustomerRequestOperationNameFromContextIfRootRequestNameIsEmpty()
         {
             var source = new TestableOperationNameTelemetryInitializer();
-            var rootRequest = source.FakeContext.CreateRequestTelemetryPrivate();
+            var rootRequest = source.Telemetry;
             Assert.AreEqual(string.Empty, rootRequest.Name);
             RequestTelemetry customerRequestTelemetry = new RequestTelemetry();
 
@@ -130,7 +126,7 @@
         public void InitializeSetsCustomerRequestOperationNameFromRequestIfRequestNameIsNotEmpty()
         {
             var source = new TestableOperationNameTelemetryInitializer();
-            var rootRequest = source.FakeContext.CreateRequestTelemetryPrivate();
+            var rootRequest = source.Telemetry;
             rootRequest.Name = "Test";
             RequestTelemetry customerRequestTelemetry = new RequestTelemetry();
 
@@ -142,9 +138,8 @@
         [TestMethod]
         public void InitializeDoesNotOverrideCustomerRequestName()
         {
-            var source = new TestableOperationNameTelemetryInitializer();
-            source.FakeContext.CreateRequestTelemetryPrivate();
             RequestTelemetry customerRequestTelemetry = new RequestTelemetry("name", DateTimeOffset.UtcNow, TimeSpan.FromSeconds(42), "404", true);
+            var source = new TestableOperationNameTelemetryInitializer();
 
             source.Initialize(customerRequestTelemetry);
 
@@ -155,7 +150,6 @@
         public void InitializeDoesNotOverrideCustomerOperationName()
         {
             var source = new TestableOperationNameTelemetryInitializer();
-            source.FakeContext.CreateRequestTelemetryPrivate();
             var customerTelemetry = new TraceTelemetry("Text");
             customerTelemetry.Context.Operation.Name = "Name";
 
@@ -169,7 +163,6 @@
         {
             var exceptionTelemetry = CreateExceptionTelemetry();
             var source = new TestableOperationNameTelemetryInitializer();
-            source.FakeContext.CreateRequestTelemetryPrivate();
 
             source.Initialize(exceptionTelemetry);
 
@@ -181,7 +174,7 @@
         {
             var telemetry = CreateRequestTelemetry();
 
-            var source = new TestableOperationNameTelemetryInitializer();
+            var source = new TestableOperationNameTelemetryInitializer(telemetry);
             source.Initialize(telemetry);
 
             Assert.AreEqual("GET " + HttpModuleHelper.UrlPath, telemetry.Context.Operation.Name);
@@ -228,6 +221,17 @@
         private class TestableOperationNameTelemetryInitializer : OperationNameTelemetryInitializer
         {
             private readonly HttpContext fakeContext = HttpModuleHelper.GetFakeHttpContext();
+            private readonly RequestTelemetry telemetry;
+
+            public TestableOperationNameTelemetryInitializer(RequestTelemetry requestTelemetry = null)
+            {
+                telemetry = fakeContext.SetOperationHolder(requestTelemetry).Telemetry;
+            }
+
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
+            }
 
             public HttpContext FakeContext
             {

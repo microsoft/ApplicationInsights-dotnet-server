@@ -69,7 +69,7 @@
         public void InitializeSetsLocationIpOfRequestToUserHostAddressIfNoHeadersInRequest()
         {
             var module = new TestableClientIpHeaderTelemetryInitializer();
-            var requestTelemetry = module.PlatformContext.CreateRequestTelemetryPrivate();
+            var requestTelemetry = module.Telemetry;
             
             module.Initialize(new EventTelemetry());
 
@@ -93,7 +93,7 @@
         {
             var dictionary = new Dictionary<string, string> { { "X-Forwarded-For", "1.2.3.4" } };
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
-            var requestTelemetry = module.PlatformContext.CreateRequestTelemetryPrivate();
+            var requestTelemetry = module.Telemetry;
             
             module.Initialize(new TraceTelemetry("trace"));
 
@@ -128,7 +128,7 @@
         {
             var dictionary = new Dictionary<string, string> { { "X-Forwarded-For", "bad" } };
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
-            var telemetry = new RequestTelemetry();
+            var telemetry = module.Telemetry;
 
             module.Initialize(telemetry);
 
@@ -140,6 +140,7 @@
         {
             var dictionary = new Dictionary<string, string> { { "X-Forwarded-For", "1.2.3.4, 2.3.4.5,3.4.5.6" } };
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
+
             var telemetry = new EventTelemetry();
 
             module.Initialize(telemetry);
@@ -152,6 +153,7 @@
         {
             var dictionary = new Dictionary<string, string> { { "X-Forwarded-For", "1.2.3.4, 2.3.4.5" } };
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary) { UseFirstIp = false };
+
             var telemetry = new ExceptionTelemetry();
 
             module.Initialize(telemetry);
@@ -170,6 +172,7 @@
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
             module.HeaderNames.Clear();
             module.HeaderNames.Add("CustomHeader");
+
             var telemetry = new EventTelemetry();
 
             module.Initialize(telemetry);
@@ -188,6 +191,7 @@
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
             module.HeaderNames.Add("CustomHeader1");
             module.HeaderNames.Add("CustomHeader2");
+
             var telemetry = new PageViewTelemetry();
 
             module.Initialize(telemetry);
@@ -203,7 +207,7 @@
                 { "X-Forwarded-For", "1.2.3.4;2.3.4.5,3.4.5.6" },
             };
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary) { HeaderValueSeparators = ",;" };
-            var telemetry = new RequestTelemetry();
+            var telemetry = module.Telemetry;
 
             module.Initialize(telemetry);
 
@@ -221,6 +225,7 @@
             var module = new TestableClientIpHeaderTelemetryInitializer(dictionary);
             module.HeaderNames.Add("CustomHeader1");
             module.HeaderNames.Add("CustomHeader2");
+
             var telemetry = new TraceTelemetry("trace");
 
             module.Initialize(telemetry);
@@ -231,15 +236,21 @@
         private class TestableClientIpHeaderTelemetryInitializer : ClientIpHeaderTelemetryInitializer
         {
             private readonly HttpContext platformContext;
+            private readonly RequestTelemetry telemetry;
 
             public TestableClientIpHeaderTelemetryInitializer(IDictionary<string, string> headers = null)
             {
                 this.platformContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                telemetry = PlatformContext.SetOperationHolder().Telemetry;
             }
 
             public HttpContext PlatformContext
             {
                 get { return this.platformContext; }
+            }
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
             }
 
             protected override HttpContext ResolvePlatformContext()

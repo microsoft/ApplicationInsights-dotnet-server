@@ -24,7 +24,7 @@
             var eventTelemetry = new EventTelemetry("name");
 
             var source = new TestableSessionTelemetryInitializer();
-            var context = source.FakeContext.CreateRequestTelemetryPrivate();
+            var context = source.Telemetry;
             
             context.Context.Session.Id = "1";
             source.Initialize(eventTelemetry);
@@ -38,7 +38,7 @@
             var telemetry = new EventTelemetry("name");
 
             var source = new TestableSessionTelemetryInitializer();
-            var context = source.FakeContext.CreateRequestTelemetryPrivate();
+            var context = source.Telemetry;
 
             context.Context.Session.IsFirst = true;
             source.Initialize(telemetry);
@@ -53,7 +53,7 @@
             var eventTelemetry = new EventTelemetry("name");
 
             var source = new TestableSessionTelemetryInitializer();
-            var context = source.FakeContext.CreateRequestTelemetryPrivate();
+            var context = source.Telemetry;
 
             context.Context.Session.Id = "1";
             eventTelemetry.Context.Session.Id = "2";
@@ -68,7 +68,7 @@
             var telemetry = new EventTelemetry("name");
 
             var source = new TestableSessionTelemetryInitializer();
-            var context = source.FakeContext.CreateRequestTelemetryPrivate();
+            var context = source.Telemetry;
 
             context.Context.Session.IsFirst = true;
             telemetry.Context.Session.IsFirst = false;
@@ -82,11 +82,8 @@
         [TestMethod]
         public void NullCookieDoNotInitializeSessionId()
         {
-            var requestTelemetry = new RequestTelemetry();
-
             var initializer = new TestableSessionTelemetryInitializer();
-            initializer.FakeContext
-                .AddRequestTelemetry(requestTelemetry);
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
             
@@ -99,12 +96,10 @@
         [TestMethod]
         public void EmptyCookieDoNotInitializeSessionId()
         {
-            var requestTelemetry = new RequestTelemetry();
-
             var initializer = new TestableSessionTelemetryInitializer();
             initializer.FakeContext
-                .AddRequestCookie(new HttpCookie("ai_session", string.Empty))
-                .AddRequestTelemetry(requestTelemetry);
+                .AddRequestCookie(new HttpCookie("ai_session", string.Empty));
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
 
@@ -117,14 +112,12 @@
         [TestMethod]
         public void SimpleCookieWillInitializeSessionId()
         {
-            var requestTelemetry = new RequestTelemetry();
-
             var initializer = new TestableSessionTelemetryInitializer();
             string now = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
             initializer.FakeContext
-                .AddRequestCookie(new HttpCookie("ai_session", "123|" + now + "|" + now))
-                .AddRequestTelemetry(requestTelemetry);
+                .AddRequestCookie(new HttpCookie("ai_session", "123|" + now + "|" + now));
 
+            var requestTelemetry = initializer.Telemetry;
             var telemetry = new EventTelemetry();
 
             initializer.Initialize(telemetry);
@@ -137,8 +130,16 @@
         {
             private readonly HttpContext fakeContext = HttpModuleHelper.GetFakeHttpContext();
 
-            public TestableSessionTelemetryInitializer()
+            private readonly RequestTelemetry telemetry;
+
+            public TestableSessionTelemetryInitializer(RequestTelemetry requestTelemetry = null)
             {
+                telemetry = fakeContext.SetOperationHolder(requestTelemetry).Telemetry;
+            }
+
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
             }
 
             public HttpContext FakeContext
