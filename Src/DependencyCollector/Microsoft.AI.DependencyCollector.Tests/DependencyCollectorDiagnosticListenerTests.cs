@@ -52,8 +52,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 OnSend = sentTelemetry.Add
             };
 
-            mockCorrelationIdLookupHelper = new MockCorrelationIdLookupHelper();
-            mockCorrelationIdLookupHelper.SetCorrelationId(instrumentationKey, mockAppId);
+            mockCorrelationIdLookupHelper = new MockCorrelationIdLookupHelper(new Dictionary<string, string>()
+            {
+                [instrumentationKey] = mockAppId
+            });
 
             listener = new DependencyCollectorDiagnosticListener(new TelemetryConfiguration()
             {

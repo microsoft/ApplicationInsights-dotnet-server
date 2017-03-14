@@ -5,18 +5,11 @@
 
     internal class MockCorrelationIdLookupHelper : ICorrelationIdLookupHelper
     {
-        private readonly Dictionary<string, string> instrumentationKeyToCorrelationIdMap = new Dictionary<string, string>();
-
-        public void SetCorrelationId(string instrumentationKey, string correlationId)
+        private readonly Dictionary<string, string> instrumentationKeyToCorrelationIdMap;
+        
+        public MockCorrelationIdLookupHelper(Dictionary<string, string> instrumentationKeyToCorrelationIdMap)
         {
-            if (this.instrumentationKeyToCorrelationIdMap.ContainsKey(instrumentationKey))
-            {
-                this.instrumentationKeyToCorrelationIdMap[instrumentationKey] = correlationId;
-            }
-            else
-            {
-                this.instrumentationKeyToCorrelationIdMap.Add(instrumentationKey, correlationId);
-            }
+            this.instrumentationKeyToCorrelationIdMap = instrumentationKeyToCorrelationIdMap;
         }
 
         public bool TryGetXComponentCorrelationId(string instrumentationKey, out string correlationId)
