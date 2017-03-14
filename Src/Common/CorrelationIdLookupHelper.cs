@@ -185,7 +185,7 @@
 #else
                 using (HttpClient client = new HttpClient())
                 {
-                    return await client.GetStringAsync(appIdEndpoint);
+                    return await client.GetStringAsync(appIdEndpoint).ConfigureAwait(false);
                 }
 #endif
             }
