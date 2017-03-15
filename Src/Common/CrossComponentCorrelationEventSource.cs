@@ -1,15 +1,13 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
-    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using System;
-    using System.Globalization;
-
+#if NETCORE || NET45
+    using System.Diagnostics.Tracing;
+#endif
 #if NETCORE
-    using System.Diagnostics.Tracing;
     using System.Reflection;
-#elif NET45
-    using System.Diagnostics.Tracing;
-#elif NET40
+#endif
+#if NET40
     using Microsoft.Diagnostics.Tracing;
 #endif
 
