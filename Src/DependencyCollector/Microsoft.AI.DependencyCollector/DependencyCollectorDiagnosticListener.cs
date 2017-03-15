@@ -128,25 +128,25 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 HttpRequestHeaders requestHeaders = request.Headers;
                 if (requestHeaders != null)
                 {
-                    if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
+                    if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
                     {
                         string sourceApplicationId;
                         if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
                         {
-                            requestHeaders.Add(RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                            SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
                         }
                     }
 
                     // Add the root ID
                     string rootId = telemetry.Context.Operation.Id;
-                    if (!string.IsNullOrEmpty(rootId) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.StandardRootIdHeader))
+                    if (!string.IsNullOrEmpty(rootId) && !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
                     {
                         requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
                     }
 
                     // Add the parent ID
                     string parentId = telemetry.Id;
-                    if (!string.IsNullOrEmpty(parentId) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.StandardParentIdHeader))
+                    if (!string.IsNullOrEmpty(parentId) && !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
                     {
                         requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
                     }
@@ -166,7 +166,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 DependencyTelemetry telemetry;
                 if (this.pendingTelemetry.TryRemove(loggingRequestId, out telemetry))
                 {
-                    string targetApplicationId = GetHeaderValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
+                    string targetApplicationId = GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
                     if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                     {
                         // We only add the cross component correlation key if the key does not represent the current component.
@@ -189,23 +189,47 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             }
         }
 
-        private static string GetHeaderValue(HttpHeaders headers, string headerName)
+        internal static IEnumerable<string> GetHeaderValues(HttpHeaders headers, string headerName)
         {
-            string result = null;
-            if (headers != null)
+            IEnumerable<string> result;
+            if (headers == null || !headers.TryGetValues(headerName, out result))
             {
-                IEnumerable<string> headerValues;
-                if (headers.TryGetValues(headerName, out headerValues))
-                {
-                    result = headerValues.SingleOrDefault();
-                }
+                result = Enumerable.Empty<string>();
             }
             return result;
         }
 
-        private static bool ContainsRequestHeaderValue(HttpHeaders headers, string headerName)
+        internal static string GetHeaderKeyValue(HttpHeaders headers, string headerName, string keyName)
         {
-            return !string.IsNullOrEmpty(GetHeaderValue(headers, headerName));
+            IEnumerable<string> headerValues = GetHeaderValues(headers, headerName);
+            return HeadersExtensions.GetHeaderKeyValue(headerValues, keyName);
+        }
+
+        internal static string GetRequestContextKeyValue(HttpHeaders headers, string keyName)
+        {
+            return GetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName);
+        }
+
+        internal static bool ContainsRequestContextKeyValue(HttpHeaders headers, string keyName)
+        {
+            return !string.IsNullOrEmpty(GetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName));
+        }
+
+        internal static void SetRequestContextKeyValue(HttpHeaders headers, string keyName, string keyValue)
+        {
+            SetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName, keyValue);
+        }
+
+        internal static void SetHeaderKeyValue(HttpHeaders headers, string headerName, string keyName, string keyValue)
+        {
+            if (headers == null)
+            {
+                throw new ArgumentNullException(nameof(headers));
+            }
+
+            IEnumerable<string> headerValues = GetHeaderValues(headers, headerName);
+            headers.Remove(headerName);
+            headers.Add(headerName, HeadersExtensions.SetHeaderKeyValue(headerValues, keyName, keyValue));
         }
     }
 }

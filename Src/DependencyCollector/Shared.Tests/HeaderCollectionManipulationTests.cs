@@ -1,14 +1,11 @@
 ﻿namespace Microsoft.ApplicationInsights.DependencyCollector
 {
-    using System;
-    using System.Collections.Generic;
     using System.Net;
-    using System.Text;
-    using Common;
+    using Microsoft.ApplicationInsights.Common;
     using VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class HeaderCollectionManupilationTests
+    public class HeaderCollectionManipulationTests
     {
         /// <summary>
         /// Ensures that the GetNameValueHeaderValue extension methods works as expected.

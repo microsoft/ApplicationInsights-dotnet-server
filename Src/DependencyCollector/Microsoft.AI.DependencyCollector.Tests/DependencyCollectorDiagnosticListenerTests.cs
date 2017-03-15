@@ -11,6 +11,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Http.Headers;
 
     /// <summary>
     /// Unit tests for DependencyCollectorDiagnosticListener.
@@ -94,16 +95,21 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual("", telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
 
-            Assert.AreEqual(mockAppId, GetRequestHeaderValues(request, RequestResponseHeaders.RequestContextSourceKey).SingleOrDefault());
-            Assert.IsFalse(GetRequestHeaderValues(request, RequestResponseHeaders.StandardRootIdHeader).Any());
-            Assert.IsTrue(GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Any());
+            Assert.AreEqual(mockAppId, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextSourceKey));
+            Assert.AreEqual(null, GetRequestContextKeyValue(request, RequestResponseHeaders.StandardRootIdHeader));
+            Assert.IsFalse(string.IsNullOrEmpty(GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).SingleOrDefault()));
 
             Assert.AreEqual(0, sentTelemetry.Count);
         }
 
         private static IEnumerable<string> GetRequestHeaderValues(HttpRequestMessage request, string headerName)
         {
-            return request != null && request.Headers != null && request.Headers.Contains(headerName) ? request.Headers.GetValues(headerName) : Enumerable.Empty<string>();
+            return DependencyCollectorDiagnosticListener.GetHeaderValues(request.Headers, headerName);
+        }
+
+        private static string GetRequestContextKeyValue(HttpRequestMessage request, string keyName)
+        {
+            return DependencyCollectorDiagnosticListener.GetRequestContextKeyValue(request.Headers, keyName);
         }
 
         /// <summary>
@@ -251,7 +257,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
             string targetApplicationId = mockAppId2;
-            response.Headers.Add(RequestResponseHeaders.RequestContextTargetKey, targetApplicationId);
+            DependencyCollectorDiagnosticListener.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey, targetApplicationId);
 
             listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
@@ -282,7 +288,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.NotFound);
             string targetApplicationId = mockAppId2;
-            response.Headers.Add(RequestResponseHeaders.RequestContextTargetKey, mockAppId2);
+            DependencyCollectorDiagnosticListener.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey, targetApplicationId);
 
             listener.OnResponse(response, loggingRequestId);
             Assert.AreEqual(0, listener.PendingDependencyTelemetry.Count());
@@ -293,6 +299,178 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(notFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderValues() returns an empty IEnumerable when the headers argument is null.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderValuesWithNullHeaders()
+        {
+            EnumerableAssert.AreEqual(Enumerable.Empty<string>(), DependencyCollectorDiagnosticListener.GetHeaderValues(null, "MOCK_HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderValues() returns an empty IEnumerable when the headers argument is empty.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderValuesWithEmptyHeaders()
+        {
+            HttpHeaders headers = CreateHeaders();
+            EnumerableAssert.AreEqual(Enumerable.Empty<string>(), DependencyCollectorDiagnosticListener.GetHeaderValues(headers, "MOCK_HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderValues() returns an IEnumerable that contains the key value when the headers argument contains the key name.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderValuesWithMatchingHeader()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("MOCK_HEADER_NAME", "MOCK_HEADER_VALUE");
+            EnumerableAssert.AreEqual(new[] { "MOCK_HEADER_VALUE" }, DependencyCollectorDiagnosticListener.GetHeaderValues(headers, "MOCK_HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderValues() returns an IEnumerable that contains all of the values when the headers argument contains multiple values for the key name.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderValuesWithMultipleMatchingHeaders()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("MOCK_HEADER_NAME", "A");
+            headers.Add("MOCK_HEADER_NAME", "B");
+            headers.Add("MOCK_HEADER_NAME", "C");
+            EnumerableAssert.AreEqual(new[] { "A", "B", "C" }, DependencyCollectorDiagnosticListener.GetHeaderValues(headers, "MOCK_HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderKeyValue() returns null when the headers argument is null.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderKeyValuesWithNullHeaders()
+        {
+            Assert.AreEqual(null, DependencyCollectorDiagnosticListener.GetHeaderKeyValue(null, "HEADER_NAME", "KEY_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderKeyValue() returns null when the headers argument is empty.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderKeyValuesWithEmptyHeaders()
+        {
+            HttpHeaders headers = CreateHeaders();
+            Assert.AreEqual(null, DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderKeyValue() returns key value when the headers argument contains header key name.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderKeyValuesWithMatchingHeader()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "KEY_NAME=KEY_VALUE");
+            Assert.AreEqual("KEY_VALUE", DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderKeyValue() returns first key value when the headers argument contains multiple key name/value pairs for header name.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderKeyValuesWithMultipleMatchingHeaderNamesButOnlyOneMatchingKeyName()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "A=a");
+            headers.Add("HEADER_NAME", "B=b");
+            headers.Add("HEADER_NAME", "C=c");
+            Assert.AreEqual("b", DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "B"));
+        }
+
+        /// <summary>
+        /// Ensure that GetHeaderKeyValue() returns first key value when the headers argument contains multiple key values for the key name.
+        /// </summary>
+        [TestMethod]
+        public void GetHeaderKeyValuesWithMultipleMatchingHeaderNamesAndMultipleMatchingKeyNames()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "A=a");
+            headers.Add("HEADER_NAME", "B=b");
+            headers.Add("HEADER_NAME", "C=c1");
+            headers.Add("HEADER_NAME", "C=c2");
+            Assert.AreEqual("c1", DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "C"));
+        }
+
+        /// <summary>
+        /// Ensure that SetHeaderKeyValue() throws an ArgumentNullException when headers is null.
+        /// </summary>
+        [TestMethod]
+        public void SetHeaderKeyValueWithNullHeaders()
+        {
+            Assert.ThrowsException<ArgumentNullException>(() => DependencyCollectorDiagnosticListener.SetHeaderKeyValue(null, "HEADER_NAME", "KEY_NAME", "KEY_VALUE"));
+        }
+
+        /// <summary>
+        /// Ensure that SetHeaderKeyValue() sets the proper key value when the headers argument is empty.
+        /// </summary>
+        [TestMethod]
+        public void SetHeaderKeyValueWithEmptyHeaders()
+        {
+            HttpHeaders headers = CreateHeaders();
+            DependencyCollectorDiagnosticListener.SetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME", "KEY_VALUE");
+            Assert.AreEqual("KEY_VALUE", DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that SetHeaderKeyValue() overwrites an existing key value.
+        /// </summary>
+        [TestMethod]
+        public void SetHeaderKeyValueWithMatchingHeader()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "KEY_NAME=KEY_VALUE1");
+            DependencyCollectorDiagnosticListener.SetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME", "KEY_VALUE2");
+            Assert.AreEqual("KEY_VALUE2", DependencyCollectorDiagnosticListener.GetHeaderKeyValue(headers, "HEADER_NAME", "KEY_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that SetHeaderKeyValue() overwrites an existing key value when multiple key name/value pairs exist for a single header.
+        /// </summary>
+        [TestMethod]
+        public void SetHeaderKeyValueWithMultipleMatchingHeaderNamesButOnlyOneMatchingKeyName()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "A=a1");
+            headers.Add("HEADER_NAME", "B=b1");
+            headers.Add("HEADER_NAME", "C=c1");
+            DependencyCollectorDiagnosticListener.SetHeaderKeyValue(headers, "HEADER_NAME", "B", "b2");
+            EnumerableAssert.AreEqual(new[] { "A=a1, B=b2, C=c1" }, DependencyCollectorDiagnosticListener.GetHeaderValues(headers, "HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Ensure that SetHeaderKeyValue() overwrites all existing key values.
+        /// </summary>
+        [TestMethod]
+        public void SetHeaderKeyValueWithMultipleMatchingHeaderNamesAndMultipleMatchingKeyNames()
+        {
+            HttpHeaders headers = CreateHeaders();
+            headers.Add("HEADER_NAME", "A=a");
+            headers.Add("HEADER_NAME", "B=b");
+            headers.Add("HEADER_NAME", "C=c1");
+            headers.Add("HEADER_NAME", "C=c2");
+            DependencyCollectorDiagnosticListener.SetHeaderKeyValue(headers, "HEADER_NAME", "C", "c3");
+            EnumerableAssert.AreEqual(new[] { "A=a, B=b, C=c3" }, DependencyCollectorDiagnosticListener.GetHeaderValues(headers, "HEADER_NAME"));
+        }
+
+        /// <summary>
+        /// Create a HttpHeaders object for testing.
+        /// </summary>
+        /// <returns></returns>
+        private static HttpHeaders CreateHeaders()
+        {
+            HttpHeaders result = new HttpRequestMessage().Headers;
+            Assert.IsNotNull(result);
+            return result;
         }
     }
 }

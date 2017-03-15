@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Specialized;
-    using System.Globalization;
-    using System.Linq;
 
     /// <summary>
     /// WebHeaderCollection extension methods.
@@ -29,26 +27,9 @@
                 throw new ArgumentNullException(nameof(keyName));
             }
 
-            var requiredHeader = headers[headerName];
-
-            if (requiredHeader != null)
-            {
-                var headerValues = requiredHeader.Split(',');
-                foreach (var headerValue in headerValues)
-                {
-                    string keyValueString = headerValue.Trim();
-                    var keyValue = keyValueString.Split('=');
-
-                    if (keyValue.Length == 2 && keyValue[0].Trim() == keyName)
-                    {
-                        return keyValue[1].Trim();
-                    }
-                }
-            }
-
-            return null;
+            return HeadersExtensions.GetHeaderKeyValue(headers[headerName]?.Split(','), keyName);
         }
-
+        
         /// <summary>
         /// For the given header collection, sets the header value based on the name value format.
         /// </summary>
@@ -67,38 +48,8 @@
             {
                 throw new ArgumentNullException(nameof(keyName));
             }
-            
-            var requiredHeader = headers[headerName];
 
-            if (!string.IsNullOrEmpty(requiredHeader))
-            {
-                bool found = false;
-                var headerValues = requiredHeader.Split(',').Select(s => s.Trim()).ToArray();
-                for (int i = 0; i < headerValues.Length; i++)
-                {
-                    string keyValueString = headerValues[i];
-                    var keyValue = keyValueString.Split('=');
-
-                    if (keyValue.Length == 2 && keyValue[0].Trim() == keyName)
-                    {
-                        // Overwrite the existing thing
-                        headerValues[i] = string.Format(CultureInfo.InvariantCulture, "{0}={1}", keyName, value);
-                        found = true;
-                    }
-                }
-
-                headers[headerName] = string.Join(", ", headerValues);
-
-                if (!found)
-                {
-                    headers[headerName] += string.Format(CultureInfo.InvariantCulture, ", {0}={1}", keyName, value);
-                }
-            }
-            else
-            {
-                // header with headerName does not exist - let's add one.
-                headers[headerName] = string.Format(CultureInfo.InvariantCulture, "{0}={1}", keyName, value);
-            }
+            headers[headerName] = HeadersExtensions.SetHeaderKeyValue(headers[headerName]?.Split(','), keyName, value);
         }
     }
 }
