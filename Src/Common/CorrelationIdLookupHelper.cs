@@ -122,22 +122,15 @@
                             {
                                 this.GenerateCorrelationIdAndAddToDictionary(instrumentationKey, appId.Result);
                             }
-#if !NETCORE
                             catch (Exception ex)
                             {
                                 CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
                             }
-#else
-                            catch (Exception)
-                            {
-                            }
-#endif
                         });
 
                         return false;
                     }
                 }
-#if !NETCORE
                 catch (Exception ex)
                 {
                     CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
@@ -145,13 +138,6 @@
                     correlationId = string.Empty;
                     return false;
                 }
-#else
-                catch (Exception)
-                {
-                    correlationId = string.Empty;
-                    return false;
-                }
-#endif
             }
         }
 

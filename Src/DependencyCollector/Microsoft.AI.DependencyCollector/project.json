@@ -11,7 +11,9 @@
     "compile": {
       "include": [
         "../Shared/Implementation/ApplicationInsightsUrlFilter.cs",
+        "../Shared/Implementation/RemoteDependencyConstants.cs",
         "../../Common/CorrelationIdLookupHelper.cs",
+        "../../Common/CrossComponentCorrelationEventSource.cs",
         "../../Common/ICorrelationIdLookupHelper.cs",
         "../../Common/RequestResponseHeaders.cs",
         "../../Web/Web.Net45/Implementation/SdkVersionUtils.cs"

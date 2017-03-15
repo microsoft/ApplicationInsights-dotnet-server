@@ -1,5 +1,6 @@
 namespace Microsoft.ApplicationInsights.DependencyCollector
 {
+    using Implementation;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
@@ -19,8 +20,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     {
         private const string requestUrl = "www.example.com";
         private const string requestUrlWithScheme = "https://" + requestUrl;
-        private const string httpType = "Http";
-        private const string applicationInsightsType = "Application Insights";
         private const string okResultCode = "200";
         private const string notFoundResultCode = "404";
         private const string mockAppId = "MOCK_APP_ID";
@@ -90,7 +89,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             DependencyTelemetry telemetry = listener.PendingDependencyTelemetry.Single();
             Assert.AreEqual("POST /", telemetry.Name);
             Assert.AreEqual(requestUrl, telemetry.Target);
-            Assert.AreEqual(httpType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(requestUrlWithScheme, telemetry.Data);
             Assert.AreEqual("", telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
@@ -140,7 +139,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(httpType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(requestUrl, telemetry.Target);
             Assert.AreEqual(okResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
@@ -168,7 +167,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(httpType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(requestUrl, telemetry.Target);
             Assert.AreEqual(notFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
@@ -198,7 +197,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(httpType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(requestUrl, telemetry.Target);
             Assert.AreEqual(okResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
@@ -228,7 +227,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(httpType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(requestUrl, telemetry.Target);
             Assert.AreEqual(notFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
@@ -259,7 +258,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(applicationInsightsType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.AI, telemetry.Type);
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(okResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
@@ -290,7 +289,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(1, sentTelemetry.Count);
             Assert.AreSame(telemetry, sentTelemetry.Single());
 
-            Assert.AreEqual(applicationInsightsType, telemetry.Type);
+            Assert.AreEqual(RemoteDependencyConstants.AI, telemetry.Type);
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(notFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);

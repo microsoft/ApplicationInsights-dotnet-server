@@ -1,12 +1,15 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
-    using System;
-#if NET45
-    using System.Diagnostics.Tracing;
-#endif
-    using System.Globalization;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-#if NET40
+    using System;
+    using System.Globalization;
+
+#if NETCORE
+    using System.Diagnostics.Tracing;
+    using System.Reflection;
+#elif NET45
+    using System.Diagnostics.Tracing;
+#elif NET40
     using Microsoft.Diagnostics.Tracing;
 #endif
 
@@ -61,7 +64,11 @@
             string name;
             try
             {
+#if NETCORE
+                name = typeof(CrossComponentCorrelationEventSource).GetTypeInfo().Assembly.GetName().FullName;
+#else
                 name = AppDomain.CurrentDomain.FriendlyName;
+#endif
             }
             catch (Exception exp)
             {

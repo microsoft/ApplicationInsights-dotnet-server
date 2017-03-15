@@ -7,6 +7,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -120,31 +121,35 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 telemetry.Start();
                 telemetry.Name = resourceName;
                 telemetry.Target = requestUri.Host;
-                telemetry.Type = "Http";
+                telemetry.Type = RemoteDependencyConstants.HTTP;
                 telemetry.Data = requestUri.OriginalString;
                 this.pendingTelemetry.TryAdd(loggingRequestId, telemetry);
 
-                if (!request.Headers.Contains(RequestResponseHeaders.RequestContextSourceKey))
+                HttpRequestHeaders requestHeaders = request.Headers;
+                if (requestHeaders != null)
                 {
-                    string sourceApplicationId;
-                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
+                    if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
                     {
-                        request.Headers.Add(RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                        string sourceApplicationId;
+                        if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
+                        {
+                            requestHeaders.Add(RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                        }
                     }
-                }
 
-                // Add the root ID
-                string rootId = telemetry.Context.Operation.Id;
-                if (!string.IsNullOrEmpty(rootId) && !request.Headers.Contains(RequestResponseHeaders.StandardRootIdHeader))
-                {
-                    request.Headers.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
-                }
+                    // Add the root ID
+                    string rootId = telemetry.Context.Operation.Id;
+                    if (!string.IsNullOrEmpty(rootId) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.StandardRootIdHeader))
+                    {
+                        requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
+                    }
 
-                // Add the parent ID
-                string parentId = telemetry.Id;
-                if (!string.IsNullOrEmpty(parentId) && !request.Headers.Contains(RequestResponseHeaders.StandardParentIdHeader))
-                {
-                    request.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                    // Add the parent ID
+                    string parentId = telemetry.Id;
+                    if (!string.IsNullOrEmpty(parentId) && !ContainsRequestHeaderValue(requestHeaders, RequestResponseHeaders.StandardParentIdHeader))
+                    {
+                        requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                    }
                 }
             }
         }
@@ -161,19 +166,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                 DependencyTelemetry telemetry;
                 if (this.pendingTelemetry.TryRemove(loggingRequestId, out telemetry))
                 {
-                    if (response.Headers.Contains(RequestResponseHeaders.RequestContextTargetKey))
+                    string targetApplicationId = GetHeaderValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
+                    if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                     {
-                        string targetApplicationId = response.Headers.GetValues(RequestResponseHeaders.RequestContextTargetKey).SingleOrDefault();
-                        if (!string.IsNullOrEmpty(targetApplicationId))
+                        // We only add the cross component correlation key if the key does not represent the current component.
+                        string sourceApplicationId;
+                        if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
+                            targetApplicationId != sourceApplicationId)
                         {
-                            // We only add the cross component correlation key if the key does not represent the current component.
-                            string sourceApplicationId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
-                                targetApplicationId != sourceApplicationId)
-                            {
-                                telemetry.Type = "Application Insights";
-                                telemetry.Target += " | " + targetApplicationId;
-                            }
+                            telemetry.Type = RemoteDependencyConstants.AI;
+                            telemetry.Target += " | " + targetApplicationId;
                         }
                     }
 
@@ -185,6 +187,25 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     this.client.Track(telemetry);
                 }
             }
+        }
+
+        private static string GetHeaderValue(HttpHeaders headers, string headerName)
+        {
+            string result = null;
+            if (headers != null)
+            {
+                IEnumerable<string> headerValues;
+                if (headers.TryGetValues(headerName, out headerValues))
+                {
+                    result = headerValues.SingleOrDefault();
+                }
+            }
+            return result;
+        }
+
+        private static bool ContainsRequestHeaderValue(HttpHeaders headers, string headerName)
+        {
+            return !string.IsNullOrEmpty(GetHeaderValue(headers, headerName));
         }
     }
 }
