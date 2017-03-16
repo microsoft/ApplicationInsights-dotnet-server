@@ -12,6 +12,8 @@
 
         Metric = 4,
 
-        PerformanceCounter = 5
+        PerformanceCounter = 5,
+
+        Trace = 6
     }
 }

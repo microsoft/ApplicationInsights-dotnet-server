@@ -10,6 +10,8 @@
 
         Exception,
 
-        Event
+        Event,
+
+        Trace
     }
 }

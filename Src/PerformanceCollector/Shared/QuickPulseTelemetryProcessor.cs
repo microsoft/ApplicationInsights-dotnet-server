@@ -242,6 +242,18 @@
             };
         }
 
+        private static ITelemetryDocument ConvertTraceToTelemetryDocument(TraceTelemetry traceTelemetry)
+        {
+            return new TraceTelemetryDocument()
+            {
+                Id = Guid.NewGuid(),
+                Version = TelemetryDocumentContractVersion,
+                Timestamp = traceTelemetry.Timestamp,
+                Message = TruncateValue(traceTelemetry.Message),
+                Properties = GetProperties(traceTelemetry)
+            };
+        }
+
         private static string ExpandExceptionMessage(ExceptionTelemetry exceptionTelemetry)
         {
             Exception exception = exceptionTelemetry.Exception;
@@ -369,6 +381,7 @@
                 var telemetryAsDependency = telemetry as DependencyTelemetry;
                 var telemetryAsException = telemetry as ExceptionTelemetry;
                 var telemetryAsEvent = telemetry as EventTelemetry;
+                var telemetryAsTrace = telemetry as TraceTelemetry;
 
                 // update aggregates
                 if (telemetryAsRequest != null)
@@ -441,6 +454,15 @@
                                 documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors),
                                 ConvertEventToTelemetryDocument);
                         }
+                        else if (telemetryAsTrace != null)
+                        {
+                            telemetryDocument = CreateTelemetryDocument(
+                                telemetryAsTrace,
+                                documentStreams,
+                                documentStream => documentStream.TraceQuotaTracker,
+                                documentStream => documentStream.CheckFilters(telemetryAsTrace, out groupErrors),
+                                ConvertTraceToTelemetryDocument);
+                        }
 
                         if (telemetryDocument != null)
                         {
@@ -485,6 +507,15 @@
                             configurationAccumulatorLocal,
                             configurationAccumulatorLocal.CollectionConfiguration.EventMetrics,
                             telemetryAsEvent,
+                            out filteringErrors,
+                            ref projectionError);
+                    }
+                    else if (telemetryAsTrace != null)
+                    {
+                        QuickPulseTelemetryProcessor.ProcessMetrics(
+                            configurationAccumulatorLocal,
+                            configurationAccumulatorLocal.CollectionConfiguration.TraceMetrics,
+                            telemetryAsTrace,
                             out filteringErrors,
                             ref projectionError);
                     }

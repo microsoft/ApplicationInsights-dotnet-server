@@ -393,6 +393,12 @@
                                         DocumentStreamIds = new[] { "Stream1" },
                                         Name = "Event1",
                                         Properties = properties.ToArray()
+                                    },
+                                    new TraceTelemetryDocument()
+                                    {
+                                        DocumentStreamIds = new[] { "Stream1" },
+                                        Message = "Trace1",
+                                        Properties = properties.ToArray()
                                     }
                                 })
                     },
@@ -422,6 +428,10 @@
             Assert.AreEqual("Event1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Name);
             Assert.AreEqual("Prop1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Key);
             Assert.AreEqual("Val1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Value);
+
+            Assert.AreEqual("Trace1", ((TraceTelemetryDocument)this.samples[0].Item3.Documents[4]).Message);
+            Assert.AreEqual("Prop1", ((TraceTelemetryDocument)this.samples[0].Item3.Documents[4]).Properties.First().Key);
+            Assert.AreEqual("Val1", ((TraceTelemetryDocument)this.samples[0].Item3.Documents[4]).Properties.First().Value);
         }
 
         [TestMethod]

@@ -1,0 +1,41 @@
+﻿namespace Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.Serialization;
+
+    [DataContract]
+    internal struct TraceTelemetryDocument : ITelemetryDocument
+    {
+        [DataMember(EmitDefaultValue = false)]
+        public Guid Id { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string Version { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public DateTimeOffset Timestamp { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string Message { get; set; }
+        
+        [DataMember(EmitDefaultValue = false)]
+        public KeyValuePair<string, string>[] Properties { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string DocumentType
+        {
+            get
+            {
+                return TelemetryDocumentType.Trace.ToString();
+            }
+
+            private set
+            {
+            }
+        }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string[] DocumentStreamIds { get; set; }
+    }
+}

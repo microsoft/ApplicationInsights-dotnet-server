@@ -39,7 +39,11 @@
 
         public override string ToString()
         {
-            return string.Format(CultureInfo.InvariantCulture, "TelemetryType: '{0}', filters: '{1}'", this.TelemetryType, this.Filters.ToString());
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "TelemetryType: '{0}', filters: '{1}'",
+                this.TelemetryType,
+                this.Filters?.ToString() ?? string.Empty);
         }
     }
 }

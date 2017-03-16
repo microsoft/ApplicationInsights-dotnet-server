@@ -86,6 +86,14 @@
                 new OperationalizedMetricInfo()
                 {
                     Id = "Metric5",
+                    TelemetryType = TelemetryType.Trace,
+                    Projection = "Message",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = filters
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric6",
                     TelemetryType = TelemetryType.Metric,
                     Projection = "Value",
                     Aggregation = AggregationType.Avg,
@@ -100,15 +108,15 @@
                 new ClockMock());
 
             // ASSERT
+            Assert.AreEqual(6, collectionConfiguration.TelemetryMetadata.Count());
+
             Assert.AreEqual("Metric0", collectionConfiguration.RequestMetrics.First().Id);
             Assert.AreEqual("Metric1", collectionConfiguration.RequestMetrics.Last().Id);
             Assert.AreEqual("Metric2", collectionConfiguration.DependencyMetrics.Single().Id);
             Assert.AreEqual("Metric3", collectionConfiguration.ExceptionMetrics.Single().Id);
             Assert.AreEqual("Metric4", collectionConfiguration.EventMetrics.Single().Id);
-            Assert.AreEqual("Metric5", collectionConfiguration.MetricMetrics.Single().Id);
-
-            Assert.AreEqual(5, collectionConfiguration.TelemetryMetadata.Count());
-            Assert.AreEqual("Metric5", collectionConfiguration.MetricMetrics.Single().Id);
+            Assert.AreEqual("Metric5", collectionConfiguration.TraceMetrics.Single().Id);
+            Assert.AreEqual("Metric6", collectionConfiguration.MetricMetrics.Single().Id);
         }
 
         [TestMethod]
@@ -434,6 +442,19 @@
                                 Filters = new FilterConjunctionGroupInfo() { Filters = new FilterInfo[0] }
                             }
                         }
+                },
+                new DocumentStreamInfo()
+                {
+                    Id = "Stream5",
+                    DocumentFilterGroups =
+                        new[]
+                        {
+                            new DocumentFilterConjunctionGroupInfo()
+                            {
+                                TelemetryType = TelemetryType.Trace,
+                                Filters = new FilterConjunctionGroupInfo() { Filters = new FilterInfo[0] }
+                            }
+                        }
                 }
             };
 
@@ -471,12 +492,13 @@
 
             // ASSERT
             DocumentStream[] documentStreams = newCollectionConfiguration.DocumentStreams.ToArray();
-            Assert.AreEqual(4, documentStreams.Length);
+            Assert.AreEqual(5, documentStreams.Length);
 
             Assert.AreEqual("Stream1", documentStreams[0].Id);
             Assert.AreEqual(2, documentStreams[0].RequestQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[0].DependencyQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[0].ExceptionQuotaTracker.CurrentQuota);
+            Assert.AreEqual(3, documentStreams[0].EventQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[0].EventQuotaTracker.CurrentQuota);
 
             Assert.AreEqual("Stream2", documentStreams[1].Id);
@@ -484,17 +506,20 @@
             Assert.AreEqual(1, documentStreams[1].DependencyQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[1].ExceptionQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[1].EventQuotaTracker.CurrentQuota);
+            Assert.AreEqual(3, documentStreams[1].EventQuotaTracker.CurrentQuota);
 
             Assert.AreEqual("Stream3", documentStreams[2].Id);
             Assert.AreEqual(3, documentStreams[2].RequestQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[2].DependencyQuotaTracker.CurrentQuota);
             Assert.AreEqual(0, documentStreams[2].ExceptionQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[2].EventQuotaTracker.CurrentQuota);
+            Assert.AreEqual(3, documentStreams[2].EventQuotaTracker.CurrentQuota);
 
             Assert.AreEqual("Stream4", documentStreams[3].Id);
             Assert.AreEqual(3, documentStreams[3].RequestQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[3].DependencyQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[3].ExceptionQuotaTracker.CurrentQuota);
+            Assert.AreEqual(3, documentStreams[3].EventQuotaTracker.CurrentQuota);
             Assert.AreEqual(3, documentStreams[3].EventQuotaTracker.CurrentQuota);
         }
 

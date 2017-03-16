@@ -127,7 +127,6 @@
         /// Gets the auth API key.
         /// </summary>
         /// <remarks>Loaded from configuration.</remarks>
-        /// //!!! move to TelemetryConfiguration
         public string AuthApiKey { get; set; }
 
         /// <summary>

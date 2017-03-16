@@ -27,6 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseProcess.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseProcessProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseTopCpuCollector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\TraceTelemetryDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\ProcessCpuData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\EventTelemetryDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\StandardPerformanceCollector\StandardPerformanceCollector.cs" />

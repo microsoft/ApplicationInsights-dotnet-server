@@ -8,10 +8,11 @@
     [KnownType(typeof(DependencyTelemetryDocument))]
     [KnownType(typeof(ExceptionTelemetryDocument))]
     [KnownType(typeof(EventTelemetryDocument))]
+    [KnownType(typeof(TraceTelemetryDocument))]
     internal struct MonitoringDataPoint
     {
         /*
-         * 4 - adding errors for extended backchannel, adding EventTelemetryDocument, adding DocumentStreamId for full documents
+         * 4 - adding errors for extended backchannel, adding EventTelemetryDocument and TraceTelemetryDocument, adding DocumentStreamId for full documents
          * 3 - adding TopCpuProcesses
         */
         public const int CurrentInvariantVersion = 4;

@@ -22,6 +22,8 @@
 
         private readonly List<OperationalizedMetric<EventTelemetry>> eventTelemetryMetrics = new List<OperationalizedMetric<EventTelemetry>>();
 
+        private readonly List<OperationalizedMetric<TraceTelemetry>> traceTelemetryMetrics = new List<OperationalizedMetric<TraceTelemetry>>();
+
         private readonly List<OperationalizedMetric<MetricValue>> metricMetrics = new List<OperationalizedMetric<MetricValue>>();
 
         private readonly List<Tuple<string, AggregationType>> telemetryMetadata = new List<Tuple<string, AggregationType>>();
@@ -37,6 +39,8 @@
         public IEnumerable<OperationalizedMetric<ExceptionTelemetry>> ExceptionMetrics => this.exceptionTelemetryMetrics;
 
         public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
 
         public IEnumerable<OperationalizedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
 
@@ -104,7 +108,7 @@
 
             // quota might be changing concurrently on the collection thread, but we don't need the exact value at any given time
             // we will try to carry over the last known values to this new configuration
-            Dictionary<string, Tuple<float, float, float, float>> previousQuotasByStreamId =
+            Dictionary<string, Tuple<float, float, float, float, float>> previousQuotasByStreamId =
                 previousDocumentStreams.ToDictionary(
                     documentStream => documentStream.Id,
                     documentStream =>
@@ -112,7 +116,8 @@
                         documentStream.RequestQuotaTracker.CurrentQuota,
                         documentStream.DependencyQuotaTracker.CurrentQuota,
                         documentStream.ExceptionQuotaTracker.CurrentQuota,
-                        documentStream.EventQuotaTracker.CurrentQuota));
+                        documentStream.EventQuotaTracker.CurrentQuota,
+                        documentStream.TraceQuotaTracker.CurrentQuota));
 
             foreach (DocumentStreamInfo documentStreamInfo in info.DocumentStreams ?? new DocumentStreamInfo[0])
             {
@@ -127,7 +132,7 @@
 
                 try
                 {
-                    Tuple<float, float, float, float> initialQuotas;
+                    Tuple<float, float, float, float, float> initialQuotas;
                     previousQuotasByStreamId.TryGetValue(documentStreamInfo.Id, out initialQuotas);
 
                     string[] localErrors;
@@ -138,7 +143,8 @@
                         initialQuotas?.Item1,
                         initialQuotas?.Item2,
                         initialQuotas?.Item3,
-                        initialQuotas?.Item4);
+                        initialQuotas?.Item4,
+                        initialQuotas?.Item5);
                     
                     errorList.AddRange(localErrors ?? new string[0]);
                     documentStreamIds.Add(documentStreamInfo.Id);
@@ -188,13 +194,17 @@
                     case TelemetryType.Event:
                         CollectionConfiguration.AddMetric(metricInfo, this.eventTelemetryMetrics, out localErrors);
                         break;
-                    case TelemetryType.Metric:
+                   case TelemetryType.Metric:
                         CollectionConfiguration.AddMetric(metricInfo, this.metricMetrics, out localErrors);
                         break;
                     case TelemetryType.PerformanceCounter:
                         // no need to create a wrapper, we rely on the underlying CollectionConfigurationInfo to provide data about performance counters
                         // move on to the next metric
                         continue;
+                        break;
+                    case TelemetryType.Trace:
+                        CollectionConfiguration.AddMetric(metricInfo, this.traceTelemetryMetrics, out localErrors);
+                        break;
                     default:
                         errorList.Add(string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType));
                         break;
@@ -214,7 +224,8 @@
                 this.requestTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))
                     .Concat(this.dependencyTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
                     .Concat(this.exceptionTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
-                    .Concat(this.eventTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))))
+                    .Concat(this.eventTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
+                    .Concat(this.traceTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))))
             {
                 this.telemetryMetadata.Add(metricIds);
             }

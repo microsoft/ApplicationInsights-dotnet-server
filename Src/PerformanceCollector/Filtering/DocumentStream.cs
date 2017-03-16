@@ -26,6 +26,8 @@
 
         private readonly List<FilterConjunctionGroup<EventTelemetry>> eventFilterGroups = new List<FilterConjunctionGroup<EventTelemetry>>();
 
+        private readonly List<FilterConjunctionGroup<TraceTelemetry>> traceFilterGroups = new List<FilterConjunctionGroup<TraceTelemetry>>();
+
         public QuickPulseQuotaTracker RequestQuotaTracker { get; }
 
         public QuickPulseQuotaTracker DependencyQuotaTracker { get; }
@@ -33,6 +35,8 @@
         public QuickPulseQuotaTracker ExceptionQuotaTracker { get; }
 
         public QuickPulseQuotaTracker EventQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker TraceQuotaTracker { get; }
 
         public string Id => this.info.Id;
 
@@ -43,7 +47,8 @@
             float? initialRequestQuota = null,
             float? initialDependencyQuota = null,
             float? initialExceptionQuota = null,
-            float? initialEventQuota = null)
+            float? initialEventQuota = null,
+            float? initialTraceQuota = null)
         {
             if (info == null)
             {
@@ -73,6 +78,11 @@
                 timeProvider,
                 MaxTelemetryQuota,
                 initialEventQuota ?? InitialTelemetryQuota);
+
+            this.TraceQuotaTracker = new QuickPulseQuotaTracker(
+                timeProvider, 
+                MaxTelemetryQuota,
+                initialTraceQuota ?? InitialTelemetryQuota);
         }
 
         public bool CheckFilters(RequestTelemetry document, out string[] errors)
@@ -132,6 +142,21 @@
 
                         return groupPassed;
                     },
+                out errors);
+        }
+
+        public bool CheckFilters(TraceTelemetry document, out string[] errors)
+        {
+            return DocumentStream.CheckFilters(
+                this.traceFilterGroups,
+                (filterGroup, errorList) =>
+                {
+                    string[] groupErrors;
+                    bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
+                    errorList.AddRange(groupErrors ?? new string[0]);
+
+                    return groupPassed;
+                },
                 out errors);
         }
 
@@ -196,6 +221,9 @@
                             break;
                         case TelemetryType.Event:
                             this.eventFilterGroups.Add(new FilterConjunctionGroup<EventTelemetry>(documentFilterConjunctionGroupInfo.Filters, out groupErrors));
+                            break;
+                        case TelemetryType.Trace:
+                            this.traceFilterGroups.Add(new FilterConjunctionGroup<TraceTelemetry>(documentFilterConjunctionGroupInfo.Filters, out groupErrors));
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Unsupported TelemetryType: '{0}'", documentFilterConjunctionGroupInfo.TelemetryType));
