@@ -16,7 +16,7 @@
         public void QuickPulseDataAccumulatorManagerLocksInSampleCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             CollectionConfiguration collectionConfiguration =
                 new CollectionConfiguration(
                     new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
@@ -38,7 +38,7 @@
         public void QuickPulseDataAccumulatorManagerLocksInSampleCorrectlyMultithreaded()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             CollectionConfiguration collectionConfiguration = new CollectionConfiguration(
                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
                 out errors, new ClockMock());

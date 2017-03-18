@@ -76,7 +76,7 @@
 
         public CollectionConfiguration(
             CollectionConfigurationInfo info,
-            out string[] errors,
+            out CollectionConfigurationError[] errors,
             Clock timeProvider,
             IEnumerable<DocumentStream> previousDocumentStreams = null)
         {
@@ -88,22 +88,22 @@
             this.info = info;
 
             // create metrics based on descriptions in info
-            string[] metricErrors;
+            CollectionConfigurationError[] metricErrors;
             this.CreateMetrics(info, out metricErrors);
 
             // maintain a separate collection of all (Id, AggregationType) pairs with some additional data - to allow for uniform access to all types of metrics
             this.CreateMetadata();
 
             // create document streams based on description in info
-            string[] documentStreamErrors;
+            CollectionConfigurationError[] documentStreamErrors;
             this.CreateDocumentStreams(out documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
 
             errors = metricErrors.Concat(documentStreamErrors).ToArray();
         }
 
-        private void CreateDocumentStreams(out string[] errors, Clock timeProvider, IEnumerable<DocumentStream> previousDocumentStreams)
+        private void CreateDocumentStreams(out CollectionConfigurationError[] errors, Clock timeProvider, IEnumerable<DocumentStream> previousDocumentStreams)
         {
-            var errorList = new List<string>();
+            var errorList = new List<CollectionConfigurationError>();
             var documentStreamIds = new HashSet<string>();
 
             // quota might be changing concurrently on the collection thread, but we don't need the exact value at any given time
@@ -125,7 +125,10 @@
                 {
                     // there must not be streams with duplicate ids
                     errorList.Add(
-                        string.Format(CultureInfo.InvariantCulture, "Document stream with a duplicate id ignored: {0}", documentStreamInfo.Id));
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.DocumentStreamDuplicateIds,
+                            string.Format(CultureInfo.InvariantCulture, "Document stream with a duplicate id ignored: {0}", documentStreamInfo.Id),
+                            null, Tuple.Create("DocumentStreamId", documentStreamInfo.Id)));
 
                     continue;
                 }
@@ -135,7 +138,7 @@
                     Tuple<float, float, float, float, float> initialQuotas;
                     previousQuotasByStreamId.TryGetValue(documentStreamInfo.Id, out initialQuotas);
 
-                    string[] localErrors;
+                    CollectionConfigurationError[] localErrors;
                     var documentStream = new DocumentStream(
                         documentStreamInfo,
                         out localErrors,
@@ -146,7 +149,7 @@
                         initialQuotas?.Item4,
                         initialQuotas?.Item5);
                     
-                    errorList.AddRange(localErrors ?? new string[0]);
+                    errorList.AddRange(localErrors ?? new CollectionConfigurationError[0]);
                     documentStreamIds.Add(documentStreamInfo.Id);
 
                     this.documentStreams.Add(documentStream);
@@ -154,20 +157,20 @@
                 catch (Exception e)
                 {
                     errorList.Add(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Failed to create document stream {0}. Error message: {1}",
-                            documentStreamInfo.ToString(),
-                            e.ToString()));
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.DocumentStreamFailureToCreate,
+                            string.Format(CultureInfo.InvariantCulture, "Failed to create document stream {0}", documentStreamInfo),
+                            e,
+                            Tuple.Create("DocumentStreamId", documentStreamInfo.Id)));
                 }
             }
 
             errors = errorList.ToArray();
         }
 
-        private void CreateMetrics(CollectionConfigurationInfo info, out string[] errors)
+        private void CreateMetrics(CollectionConfigurationInfo info, out CollectionConfigurationError[] errors)
         {
-            var errorList = new List<string>();
+            var errorList = new List<CollectionConfigurationError>();
             var metricIds = new HashSet<string>();
 
             foreach (OperationalizedMetricInfo metricInfo in info.Metrics ?? new OperationalizedMetricInfo[0])
@@ -175,11 +178,17 @@
                 if (metricIds.Contains(metricInfo.Id))
                 {
                     // there must not be metrics with duplicate ids
-                    errorList.Add(string.Format(CultureInfo.InvariantCulture, "Metric with a duplicate id ignored: {0}", metricInfo.Id));
+                    errorList.Add(
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.MetricDuplicateIds,
+                            string.Format(CultureInfo.InvariantCulture, "Metric with a duplicate id ignored: {0}", metricInfo.Id),
+                            null,
+                            Tuple.Create("MetricId", metricInfo.Id)));
+
                     continue;
                 }
 
-                string[] localErrors = null;
+                CollectionConfigurationError[] localErrors = null;
                 switch (metricInfo.TelemetryType)
                 {
                     case TelemetryType.Request:
@@ -206,11 +215,16 @@
                         CollectionConfiguration.AddMetric(metricInfo, this.traceTelemetryMetrics, out localErrors);
                         break;
                     default:
-                        errorList.Add(string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType));
+                        errorList.Add(
+                            CollectionConfigurationError.CreateError(
+                                CollectionConfigurationErrorType.MetricTelemetryTypeUnsupported,
+                                string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType),
+                                null,
+                                Tuple.Create("TelemetryType", metricInfo.TelemetryType.ToString())));
                         break;
                 }
 
-                errorList.AddRange(localErrors ?? new string[0]);
+                errorList.AddRange(localErrors ?? new CollectionConfigurationError[0]);
 
                 metricIds.Add(metricInfo.Id);
             }
@@ -239,9 +253,9 @@
         private static void AddMetric<TTelemetry>(
             OperationalizedMetricInfo metricInfo,
             List<OperationalizedMetric<TTelemetry>> metrics,
-            out string[] errors)
+            out CollectionConfigurationError[] errors)
         {
-            errors = new string[] { };
+            errors = new CollectionConfigurationError[] { };
 
             try
             {
@@ -253,13 +267,13 @@
                 errors =
                     errors.Concat(
                         new[]
-                            {
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "Failed to create metric {0}. Error message: {1}",
-                                    metricInfo.ToString(),
-                                    e.ToString())
-                            }).ToArray();
+                        {
+                            CollectionConfigurationError.CreateError(
+                                CollectionConfigurationErrorType.MetricFailureToCreate,
+                                string.Format(CultureInfo.InvariantCulture, "Failed to create metric {0}.", metricInfo),
+                                e,
+                                Tuple.Create("MetricId", metricInfo.Id))
+                        }).ToArray();
             }
         }
     }

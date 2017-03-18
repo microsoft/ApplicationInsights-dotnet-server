@@ -430,7 +430,7 @@
             var collectionInterval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var accumulatorManager =
                 new QuickPulseDataAccumulatorManager(
                     new CollectionConfiguration(
@@ -765,8 +765,15 @@
             Assert.AreEqual(@"\SomeCategory(SomeInstance)\SomeCounter", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
             Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
 
-            Assert.AreEqual(1, serviceClient.CollectionConfigurationErrors.Count());
-            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[0].Contains("NonParseable"));
+            CollectionConfigurationError[] errors = serviceClient.CollectionConfigurationErrors;
+            Assert.AreEqual(1, errors.Length);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterParsing, errors[0].ErrorType);
+            Assert.AreEqual(
+                "Error parsing performance counter: 'NonParseable'. Invalid performance counter name format: NonParseable. Expected formats are \\category(instance)\\counter or \\category\\counter\r\nParameter name: performanceCounter",
+                errors[0].Message);
+            Assert.AreEqual(string.Empty, errors[0].FullException);
+            Assert.IsFalse(errors[0].Data.Any());
         }
 
         [TestMethod]

@@ -30,7 +30,7 @@
             var telemetryThatMustFail2 = new RequestTelemetry() { Name = "This value only contains the word 'cat', but not the other one" };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
@@ -62,7 +62,7 @@
             var telemetryThatMustPass = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies both filters" };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
@@ -88,7 +88,7 @@
             var telemetryThatMustPass = new RequestTelemetry() { Name = "Both the words 'dog' and 'CAT' are here, which satisfies both filters" };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
@@ -128,7 +128,7 @@
             var telemetryThatMustFail3 = new RequestTelemetry() { Name = "None of the words are here!" };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
@@ -169,7 +169,7 @@
             var telemetry = new RequestTelemetry() { Name = "1.23", Id = "5.67" };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
@@ -195,7 +195,7 @@
             var telemetry = new RequestTelemetry() { Properties = { ["Dimension1"] = "1.5" } };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
@@ -221,7 +221,7 @@
             var telemetry = new RequestTelemetry() { Metrics = { ["Metric1"] = 1.75d } };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
@@ -247,7 +247,7 @@
             var telemetry = new RequestTelemetry();
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
@@ -311,12 +311,17 @@
             };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
-            Assert.IsTrue(errors.Single().Contains("NonExistentField"));
-
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors.Single().ErrorType);
+            Assert.AreEqual(
+                "Failed to create a filter NonExistentField Equal Comparand.",
+                errors.Single().Message);
+            Assert.IsTrue(errors.Single().FullException.Contains("Could not find the property NonExistentField in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors.Single().Data.Any());
+            
             // we must be left with the one valid filter only
             Assert.IsTrue(metric.CheckFilters(new RequestTelemetry() { Name = "sky" }, out errors));
             Assert.AreEqual(0, errors.Length);
@@ -340,7 +345,7 @@
             };
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
@@ -361,7 +366,7 @@
 
             var telemetry = new RequestTelemetry() { Id = "NotDoubleValue" };
 
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ACT

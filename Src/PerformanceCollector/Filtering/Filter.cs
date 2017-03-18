@@ -52,9 +52,13 @@
 
         private readonly string fieldName;
 
+        private readonly FilterInfo info;
+
         public Filter(FilterInfo filterInfo)
         {
             ValidateInput(filterInfo);
+
+            this.info = filterInfo;
 
             this.fieldName = filterInfo.FieldName;
             this.predicate = filterInfo.Predicate;
@@ -118,6 +122,11 @@
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Runtime error while filtering."), e);
             }
+        }
+
+        public override string ToString()
+        {
+            return this.info?.ToString() ?? string.Empty;
         }
 
         internal static Expression ProduceFieldExpression(ParameterExpression documentExpression, string fieldName, bool isFieldCustomDimension, bool isFieldCustomMetric)
@@ -250,6 +259,11 @@
 
         private static void ValidateInput(FilterInfo filterInfo)
         {
+            if (filterInfo == null)
+            {
+                throw new ArgumentNullException(nameof(filterInfo));
+            }
+
             if (string.IsNullOrEmpty(filterInfo.FieldName))
             {
                 throw new ArgumentNullException(

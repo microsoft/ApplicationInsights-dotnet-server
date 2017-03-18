@@ -106,7 +106,7 @@
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,
-            string[] collectionConfigurationErrors)
+            CollectionConfigurationError[] collectionConfigurationErrors)
         {
             var requestUri = string.Format(
                 CultureInfo.InvariantCulture,
@@ -211,7 +211,7 @@
             request.Content = new StreamContent(ms);
         }
 
-        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, HttpRequestMessage request, string[] errors)
+        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, HttpRequestMessage request, CollectionConfigurationError[] errors)
         {
             var monitoringPoints = new List<MonitoringDataPoint>();
 

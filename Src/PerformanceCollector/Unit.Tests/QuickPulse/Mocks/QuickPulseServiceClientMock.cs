@@ -23,7 +23,7 @@
 
         public CollectionConfigurationInfo CollectionConfigurationInfo { private get; set; }
 
-        public string[] CollectionConfigurationErrors { get; private set; }
+        public CollectionConfigurationError[] CollectionConfigurationErrors { get; private set; }
 
         public bool? ReturnValueFromSubmitSample { private get; set; }
 
@@ -101,7 +101,7 @@
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,
-            string[] collectionConfigurationErrors)
+            CollectionConfigurationError[] collectionConfigurationErrors)
         {
             lock (this.ResponseLock)
             {

@@ -61,7 +61,7 @@
                 Interlocked.Increment(ref configurationAccumulatorLocal.ReferenceCount);
                 try
                 {
-                    string[] filteringErrors;
+                    CollectionConfigurationError[] filteringErrors;
                     string projectionError = null;
 
                     QuickPulseTelemetryProcessor.ProcessMetrics(

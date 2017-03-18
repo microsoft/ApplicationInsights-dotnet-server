@@ -44,6 +44,6 @@
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,
-            string[] collectionConfigurationErrors);
+            CollectionConfigurationError[] collectionConfigurationErrors);
     }
 }

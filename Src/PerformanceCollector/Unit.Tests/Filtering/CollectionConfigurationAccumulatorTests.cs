@@ -13,7 +13,7 @@
         public void CollectionConfigurationAccumulatorPreparesMetricAccumulatorsTest()
         {
             // ARRANGE
-            string[] error;
+            CollectionConfigurationError[] error;
             var metricInfo = new OperationalizedMetricInfo()
                                  {
                                      Id = "Metric1",
@@ -39,7 +39,7 @@
         public void CollectionConfigurationAccumulatorPreparesMetricAccumulatorsForMetricsTest()
         {
             // ARRANGE
-            string[] error;
+            CollectionConfigurationError[] error;
             var metricInfo = new OperationalizedMetricInfo()
                                  {
                                      Id = "Metric1",

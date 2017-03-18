@@ -416,7 +416,7 @@
                         IEnumerable<DocumentStream> documentStreams = configurationAccumulatorLocal.CollectionConfiguration.DocumentStreams;
 
                         //!!! report runtime errors for filter groups?
-                        string[] groupErrors;
+                        CollectionConfigurationError[] groupErrors;
 
                         if (telemetryAsRequest != null)
                         {
@@ -471,7 +471,7 @@
                     }
 
                     // collect operationalized metrics
-                    string[] filteringErrors;
+                    CollectionConfigurationError[] filteringErrors;
                     string projectionError = null;
 
                     if (telemetryAsRequest != null)
@@ -567,10 +567,10 @@
             CollectionConfigurationAccumulator configurationAccumulatorLocal,
             IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
             TTelemetry telemetry,
-            out string[] filteringErrors,
+            out CollectionConfigurationError[] filteringErrors,
             ref string projectionError)
         {
-            filteringErrors = new string[] { };
+            filteringErrors = new CollectionConfigurationError[] { };
 
             foreach (OperationalizedMetric<TTelemetry> metric in metrics)
             {

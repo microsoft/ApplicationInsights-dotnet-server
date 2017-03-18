@@ -585,7 +585,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseCollectionStateManagerMergesAndReportsErrorsInCollectionConfiguration()
+        public void QuickPulseCollectionStateManagerReportsErrorsInCollectionConfiguration()
         {
             // ARRANGE
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
@@ -596,24 +596,24 @@
 
             var filter = new FilterInfo() { FieldName = "NonExistentNameInFilter", Predicate = Predicate.Equal, Comparand = "Request1" };
             var metrics = new[]
-                              {
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "Metric0",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "NoneExistentNameInProjection",
-                                          Aggregation = AggregationType.Avg,
-                                          FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter, filter }}}
-                                      },
-                                  new OperationalizedMetricInfo()
-                                      {
-                                          Id = "Metric1",
-                                          TelemetryType = TelemetryType.Request,
-                                          Projection = "Id",
-                                          Aggregation = AggregationType.Sum,
-                                          FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter }}}
-                                      }
-                              };
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric0",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "NoneExistentNameInProjection",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter, filter } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Id",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter } } }
+                }
+            };
 
             // ACT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = metrics };
@@ -625,9 +625,37 @@
             manager.UpdateState("empty iKey", string.Empty);
 
             // ASSERT
-            Assert.AreEqual(2, serviceClient.CollectionConfigurationErrors.Length);
-            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[0].Contains("NonExistentNameInFilter"));
-            Assert.IsTrue(serviceClient.CollectionConfigurationErrors[1].Contains("NoneExistentNameInProjection"));
+            CollectionConfigurationError[] errors = serviceClient.CollectionConfigurationErrors;
+            Assert.AreEqual(4, errors.Length);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[0].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[0].Message);
+            Assert.IsTrue(
+                errors[0].FullException.Contains(
+                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[0].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[1].Message);
+            Assert.IsTrue(
+                errors[1].FullException.Contains(
+                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[1].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[2].ErrorType);
+            Assert.AreEqual(
+                "Failed to create metric Id: 'Metric0', TelemetryType: 'Request', Projection: 'NoneExistentNameInProjection', Aggregation: 'Avg', FilterGroups: [NonExistentNameInFilter Equal Request1, NonExistentNameInFilter Equal Request1].",
+                errors[2].Message);
+            Assert.IsTrue(errors[2].FullException.Contains("Could not construct the projection"));
+            Assert.AreEqual("MetricId", errors[2].Data.Single().Key);
+            Assert.AreEqual("Metric0", errors[2].Data.Single().Value);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[3].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[3].Message);
+            Assert.IsTrue(
+                errors[3].FullException.Contains(
+                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[3].Data.Any());
         }
 
         #region Helpers
@@ -650,7 +678,7 @@
                     {
                         actions.Add(CollectMessage);
 
-                        string[] errors;
+                        CollectionConfigurationError[] errors;
                         var now = DateTimeOffset.UtcNow;
                         return
                             new[]
@@ -677,7 +705,7 @@
                         actions.Add(UpdatedConfigurationMessage);
                         collectionConfigurationInfos?.Add(collectionConfigurationInfo);
 
-                        string[] errors;
+                        CollectionConfigurationError[] errors;
                         new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
                         return errors;
                     });

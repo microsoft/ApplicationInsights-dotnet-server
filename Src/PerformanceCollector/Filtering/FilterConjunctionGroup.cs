@@ -13,7 +13,7 @@
 
         private readonly List<Filter<TTelemetry>> filters = new List<Filter<TTelemetry>>();
 
-        public FilterConjunctionGroup(FilterConjunctionGroupInfo info, out string[] errors)
+        public FilterConjunctionGroup(FilterConjunctionGroupInfo info, out CollectionConfigurationError[] errors)
         {
             if (info == null)
             {
@@ -25,9 +25,9 @@
             this.CreateFilters(out errors);
         }
 
-        public bool CheckFilters(TTelemetry document, out string[] errors)
+        public bool CheckFilters(TTelemetry document, out CollectionConfigurationError[] errors)
         {
-            var errorList = new List<string>(this.filters.Count);
+            var errorList = new List<CollectionConfigurationError>(this.filters.Count);
 
             foreach (Filter<TTelemetry> filter in this.filters)
             {
@@ -39,7 +39,12 @@
                 catch (Exception e)
                 {
                     // the filter has failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out by this conjunction group
-                    errorList.Add(e.ToString());
+                    //!!!
+                    //errorList.Add(
+                    //    CollectionConfigurationError.CreateError(
+                    //        CollectionConfigurationErrorType.FilterFailureToRun,
+                    //        string.Format(CultureInfo.InvariantCulture, "Failter failed to run: {0}.", filter),
+                    //        e));
                     filterPassed = false;
                 }
 
@@ -54,9 +59,9 @@
             return true;
         }
 
-        private void CreateFilters(out string[] errors)
+        private void CreateFilters(out CollectionConfigurationError[] errors)
         {
-            var errorList = new List<string>();
+            var errorList = new List<CollectionConfigurationError>();
             foreach (FilterInfo filterInfo in this.info.Filters)
             {
                 try
@@ -68,11 +73,10 @@
                 catch (Exception e)
                 {
                     errorList.Add(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Failed to create a filter {0}. Error message: {1}",
-                            filterInfo.ToString(),
-                            e.ToString()));
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.FilterFailureToCreateUnexpected,
+                            string.Format(CultureInfo.InvariantCulture, "Failed to create a filter {0}.", filterInfo),
+                            e));
                 }
             }
 

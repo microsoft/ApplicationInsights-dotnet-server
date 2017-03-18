@@ -3,6 +3,8 @@
     using System;
     using System.Runtime.Serialization;
 
+    using Microsoft.ApplicationInsights.Extensibility.Filtering;
+
     [DataContract]
     [KnownType(typeof(RequestTelemetryDocument))]
     [KnownType(typeof(DependencyTelemetryDocument))]
@@ -54,6 +56,6 @@
         public bool TopCpuDataAccessDenied { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
-        public string[] CollectionConfigurationErrors { get; set; }
+        public CollectionConfigurationError[] CollectionConfigurationErrors { get; set; }
     }
 }

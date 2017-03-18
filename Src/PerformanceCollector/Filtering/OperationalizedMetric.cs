@@ -35,7 +35,7 @@
 
         public AggregationType AggregationType => this.info.Aggregation;
 
-        public OperationalizedMetric(OperationalizedMetricInfo info, out string[] errors)
+        public OperationalizedMetric(OperationalizedMetricInfo info, out CollectionConfigurationError[] errors)
         {
             if (info == null)
             {
@@ -49,20 +49,20 @@
             this.CreateProjection();
         }
         
-        public bool CheckFilters(TTelemetry document, out string[] errors)
+        public bool CheckFilters(TTelemetry document, out CollectionConfigurationError[] errors)
         {
             if (this.filterGroups.Count < 1)
             {
-                errors = new string[0];
+                errors = new CollectionConfigurationError[0];
                 return true;
             }
 
-            var errorList = new List<string>(this.filterGroups.Count);
+            var errorList = new List<CollectionConfigurationError>(this.filterGroups.Count);
 
             // iterate over OR-connected groups
             foreach (FilterConjunctionGroup<TTelemetry> conjunctionFilterGroup in this.filterGroups)
             {
-                string[] groupErrors;
+                CollectionConfigurationError[] groupErrors;
                 bool groupPassed = conjunctionFilterGroup.CheckFilters(document, out groupErrors);
 
                 errorList.AddRange(groupErrors);
@@ -120,14 +120,14 @@
             return this.info.ToString();
         }
 
-        private void CreateFilters(out string[] errors)
+        private void CreateFilters(out CollectionConfigurationError[] errors)
         {
-            var errorList = new List<string>();
+            var errorList = new List<CollectionConfigurationError>();
             foreach (FilterConjunctionGroupInfo filterConjunctionGroupInfo in this.info.FilterGroups ?? new FilterConjunctionGroupInfo[0])
             {
                 try
                 {
-                    string[] groupErrors;
+                    CollectionConfigurationError[] groupErrors;
                     var conjunctionFilterGroup = new FilterConjunctionGroup<TTelemetry>(filterConjunctionGroupInfo, out groupErrors);
 
                     errorList.AddRange(groupErrors);
@@ -137,11 +137,11 @@
                 catch (Exception e)
                 {
                     errorList.Add(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            "Failed to create a filter group {0}. Error message: {1}",
-                            filterConjunctionGroupInfo.ToString(),
-                            e.ToString()));
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.MetricFailureToCreateFilterUnexpected,
+                            string.Format(CultureInfo.InvariantCulture, "Failed to create a filter group {0}.", filterConjunctionGroupInfo),
+                            e,
+                            Tuple.Create("MetricId", this.info.Id)));
                 }
             }
 

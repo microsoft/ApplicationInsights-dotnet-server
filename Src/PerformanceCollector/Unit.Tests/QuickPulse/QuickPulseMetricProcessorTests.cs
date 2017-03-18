@@ -49,7 +49,7 @@
                 }
             };
 
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var collectionConfiguration = new CollectionConfiguration(
                 new CollectionConfigurationInfo() { Metrics = metrics },
                 out errors,

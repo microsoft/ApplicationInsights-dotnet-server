@@ -1,7 +1,6 @@
 ﻿namespace Unit.Tests
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
 
     using Microsoft.ApplicationInsights.DataContracts;
@@ -22,7 +21,7 @@
             // ARRANGE
 
             // ACT
-            string[] errors;
+            CollectionConfigurationError[] errors;
             new CollectionConfiguration(null, out errors, new ClockMock());
 
             // ASSERT
@@ -32,7 +31,7 @@
         public void CollectionConfigurationCreatesMetrics()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var filters = new[]
             {
                 new FilterConjunctionGroupInfo()
@@ -123,7 +122,7 @@
         public void CollectionConfigurationReportsMetricsWithDuplicateIds()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var filter1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
             var filter2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
             var metrics = new[]
@@ -155,20 +154,28 @@
             };
 
             // ACT
-            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors, new ClockMock());
+            var collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { Metrics = metrics },
+                out errors,
+                new ClockMock());
 
             // ASSERT
             Assert.AreEqual(2, collectionConfiguration.RequestMetrics.Count());
             Assert.AreEqual("Metric1", collectionConfiguration.TelemetryMetadata.First().Item1);
             Assert.AreEqual("Metric2", collectionConfiguration.TelemetryMetadata.Last().Item1);
-            Assert.IsTrue(errors.Single().Contains("Metric1"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricDuplicateIds, errors.Single().ErrorType);
+            Assert.AreEqual("Metric with a duplicate id ignored: Metric1", errors.Single().Message);
+            Assert.AreEqual(string.Empty, errors.Single().FullException);
+            Assert.AreEqual("MetricId", errors.Single().Data.Single().Key);
+            Assert.AreEqual("Metric1", errors.Single().Data.Single().Value);
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsInvalidFilterForMetric()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var filterInfo = new FilterInfo() { FieldName = "NonExistentFieldName", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
             {
@@ -183,19 +190,29 @@
             };
 
             // ACT
-            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors, new ClockMock());
+            var collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { Metrics = metrics },
+                out errors,
+                new ClockMock());
 
             // ASSERT
             Assert.AreEqual(1, collectionConfiguration.RequestMetrics.Count());
             Assert.AreEqual(1, collectionConfiguration.TelemetryMetadata.Count());
-            Assert.IsTrue(errors.Single().Contains("NonExistentFieldName"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors.Single().ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFieldName Equal Request.", errors.Single().Message);
+            Assert.IsTrue(
+                errors.Single()
+                    .FullException.Contains(
+                        "Could not find the property NonExistentFieldName in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors.Single().Data.Any());
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsInvalidMetric()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var filterInfo = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
             {
@@ -210,19 +227,29 @@
             };
 
             // ACT
-            var collectionConfiguration = new CollectionConfiguration(new CollectionConfigurationInfo() { Metrics = metrics }, out errors, new ClockMock());
+            var collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { Metrics = metrics },
+                out errors,
+                new ClockMock());
 
             // ASSERT
             Assert.AreEqual(0, collectionConfiguration.RequestMetrics.Count());
             Assert.AreEqual(0, collectionConfiguration.TelemetryMetadata.Count());
-            Assert.IsTrue(errors.Single().Contains("NonExistentFieldName"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors.Single().ErrorType);
+            Assert.AreEqual(
+                "Failed to create metric Id: 'Metric1', TelemetryType: 'Request', Projection: 'NonExistentFieldName', Aggregation: 'Avg', FilterGroups: [Name Equal Request].",
+                errors.Single().Message);
+            Assert.IsTrue(errors.Single().FullException.Contains("Could not construct the projection"));
+            Assert.AreEqual("MetricId", errors.Single().Data.Single().Key);
+            Assert.AreEqual("Metric1", errors.Single().Data.Single().Value);
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsMultipleInvalidFiltersAndMetrics()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var filterInfo1 = new FilterInfo() { FieldName = "NonExistentFilterFieldName1", Predicate = Predicate.Equal, Comparand = "Request" };
             var filterInfo2 = new FilterInfo() { FieldName = "NonExistentFilterFieldName2", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
@@ -256,19 +283,57 @@
             Assert.AreEqual(0, collectionConfiguration.TelemetryMetadata.Count());
 
             Assert.AreEqual(6, errors.Length);
-            Assert.IsTrue(errors[0].Contains("NonExistentFilterFieldName1"));
-            Assert.IsTrue(errors[1].Contains("NonExistentFilterFieldName2"));
-            Assert.IsTrue(errors[2].Contains("NonExistentProjectionName1"));
-            Assert.IsTrue(errors[3].Contains("NonExistentFilterFieldName1"));
-            Assert.IsTrue(errors[4].Contains("NonExistentFilterFieldName2"));
-            Assert.IsTrue(errors[5].Contains("NonExistentProjectionName2"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[0].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName1 Equal Request.", errors[0].Message);
+            Assert.IsTrue(
+                errors[0].FullException.Contains(
+                    "Could not find the property NonExistentFilterFieldName1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[0].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName2 Equal Request.", errors[1].Message);
+            Assert.IsTrue(
+                errors[1].FullException.Contains(
+                    "Could not find the property NonExistentFilterFieldName2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[1].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[2].ErrorType);
+            Assert.AreEqual(
+                "Failed to create metric Id: 'Metric1', TelemetryType: 'Request', Projection: 'NonExistentProjectionName1', Aggregation: 'Avg', FilterGroups: [NonExistentFilterFieldName1 Equal Request, NonExistentFilterFieldName2 Equal Request].",
+                errors[2].Message);
+            Assert.IsTrue(errors[2].FullException.Contains("Could not construct the projection"));
+            Assert.AreEqual("MetricId", errors[2].Data.Single().Key);
+            Assert.AreEqual("Metric1", errors[2].Data.Single().Value);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[3].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName1 Equal Request.", errors[3].Message);
+            Assert.IsTrue(
+                errors[3].FullException.Contains(
+                    "Could not find the property NonExistentFilterFieldName1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[3].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[4].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName2 Equal Request.", errors[4].Message);
+            Assert.IsTrue(
+                errors[4].FullException.Contains(
+                    "Could not find the property NonExistentFilterFieldName2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[4].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[5].ErrorType);
+            Assert.AreEqual(
+                "Failed to create metric Id: 'Metric2', TelemetryType: 'Request', Projection: 'NonExistentProjectionName2', Aggregation: 'Avg', FilterGroups: [NonExistentFilterFieldName1 Equal Request, NonExistentFilterFieldName2 Equal Request].",
+                errors[5].Message);
+            Assert.IsTrue(errors[5].FullException.Contains("Could not construct the projection"));
+            Assert.AreEqual("MetricId", errors[5].Data.Single().Key);
+            Assert.AreEqual("Metric2", errors[5].Data.Single().Value);
         }
 
         [TestMethod]
         public void CollectionConfigurationCreatesDocumentStreams()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -345,7 +410,7 @@
             // ARRANGE
             var timeProvider = new ClockMock();
 
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var oldDocumentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -527,7 +592,7 @@
         public void CollectionConfigurationReportsDocumentStreamsWithDuplicateIds()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -580,14 +645,19 @@
             Assert.AreEqual(2, collectionConfiguration.DocumentStreams.Count());
             Assert.AreEqual("Stream1", collectionConfiguration.DocumentStreams.First().Id);
             Assert.AreEqual("Stream2", collectionConfiguration.DocumentStreams.Last().Id);
-            Assert.IsTrue(errors.Single().Contains("Stream1"));
+            
+            Assert.AreEqual(CollectionConfigurationErrorType.DocumentStreamDuplicateIds, errors.Single().ErrorType);
+            Assert.AreEqual("Document stream with a duplicate id ignored: Stream1", errors.Single().Message);
+            Assert.AreEqual(string.Empty, errors.Single().FullException);
+            Assert.AreEqual("DocumentStreamId", errors.Single().Data.Single().Key);
+            Assert.AreEqual("Stream1", errors.Single().Data.Single().Value);
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsInvalidFilterForDocumentStreams()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -612,14 +682,18 @@
 
             // ASSERT
             Assert.AreEqual(1, collectionConfiguration.DocumentStreams.Count());
-            Assert.IsTrue(errors.Single().Contains("NonExistentFieldName"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors.Single().ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFieldName Equal .", errors.Single().Message);
+            Assert.IsTrue(errors.Single().FullException.Contains("Comparand"));
+            Assert.IsFalse(errors.Single().Data.Any());
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsInvalidFilterGroupForDocumentStreams()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -644,14 +718,19 @@
 
             // ASSERT
             Assert.AreEqual(1, collectionConfiguration.DocumentStreams.Count());
-            Assert.IsTrue(errors.Single().Contains("505"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.DocumentStreamFailureToCreateFilterUnexpected, errors.Single().ErrorType);
+            Assert.AreEqual("Failed to create a document stream filter TelemetryType: '505', filters: ''.", errors.Single().Message);
+            Assert.IsTrue(errors.Single().FullException.Contains("Unsupported TelemetryType: '505'"));
+            Assert.AreEqual("DocumentStreamId", errors.Single().Data.Single().Key);
+            Assert.AreEqual("Stream1", errors.Single().Data.Single().Value);
         }
 
         [TestMethod]
         public void CollectionConfigurationReportsMultipleInvalidFiltersAndDocumentStreams()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfos = new[]
             {
                 new DocumentStreamInfo()
@@ -711,9 +790,24 @@
             Assert.AreEqual("Stream2", collectionConfiguration.DocumentStreams.Last().Id);
 
             Assert.AreEqual(3, errors.Length);
-            Assert.IsTrue(errors[0].Contains("505"));
-            Assert.IsTrue(errors[1].Contains("NonExistentFilterFieldName3"));
-            Assert.IsTrue(errors[2].Contains("NonExistentFilterFieldName4"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.DocumentStreamFailureToCreateFilterUnexpected, errors[0].ErrorType);
+            Assert.AreEqual(
+                "Failed to create a document stream filter TelemetryType: '505', filters: 'NonExistentFilterFieldName1 Equal , NonExistentFilterFieldName2 Equal '.",
+                errors[0].Message);
+            Assert.IsTrue(errors[0].FullException.Contains("Unsupported TelemetryType: '505'"));
+            Assert.AreEqual("DocumentStreamId", errors[0].Data.Single().Key);
+            Assert.AreEqual("Stream1", errors[0].Data.Single().Value);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName3 Equal .", errors[1].Message);
+            Assert.IsTrue(errors[1].FullException.Contains("Comparand"));
+            Assert.IsFalse(errors[1].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[2].ErrorType);
+            Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName4 Equal .", errors[2].Message);
+            Assert.IsTrue(errors[2].FullException.Contains("Comparand"));
+            Assert.IsFalse(errors[2].Data.Any());
         }
     }
 }

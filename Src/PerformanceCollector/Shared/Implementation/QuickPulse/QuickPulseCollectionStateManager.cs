@@ -26,7 +26,7 @@
 
         private readonly Action<IList<QuickPulseDataSample>> onReturnFailedSamples;
 
-        private readonly Func<CollectionConfigurationInfo, string[]> onUpdatedConfiguration;
+        private readonly Func<CollectionConfigurationInfo, CollectionConfigurationError[]> onUpdatedConfiguration;
 
         private DateTimeOffset lastSuccessfulPing;
         
@@ -40,7 +40,7 @@
 
         private readonly TimeSpan coolDownTimeout = TimeSpan.FromMilliseconds(50);
 
-        private readonly List<string> collectionConfigurationErrors = new List<string>(); 
+        private readonly List<CollectionConfigurationError> collectionConfigurationErrors = new List<CollectionConfigurationError>(); 
 
         public QuickPulseCollectionStateManager(
             IQuickPulseServiceClient serviceClient, 
@@ -50,7 +50,7 @@
             Action onStopCollection, 
             Func<IList<QuickPulseDataSample>> onSubmitSamples, 
             Action<IList<QuickPulseDataSample>> onReturnFailedSamples,
-            Func<CollectionConfigurationInfo, string[]> onUpdatedConfiguration)
+            Func<CollectionConfigurationInfo, CollectionConfigurationError[]> onUpdatedConfiguration)
         {
             if (serviceClient == null)
             {
@@ -238,10 +238,10 @@
             {
                 this.collectionConfigurationErrors.Clear();
 
-                string[] errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
+                CollectionConfigurationError[] errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
                 if (errors != null)
                 {
-                    this.collectionConfigurationErrors.AddRange(errors.Distinct(StringComparer.Ordinal));
+                    this.collectionConfigurationErrors.AddRange(errors);
                 }
 
                 this.currentConfigurationETag = configurationInfo.ETag;

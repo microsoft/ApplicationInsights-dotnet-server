@@ -13,13 +13,13 @@
         public void DocumentStreamHandlesNoFiltersCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfo = new DocumentStreamInfo() { DocumentFilterGroups = new DocumentFilterConjunctionGroupInfo[0] };
             var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var request = new RequestTelemetry() { Id = "apple" };
 
             // ACT
-            string[] runtimeErrors;
+            CollectionConfigurationError[] runtimeErrors;
             bool result = documentStream.CheckFilters(request, out runtimeErrors);
             
             // ASSERT
@@ -33,13 +33,13 @@
         public void DocumentStreamHandlesNullFiltersCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var documentStreamInfo = new DocumentStreamInfo() { DocumentFilterGroups = null };
             var documentStream = new DocumentStream(documentStreamInfo, out errors, new ClockMock());
             var request = new RequestTelemetry() { Id = "apple" };
 
             // ACT
-            string[] runtimeErrors;
+            CollectionConfigurationError[] runtimeErrors;
             bool result = documentStream.CheckFilters(request, out runtimeErrors);
 
             // ASSERT
@@ -53,7 +53,7 @@
         public void DocumentStreamFiltersRequestsCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             FilterInfo filterApple = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "apple" };
             FilterInfo filterOrange = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "orange" };
             FilterInfo filterMango = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "mango" };
@@ -90,7 +90,7 @@
             bool errorsEncountered = false;
             for (int i = 0; i < requests.Length; i ++)
             {
-                string[] runtimeErrors;
+                CollectionConfigurationError[] runtimeErrors;
                 results[i] = documentStream.CheckFilters(requests[i], out runtimeErrors);
                 if (runtimeErrors.Any())
                 {
@@ -117,7 +117,7 @@
         public void DocumentStreamFiltersDependenciesCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             FilterInfo filterApple = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "apple" };
             FilterInfo filterOrange = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "orange" };
             FilterInfo filterMango = new FilterInfo { FieldName = "Id", Predicate = Predicate.Contains, Comparand = "mango" };
@@ -154,7 +154,7 @@
             bool errorsEncountered = false;
             for (int i = 0; i < dependencies.Length; i++)
             {
-                string[] runtimeErrors;
+                CollectionConfigurationError[] runtimeErrors;
                 results[i] = documentStream.CheckFilters(dependencies[i], out runtimeErrors);
                 if (runtimeErrors.Any())
                 {
@@ -181,7 +181,7 @@
         public void DocumentStreamFiltersExceptionsCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             FilterInfo filterApple = new FilterInfo { FieldName = "Message", Predicate = Predicate.Contains, Comparand = "apple" };
             FilterInfo filterOrange = new FilterInfo { FieldName = "Message", Predicate = Predicate.Contains, Comparand = "orange" };
             FilterInfo filterMango = new FilterInfo { FieldName = "Message", Predicate = Predicate.Contains, Comparand = "mango" };
@@ -218,7 +218,7 @@
             bool errorsEncountered = false;
             for (int i = 0; i < exceptions.Length; i++)
             {
-                string[] runtimeErrors;
+                CollectionConfigurationError[] runtimeErrors;
                 results[i] = documentStream.CheckFilters(exceptions[i], out runtimeErrors);
                 if (runtimeErrors.Any())
                 {
@@ -245,7 +245,7 @@
         public void DocumentStreamFiltersEventsCorrectly()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             FilterInfo filterApple = new FilterInfo { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "apple" };
             FilterInfo filterOrange = new FilterInfo { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "orange" };
             FilterInfo filterMango = new FilterInfo { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "mango" };
@@ -282,7 +282,7 @@
             bool errorsEncountered = false;
             for (int i = 0; i < events.Length; i++)
             {
-                string[] runtimeErrors;
+                CollectionConfigurationError[] runtimeErrors;
                 results[i] = documentStream.CheckFilters(events[i], out runtimeErrors);
                 if (runtimeErrors.Any())
                 {
@@ -309,7 +309,7 @@
         public void DocumentStreamReportsErrorsDuringCreation()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             FilterInfo filterApple = new FilterInfo { FieldName = "NonExistentField1", Predicate = Predicate.Contains, Comparand = "apple" };
             FilterInfo filterOrange = new FilterInfo { FieldName = "NonExistentField2", Predicate = Predicate.Contains, Comparand = "orange" };
             FilterInfo filterMango = new FilterInfo { FieldName = "NonExistentField3", Predicate = Predicate.Contains, Comparand = "mango" };
@@ -337,9 +337,27 @@
 
             // ASSERT
             Assert.AreEqual(3, errors.Length);
-            Assert.IsTrue(errors[0].Contains("NonExistentField1"));
-            Assert.IsTrue(errors[1].Contains("NonExistentField2"));
-            Assert.IsTrue(errors[2].Contains("NonExistentField3"));
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[0].ErrorType);
+            Assert.AreEqual(
+                "Failed to create a filter NonExistentField1 Contains apple.",
+                errors[0].Message);
+            Assert.IsTrue(errors[0].FullException.Contains("Could not find the property NonExistentField1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[0].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
+            Assert.AreEqual(
+                "Failed to create a filter NonExistentField2 Contains orange.",
+                errors[1].Message);
+            Assert.IsTrue(errors[1].FullException.Contains("Could not find the property NonExistentField2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[1].Data.Any());
+
+            Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[2].ErrorType);
+            Assert.AreEqual(
+                "Failed to create a filter NonExistentField3 Contains mango.",
+                errors[2].Message);
+            Assert.IsTrue(errors[2].FullException.Contains("Could not find the property NonExistentField3 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsFalse(errors[2].Data.Any());
         }
     }
 }

@@ -79,7 +79,7 @@
         public void QuickPulseDataAccumulatorCollectsTelemetryItemsInThreadSafeManner()
         {
             // ARRANGE
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var accumulator =
                 new QuickPulseDataAccumulator(
                     new CollectionConfiguration(

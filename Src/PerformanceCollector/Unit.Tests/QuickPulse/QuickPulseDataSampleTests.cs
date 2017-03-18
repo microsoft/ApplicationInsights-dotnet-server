@@ -24,7 +24,7 @@
 
         private IEnumerable<Tuple<string, int>> dummyTopCpu;
 
-        private string[] errors;
+        private CollectionConfigurationError[] errors;
 
         [TestInitialize]
         public void TestInitialize()

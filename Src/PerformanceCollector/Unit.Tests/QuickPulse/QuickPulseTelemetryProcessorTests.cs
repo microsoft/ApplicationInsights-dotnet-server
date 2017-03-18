@@ -26,7 +26,7 @@
                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
                 out errors, new ClockMock());
 
-        private static string[] errors;
+        private static CollectionConfigurationError[] errors;
 
         [TestInitialize]
         public void TestInitialize()

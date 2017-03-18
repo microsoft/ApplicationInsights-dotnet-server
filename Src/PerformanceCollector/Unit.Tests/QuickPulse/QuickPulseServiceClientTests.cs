@@ -55,7 +55,7 @@
 
         public QuickPulseServiceClientTests()
         {
-            string[] errors;
+            CollectionConfigurationError[] errors;
             this.emptyCollectionConfiguration =
                 new CollectionConfiguration(
                     new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
@@ -179,7 +179,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -251,7 +251,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -290,7 +290,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -337,7 +337,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -408,7 +408,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -552,7 +552,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -582,7 +582,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -612,7 +612,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -642,7 +642,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -700,7 +700,7 @@
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
-                new string[0]);
+                new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -785,7 +785,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -871,7 +871,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -949,7 +949,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -991,7 +991,7 @@
                 }
             };
 
-            string[] errors;
+            CollectionConfigurationError[] errors;
             var collectionConfiguration = new CollectionConfiguration(
                 new CollectionConfigurationInfo() { Metrics = metrics },
                 out errors,
@@ -1014,7 +1014,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1077,7 +1077,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1135,7 +1135,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1193,7 +1193,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1253,7 +1253,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1311,7 +1311,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1370,7 +1370,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, authApiKey, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, authApiKey, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1401,7 +1401,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
             serviceClient.Ping(string.Empty, now, "ETag1", string.Empty, out configurationInfo);
 
             // ASSERT
@@ -1430,8 +1430,20 @@
                     new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
                     Enumerable.Empty<Tuple<string, int>>(),
                     false);
-            string[] collectionConfigurationErrors = { "Error1", "Error2" };
-
+            CollectionConfigurationError[] collectionConfigurationErrors =
+            {
+                CollectionConfigurationError.CreateError(
+                    CollectionConfigurationErrorType.MetricDuplicateIds,
+                    "Error1",
+                    new Exception("Exception1"),
+                    Tuple.Create("Prop1", "Val1")),
+                CollectionConfigurationError.CreateError(
+                    CollectionConfigurationErrorType.DocumentStreamFailureToCreate,
+                    "Error2",
+                    new Exception("Exception2"),
+                    Tuple.Create("Prop2", "Val2")),
+            };
+            
             // ACT
             CollectionConfigurationInfo configurationInfo;
             serviceClient.SubmitSamples(
@@ -1446,8 +1458,18 @@
             this.listener.Stop();
 
             Assert.AreEqual(2, this.samples.Single().Item3.CollectionConfigurationErrors.Length);
-            Assert.AreEqual("Error1", this.samples.Single().Item3.CollectionConfigurationErrors[0]);
-            Assert.AreEqual("Error2", this.samples.Single().Item3.CollectionConfigurationErrors[1]);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.MetricDuplicateIds, this.samples.Single().Item3.CollectionConfigurationErrors[0].ErrorType);
+            Assert.AreEqual("Error1", this.samples.Single().Item3.CollectionConfigurationErrors[0].Message);
+            Assert.AreEqual(new Exception("Exception1").ToString(), this.samples.Single().Item3.CollectionConfigurationErrors[0].FullException);
+            Assert.AreEqual("Prop1", this.samples.Single().Item3.CollectionConfigurationErrors[0].Data.Single().Key);
+            Assert.AreEqual("Val1", this.samples.Single().Item3.CollectionConfigurationErrors[0].Data.Single().Value);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.DocumentStreamFailureToCreate, this.samples.Single().Item3.CollectionConfigurationErrors[1].ErrorType);
+            Assert.AreEqual("Error2", this.samples.Single().Item3.CollectionConfigurationErrors[1].Message);
+            Assert.AreEqual(new Exception("Exception2").ToString(), this.samples.Single().Item3.CollectionConfigurationErrors[1].FullException);
+            Assert.AreEqual("Prop2", this.samples.Single().Item3.CollectionConfigurationErrors[1].Data.Single().Key);
+            Assert.AreEqual("Val2", this.samples.Single().Item3.CollectionConfigurationErrors[1].Data.Single().Value);
         }
 
         [TestMethod]
@@ -1473,7 +1495,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1505,7 +1527,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1539,7 +1561,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1576,7 +1598,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new string[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();

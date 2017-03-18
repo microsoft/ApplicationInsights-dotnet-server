@@ -169,7 +169,7 @@
                                                ?? new QuickPulseTopCpuCollector(this.timeProvider, new QuickPulseProcessProvider(PerfLib.GetPerfLib()));
                         this.timings = timings ?? QuickPulseTimings.Default;
 
-                        string[] errors;
+                        CollectionConfigurationError[] errors;
                         this.collectionConfiguration =
                             new CollectionConfiguration(
                                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
@@ -230,7 +230,7 @@
             }
         }
 
-        private void UpdatePerformanceCollector(IEnumerable<string> performanceCountersToCollect, out string[] errors)
+        private void UpdatePerformanceCollector(IEnumerable<string> performanceCountersToCollect, out CollectionConfigurationError[] errors)
         {
             // all counters that need to be collected according to the new configuration - remove duplicates
             List<string> countersToCollect =
@@ -259,7 +259,7 @@
                     this.performanceCollector.RemoveCounter(counter);
                 }
 
-                var errorsList = new List<string>();
+                var errorsList = new List<CollectionConfigurationError>();
 
                 // add counters that should now be collected
                 foreach (var counter in countersToAdd)
@@ -272,7 +272,10 @@
                         if (!string.IsNullOrWhiteSpace(error))
                         {
                             errorsList.Add(
-                                string.Format(CultureInfo.InvariantCulture, "Error parsing performance counter: '{0}'. {1}", counter, error));
+                                CollectionConfigurationError.CreateError(
+                                    CollectionConfigurationErrorType.PerformanceCounterParsing,
+                                    string.Format(CultureInfo.InvariantCulture, "Error parsing performance counter: '{0}'. {1}", counter, error),
+                                    null));
 
                             QuickPulseEventSource.Log.CounterParsingFailedEvent(error, counter);
                             continue;
@@ -283,7 +286,11 @@
                     catch (Exception e)
                     {
                         errorsList.Add(
-                            string.Format(CultureInfo.InvariantCulture, "Unexpected error processing counter '{0}': {1}", counter, e.Message));
+                            CollectionConfigurationError.CreateError(
+                                CollectionConfigurationErrorType.PerformanceCounterUnexpected,
+                                string.Format(CultureInfo.InvariantCulture, "Unexpected error processing counter '{0}': {1}", counter, e.Message),
+                                e));
+                            
 
                         QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter);
                     }
@@ -562,7 +569,7 @@
 
             this.EndCollectionThread();
 
-            string[] errors;
+            CollectionConfigurationError[] errors;
             this.UpdatePerformanceCollector(this.collectionConfiguration.PerformanceCounters, out errors);
 
             this.dataAccumulatorManager.CompleteCurrentDataAccumulator(this.collectionConfiguration);
@@ -656,16 +663,16 @@
             }
         }
 
-        private string[] OnUpdatedConfiguration(CollectionConfigurationInfo configurationInfo)
+        private CollectionConfigurationError[] OnUpdatedConfiguration(CollectionConfigurationInfo configurationInfo)
         {
             // we need to preserve the current quota for each document stream that still exists in the new configuration
-            string[] errorsConfig;
+            CollectionConfigurationError[] errorsConfig;
             var newCollectionConfiguration = new CollectionConfiguration(configurationInfo, out errorsConfig, this.timeProvider, this.collectionConfiguration?.DocumentStreams);
 
             // the next accumulator that gets swapped in on the collection thread will be initialized with the new collection configuration
             Interlocked.Exchange(ref this.collectionConfiguration, newCollectionConfiguration);
 
-            string[] errorsPerformanceCounters;
+            CollectionConfigurationError[] errorsPerformanceCounters;
             this.UpdatePerformanceCollector(newCollectionConfiguration.PerformanceCounters, out errorsPerformanceCounters);
 
             return errorsConfig.Concat(errorsPerformanceCounters).ToArray();

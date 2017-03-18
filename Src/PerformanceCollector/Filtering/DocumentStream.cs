@@ -42,7 +42,7 @@
 
         public DocumentStream(
             DocumentStreamInfo info,
-            out string[] errors,
+            out CollectionConfigurationError[] errors,
             Clock timeProvider,
             float? initialRequestQuota = null,
             float? initialDependencyQuota = null,
@@ -85,85 +85,88 @@
                 initialTraceQuota ?? InitialTelemetryQuota);
         }
 
-        public bool CheckFilters(RequestTelemetry document, out string[] errors)
+        public bool CheckFilters(RequestTelemetry document, out CollectionConfigurationError[] errors)
         {
             return DocumentStream.CheckFilters(
                 this.requestFilterGroups,
                 (filterGroup, errorList) =>
                     {
-                        string[] groupErrors;
+                        CollectionConfigurationError[] groupErrors;
                         bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
-                        errorList.AddRange(groupErrors ?? new string[0]);
+                        errorList.AddRange(groupErrors ?? new CollectionConfigurationError[0]);
 
                         return groupPassed;
                     },
                 out errors);
         }
 
-        public bool CheckFilters(DependencyTelemetry document, out string[] errors)
+        public bool CheckFilters(DependencyTelemetry document, out CollectionConfigurationError[] errors)
         {
             return DocumentStream.CheckFilters(
                 this.dependencyFilterGroups,
                 (filterGroup, errorList) =>
                     {
-                        string[] groupErrors;
+                        CollectionConfigurationError[] groupErrors;
                         bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
-                        errorList.AddRange(groupErrors ?? new string[0]);
+                        errorList.AddRange(groupErrors ?? new CollectionConfigurationError[0]);
 
                         return groupPassed;
                     },
                 out errors);
         }
 
-        public bool CheckFilters(ExceptionTelemetry document, out string[] errors)
+        public bool CheckFilters(ExceptionTelemetry document, out CollectionConfigurationError[] errors)
         {
             return DocumentStream.CheckFilters(
                 this.exceptionFilterGroups,
                 (filterGroup, errorList) =>
                     {
-                        string[] groupErrors;
+                        CollectionConfigurationError[] groupErrors;
                         bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
-                        errorList.AddRange(groupErrors ?? new string[0]);
+                        errorList.AddRange(groupErrors ?? new CollectionConfigurationError[0]);
 
                         return groupPassed;
                     },
                 out errors);
         }
 
-        public bool CheckFilters(EventTelemetry document, out string[] errors)
+        public bool CheckFilters(EventTelemetry document, out CollectionConfigurationError[] errors)
         {
             return DocumentStream.CheckFilters(
                 this.eventFilterGroups,
                 (filterGroup, errorList) =>
                     {
-                        string[] groupErrors;
+                        CollectionConfigurationError[] groupErrors;
                         bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
-                        errorList.AddRange(groupErrors ?? new string[0]);
+                        errorList.AddRange(groupErrors ?? new CollectionConfigurationError[0]);
 
                         return groupPassed;
                     },
                 out errors);
         }
 
-        public bool CheckFilters(TraceTelemetry document, out string[] errors)
+        public bool CheckFilters(TraceTelemetry document, out CollectionConfigurationError[] errors)
         {
             return DocumentStream.CheckFilters(
                 this.traceFilterGroups,
                 (filterGroup, errorList) =>
                 {
-                    string[] groupErrors;
+                    CollectionConfigurationError[] groupErrors;
                     bool groupPassed = filterGroup.CheckFilters(document, out groupErrors);
-                    errorList.AddRange(groupErrors ?? new string[0]);
+                    errorList.AddRange(groupErrors ?? new CollectionConfigurationError[0]);
 
                     return groupPassed;
                 },
                 out errors);
         }
 
-        private static bool CheckFilters<TTelemetry>(List<FilterConjunctionGroup<TTelemetry>> filterGroups, Func<FilterConjunctionGroup<TTelemetry>, List<string>, bool> checkFilters, out string[] errors)
+        private static bool CheckFilters<TTelemetry>(
+            List<FilterConjunctionGroup<TTelemetry>> filterGroups,
+            Func<FilterConjunctionGroup<TTelemetry>, List<CollectionConfigurationError>, bool> checkFilters,
+            out CollectionConfigurationError[] errors)
         {
-            errors = new string[0];
-            var errorList = new List<string>();
+            errors = new CollectionConfigurationError[0];
+            var errorList = new List<CollectionConfigurationError>();
             bool atLeastOneConjunctionGroupPassed = false;
 
             if (filterGroups.Count == 0)
@@ -183,7 +186,12 @@
                 catch (Exception e)
                 {
                     // the filters have failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out by this conjunction group
-                    errorList.Add(e.ToString());
+                    //!!!
+                    //errorList.Add(
+                    //    CollectionConfigurationError.CreateError(
+                    //        CollectionConfigurationErrorType.DocumentStreamFilterFailureToRun,
+                    //        string.Format(CultureInfo.InvariantCulture, "Document stream filter failed to run"),
+                    //        e));
                     conjunctionGroupPassed = false;
                 }
 
@@ -199,15 +207,15 @@
 
             return atLeastOneConjunctionGroupPassed;
         }
-        
-        private void CreateFilters(out string[] errors)
+
+        private void CreateFilters(out CollectionConfigurationError[] errors)
         {
-            var errorList = new List<string>();
+            var errorList = new List<CollectionConfigurationError>();
             foreach (DocumentFilterConjunctionGroupInfo documentFilterConjunctionGroupInfo in this.info.DocumentFilterGroups ?? new DocumentFilterConjunctionGroupInfo[0])
             {
                 try
                 {
-                    string[] groupErrors;
+                    CollectionConfigurationError[] groupErrors;
                     switch (documentFilterConjunctionGroupInfo.TelemetryType)
                     {
                         case TelemetryType.Request:
@@ -233,7 +241,15 @@
                 }
                 catch (Exception e)
                 {
-                    errorList.Add(string.Format(CultureInfo.InvariantCulture, "Failed to create a filter {0}. Error message: {1}", documentFilterConjunctionGroupInfo.ToString(), e.ToString()));
+                    errorList.Add(
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.DocumentStreamFailureToCreateFilterUnexpected,
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                "Failed to create a document stream filter {0}.",
+                                documentFilterConjunctionGroupInfo),
+                            e,
+                            Tuple.Create("DocumentStreamId", this.info.Id)));
                 }
             }
 
