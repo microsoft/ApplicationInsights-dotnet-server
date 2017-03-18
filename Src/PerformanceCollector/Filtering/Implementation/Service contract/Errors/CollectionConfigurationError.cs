@@ -43,7 +43,7 @@
         public string FullException { get; set; }
 
         [DataMember]
-        public KeyValuePair<string, string>[] Data { get; set; }
+        public Dictionary<string, string> Data { get; set; }
 
         public static CollectionConfigurationError CreateError(
             CollectionConfigurationErrorType errorType,
@@ -56,7 +56,7 @@
                 ErrorType = errorType,
                 Message = message,
                 FullException = exception?.ToString() ?? string.Empty,
-                Data = data.Select(tuple => new KeyValuePair<string, string>(tuple.Item1.ToString(), tuple.Item2.ToString())).ToArray()
+                Data = data.ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2)
             };
         }
     }

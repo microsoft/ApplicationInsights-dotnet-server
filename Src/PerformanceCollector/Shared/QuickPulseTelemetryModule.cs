@@ -170,11 +170,10 @@
                         this.timings = timings ?? QuickPulseTimings.Default;
 
                         CollectionConfigurationError[] errors;
-                        this.collectionConfiguration =
-                            new CollectionConfiguration(
-                                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                                out errors,
-                                this.timeProvider);
+                        this.collectionConfiguration = new CollectionConfiguration(
+                            new CollectionConfigurationInfo() { ETag = string.Empty },
+                            out errors,
+                            this.timeProvider);
                         this.dataAccumulatorManager = this.dataAccumulatorManager ?? new QuickPulseDataAccumulatorManager(this.collectionConfiguration);
 
                         this.metricProcessor = new QuickPulseMetricProcessor();

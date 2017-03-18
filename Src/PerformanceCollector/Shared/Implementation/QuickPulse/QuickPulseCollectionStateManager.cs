@@ -238,7 +238,24 @@
             {
                 this.collectionConfigurationErrors.Clear();
 
-                CollectionConfigurationError[] errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
+                CollectionConfigurationError[] errors = null;
+                try
+                {
+                    errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
+                }
+                catch (Exception e)
+                {
+                    this.collectionConfigurationErrors.Add(
+                        CollectionConfigurationError.CreateError(
+                            CollectionConfigurationErrorType.CollectionConfigurationFailureToCreateUnexpected,
+                            string.Format(
+                                CultureInfo.InvariantCulture,
+                                "Unexpected error applying configuration. ETag: {0}",
+                                configurationInfo.ETag ?? string.Empty),
+                            e,
+                            Tuple.Create("ETag", configurationInfo.ETag)));
+                }
+
                 if (errors != null)
                 {
                     this.collectionConfigurationErrors.AddRange(errors);

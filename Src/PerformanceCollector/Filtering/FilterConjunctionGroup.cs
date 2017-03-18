@@ -67,7 +67,6 @@
                 try
                 {
                     var filter = new Filter<TTelemetry>(filterInfo);
-
                     this.filters.Add(filter);
                 }
                 catch (Exception e)

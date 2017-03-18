@@ -125,13 +125,10 @@
             var errorList = new List<CollectionConfigurationError>();
             foreach (FilterConjunctionGroupInfo filterConjunctionGroupInfo in this.info.FilterGroups ?? new FilterConjunctionGroupInfo[0])
             {
+                CollectionConfigurationError[] groupErrors = null;
                 try
                 {
-                    CollectionConfigurationError[] groupErrors;
                     var conjunctionFilterGroup = new FilterConjunctionGroup<TTelemetry>(filterConjunctionGroupInfo, out groupErrors);
-
-                    errorList.AddRange(groupErrors);
-
                     this.filterGroups.Add(conjunctionFilterGroup);
                 }
                 catch (Exception e)
@@ -142,6 +139,16 @@
                             string.Format(CultureInfo.InvariantCulture, "Failed to create a filter group {0}.", filterConjunctionGroupInfo),
                             e,
                             Tuple.Create("MetricId", this.info.Id)));
+                }
+
+                if (groupErrors != null)
+                {
+                    foreach (var error in groupErrors)
+                    {
+                        error.Data["MetricId"] = this.info.Id;
+                    }
+
+                    errorList.AddRange(groupErrors);
                 }
             }
 

@@ -24,6 +24,8 @@
 
         FilterFailureToCreateUnexpected,
 
-        //FilterFailureToRun
+        //FilterFailureToRun,
+
+        CollectionConfigurationFailureToCreateUnexpected
     }
 }

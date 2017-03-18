@@ -633,29 +633,36 @@
             Assert.IsTrue(
                 errors[0].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[0].Data.Any());
+            Assert.AreEqual(2, errors[0].Data.Count);
+            Assert.AreEqual("Metric0", errors[0].Data["MetricId"]);
+            Assert.AreEqual("1", errors[0].Data["ETag"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[1].Message);
             Assert.IsTrue(
                 errors[1].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[1].Data.Any());
+            Assert.AreEqual(2, errors[1].Data.Count);
+            Assert.AreEqual("Metric0", errors[1].Data["MetricId"]);
+            Assert.AreEqual("1", errors[1].Data["ETag"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[2].ErrorType);
             Assert.AreEqual(
                 "Failed to create metric Id: 'Metric0', TelemetryType: 'Request', Projection: 'NoneExistentNameInProjection', Aggregation: 'Avg', FilterGroups: [NonExistentNameInFilter Equal Request1, NonExistentNameInFilter Equal Request1].",
                 errors[2].Message);
             Assert.IsTrue(errors[2].FullException.Contains("Could not construct the projection"));
-            Assert.AreEqual("MetricId", errors[2].Data.Single().Key);
-            Assert.AreEqual("Metric0", errors[2].Data.Single().Value);
+            Assert.AreEqual(2, errors[2].Data.Count);
+            Assert.AreEqual("Metric0", errors[2].Data["MetricId"]);
+            Assert.AreEqual("1", errors[2].Data["ETag"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[3].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[3].Message);
             Assert.IsTrue(
                 errors[3].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[3].Data.Any());
+            Assert.AreEqual(2, errors[3].Data.Count);
+            Assert.AreEqual("Metric1", errors[3].Data["MetricId"]);
+            Assert.AreEqual("1", errors[3].Data["ETag"]);
         }
 
         #region Helpers

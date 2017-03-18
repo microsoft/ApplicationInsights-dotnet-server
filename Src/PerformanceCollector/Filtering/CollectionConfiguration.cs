@@ -97,11 +97,19 @@
             // create document streams based on description in info
             CollectionConfigurationError[] documentStreamErrors;
             this.CreateDocumentStreams(out documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
-
+            
             errors = metricErrors.Concat(documentStreamErrors).ToArray();
+
+            foreach (var error in errors)
+            {
+                error.Data["ETag"] = this.info.ETag;
+            }
         }
 
-        private void CreateDocumentStreams(out CollectionConfigurationError[] errors, Clock timeProvider, IEnumerable<DocumentStream> previousDocumentStreams)
+        private void CreateDocumentStreams(
+            out CollectionConfigurationError[] errors,
+            Clock timeProvider,
+            IEnumerable<DocumentStream> previousDocumentStreams)
         {
             var errorList = new List<CollectionConfigurationError>();
             var documentStreamIds = new HashSet<string>();
@@ -128,17 +136,18 @@
                         CollectionConfigurationError.CreateError(
                             CollectionConfigurationErrorType.DocumentStreamDuplicateIds,
                             string.Format(CultureInfo.InvariantCulture, "Document stream with a duplicate id ignored: {0}", documentStreamInfo.Id),
-                            null, Tuple.Create("DocumentStreamId", documentStreamInfo.Id)));
+                            null,
+                            Tuple.Create("DocumentStreamId", documentStreamInfo.Id)));
 
                     continue;
                 }
 
+                CollectionConfigurationError[] localErrors = null;
                 try
                 {
                     Tuple<float, float, float, float, float> initialQuotas;
                     previousQuotasByStreamId.TryGetValue(documentStreamInfo.Id, out initialQuotas);
 
-                    CollectionConfigurationError[] localErrors;
                     var documentStream = new DocumentStream(
                         documentStreamInfo,
                         out localErrors,
@@ -148,10 +157,8 @@
                         initialQuotas?.Item3,
                         initialQuotas?.Item4,
                         initialQuotas?.Item5);
-                    
-                    errorList.AddRange(localErrors ?? new CollectionConfigurationError[0]);
-                    documentStreamIds.Add(documentStreamInfo.Id);
 
+                    documentStreamIds.Add(documentStreamInfo.Id);
                     this.documentStreams.Add(documentStream);
                 }
                 catch (Exception e)
@@ -162,6 +169,16 @@
                             string.Format(CultureInfo.InvariantCulture, "Failed to create document stream {0}", documentStreamInfo),
                             e,
                             Tuple.Create("DocumentStreamId", documentStreamInfo.Id)));
+                }
+
+                if (localErrors != null)
+                {
+                    foreach (var error in localErrors)
+                    {
+                        error.Data["DocumentStreamId"] = documentStreamInfo.Id;
+                    }
+
+                    errorList.AddRange(localErrors);
                 }
             }
 
@@ -220,6 +237,7 @@
                                 CollectionConfigurationErrorType.MetricTelemetryTypeUnsupported,
                                 string.Format(CultureInfo.InvariantCulture, "TelemetryType is not supported: {0}", metricInfo.TelemetryType),
                                 null,
+                                Tuple.Create("MetricId", metricInfo.Id),
                                 Tuple.Create("TelemetryType", metricInfo.TelemetryType.ToString())));
                         break;
                 }
