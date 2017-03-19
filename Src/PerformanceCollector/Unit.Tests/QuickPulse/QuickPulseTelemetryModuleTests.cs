@@ -659,6 +659,12 @@
                             Id = "PerformanceCounter2",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\Memory\Cache Bytes Peak"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter3",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\Processor(_Total)\% Processor Time"
                         }
                     }
             };
@@ -670,12 +676,18 @@
 
             Assert.AreEqual("ETag1", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
 
-            // 2 default + 2 configured
-            Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
-            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
-            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
-            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
-            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+            // 2 default + 3 configured
+            Assert.AreEqual(5, performanceCollector.PerformanceCounters.Count());
+            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(0).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter1", performanceCollector.PerformanceCounters.Skip(0).First().ReportAs);
+            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter2", performanceCollector.PerformanceCounters.Skip(1).First().ReportAs);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter3", performanceCollector.PerformanceCounters.Skip(2).First().ReportAs);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(3).First().ReportAs);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(4).First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(4).First().ReportAs);
 
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
             {
@@ -685,13 +697,13 @@
                     {
                         new OperationalizedMetricInfo()
                         {
-                            Id = "PerformanceCounter3",
+                            Id = "PerformanceCounter1",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\MEMORY\Cache Bytes"
                         },
                         new OperationalizedMetricInfo()
                         {
-                            Id = "PerformanceCounter4",
+                            Id = "PerformanceCounter5",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\Memory\Commit Limit"
                         }
@@ -703,10 +715,14 @@
 
             // 2 default + 1 configured remaining + 1 configured new
             Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
-            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
-            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
-            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Cache Bytes", performanceCollector.PerformanceCounters.Skip(0).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter1", performanceCollector.PerformanceCounters.Skip(0).First().ReportAs);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(1).First().ReportAs);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(2).First().ReportAs);
             Assert.AreEqual(@"\Memory\Commit Limit", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter5", performanceCollector.PerformanceCounters.Skip(3).First().ReportAs);
         }
 
         [TestMethod]
@@ -744,9 +760,21 @@
                         },
                         new OperationalizedMetricInfo()
                         {
-                            Id = "PerformanceCounter2",
+                            Id = "PerformanceCounter3",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"NonParseable"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter4",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\SomeObject\SomeCounter"
+                        },
+                        new OperationalizedMetricInfo()
+                        {
+                            Id = "PerformanceCounter4",
+                            TelemetryType = TelemetryType.PerformanceCounter,
+                            Projection = @"\SomeObject1\SomeCounter1"
                         }
                     }
             };
@@ -758,22 +786,34 @@
 
             Assert.AreEqual("ETag1", serviceClient.SnappedSamples.Last().CollectionConfigurationAccumulator.CollectionConfiguration.ETag);
 
-            // 2 default + 1 configured + 1 non-existent
-            Assert.AreEqual(4, performanceCollector.PerformanceCounters.Count());
-            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.First().OriginalString);
-            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
-            Assert.AreEqual(@"\SomeCategory(SomeInstance)\SomeCounter", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
-            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+            Assert.AreEqual(5, performanceCollector.PerformanceCounters.Count());
+            Assert.AreEqual(@"\SomeCategory(SomeInstance)\SomeCounter", performanceCollector.PerformanceCounters.Skip(0).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter1", performanceCollector.PerformanceCounters.Skip(0).First().ReportAs);
+            Assert.AreEqual(@"\Memory\Cache Bytes Peak", performanceCollector.PerformanceCounters.Skip(1).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter2", performanceCollector.PerformanceCounters.Skip(1).First().ReportAs);
+            Assert.AreEqual(@"\SomeObject\SomeCounter", performanceCollector.PerformanceCounters.Skip(2).First().OriginalString);
+            Assert.AreEqual(@"PerformanceCounter4", performanceCollector.PerformanceCounters.Skip(2).First().ReportAs);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(3).First().OriginalString);
+            Assert.AreEqual(@"\Memory\Committed Bytes", performanceCollector.PerformanceCounters.Skip(3).First().ReportAs);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(4).First().OriginalString);
+            Assert.AreEqual(@"\Processor(_Total)\% Processor Time", performanceCollector.PerformanceCounters.Skip(4).First().ReportAs);
 
             CollectionConfigurationError[] errors = serviceClient.CollectionConfigurationErrors;
-            Assert.AreEqual(1, errors.Length);
+            Assert.AreEqual(2, errors.Length);
 
-            Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterParsing, errors[0].ErrorType);
-            Assert.AreEqual(
-                "Error parsing performance counter: 'NonParseable'. Invalid performance counter name format: NonParseable. Expected formats are \\category(instance)\\counter or \\category\\counter\r\nParameter name: performanceCounter",
-                errors[0].Message);
+            Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterDuplicateIds, errors[0].ErrorType);
+            Assert.AreEqual(@"Duplicate performance counter id 'PerformanceCounter4'", errors[0].Message);
             Assert.AreEqual(string.Empty, errors[0].FullException);
-            Assert.IsFalse(errors[0].Data.Any());
+            Assert.AreEqual(2, errors[0].Data.Count);
+            Assert.AreEqual("PerformanceCounter4", errors[0].Data["MetricId"]);
+            Assert.AreEqual("ETag1", errors[0].Data["ETag"]);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterParsing, errors[1].ErrorType);
+            Assert.AreEqual(@"Error parsing performance counter: '(PerformanceCounter3, NonParseable)'. Invalid performance counter name format: NonParseable. Expected formats are \category(instance)\counter or \category\counter
+Parameter name: performanceCounter",
+                errors[1].Message);
+            Assert.AreEqual(string.Empty, errors[1].FullException);
+            Assert.AreEqual(0, errors[1].Data.Count);
         }
 
         [TestMethod]

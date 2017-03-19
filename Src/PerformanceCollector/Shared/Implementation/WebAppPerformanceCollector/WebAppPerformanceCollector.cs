@@ -1,7 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
@@ -112,11 +111,14 @@
         /// Removes a counter.
         /// </summary>
         /// <param name="perfCounter">Name of the performance counter to remove.</param>
-        public void RemoveCounter(string perfCounter)
+        /// <param name="reportAs">ReportAs value of the performance counter to remove.</param>
+        public void RemoveCounter(string perfCounter, string reportAs)
         {
             Tuple<PerformanceCounterData, ICounterValue> keyToRemove =
                 this.performanceCounters.FirstOrDefault(
-                    pair => string.Equals(pair.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
+                    pair =>
+                    string.Equals(pair.Item1.ReportAs, reportAs, StringComparison.Ordinal)
+                    && string.Equals(pair.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
 
             if (keyToRemove != null)
             {

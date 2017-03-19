@@ -30,7 +30,9 @@
 
         private readonly List<Tuple<string, AggregationType>> metricMetadata = new List<Tuple<string, AggregationType>>();
 
-        private readonly List<DocumentStream> documentStreams = new List<DocumentStream>(); 
+        private readonly List<DocumentStream> documentStreams = new List<DocumentStream>();
+
+        private readonly List<Tuple<string, string>> performanceCounters = new List<Tuple<string, string>>();
 
         public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
 
@@ -62,18 +64,10 @@
         public string ETag => this.info.ETag;
 
         /// <remarks>
-        ///  Performance counter name is stored in OperationalizedMetricInfo.Projection
+        /// Performance counter name is stored in OperationalizedMetricInfo.Projection
         /// </remarks>
-        public IEnumerable<string> PerformanceCounters
-        {
-            get
-            {
-                return
-                    (this.info.Metrics ?? new OperationalizedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.PerformanceCounter)
-                        .Select(metric => metric.Projection);
-            }
-        }
-
+        public IEnumerable<Tuple<string, string>> PerformanceCounters => this.performanceCounters;
+        
         public CollectionConfiguration(
             CollectionConfigurationInfo info,
             out CollectionConfigurationError[] errors,
@@ -97,13 +91,46 @@
             // create document streams based on description in info
             CollectionConfigurationError[] documentStreamErrors;
             this.CreateDocumentStreams(out documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
-            
-            errors = metricErrors.Concat(documentStreamErrors).ToArray();
+
+            // check performance counters
+            CollectionConfigurationError[] performanceCounterErrors;
+            this.CreatePerformanceCounters(out performanceCounterErrors);
+
+            errors = metricErrors.Concat(documentStreamErrors).Concat(performanceCounterErrors).ToArray();
 
             foreach (var error in errors)
             {
                 error.Data["ETag"] = this.info.ETag;
             }
+        }
+
+        private void CreatePerformanceCounters(out CollectionConfigurationError[] errors)
+        {
+            var errorList = new List<CollectionConfigurationError>();
+
+            OperationalizedMetricInfo[] performanceCounterMetrics =
+                (this.info.Metrics ?? new OperationalizedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.PerformanceCounter)
+                    .ToArray();
+
+            this.performanceCounters.AddRange(
+                performanceCounterMetrics.GroupBy(metric => metric.Id, StringComparer.Ordinal)
+                    .Select(group => group.First())
+                    .Select(pc => Tuple.Create(pc.Id, pc.Projection)));
+
+            IEnumerable<string> duplicateMetricIds =
+                performanceCounterMetrics.GroupBy(pc => pc.Id, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => group.Key);
+
+            foreach (var duplicateMetricId in duplicateMetricIds)
+            {
+                errorList.Add(
+                    CollectionConfigurationError.CreateError(
+                        CollectionConfigurationErrorType.PerformanceCounterDuplicateIds,
+                        string.Format(CultureInfo.InvariantCulture, "Duplicate performance counter id '{0}'", duplicateMetricId),
+                        null,
+                        Tuple.Create("MetricId", duplicateMetricId)));
+            }
+
+            errors = errorList.ToArray();
         }
 
         private void CreateDocumentStreams(

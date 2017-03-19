@@ -119,6 +119,51 @@
         }
 
         [TestMethod]
+        public void CollectionConfigurationReportsPerformanceCountersWithDuplicateIds()
+        {
+            // ARRANGE
+            CollectionConfigurationError[] errors;
+            var filter1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
+            var filter2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
+            var metrics = new[]
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "PerformanceCounter1",
+                    TelemetryType = TelemetryType.PerformanceCounter,
+                    Projection = @"\SomeObject\SomeCounter",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter1 } } }
+                },
+                new OperationalizedMetricInfo()
+                {
+                    Id = "PerformanceCounter1",
+                    TelemetryType = TelemetryType.PerformanceCounter,
+                    Projection = @"\SomeObject(SomeInstance)\SomeCounter",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter2 } } }
+                }
+            };
+
+            // ACT
+            var collectionConfiguration = new CollectionConfiguration(
+                new CollectionConfigurationInfo() { ETag = "ETag1", Metrics = metrics },
+                out errors,
+                new ClockMock());
+
+            // ASSERT
+            Assert.AreEqual("PerformanceCounter1", collectionConfiguration.PerformanceCounters.Single().Item1);
+            Assert.AreEqual(@"\SomeObject\SomeCounter", collectionConfiguration.PerformanceCounters.Single().Item2);
+
+            Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterDuplicateIds, errors.Single().ErrorType);
+            Assert.AreEqual("Duplicate performance counter id 'PerformanceCounter1'", errors.Single().Message);
+            Assert.AreEqual(string.Empty, errors.Single().FullException);
+            Assert.AreEqual(2, errors.Single().Data.Count);
+            Assert.AreEqual("PerformanceCounter1", errors.Single().Data["MetricId"]);
+            Assert.AreEqual("ETag1", errors.Single().Data["ETag"]);
+        }
+
+        [TestMethod]
         public void CollectionConfigurationReportsMetricsWithDuplicateIds()
         {
             // ARRANGE

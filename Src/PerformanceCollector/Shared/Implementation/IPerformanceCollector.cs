@@ -35,6 +35,7 @@
         /// Removes a counter.
         /// </summary>
         /// <param name="perfCounter">Name of the performance counter to remove.</param>
-        void RemoveCounter(string perfCounter);
+        /// <param name="reportAs">ReportAs value of the counter to remove.</param>
+        void RemoveCounter(string perfCounter, string reportAs);
     }
 }

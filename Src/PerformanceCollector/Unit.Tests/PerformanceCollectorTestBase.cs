@@ -121,12 +121,12 @@
             foreach (var pc in counters)
             {
                 string error;
-                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), null, true, out error, false);
+                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), pc.GetHashCode().ToString(), true, out error, false);
             }
 
             var twoCounters = collector.PerformanceCounters.ToArray();
 
-            collector.RemoveCounter(@"\PROCESSOR(_Total)\% Processor Time");
+            collector.RemoveCounter(@"\PROCESSOR(_Total)\% Processor Time", counters[0].GetHashCode().ToString());
 
             var oneCounter = collector.PerformanceCounters.ToArray();
 
@@ -148,12 +148,12 @@
             foreach (var pc in counters)
             {
                 string error;
-                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), null, true, out error, false);
+                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), pc.GetHashCode().ToString(), true, out error, false);
             }
 
             var twoCounters = collector.PerformanceCounters.ToArray();
 
-            collector.RemoveCounter(@"\ASP.NET APPLICATIONS(??APP_W3SVC_PROC??)\Request Execution Time");
+            collector.RemoveCounter(@"\ASP.NET APPLICATIONS(??APP_W3SVC_PROC??)\Request Execution Time", counters[0].GetHashCode().ToString());
 
             var oneCounter = collector.PerformanceCounters.ToArray();
 

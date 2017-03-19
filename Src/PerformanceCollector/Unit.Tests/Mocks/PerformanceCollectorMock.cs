@@ -95,9 +95,12 @@
             }
         }
 
-        public void RemoveCounter(string perfCounter)
+        public void RemoveCounter(string perfCounter, string reportAs)
         {
-            this.counters.RemoveAll(counter => string.Equals(counter.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
+            this.counters.RemoveAll(
+                counter =>
+                string.Equals(counter.Item1.ReportAs, reportAs, StringComparison.Ordinal)
+                && string.Equals(counter.Item1.OriginalString, perfCounter, StringComparison.OrdinalIgnoreCase));
         }
 
         public PerformanceCounter CreateCounter(

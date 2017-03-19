@@ -6,6 +6,8 @@
 
         PerformanceCounterUnexpected,
 
+        PerformanceCounterDuplicateIds,
+
         DocumentStreamDuplicateIds,
 
         DocumentStreamFailureToCreate,

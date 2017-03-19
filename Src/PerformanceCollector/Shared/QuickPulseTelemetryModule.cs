@@ -229,33 +229,33 @@
             }
         }
 
-        private void UpdatePerformanceCollector(IEnumerable<string> performanceCountersToCollect, out CollectionConfigurationError[] errors)
+        private void UpdatePerformanceCollector(IEnumerable<Tuple<string, string>> performanceCountersToCollect, out CollectionConfigurationError[] errors)
         {
             // all counters that need to be collected according to the new configuration - remove duplicates
-            List<string> countersToCollect =
-                QuickPulseDefaults.DefaultCountersToCollect.Select(defaultCounter => defaultCounter.Value)
-                    .Concat(performanceCountersToCollect)
-                    .GroupBy(counter => counter.ToUpperInvariant())
+            List<Tuple<string, string>> countersToCollect =
+                performanceCountersToCollect.GroupBy(counter => counter.Item1, StringComparer.Ordinal)
                     .Select(group => group.First())
+                    .Concat(
+                        QuickPulseDefaults.DefaultCountersToCollect.Select(defaultCounter => Tuple.Create(defaultCounter.Value, defaultCounter.Value)))
                     .ToList();
 
             lock (this.performanceCollectorUpdateLock)
             {
                 List<PerformanceCounterData> countersCurrentlyCollected = this.performanceCollector.PerformanceCounters.ToList();
 
-                IEnumerable<string> countersToRemove =
+                IEnumerable<Tuple<string, string>> countersToRemove =
                     countersCurrentlyCollected.Where(
-                        counter => !countersToCollect.Any(c => string.Equals(c, counter.OriginalString, StringComparison.OrdinalIgnoreCase)))
-                        .Select(counter => counter.OriginalString);
+                        counter => !countersToCollect.Any(c => string.Equals(c.Item1, counter.ReportAs, StringComparison.Ordinal)))
+                        .Select(counter => Tuple.Create(counter.ReportAs, counter.OriginalString));
 
-                IEnumerable<string> countersToAdd =
+                IEnumerable<Tuple<string, string>> countersToAdd =
                     countersToCollect.Where(
-                        counter => !countersCurrentlyCollected.Any(c => string.Equals(c.OriginalString, counter, StringComparison.OrdinalIgnoreCase)));
+                        counter => !countersCurrentlyCollected.Any(c => string.Equals(c.ReportAs, counter.Item1, StringComparison.Ordinal)));
 
                 // remove counters that should no longer be collected
                 foreach (var counter in countersToRemove)
                 {
-                    this.performanceCollector.RemoveCounter(counter);
+                    this.performanceCollector.RemoveCounter(counter.Item2, counter.Item1);
                 }
 
                 var errorsList = new List<CollectionConfigurationError>();
@@ -266,7 +266,7 @@
                     try
                     {
                         string error;
-                        this.performanceCollector.RegisterCounter(counter, counter, true, out error, true);
+                        this.performanceCollector.RegisterCounter(counter.Item2, counter.Item1, true, out error, true);
 
                         if (!string.IsNullOrWhiteSpace(error))
                         {
@@ -276,11 +276,11 @@
                                     string.Format(CultureInfo.InvariantCulture, "Error parsing performance counter: '{0}'. {1}", counter, error),
                                     null));
 
-                            QuickPulseEventSource.Log.CounterParsingFailedEvent(error, counter);
+                            QuickPulseEventSource.Log.CounterParsingFailedEvent(error, counter.Item2);
                             continue;
                         }
 
-                        QuickPulseEventSource.Log.CounterRegisteredEvent(counter);
+                        QuickPulseEventSource.Log.CounterRegisteredEvent(counter.Item2);
                     }
                     catch (Exception e)
                     {
@@ -291,7 +291,7 @@
                                 e));
                             
 
-                        QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter);
+                        QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter.Item2);
                     }
                 }
 
