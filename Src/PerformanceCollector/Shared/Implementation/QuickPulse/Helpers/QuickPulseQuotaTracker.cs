@@ -22,6 +22,8 @@
 
         public float CurrentQuota => Interlocked.CompareExchange(ref this.currentQuota, 0, 0);
 
+        public bool QuotaExhausted => Interlocked.CompareExchange(ref this.currentQuota, 0, 0) < 1f;
+
         public QuickPulseQuotaTracker(Clock timeProvider, float maxQuota, float startQuota)
         {
             this.timeProvider = timeProvider;

@@ -50,6 +50,9 @@
         public ITelemetryDocument[] Documents { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public bool GlobalDocumentQuotaReached { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public ProcessCpuData[] TopCpuProcesses { get; set; }
 
         [DataMember(EmitDefaultValue = false)]

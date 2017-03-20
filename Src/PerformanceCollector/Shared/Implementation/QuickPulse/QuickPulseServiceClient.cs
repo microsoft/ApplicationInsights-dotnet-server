@@ -244,6 +244,7 @@
                     IsWebApp = this.isWebApp,
                     Metrics = metricPoints.ToArray(),
                     Documents = documents,
+                    GlobalDocumentQuotaReached = sample.GlobalDocumentQuotaReached,
                     TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
                     TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied,
                     CollectionConfigurationErrors = errors

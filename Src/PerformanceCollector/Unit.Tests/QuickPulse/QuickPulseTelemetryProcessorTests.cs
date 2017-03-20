@@ -545,6 +545,8 @@
             // ASSERT
             var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray();
 
+            Assert.IsFalse(accumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached);
+
             Assert.AreEqual(5, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
             Assert.AreEqual(TelemetryDocumentType.Request, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[0].DocumentType));
@@ -1278,7 +1280,7 @@
         {
             // ARRANGE
             var documentStreamInfos = new List<DocumentStreamInfo>();
-            
+
             // we have 15 streams (global quota is 10 * 30 documents per minute (5 documents per second), which is 10x the per-stream quota
             var streamCount = 15;
             for (int i = 0; i < streamCount; i ++)
@@ -1300,7 +1302,7 @@
             }
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos.ToArray() };
-            
+
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1326,6 +1328,8 @@
             // ASSERT
             Assert.AreEqual(0, errors.Length);
 
+            Assert.IsTrue(accumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached);
+
             // we expect to see the first 6 documents in each stream, which is the global quota
             Assert.AreEqual(maxGlobalTelemetryQuota, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
@@ -1333,11 +1337,11 @@
             {
                 var streamId = $"Stream{i}#";
                 var collectedTelemetryForStream =
-               accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Where(document => document.DocumentStreamIds.Contains(streamId))
-                   .ToArray()
-                   .Reverse()
-                   .Cast<RequestTelemetryDocument>()
-                   .ToArray();
+                    accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Where(document => document.DocumentStreamIds.Contains(streamId))
+                        .ToArray()
+                        .Reverse()
+                        .Cast<RequestTelemetryDocument>()
+                        .ToArray();
 
                 Assert.AreEqual(maxGlobalTelemetryQuota, collectedTelemetryForStream.Length);
 

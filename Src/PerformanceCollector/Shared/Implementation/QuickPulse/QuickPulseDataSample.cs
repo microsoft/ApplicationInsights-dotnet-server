@@ -69,6 +69,8 @@
 
             this.AIExceptionsPerSecond = sampleDuration.TotalSeconds > 0 ? accumulator.AIExceptionCount / sampleDuration.TotalSeconds : 0;
 
+            this.GlobalDocumentQuotaReached = accumulator.GlobalDocumentQuotaReached;
+
             try
             {
                 this.PerfCountersLookup =
@@ -120,6 +122,8 @@
         public double AIDependencyCallsSucceededPerSecond { get; private set; }
 
         public double AIExceptionsPerSecond { get; private set; }
+
+        public bool GlobalDocumentQuotaReached { get; private set; }
 
         #endregion
 

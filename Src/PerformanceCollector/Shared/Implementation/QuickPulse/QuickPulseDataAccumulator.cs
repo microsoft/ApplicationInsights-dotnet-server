@@ -32,6 +32,8 @@
 
         public long AIExceptionCount;
 
+        public bool GlobalDocumentQuotaReached;
+
         /// <summary>
         /// 2^19 - 1
         /// </summary>

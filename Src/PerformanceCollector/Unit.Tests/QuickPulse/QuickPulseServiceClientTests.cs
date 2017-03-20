@@ -435,6 +435,53 @@
         }
 
         [TestMethod]
+        public void QuickPulseServiceClientFillsInGlobalDocumentQuotaReachedWhenSubmittingToService()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+            var sample1 =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration)
+                    {
+                        StartTimestamp = now,
+                        EndTimestamp = now.AddSeconds(1),
+                        GlobalDocumentQuotaReached = true
+                    },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+            var sample2 =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration)
+                    {
+                        StartTimestamp = now,
+                        EndTimestamp = now.AddSeconds(1),
+                        GlobalDocumentQuotaReached = false
+                    },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.IsTrue(this.samples[0].Item3.GlobalDocumentQuotaReached);
+            Assert.IsFalse(this.samples[1].Item3.GlobalDocumentQuotaReached);
+        }
+
+        [TestMethod]
         public void QuickPulseServiceClientInterpretsPingResponseCorrectlyWhenHeaderTrue()
         {
             // ARRANGE

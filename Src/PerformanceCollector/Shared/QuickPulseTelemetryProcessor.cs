@@ -22,7 +22,7 @@
     {
         /// <summary>
         /// 1.0 - initial release
-        /// 1.1 - added DocumentStreamId, EventTelemetryDocument, TraceTelemetryDocument //!!! add TraceTelemetryDocument
+        /// 1.1 - added DocumentStreamId, EventTelemetryDocument, TraceTelemetryDocument
         /// </summary>
         private const string TelemetryDocumentContractVersion = "1.1";
 
@@ -52,8 +52,6 @@
         /// An overall, cross-stream quota tracker
         /// </summary>
         private readonly QuickPulseQuotaTracker globalQuotaTracker;
-
-        //!!! implement outgoing overall quota (done) and report its violations (not done - implement it through the accumulator)
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryProcessor"/> class.
@@ -468,6 +466,8 @@
                         {
                             this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
                         }
+
+                        this.dataAccumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached = this.globalQuotaTracker.QuotaExhausted;
                     }
 
                     // collect operationalized metrics
