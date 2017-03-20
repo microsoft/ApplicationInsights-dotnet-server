@@ -633,18 +633,24 @@
             Assert.IsTrue(
                 errors[0].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[0].Data.Count);
+            Assert.AreEqual(5, errors[0].Data.Count);
             Assert.AreEqual("Metric0", errors[0].Data["MetricId"]);
             Assert.AreEqual("1", errors[0].Data["ETag"]);
+            Assert.AreEqual("NonExistentNameInFilter", errors[0].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[0].Data["FilterPredicate"]);
+            Assert.AreEqual("Request1", errors[0].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[1].Message);
             Assert.IsTrue(
                 errors[1].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[1].Data.Count);
+            Assert.AreEqual(5, errors[1].Data.Count);
             Assert.AreEqual("Metric0", errors[1].Data["MetricId"]);
             Assert.AreEqual("1", errors[1].Data["ETag"]);
+            Assert.AreEqual("NonExistentNameInFilter", errors[1].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[1].Data["FilterPredicate"]);
+            Assert.AreEqual("Request1", errors[1].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[2].ErrorType);
             Assert.AreEqual(
@@ -660,9 +666,12 @@
             Assert.IsTrue(
                 errors[3].FullException.Contains(
                     "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[3].Data.Count);
+            Assert.AreEqual(5, errors[3].Data.Count);
             Assert.AreEqual("Metric1", errors[3].Data["MetricId"]);
             Assert.AreEqual("1", errors[3].Data["ETag"]);
+            Assert.AreEqual("NonExistentNameInFilter", errors[3].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[3].Data["FilterPredicate"]);
+            Assert.AreEqual("Request1", errors[3].Data["FilterComparand"]);
         }
 
         #region Helpers

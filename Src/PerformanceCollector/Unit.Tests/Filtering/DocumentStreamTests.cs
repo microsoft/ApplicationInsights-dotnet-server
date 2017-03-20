@@ -343,21 +343,30 @@
                 "Failed to create a filter NonExistentField1 Contains apple.",
                 errors[0].Message);
             Assert.IsTrue(errors[0].FullException.Contains("Could not find the property NonExistentField1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[0].Data.Any());
+            Assert.AreEqual(3, errors[0].Data.Count);
+            Assert.AreEqual("NonExistentField1", errors[0].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Contains.ToString(), errors[0].Data["FilterPredicate"]);
+            Assert.AreEqual("apple", errors[0].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField2 Contains orange.",
                 errors[1].Message);
             Assert.IsTrue(errors[1].FullException.Contains("Could not find the property NonExistentField2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[1].Data.Any());
+            Assert.AreEqual(3, errors[1].Data.Count);
+            Assert.AreEqual("NonExistentField2", errors[1].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Contains.ToString(), errors[1].Data["FilterPredicate"]);
+            Assert.AreEqual("orange", errors[1].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[2].ErrorType);
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField3 Contains mango.",
                 errors[2].Message);
             Assert.IsTrue(errors[2].FullException.Contains("Could not find the property NonExistentField3 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.IsFalse(errors[2].Data.Any());
+            Assert.AreEqual(3, errors[2].Data.Count);
+            Assert.AreEqual("NonExistentField3", errors[2].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Contains.ToString(), errors[2].Data["FilterPredicate"]);
+            Assert.AreEqual("mango", errors[2].Data["FilterComparand"]);
         }
     }
 }

@@ -75,7 +75,10 @@
                         CollectionConfigurationError.CreateError(
                             CollectionConfigurationErrorType.FilterFailureToCreateUnexpected,
                             string.Format(CultureInfo.InvariantCulture, "Failed to create a filter {0}.", filterInfo),
-                            e));
+                            e,
+                            Tuple.Create("FilterFieldName", filterInfo.FieldName),
+                            Tuple.Create("FilterPredicate", filterInfo.Predicate.ToString()),
+                            Tuple.Create("FilterComparand", filterInfo.Comparand)));
                 }
             }
 

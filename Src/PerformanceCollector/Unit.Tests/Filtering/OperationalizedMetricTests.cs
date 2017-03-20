@@ -320,9 +320,12 @@
                 "Failed to create a filter NonExistentField Equal Comparand.",
                 errors.Single().Message);
             Assert.IsTrue(errors.Single().FullException.Contains("Could not find the property NonExistentField in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(1, errors[0].Data.Count);
+            Assert.AreEqual(4, errors[0].Data.Count);
             Assert.AreEqual("Metric1", errors[0].Data["MetricId"]);
-            
+            Assert.AreEqual("NonExistentField", errors[0].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[0].Data["FilterPredicate"]);
+            Assert.AreEqual("Comparand", errors[0].Data["FilterComparand"]);
+
             // we must be left with the one valid filter only
             Assert.IsTrue(metric.CheckFilters(new RequestTelemetry() { Name = "sky" }, out errors));
             Assert.AreEqual(0, errors.Length);

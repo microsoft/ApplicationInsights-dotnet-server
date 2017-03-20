@@ -251,9 +251,12 @@
                 errors.Single()
                     .FullException.Contains(
                         "Could not find the property NonExistentFieldName in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors.Single().Data.Count);
+            Assert.AreEqual(5, errors.Single().Data.Count);
             Assert.AreEqual("Metric1", errors.Single().Data["MetricId"]);
             Assert.AreEqual(null, errors.Single().Data["ETag"]);
+            Assert.AreEqual("NonExistentFieldName", errors.Single().Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors.Single().Data["FilterPredicate"]);
+            Assert.AreEqual("Request", errors.Single().Data["FilterComparand"]);
         }
 
         [TestMethod]
@@ -338,18 +341,24 @@
             Assert.IsTrue(
                 errors[0].FullException.Contains(
                     "Could not find the property NonExistentFilterFieldName1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[0].Data.Count);
+            Assert.AreEqual(5, errors[0].Data.Count);
             Assert.AreEqual("Metric1", errors[0].Data["MetricId"]);
             Assert.AreEqual("ETag1", errors[0].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName1", errors[0].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[0].Data["FilterPredicate"]);
+            Assert.AreEqual("Request", errors[0].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName2 Equal Request.", errors[1].Message);
             Assert.IsTrue(
                 errors[1].FullException.Contains(
                     "Could not find the property NonExistentFilterFieldName2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[1].Data.Count);
+            Assert.AreEqual(5, errors[1].Data.Count);
             Assert.AreEqual("Metric1", errors[1].Data["MetricId"]);
             Assert.AreEqual("ETag1", errors[1].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName2", errors[1].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[1].Data["FilterPredicate"]);
+            Assert.AreEqual("Request", errors[1].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[2].ErrorType);
             Assert.AreEqual(
@@ -365,18 +374,24 @@
             Assert.IsTrue(
                 errors[3].FullException.Contains(
                     "Could not find the property NonExistentFilterFieldName1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[0].Data.Count);
+            Assert.AreEqual(5, errors[3].Data.Count);
             Assert.AreEqual("Metric2", errors[3].Data["MetricId"]);
             Assert.AreEqual("ETag1", errors[3].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName1", errors[3].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[3].Data["FilterPredicate"]);
+            Assert.AreEqual("Request", errors[3].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[4].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName2 Equal Request.", errors[4].Message);
             Assert.IsTrue(
                 errors[4].FullException.Contains(
                     "Could not find the property NonExistentFilterFieldName2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
-            Assert.AreEqual(2, errors[4].Data.Count);
+            Assert.AreEqual(5, errors[4].Data.Count);
             Assert.AreEqual("Metric2", errors[4].Data["MetricId"]);
             Assert.AreEqual("ETag1", errors[4].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName2", errors[4].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[4].Data["FilterPredicate"]);
+            Assert.AreEqual("Request", errors[4].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.MetricFailureToCreate, errors[5].ErrorType);
             Assert.AreEqual(
@@ -746,9 +761,12 @@
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors.Single().ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentFieldName Equal .", errors.Single().Message);
             Assert.IsTrue(errors.Single().FullException.Contains("Comparand"));
-            Assert.AreEqual(2, errors.Single().Data.Count);
+            Assert.AreEqual(5, errors.Single().Data.Count);
             Assert.AreEqual("Stream1", errors.Single().Data["DocumentStreamId"]);
             Assert.AreEqual("ETag1", errors.Single().Data["ETag"]);
+            Assert.AreEqual("NonExistentFieldName", errors.Single().Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors.Single().Data["FilterPredicate"]);
+            Assert.AreEqual(null, errors.Single().Data["FilterComparand"]);
         }
 
         [TestMethod]
@@ -866,16 +884,22 @@
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName3 Equal .", errors[1].Message);
             Assert.IsTrue(errors[1].FullException.Contains("Comparand"));
-            Assert.AreEqual(2, errors[1].Data.Count);
+            Assert.AreEqual(5, errors[1].Data.Count);
             Assert.AreEqual("Stream2", errors[1].Data["DocumentStreamId"]);
             Assert.AreEqual("ETag1", errors[1].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName3", errors[1].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[1].Data["FilterPredicate"]);
+            Assert.AreEqual(null, errors[1].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[2].ErrorType);
             Assert.AreEqual("Failed to create a filter NonExistentFilterFieldName4 Equal .", errors[2].Message);
             Assert.IsTrue(errors[2].FullException.Contains("Comparand"));
-            Assert.AreEqual(2, errors[2].Data.Count);
+            Assert.AreEqual(5, errors[2].Data.Count);
             Assert.AreEqual("Stream2", errors[2].Data["DocumentStreamId"]);
             Assert.AreEqual("ETag1", errors[2].Data["ETag"]);
+            Assert.AreEqual("NonExistentFilterFieldName4", errors[2].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Equal.ToString(), errors[2].Data["FilterPredicate"]);
+            Assert.AreEqual(null, errors[2].Data["FilterComparand"]);
         }
     }
 }

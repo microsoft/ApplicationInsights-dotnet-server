@@ -167,14 +167,20 @@
                 "Failed to create a filter NonExistentField Contains apple.",
                 errors[0].Message);
             Assert.IsTrue(errors[0].FullException.Contains("Could not find the property NonExistentField in the type Unit.Tests.TelemetryMock"));
-            Assert.IsFalse(errors[0].Data.Any());
+            Assert.AreEqual(3, errors[0].Data.Count);
+            Assert.AreEqual("NonExistentField", errors[0].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Contains.ToString(), errors[0].Data["FilterPredicate"]);
+            Assert.AreEqual("apple", errors[0].Data["FilterComparand"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors[1].ErrorType);
             Assert.AreEqual(
                 "Failed to create a filter BooleanField Contains dog.",
                 errors[1].Message);
             Assert.IsTrue(errors[1].FullException.Contains("Could not construct the filter."));
-            Assert.IsFalse(errors[1].Data.Any());
+            Assert.AreEqual(3, errors[1].Data.Count);
+            Assert.AreEqual("BooleanField", errors[1].Data["FilterFieldName"]);
+            Assert.AreEqual(Predicate.Contains.ToString(), errors[1].Data["FilterPredicate"]);
+            Assert.AreEqual("dog", errors[1].Data["FilterComparand"]);
 
             Assert.AreEqual(0, runtimeErrors.Length);
         }
