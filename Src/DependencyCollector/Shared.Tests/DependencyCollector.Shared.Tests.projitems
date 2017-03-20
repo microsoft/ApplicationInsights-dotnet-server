@@ -15,10 +15,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\DependencyTargetNameHelperTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Operation\CacheBasedOperationHolderTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Operation\ObjectInstanceBasedOperationHolderTests.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebRequestDependencyTrackingHelpersTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\DependencyCollectorTestHelpers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\MockTelemetryInitializer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\TelemetryExtensionsForDependencyCollectorTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingTelemetryModuleTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\ApplicationInsightsUrlFilterTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\DependencyCollectorEventSourceTest.cs" />
