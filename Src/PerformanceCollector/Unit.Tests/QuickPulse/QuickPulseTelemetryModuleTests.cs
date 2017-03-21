@@ -813,7 +813,8 @@
 Parameter name: performanceCounter",
                 errors[1].Message);
             Assert.AreEqual(string.Empty, errors[1].FullException);
-            Assert.AreEqual(0, errors[1].Data.Count);
+            Assert.AreEqual(1, errors[1].Data.Count);
+            Assert.AreEqual("PerformanceCounter3", errors[1].Data["MetricId"]);
         }
 
         [TestMethod]

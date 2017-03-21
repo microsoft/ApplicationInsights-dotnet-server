@@ -274,7 +274,8 @@
                                 CollectionConfigurationError.CreateError(
                                     CollectionConfigurationErrorType.PerformanceCounterParsing,
                                     string.Format(CultureInfo.InvariantCulture, "Error parsing performance counter: '{0}'. {1}", counter, error),
-                                    null));
+                                    null,
+                                    Tuple.Create("MetricId", counter.Item1)));
 
                             QuickPulseEventSource.Log.CounterParsingFailedEvent(error, counter.Item2);
                             continue;
@@ -288,7 +289,8 @@
                             CollectionConfigurationError.CreateError(
                                 CollectionConfigurationErrorType.PerformanceCounterUnexpected,
                                 string.Format(CultureInfo.InvariantCulture, "Unexpected error processing counter '{0}': {1}", counter, e.Message),
-                                e));
+                                e,
+                                Tuple.Create("MetricId", counter.Item1)));
                             
 
                         QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter.Item2);
