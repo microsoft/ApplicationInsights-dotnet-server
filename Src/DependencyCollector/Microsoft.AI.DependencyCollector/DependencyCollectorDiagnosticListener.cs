@@ -133,13 +133,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     HttpRequestHeaders requestHeaders = request.Headers;
                     if (requestHeaders != null)
                     {
-                        if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
+                        try
                         {
-                            string sourceApplicationId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
+                            if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
                             {
-                                HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                                string sourceApplicationId;
+                                if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
+                                {
+                                    HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                                }
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
                         }
 
                         // Add the root ID
@@ -178,17 +185,24 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     DependencyTelemetry telemetry;
                     if (this.pendingTelemetry.TryRemove(loggingRequestId, out telemetry))
                     {
-                        string targetApplicationId = HttpHeadersUtilities.GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
-                        if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
+                        try
                         {
-                            // We only add the cross component correlation key if the key does not represent the current component.
-                            string sourceApplicationId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
-                                targetApplicationId != sourceApplicationId)
+                            string targetApplicationId = HttpHeadersUtilities.GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
+                            if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                             {
-                                telemetry.Type = RemoteDependencyConstants.AI;
-                                telemetry.Target += " | " + targetApplicationId;
+                                // We only add the cross component correlation key if the key does not represent the current component.
+                                string sourceApplicationId;
+                                if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
+                                    targetApplicationId != sourceApplicationId)
+                                {
+                                    telemetry.Type = RemoteDependencyConstants.AI;
+                                    telemetry.Target += " | " + targetApplicationId;
+                                }
                             }
+                        }
+                        catch (Exception e)
+                        {
+                            CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
                         }
 
                         int statusCode = (int)response.StatusCode;
