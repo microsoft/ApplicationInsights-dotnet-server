@@ -129,8 +129,7 @@
 
         private static ulong GetRandomNumber()
         {
-            return BitConverter.ToUInt64(Guid.NewGuid().ToByteArray(), 8);
-            //TODO//WeakConcurrentRandom.Instance.Next();
+            return WeakConcurrentRandom.Instance.Next();
         }
     }
 }

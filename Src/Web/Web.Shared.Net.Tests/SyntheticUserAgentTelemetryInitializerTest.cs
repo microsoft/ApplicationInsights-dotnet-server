@@ -1,12 +1,11 @@
-﻿using Microsoft.ApplicationInsights.Web.Implementation;
-
-namespace Microsoft.ApplicationInsights.Web
+﻿namespace Microsoft.ApplicationInsights.Web
 {
     using System.Collections.Generic;
     using System.Web;
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Web.Helpers;
+    using Microsoft.ApplicationInsights.Web.Implementation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]

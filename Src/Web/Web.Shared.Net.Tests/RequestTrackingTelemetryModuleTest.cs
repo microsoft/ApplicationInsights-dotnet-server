@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Threading;
     using System.Threading.Tasks;
     using System.Web;
 
@@ -389,36 +388,33 @@
         }
 
         [TestMethod]
-        public void OnOnPreRequestHandlerExecuteStartsOperation()
+        public void OnPreRequestHandlerExecuteSetsCallContext()
         {
             var context = HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
             {
-                ["Request-Id"] = "|guid1.1"
+                ["Request-Id"] = "|guid1.1",
+                ["Correlation-Context"] = "k=v"
             });
 
             var requestTelemetry = context.CreateRequestTelemetryPrivate();
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             var config = TelemetryConfiguration.CreateDefault();
-            var operationTelemetryIntializer = new OperationCorrelationTelemetryInitializer();
-            config.TelemetryInitializers.Add(operationTelemetryIntializer);
 
             config.InstrumentationKey = Guid.NewGuid().ToString();
             module.Initialize(config);
 
-            // start operation
+            // start operation, there is no callcontext, so OnPreRequestHandlerExecute will set it
             module.OnPreRequestHandlerExecute(context);
-            //TODO:
-            /*
-            // let's check it. If there is a CallContext, child telemetry will be properly filled
+
+            // if OnPreRequestHandlerExecute set a CallContext, child telemetry will be properly filled
             var telemetryClient = new TelemetryClient(config);
             using (var dependency = telemetryClient.StartOperation<DependencyTelemetry>("child"))
             {
                 Assert.Equal(requestTelemetry.Context.Operation.Id, dependency.Telemetry.Context.Operation.Id);
                 Assert.Equal(requestTelemetry.Id, dependency.Telemetry.Context.Operation.ParentId);
+                Assert.Equal("v", dependency.Telemetry.Context.GetCorrelationContext()["k"]);
             }
-
-            module.OnEndRequest(context);*/
         }
 
         private RequestTrackingTelemetryModule RequestTrackingTelemetryModuleFactory()

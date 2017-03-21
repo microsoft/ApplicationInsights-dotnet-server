@@ -72,8 +72,6 @@
             }
         }
 
-
-
         private bool TryParseCustomHeaders(
             RequestTelemetry requestTelemetry,
             HttpRequest request)

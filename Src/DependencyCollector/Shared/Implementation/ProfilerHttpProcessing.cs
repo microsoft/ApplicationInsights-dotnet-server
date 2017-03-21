@@ -335,14 +335,13 @@
 
                         if (webRequest.Headers[RequestResponseHeaders.CorrelationContextHeader] == null)
                         {
-                            //TODO:
-                            /*if (telemetry.Context.CorrelationContext != null &&
+                            if (telemetry.Context.CorrelationContext != null &&
                                 telemetry.Context.CorrelationContext.Count > 0)
                             {
                                 webRequest.Headers.SetHeaderFromNameValueCollection(
                                     RequestResponseHeaders.CorrelationContextHeader,
                                     telemetry.Context.CorrelationContext);
-                            }*/
+                            }
                         }
                     }
                 }

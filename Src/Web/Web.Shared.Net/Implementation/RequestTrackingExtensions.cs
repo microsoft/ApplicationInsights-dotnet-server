@@ -1,10 +1,9 @@
-﻿using Microsoft.ApplicationInsights.Common;
-
-namespace Microsoft.ApplicationInsights.Web.Implementation
+﻿namespace Microsoft.ApplicationInsights.Web.Implementation
 {
     using System;
     using System.Linq;
     using System.Web;
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     
     internal static class RequestTrackingExtensions
@@ -125,11 +124,7 @@ namespace Microsoft.ApplicationInsights.Web.Implementation
                                 requestTelemetry.Id = AppInsightsActivity.GenerateRequestId(item.Value);
                             }
 
-                            if (!requestTelemetry.Context.Properties.ContainsKey(item.Key))
-                            {
-                                requestTelemetry.Context.Properties.Add(item);
-                            }
-                            // requestTelemetry.Context.CorrelationContext[item.Key] = item.Value;
+                            requestTelemetry.Context.CorrelationContext[item.Key] = item.Value;
                         }
                     }
                 }

@@ -106,7 +106,18 @@
                 return;
             }
 
-            //TODOcontext.GetOrStartOperation(this.telemetryClient); 
+            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
+            var operationContext = CallContextHelpers.GetCurrentOperationContext();
+            if (operationContext == null)
+            {
+                operationContext = new OperationContextForCallContext
+                {
+                    RootOperationId = requestTelemetry.Context.Operation.Id,
+                    ParentOperationId = requestTelemetry.Id,
+                    CorrelationContext = requestTelemetry.Context.CorrelationContext
+                };
+                CallContextHelpers.SaveOperationContext(operationContext);
+            }
         }
 
         /// <summary>

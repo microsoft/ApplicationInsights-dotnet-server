@@ -56,7 +56,7 @@
         public void Initialize(TelemetryConfiguration configuration)
         {
             this.telemetryClient = new TelemetryClient(configuration);
-            this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
+            this.telemetryClient.Context.GetInternalContext().SdkVersion = Implementation.SdkVersionUtils.GetSdkVersion("web:");
         }
     }
 }

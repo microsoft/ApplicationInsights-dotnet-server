@@ -1,6 +1,4 @@
-﻿using Microsoft.ApplicationInsights.Web.Implementation;
-
-namespace Microsoft.ApplicationInsights.Web
+﻿namespace Microsoft.ApplicationInsights.Web
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +6,7 @@ namespace Microsoft.ApplicationInsights.Web
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.ApplicationInsights.Web.Helpers;
+    using Microsoft.ApplicationInsights.Web.Implementation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -144,6 +143,7 @@ namespace Microsoft.ApplicationInsights.Web
             Assert.AreEqual("standard-id", requestTelemetry.Context.Operation.Id);
             Assert.AreEqual(GetActivityRootId(requestTelemetry.Id), requestTelemetry.Context.Operation.Id);
             Assert.AreNotEqual(requestTelemetry.Context.Operation.Id, requestTelemetry.Id);
+            Assert.AreEqual(0, requestTelemetry.Context.GetCorrelationContext().Count);
         }
 
         [TestMethod]
@@ -162,8 +162,10 @@ namespace Microsoft.ApplicationInsights.Web
             Assert.AreEqual("guid", GetActivityRootId(requestTelemetry.Id));
             Assert.AreNotEqual(requestTelemetry.Context.Operation.Id, requestTelemetry.Id);
 
-            Assert.AreEqual("v1", requestTelemetry.Context.Properties["k1"]);
-            Assert.AreEqual("v2", requestTelemetry.Context.Properties["k2"]);
+            var correationContext = requestTelemetry.Context.GetCorrelationContext();
+            Assert.AreEqual("v1", correationContext["k1"]);
+            Assert.AreEqual("v2", correationContext["k2"]);
+            Assert.AreEqual(2, correationContext.Count);
         }
 
         [TestMethod]
@@ -181,7 +183,7 @@ namespace Microsoft.ApplicationInsights.Web
             Assert.AreEqual("guid2", requestTelemetry.Context.Operation.Id);
             Assert.AreEqual("guid2", GetActivityRootId(requestTelemetry.Id));
 
-            Assert.AreEqual("guid2", requestTelemetry.Context.Properties["Id"]);
+            Assert.AreEqual("guid2", requestTelemetry.Context.GetCorrelationContext()["Id"]);
         }
 
         [TestMethod]
@@ -200,7 +202,9 @@ namespace Microsoft.ApplicationInsights.Web
             Assert.AreEqual("guid2", GetActivityRootId(requestTelemetry.Id));
             Assert.AreNotEqual("guid2", requestTelemetry.Id);
 
-            Assert.AreEqual("guid2", requestTelemetry.Context.Properties["Id"]);
+            var correlationContext = requestTelemetry.Context.GetCorrelationContext();
+            Assert.AreEqual("guid2", correlationContext["Id"]);
+            Assert.AreEqual(1, correlationContext.Count);
         }
 
         [TestMethod]
@@ -214,6 +218,7 @@ namespace Microsoft.ApplicationInsights.Web
             Assert.IsNotNull(requestTelemetry.Context.Operation.Id);
             Assert.AreEqual(requestTelemetry.Context.Operation.Id, GetActivityRootId(requestTelemetry.Id));
             Assert.AreNotEqual(requestTelemetry.Context.Operation.Id, requestTelemetry.Id);
+            Assert.AreEqual(0, requestTelemetry.Context.GetCorrelationContext().Count);
         }
 
         [TestMethod]
@@ -240,7 +245,9 @@ namespace Microsoft.ApplicationInsights.Web
 
             source.Initialize(requestTelemetry);
 
-            Assert.AreEqual("v1", requestTelemetry.Context.Properties["k1"]);
+            var correationContext = requestTelemetry.Context.GetCorrelationContext();
+            Assert.AreEqual(1, correationContext.Count);
+            Assert.AreEqual("v1", correationContext["k1"]);
         }
 
         private static string GetActivityRootId(string telemetryId)
