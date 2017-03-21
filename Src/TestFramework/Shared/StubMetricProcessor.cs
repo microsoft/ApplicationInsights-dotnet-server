@@ -2,7 +2,7 @@
 {
     using System;
     using Microsoft.ApplicationInsights.Channel;
-    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Metrics;
 
     public class StubMetricProcessor : IMetricProcessor
     {

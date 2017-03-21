@@ -6,12 +6,13 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Runtime.ExceptionServices;
-    using Extensibility.Implementation.Tracing;
-    using Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.Extensibility.Metrics;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
+    using Microsoft.ApplicationInsights.WindowsServer.Implementation;
 
     /// <summary>
     /// The module subscribed to AppDomain.CurrentDomain.FirstChanceException to send exceptions statistics to ApplicationInsights.
