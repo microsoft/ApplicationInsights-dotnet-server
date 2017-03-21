@@ -27,7 +27,7 @@
                 throw new ArgumentNullException(nameof(keyName));
             }
 
-            return HeadersExtensions.GetHeaderKeyValue(headers[headerName]?.Split(','), keyName);
+            return HeadersUtilities.GetHeaderKeyValue(headers[headerName]?.Split(','), keyName);
         }
         
         /// <summary>
@@ -49,7 +49,7 @@
                 throw new ArgumentNullException(nameof(keyName));
             }
 
-            headers[headerName] = HeadersExtensions.SetHeaderKeyValue(headers[headerName]?.Split(','), keyName, value);
+            headers[headerName] = HeadersUtilities.SetHeaderKeyValue(headers[headerName]?.Split(','), keyName, value);
         }
     }
 }

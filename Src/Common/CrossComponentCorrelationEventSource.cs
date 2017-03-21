@@ -1,5 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
+    using Extensibility.Implementation.Tracing;
     using System;
 #if NETCORE || NET45
     using System.Diagnostics.Tracing;
@@ -56,6 +57,16 @@
             this.WriteEvent(3, exception, this.ApplicationName);
         }
 
+        [Event(
+            4,
+            Keywords = Keywords.Diagnostics,
+            Message ="Unknown error occurred.",
+            Level = EventLevel.Warning)]
+        public void UnknownError(string exception, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(4, exception, this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
@@ -74,6 +85,17 @@
             }
 
             return name;
+        }
+
+        public static string GetExceptionDetailString(Exception ex)
+        {
+            var ae = ex as AggregateException;
+            if (ae != null)
+            {
+                return ae.Flatten().InnerException.ToInvariantString();
+            }
+
+            return ex.ToInvariantString();
         }
 
         /// <summary>

@@ -2,11 +2,13 @@
 {
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
+    using System.Text;
 
     /// <summary>
     /// Generic functions that can be used to get and set Http headers.
     /// </summary>
-    public static class HeadersExtensions
+    public static class HeadersUtilities
     {
         /// <summary>
         /// Get the key value from the provided HttpHeader value that is set up as a comma-separated list of key value pairs. Each key value pair is formatted like (key)=(value).
@@ -44,34 +46,49 @@
         /// <returns>The result of setting the provided key name/value pair into the provided headerValues.</returns>
         public static string SetHeaderKeyValue(IEnumerable<string> headerValues, string keyName, string keyValue)
         {
-            string result = string.Empty;
+            StringBuilder result = new StringBuilder();
+
             bool found = false;
-
-            string keyValueStringToAdd = string.Format(CultureInfo.InvariantCulture, "{0}={1}", keyName.Trim(), keyValue.Trim());
-
             if (headerValues != null)
             {
                 foreach (string keyValuePair in headerValues)
                 {
-                    string[] keyValueParts = keyValuePair.Split('=');
-                    if (keyValueParts.Length != 2 || keyValueParts[0].Trim() != keyName)
+                    int equalsSignIndex = keyValuePair.IndexOf('=');
+                    if (equalsSignIndex == -1)
                     {
-                        result = Append(result, keyValuePair);
+                        Append(result, keyValuePair.Trim());
                     }
-                    else if (!found)
+                    else
                     {
-                        found = true;
-                        result = Append(result, keyValueStringToAdd);
+                        string name = TrimSubstring(keyValuePair, 0, equalsSignIndex);
+                        if (name == null)
+                        {
+                            Append(result, keyValuePair.Trim());
+                        }
+                        else if (name != keyName)
+                        {
+                            string value = TrimSubstring(keyValuePair, equalsSignIndex + 1, keyValuePair.Length);
+                            if (value == null)
+                            {
+                                value = string.Empty;
+                            }
+                            Append(result, CreateKeyValuePair(name, value));
+                        }
+                        else if (!found)
+                        {
+                            found = true;
+                            Append(result, CreateKeyValuePair(keyName.Trim(), keyValue.Trim()));
+                        }
                     }
                 }
             }
 
             if (!found)
             {
-                result = Append(result, keyValueStringToAdd);
+                Append(result, CreateKeyValuePair(keyName.Trim(), keyValue.Trim()));
             }
 
-            return result;
+            return result.ToString();
         }
 
         /// <summary>
@@ -79,29 +96,44 @@
         /// </summary>
         /// <param name="value">The string to append toAppend to.</param>
         /// <param name="toAppend">The string to append after value.</param>
-        /// <returns>The result of appending toAppend to value with a comma a space separating them.</returns>
-        private static string Append(string value, string toAppend)
+        private static void Append(StringBuilder value, string toAppend)
         {
-            string result;
-
-            if (!string.IsNullOrEmpty(value))
+            if (value.Length > 0)
             {
-                result = value.Trim();
-                if (!string.IsNullOrEmpty(toAppend))
+                value.Append(", ");
+            }
+            value.Append(toAppend);
+        }
+
+        private static string TrimSubstring(string value, int startIndex, int endIndex)
+        {
+            int firstNonWhitespaceIndex = -1;
+            int last = -1;
+            for (int firstSearchIndex = startIndex; firstSearchIndex < endIndex; ++firstSearchIndex)
+            {
+                if (!char.IsWhiteSpace(value[firstSearchIndex]))
                 {
-                    result += ", " + toAppend.Trim();
+                    firstNonWhitespaceIndex = firstSearchIndex;
+                    
+                    // Found the first non-whitespace character index, now look for the last.
+                    for (int lastSearchIndex = endIndex - 1; lastSearchIndex >= startIndex; --lastSearchIndex)
+                    {
+                        if (!char.IsWhiteSpace(value[lastSearchIndex]))
+                        {
+                            last = lastSearchIndex;
+                            break;
+                        }
+                    }
+                    break;
                 }
             }
-            else if (!string.IsNullOrEmpty(toAppend))
-            {
-                result = toAppend.Trim();
-            }
-            else
-            {
-                result = string.Empty;
-            }
 
-            return result;
+            return firstNonWhitespaceIndex == -1 ? null : value.Substring(firstNonWhitespaceIndex, last - firstNonWhitespaceIndex + 1);
+        }
+
+        private static string CreateKeyValuePair(string key, string value)
+        {
+            return string.Format(CultureInfo.InvariantCulture, "{0}={1}", key, value);
         }
     }
 }

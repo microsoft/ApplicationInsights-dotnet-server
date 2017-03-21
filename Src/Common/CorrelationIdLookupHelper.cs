@@ -7,7 +7,6 @@
     using System.Net;
     using System.Threading.Tasks;
     using Extensibility;
-    using Extensibility.Implementation.Tracing;
 #if NETCORE
     using System.Net.Http;
 #endif
@@ -124,7 +123,7 @@
                             }
                             catch (Exception ex)
                             {
-                                CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
+                                CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(CrossComponentCorrelationEventSource.GetExceptionDetailString(ex));
                             }
                         });
 
@@ -133,7 +132,7 @@
                 }
                 catch (Exception ex)
                 {
-                    CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
+                    CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(CrossComponentCorrelationEventSource.GetExceptionDetailString(ex));
 
                     correlationId = string.Empty;
                     return false;
@@ -191,17 +190,6 @@
         private Uri GetAppIdEndPointUri(string instrumentationKey)
         {
             return new Uri(this.endpointAddress, string.Format(CultureInfo.InvariantCulture, AppIdQueryApiRelativeUriFormat, instrumentationKey));
-        }
-
-        private string GetExceptionDetailString(Exception ex)
-        {
-            var ae = ex as AggregateException;
-            if (ae != null)
-            {
-                return ae.Flatten().InnerException.ToInvariantString();
-            }
-
-            return ex.ToInvariantString();
         }
     }
 }

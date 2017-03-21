@@ -14,9 +14,7 @@
 
         public bool TryGetXComponentCorrelationId(string instrumentationKey, out string correlationId)
         {
-            bool result = this.instrumentationKeyToCorrelationIdMap.ContainsKey(instrumentationKey);
-            correlationId = result ? this.instrumentationKeyToCorrelationIdMap[instrumentationKey] : string.Empty;
-            return result;
+            return this.instrumentationKeyToCorrelationIdMap.TryGetValue(instrumentationKey, out correlationId);
         }
     }
 }

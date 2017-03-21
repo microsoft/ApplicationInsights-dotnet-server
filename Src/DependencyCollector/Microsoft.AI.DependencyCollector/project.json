@@ -16,7 +16,7 @@
         "../../Common/CrossComponentCorrelationEventSource.cs",
         "../../Common/ICorrelationIdLookupHelper.cs",
         "../../Common/RequestResponseHeaders.cs",
-        "../../Common/HeadersExtensions.cs",
+        "../../Common/HeadersUtilities.cs",
         "../../Web/Web.Net45/Implementation/SdkVersionUtils.cs"
       ]
     }
