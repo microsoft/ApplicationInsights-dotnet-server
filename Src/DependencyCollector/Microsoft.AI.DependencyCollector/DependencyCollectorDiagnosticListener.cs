@@ -133,12 +133,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     HttpRequestHeaders requestHeaders = request.Headers;
                     if (requestHeaders != null)
                     {
-                        if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
+                        if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey))
                         {
                             string sourceApplicationId;
                             if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId))
                             {
-                                SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
+                                HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextSourceKey, sourceApplicationId);
                             }
                         }
 
@@ -178,7 +178,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                     DependencyTelemetry telemetry;
                     if (this.pendingTelemetry.TryRemove(loggingRequestId, out telemetry))
                     {
-                        string targetApplicationId = GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
+                        string targetApplicationId = HttpHeadersUtilities.GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextTargetKey);
                         if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                         {
                             // We only add the cross component correlation key if the key does not represent the current component.
@@ -204,49 +204,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             {
                 CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
             }
-        }
-
-        internal static IEnumerable<string> GetHeaderValues(HttpHeaders headers, string headerName)
-        {
-            IEnumerable<string> result;
-            if (headers == null || !headers.TryGetValues(headerName, out result))
-            {
-                result = Enumerable.Empty<string>();
-            }
-            return result;
-        }
-
-        internal static string GetHeaderKeyValue(HttpHeaders headers, string headerName, string keyName)
-        {
-            IEnumerable<string> headerValues = GetHeaderValues(headers, headerName);
-            return HeadersUtilities.GetHeaderKeyValue(headerValues, keyName);
-        }
-
-        internal static string GetRequestContextKeyValue(HttpHeaders headers, string keyName)
-        {
-            return GetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName);
-        }
-
-        private static bool ContainsRequestContextKeyValue(HttpHeaders headers, string keyName)
-        {
-            return !string.IsNullOrEmpty(GetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName));
-        }
-
-        internal static void SetRequestContextKeyValue(HttpHeaders headers, string keyName, string keyValue)
-        {
-            SetHeaderKeyValue(headers, RequestResponseHeaders.RequestContextHeader, keyName, keyValue);
-        }
-
-        internal static void SetHeaderKeyValue(HttpHeaders headers, string headerName, string keyName, string keyValue)
-        {
-            if (headers == null)
-            {
-                throw new ArgumentNullException(nameof(headers));
-            }
-
-            IEnumerable<string> headerValues = GetHeaderValues(headers, headerName);
-            headers.Remove(headerName);
-            headers.Add(headerName, HeadersUtilities.SetHeaderKeyValue(headerValues, keyName, keyValue));
         }
     }
 }

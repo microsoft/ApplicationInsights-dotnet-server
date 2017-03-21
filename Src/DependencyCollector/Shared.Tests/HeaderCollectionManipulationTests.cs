@@ -62,7 +62,7 @@
             headers.SetNameValueHeaderValue("Request-Context", "roleName", "webRole");
             headers.SetNameValueHeaderValue("Request-Context", "appId", "udpatedAppId");
             Assert.AreEqual(1, headers.Keys.Count);
-            Assert.AreEqual("appId=udpatedAppId, roleName=webRole", headers["Request-Context"]);
+            Assert.AreEqual("roleName=webRole, appId=udpatedAppId", headers["Request-Context"]);
         }
     }
 }

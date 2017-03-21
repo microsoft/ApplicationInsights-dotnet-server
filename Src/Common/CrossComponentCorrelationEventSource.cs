@@ -1,6 +1,5 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
-    using Extensibility.Implementation.Tracing;
     using System;
 #if NETCORE || NET45
     using System.Diagnostics.Tracing;
@@ -8,6 +7,7 @@
 #if NETCORE
     using System.Reflection;
 #endif
+    using Extensibility.Implementation.Tracing;
 #if NET40
     using Microsoft.Diagnostics.Tracing;
 #endif
@@ -26,6 +26,17 @@
         }
 
         public string ApplicationName { [NonEvent]get; [NonEvent]private set; }
+
+        public static string GetExceptionDetailString(Exception ex)
+        {
+            var ae = ex as AggregateException;
+            if (ae != null)
+            {
+                return ae.Flatten().InnerException.ToInvariantString();
+            }
+
+            return ex.ToInvariantString();
+        }
 
         [Event(
             1,
@@ -60,7 +71,7 @@
         [Event(
             4,
             Keywords = Keywords.Diagnostics,
-            Message ="Unknown error occurred.",
+            Message = "Unknown error occurred.",
             Level = EventLevel.Warning)]
         public void UnknownError(string exception, string appDomainName = "Incorrect")
         {
@@ -74,7 +85,7 @@
             try
             {
 #if NETCORE
-                name = typeof(CrossComponentCorrelationEventSource).GetTypeInfo().Assembly.GetName().FullName;
+                name = Assembly.GetEntryAssembly().FullName;
 #else
                 name = AppDomain.CurrentDomain.FriendlyName;
 #endif
@@ -85,17 +96,6 @@
             }
 
             return name;
-        }
-
-        public static string GetExceptionDetailString(Exception ex)
-        {
-            var ae = ex as AggregateException;
-            if (ae != null)
-            {
-                return ae.Flatten().InnerException.ToInvariantString();
-            }
-
-            return ex.ToInvariantString();
         }
 
         /// <summary>
