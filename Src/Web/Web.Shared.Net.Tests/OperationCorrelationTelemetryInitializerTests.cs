@@ -131,7 +131,7 @@
 
             public TestableOperationCorrelationTelemetryInitializer(IDictionary<string, string> headers)
             {
-                 this.fakeContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                 this.fakeContext = HttpModuleHelper.GetFakeHttpContext(null, headers);
             }
 
             public HttpContext FakeContext

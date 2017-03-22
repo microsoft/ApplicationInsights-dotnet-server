@@ -272,6 +272,42 @@
         }
 
         [TestMethod]
+        public void NeedProcessRequestReturnsFalseForWCFForTransferHandler()
+        {
+            var context = HttpModuleHelper.GetFakeHttpContext("/SeLog.svc/EventData");
+            context.Handler = HttpModuleHelper.GetFakeTransferRequestHandler();
+
+            var module = this.RequestTrackingTelemetryModuleFactory();
+            {
+                Assert.False(module.NeedProcessRequest(context));
+            }
+        }
+
+        [TestMethod]
+        public void NeedProcessRequestReturnsFalseForWebServiceForTransferHandler()
+        {
+            var context = HttpModuleHelper.GetFakeHttpContext("/SeLog.asmx/EventData");
+            context.Handler = HttpModuleHelper.GetFakeTransferRequestHandler();
+
+            var module = this.RequestTrackingTelemetryModuleFactory();
+            {
+                Assert.False(module.NeedProcessRequest(context));
+            }
+        }
+
+        [TestMethod]
+        public void NeedProcessRequestReturnsTrueForRegularAppForTransferHandler()
+        {
+            var context = HttpModuleHelper.GetFakeHttpContext("/SeLog/EventData");
+            context.Handler = HttpModuleHelper.GetFakeTransferRequestHandler();
+
+            var module = this.RequestTrackingTelemetryModuleFactory();
+            {
+                Assert.True(module.NeedProcessRequest(context));
+            }
+        }
+
+        [TestMethod]
         public void SdkVersionHasCorrectFormat()
         {
             string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof(RequestTrackingTelemetryModule), prefix: "web:");
@@ -296,7 +332,7 @@
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add(RequestResponseHeaders.RequestContextHeader, requestContextContainingCorrelationId);
 
-            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var context = HttpModuleHelper.GetFakeHttpContext(null, headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             var config = TelemetryConfiguration.CreateDefault();
@@ -320,7 +356,7 @@
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(appId));
 
-            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var context = HttpModuleHelper.GetFakeHttpContext(null, headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             var config = TelemetryConfiguration.CreateDefault();
@@ -344,7 +380,7 @@
             // do not add any sourceikey header.
             Dictionary<string, string> headers = new Dictionary<string, string>();
 
-            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var context = HttpModuleHelper.GetFakeHttpContext(null, headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             var config = TelemetryConfiguration.CreateDefault();
@@ -369,7 +405,7 @@
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers.Add(RequestResponseHeaders.RequestContextHeader, appIdInHeader);
 
-            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var context = HttpModuleHelper.GetFakeHttpContext(null, headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             var config = TelemetryConfiguration.CreateDefault();
