@@ -5,13 +5,12 @@
     using System.Globalization;
     using System.IO;
     using System.Net;
+    using System.Reflection;
     using System.Threading;
     using System.Web;
     using System.Web.Hosting;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.Web.Implementation;
     using VisualStudio.TestTools.UnitTesting;
 
     internal static class HttpModuleHelper
@@ -60,15 +59,30 @@
             return (HttpApplication)httpApplicationWrapper.Target;
         }
 
-        public static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null)
+        public static HttpContext GetFakeHttpContext(string url = null, IDictionary<string, string> headers = null)
         {
             Thread.GetDomain().SetData(".appPath", string.Empty);
             Thread.GetDomain().SetData(".appVPath", string.Empty);
 
-            var workerRequest = new SimpleWorkerRequestWithHeaders(UrlPath, UrlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers);
+            var workerRequest = new SimpleWorkerRequestWithHeaders(url ?? UrlPath, UrlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers);
             
             return new HttpContext(workerRequest);
         }
+
+        public static IHttpHandler GetFakeTransferRequestHandler()
+        {
+            var type = Type.GetType("System.Web.Handlers.TransferRequestHandler, System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            var instance = type.Assembly.CreateInstance(
+                type.FullName, 
+                false,
+                BindingFlags.Instance | BindingFlags.Public,
+                null, 
+                null, 
+                null, 
+                null);
+
+            return (IHttpHandler)instance;    
+        }       
 
         public static HttpContext GetFakeHttpContextForFailedRequest()
         {

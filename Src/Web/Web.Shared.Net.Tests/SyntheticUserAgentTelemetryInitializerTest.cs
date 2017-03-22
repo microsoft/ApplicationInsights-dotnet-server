@@ -113,7 +113,7 @@
 
             public TestableSyntheticUserAgentTelemetryInitializer(IDictionary<string, string> headers = null)
             {
-                this.fakeContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                this.fakeContext = HttpModuleHelper.GetFakeHttpContext(null, headers);
             }
 
             protected override HttpContext ResolvePlatformContext()

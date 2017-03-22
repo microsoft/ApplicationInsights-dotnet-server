@@ -234,7 +234,7 @@
 
             public TestableClientIpHeaderTelemetryInitializer(IDictionary<string, string> headers = null)
             {
-                this.platformContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                this.platformContext = HttpModuleHelper.GetFakeHttpContext(null, headers);
             }
 
             public HttpContext PlatformContext

@@ -230,10 +230,21 @@
                 return false;
             }
 
-            if (httpContext.Response.StatusCode < 400)
+            if (httpContext.Response.StatusCode < 400 && httpContext.Handler != null)
             {
-                if (this.IsHandlerToFilter(httpContext.Handler))
+                string handlerName = httpContext.Handler.GetType().FullName;
+                if (this.IsHandlerToFilter(handlerName))
                 {
+                    return false;
+                }
+
+                string requestPath = httpContext.Request.UnvalidatedGetPath();
+                if (string.Equals(handlerName, RequestTrackingConstants.TransferHandlerType, StringComparison.Ordinal)
+                    && (requestPath.IndexOf(".svc", StringComparison.OrdinalIgnoreCase) != -1 || requestPath.IndexOf(".asmx", StringComparison.OrdinalIgnoreCase) != -1))
+                {
+                    // additionally filter out System.Web.Handlers.TransferRequestHandler for WCF applications 
+                    // and Web Services as it leads to duplicate requests
+                    WebEventSource.Log.WebRequestFilteredOutByRequestHandler();
                     return false;
                 }
             }
@@ -253,20 +264,16 @@
         /// <summary>
         /// Checks whether or not handler is a transfer handler.
         /// </summary>
-        /// <param name="handler">An instance of handler to validate.</param>
+        /// <param name="handlerName">A full handler type name to validate.</param>
         /// <returns>True if handler is a transfer handler, otherwise - False.</returns>
-        private bool IsHandlerToFilter(IHttpHandler handler)
+        private bool IsHandlerToFilter(string handlerName)
         {
-            if (handler != null)
+            foreach (var h in this.Handlers)
             {
-                var handlerName = handler.GetType().FullName;
-                foreach (var h in this.Handlers)
+                if (string.Equals(handlerName, h, StringComparison.Ordinal))
                 {
-                    if (string.Equals(handlerName, h, StringComparison.Ordinal))
-                    {
-                        WebEventSource.Log.WebRequestFilteredOutByRequestHandler();
-                        return true;
-                    }
+                    WebEventSource.Log.WebRequestFilteredOutByRequestHandler();
+                    return true;
                 }
             }
 
