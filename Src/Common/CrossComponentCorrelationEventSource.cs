@@ -27,17 +27,6 @@
 
         public string ApplicationName { [NonEvent]get; [NonEvent]private set; }
 
-        public static string GetExceptionDetailString(Exception ex)
-        {
-            var ae = ex as AggregateException;
-            if (ae != null)
-            {
-                return ae.Flatten().InnerException.ToInvariantString();
-            }
-
-            return ex.ToInvariantString();
-        }
-
         [Event(
             1,
             Keywords = Keywords.UserActionable,

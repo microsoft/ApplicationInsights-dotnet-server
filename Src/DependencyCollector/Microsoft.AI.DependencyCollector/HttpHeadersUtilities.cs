@@ -48,7 +48,7 @@
 
             IEnumerable<string> headerValues = GetHeaderValues(headers, headerName);
             headers.Remove(headerName);
-            headers.Add(headerName, HeadersUtilities.SetHeaderKeyValue(headerValues, keyName, keyValue));
+            headers.Add(headerName, HeadersUtilities.UpdateHeaderWithKeyValue(headerValues, keyName, keyValue));
         }
     }
 }

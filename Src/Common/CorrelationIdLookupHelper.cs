@@ -123,7 +123,7 @@
                             }
                             catch (Exception ex)
                             {
-                                CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(CrossComponentCorrelationEventSource.GetExceptionDetailString(ex));
+                                CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(ExceptionUtilities.GetExceptionDetailString(ex));
                             }
                         });
 
@@ -132,7 +132,7 @@
                 }
                 catch (Exception ex)
                 {
-                    CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(CrossComponentCorrelationEventSource.GetExceptionDetailString(ex));
+                    CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(ExceptionUtilities.GetExceptionDetailString(ex));
 
                     correlationId = string.Empty;
                     return false;

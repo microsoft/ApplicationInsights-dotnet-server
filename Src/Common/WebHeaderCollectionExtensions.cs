@@ -49,7 +49,7 @@
                 throw new ArgumentNullException(nameof(keyName));
             }
 
-            headers[headerName] = string.Join(", ", HeadersUtilities.SetHeaderKeyValue(headers[headerName]?.Split(','), keyName, value));
+            headers[headerName] = string.Join(", ", HeadersUtilities.UpdateHeaderWithKeyValue(headers[headerName]?.Split(','), keyName, value));
         }
     }
 }

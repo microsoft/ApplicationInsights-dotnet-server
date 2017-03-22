@@ -34,17 +34,17 @@
         }
 
         /// <summary>
-        /// Given the provided list of header value strings, return a comma-separated list of key
-        /// name/value pairs with the provided keyName and keyValue. If the initial header value
-        /// strings contains the key name, then the original key value should be replaced with the
-        /// provided key value. If the initial header value strings don't contain the key name,
-        /// then the key name/value pair should be added to the comma-separated list and returned.
+        /// Given the provided list of header value strings, return a list of key name/value pairs
+        /// with the provided keyName and keyValue. If the initial header value strings contains
+        /// the key name, then the original key value should be replaced with the provided key
+        /// value. If the initial header value strings don't contain the key name, then the key
+        /// name/value pair should be added to the list and returned.
         /// </summary>
         /// <param name="headerValues">The existing header values that the key/value pair should be added to.</param>
         /// <param name="keyName">The name of the key to add.</param>
         /// <param name="keyValue">The value of the key to add.</param>
         /// <returns>The result of setting the provided key name/value pair into the provided headerValues.</returns>
-        public static IEnumerable<string> SetHeaderKeyValue(IEnumerable<string> headerValues, string keyName, string keyValue)
+        public static IEnumerable<string> UpdateHeaderWithKeyValue(IEnumerable<string> headerValues, string keyName, string keyValue)
         {
             string[] newHeaderKeyValue = new[] { string.Format(CultureInfo.InvariantCulture, "{0}={1}", keyName.Trim(), keyValue.Trim()) };
             return headerValues == null || !headerValues.Any()

@@ -146,7 +146,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                         }
                         catch (Exception e)
                         {
-                            CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
+                            CrossComponentCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
                         }
 
                         // Add the root ID
@@ -167,7 +167,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             }
             catch (Exception e)
             {
-                CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
+                CrossComponentCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
             }
         }
 
@@ -202,7 +202,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
                         }
                         catch (Exception e)
                         {
-                            CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
+                            CrossComponentCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
                         }
 
                         int statusCode = (int)response.StatusCode;
@@ -216,7 +216,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             }
             catch (Exception e)
             {
-                CrossComponentCorrelationEventSource.Log.UnknownError(CrossComponentCorrelationEventSource.GetExceptionDetailString(e));
+                CrossComponentCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
             }
         }
     }
