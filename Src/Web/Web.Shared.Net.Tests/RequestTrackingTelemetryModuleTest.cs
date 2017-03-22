@@ -17,7 +17,6 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Assert = Xunit.Assert;
-    using System.Reflection;
 
     [TestClass]
     public class RequestTrackingTelemetryModuleTest
