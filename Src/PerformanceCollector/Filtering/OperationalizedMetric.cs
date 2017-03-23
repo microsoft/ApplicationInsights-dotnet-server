@@ -171,10 +171,9 @@
                 }
                 else
                 {
-                    bool isCustomDimension;
-                    bool isCustomMetric;
-                    Filter<TTelemetry>.GetFieldType(this.info.Projection, out isCustomDimension, out isCustomMetric);
-                    fieldExpression = Filter<TTelemetry>.ProduceFieldExpression(documentExpression, this.info.Projection, isCustomDimension, isCustomMetric);
+                    Filter<TTelemetry>.FieldNameType fieldNameType;
+                    Filter<TTelemetry>.GetFieldType(this.info.Projection, out fieldNameType);
+                    fieldExpression = Filter<TTelemetry>.ProduceFieldExpression(documentExpression, this.info.Projection, fieldNameType);
                 }
 
                 // double.Parse(((object)fieldExpression).ToString());

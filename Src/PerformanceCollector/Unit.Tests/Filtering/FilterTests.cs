@@ -1,6 +1,7 @@
 ﻿namespace Unit.Tests
 {
     using System;
+    using System.Collections.Generic;
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -1108,6 +1109,178 @@
             Assert.IsTrue(result1);
             Assert.IsFalse(result2);
             Assert.IsFalse(result3);
+        }
+        #endregion
+
+        #region Asterisk
+        [TestMethod]
+        public void FilterAsteriskLimitsAcceptablePredicateValues()
+        {
+            // ARRANGE
+            var acceptedPredicates = new List<Predicate>();
+
+            // ACT
+            foreach (Predicate predicate in Enum.GetValues(typeof(Predicate)))
+            {
+                try
+                {
+                    new Filter<TelemetryMock>(new FilterInfo() { FieldName = "*", Predicate = predicate, Comparand = "123" });
+
+                    acceptedPredicates.Add(predicate);
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                }
+            }
+
+            // ASSERT
+            Assert.AreEqual(2, acceptedPredicates.Count);
+            Assert.AreEqual(Predicate.Contains, acceptedPredicates[0]);
+            Assert.AreEqual(Predicate.DoesNotContain, acceptedPredicates[1]);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskPropertyContains()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.Contains, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { IntField = 1234 });
+            bool result2 = filter.Check(new TelemetryMock() { DoubleField = 1234 });
+            bool result3 = filter.Check(new TelemetryMock() { StringField = "1234" });
+            bool result4 = filter.Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/123") });
+
+            bool result5 = filter.Check(new TelemetryMock() { IntField = 12234 });
+            bool result6 = filter.Check(new TelemetryMock() { DoubleField = 12234 });
+            bool result7 = filter.Check(new TelemetryMock() { StringField = "12234" });
+            bool result8 = filter.Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/1223") });
+
+            bool result9 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+            Assert.IsTrue(result4);
+
+            Assert.IsFalse(result5);
+            Assert.IsFalse(result6);
+            Assert.IsFalse(result7);
+            Assert.IsFalse(result8);
+
+            Assert.IsFalse(result9);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskPropertyDoesNotContain()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.DoesNotContain, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { IntField = 1234 });
+            bool result2 = filter.Check(new TelemetryMock() { DoubleField = 1234 });
+            bool result3 = filter.Check(new TelemetryMock() { StringField = "1234" });
+            bool result4 = filter.Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/123") });
+
+            bool result5 = filter.Check(new TelemetryMock() { IntField = 12234 });
+            bool result6 = filter.Check(new TelemetryMock() { DoubleField = 12234 });
+            bool result7 = filter.Check(new TelemetryMock() { StringField = "12234" });
+            bool result8 = filter.Check(new TelemetryMock() { UriField = new Uri("http://microsoft.com/1223") });
+
+            bool result9 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+
+            Assert.IsTrue(result5);
+            Assert.IsTrue(result6);
+            Assert.IsTrue(result7);
+            Assert.IsTrue(result8);
+
+            Assert.IsTrue(result9);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskCustomDimensionContains()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.Contains, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", "1234" } } });
+            bool result2 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", "12234" } } });
+            bool result3 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", null } } });
+            bool result4 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskCustomMetricsContains()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.Contains, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { Metrics = { { "Metric1", 1234 } } });
+            bool result2 = filter.Check(new TelemetryMock() { Metrics = { { "Metric1", 12234 } } });
+            bool result3 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskCustomDimensionDoesNotContain()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.DoesNotContain, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", "1234" } } });
+            bool result2 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", "12234" } } });
+            bool result3 = filter.Check(new TelemetryMock() { Properties = { { "Prop1", null } } });
+            bool result4 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+            Assert.IsTrue(result4);
+        }
+
+        [TestMethod]
+        public void FilterAsteriskCustomMetricsDoesNotContain()
+        {
+            // ARRANGE
+            var filterInfo = new FilterInfo() { FieldName = "*", Predicate = Predicate.DoesNotContain, Comparand = "123" };
+            Filter<TelemetryMock> filter = new Filter<TelemetryMock>(filterInfo);
+
+            // ACT
+            bool result1 = filter.Check(new TelemetryMock() { Metrics = { { "Metric1", 1234 } } });
+            bool result2 = filter.Check(new TelemetryMock() { Metrics = { { "Metric1", 12234 } } });
+            bool result3 = filter.Check(new TelemetryMock());
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
         }
         #endregion
 
