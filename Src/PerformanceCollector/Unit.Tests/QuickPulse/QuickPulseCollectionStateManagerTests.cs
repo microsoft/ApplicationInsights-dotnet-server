@@ -55,6 +55,7 @@
 
             var manager = new QuickPulseCollectionStateManager(
                 serviceClient,
+                null,
                 new Clock(),
                 QuickPulseTimings.Default,
                 () => { },
@@ -686,6 +687,7 @@
         {
             var manager = new QuickPulseCollectionStateManager(
                 serviceClient,
+                null,
                 timeProvider,
                 timings ?? QuickPulseTimings.Default,
                 () => actions.Add(StartCollectionMessage),

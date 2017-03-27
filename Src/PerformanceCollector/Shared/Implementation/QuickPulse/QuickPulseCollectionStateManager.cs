@@ -1,18 +1,31 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse
 {
     using System;
+    using System.CodeDom;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
+    using System.Runtime.Serialization.Json;
+    using System.Text;
     using System.Threading;
 
     using Helpers;
 
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     internal class QuickPulseCollectionStateManager
     {
+        private readonly object collectionConfigurationErrorsLock = new object();
+
+        pending: use this to make UpdateConfiguration thread-safe
+        pending: unit test coverage
+        private readonly object collectionConfigurationLock = new object();
+
         private readonly IQuickPulseServiceClient serviceClient;
+
+        private readonly IQuickPulseWebSocket webSocket;
 
         private readonly Clock timeProvider;
 
@@ -33,7 +46,7 @@
         private DateTimeOffset lastSuccessfulSubmit;
 
         private bool isCollectingData;
-
+        
         private bool firstStateUpdate = true;
 
         private string currentConfigurationETag = string.Empty;
@@ -42,8 +55,11 @@
 
         private readonly List<CollectionConfigurationError> collectionConfigurationErrors = new List<CollectionConfigurationError>(); 
 
+        private readonly DataContractJsonSerializer deserializerConfigurationInfo = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
+
         public QuickPulseCollectionStateManager(
             IQuickPulseServiceClient serviceClient, 
+            IQuickPulseWebSocket webSocket,
             Clock timeProvider, 
             QuickPulseTimings timings, 
             Action onStartCollection, 
@@ -56,7 +72,7 @@
             {
                 throw new ArgumentNullException(nameof(serviceClient));
             }
-
+            
             if (timeProvider == null)
             {
                 throw new ArgumentNullException(nameof(timeProvider));
@@ -93,6 +109,7 @@
             }
 
             this.serviceClient = serviceClient;
+            this.webSocket = webSocket;
             this.timeProvider = timeProvider;
             this.timings = timings;
             this.onStartCollection = onStartCollection;
@@ -146,32 +163,25 @@
                     // no samples to submit, do nothing
                     return this.DetermineBackOffs();
                 }
-                else
+
+                QuickPulseCollectionStateManager.WaitForSamples(dataSamplesToSubmit, this.coolDownTimeout);
+
+                bool usingSocketRightNow = this.UsingSocket;
+
+                CollectionConfigurationError[] configurationErrorsSnapped;
+                lock (this.collectionConfigurationErrorsLock)
                 {
-                    // we have samples
-                    if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.ReferenceCount != 0))
-                    {
-                        //!!! better solution?
-                        // some samples are still being processed, wait a little to give them a chance to finish
-                        Thread.Sleep(this.coolDownTimeout);
-
-                        bool allCooledDown = dataSamplesToSubmit.All(sample => sample.CollectionConfigurationAccumulator.ReferenceCount == 0);
-
-                        QuickPulseEventSource.Log.TroubleshootingMessageEvent(
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Waited for a sample to cool down... {0}",
-                                allCooledDown ? "Success" : "Failed"));
-                    }
+                    configurationErrorsSnapped = this.collectionConfigurationErrors.ToArray();
                 }
 
                 bool? keepCollecting = this.serviceClient.SubmitSamples(
                     dataSamplesToSubmit,
                     instrumentationKey,
+                    !usingSocketRightNow,
                     this.currentConfigurationETag,
                     authApiKey,
                     out configurationInfo,
-                    this.collectionConfigurationErrors.ToArray());
+                    configurationErrorsSnapped);
 
                 QuickPulseEventSource.Log.SampleSubmittedEvent(keepCollecting.ToString());
 
@@ -189,7 +199,7 @@
 
                     case false:
                         // the service wants us to stop collection
-                        this.onStopCollection();
+                        this.StopCollection();
                         break;
                 }
 
@@ -216,8 +226,7 @@
 
                     case true:
                         // the service wants us to start collection now
-                        this.UpdateConfiguration(configurationInfo);
-                        this.onStartCollection();
+                        this.StartCollection(configurationInfo);
                         break;
 
                     case false:
@@ -232,39 +241,104 @@
             return this.DetermineBackOffs();
         }
 
+        private bool UsingSocket => this.webSocket?.IsConnected == true;
+
+        private void StartCollection(CollectionConfigurationInfo configurationInfo)
+        {
+            this.UpdateConfiguration(configurationInfo);
+
+            this.onStartCollection();
+
+            // switch configuration updates to the socket
+            this.webSocket?.StartAsync(this.OnSocketMessage);
+        }
+
+        private void OnSocketMessage(string msg)
+        {
+            CollectionConfigurationInfo configurationInfo;
+            try
+            {
+                using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(msg)))
+                {
+                    configurationInfo = this.deserializerConfigurationInfo.ReadObject(ms) as CollectionConfigurationInfo;
+                }
+            }
+            catch (Exception e)
+            {
+                QuickPulseEventSource.Log.TroubleshootingMessageEvent(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Failed deserializing collection configuration received through socket: {0}",
+                        e.ToInvariantString()));
+                throw;
+            }
+
+            this.UpdateConfiguration(configurationInfo);
+        }
+
+        private void StopCollection()
+        {
+            this.webSocket?.StopAsync();
+
+            this.onStopCollection();
+        }
+
+        private static void WaitForSamples(IList<QuickPulseDataSample> dataSamplesToSubmit, TimeSpan timeout)
+        {
+            if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.ReferenceCount != 0))
+            {
+                //!!! better solution?
+                // some samples are still being processed, wait a little to give them a chance to finish
+                Thread.Sleep(timeout);
+
+                bool allCooledDown = dataSamplesToSubmit.All(sample => sample.CollectionConfigurationAccumulator.ReferenceCount == 0);
+
+                QuickPulseEventSource.Log.TroubleshootingMessageEvent(
+                    string.Format(CultureInfo.InvariantCulture, "Waited for a sample to cool down... {0}", allCooledDown ? "Success" : "Failed"));
+            }
+        }
+
+        /// <remarks>This method is called from either state thread or web socket loop thread</remarks>
         private void UpdateConfiguration(CollectionConfigurationInfo configurationInfo)
         {
             if (configurationInfo != null && !string.Equals(configurationInfo.ETag, this.currentConfigurationETag, StringComparison.Ordinal))
             {
-                this.collectionConfigurationErrors.Clear();
-
                 CollectionConfigurationError[] errors = null;
+                CollectionConfigurationError error = null;
                 try
                 {
                     errors = this.onUpdatedConfiguration?.Invoke(configurationInfo);
                 }
                 catch (Exception e)
                 {
-                    this.collectionConfigurationErrors.Add(
-                        CollectionConfigurationError.CreateError(
-                            CollectionConfigurationErrorType.CollectionConfigurationFailureToCreateUnexpected,
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Unexpected error applying configuration. ETag: {0}",
-                                configurationInfo.ETag ?? string.Empty),
-                            e,
-                            Tuple.Create("ETag", configurationInfo.ETag)));
+                    error = CollectionConfigurationError.CreateError(
+                        CollectionConfigurationErrorType.CollectionConfigurationFailureToCreateUnexpected,
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "Unexpected error applying configuration. ETag: {0}",
+                            configurationInfo.ETag ?? string.Empty),
+                        e,
+                        Tuple.Create("ETag", configurationInfo.ETag));
                 }
 
-                if (errors != null)
+                lock (this.collectionConfigurationErrorsLock)
                 {
-                    this.collectionConfigurationErrors.AddRange(errors);
-                }
+                    this.collectionConfigurationErrors.Clear();
 
-                this.currentConfigurationETag = configurationInfo.ETag;
+                    if (error != null)
+                    {
+                        this.collectionConfigurationErrors.Add(error);
+                    }
+                    else
+                    {
+                        this.collectionConfigurationErrors.AddRange(errors ?? new CollectionConfigurationError[0]);
+                    }
+
+                    this.currentConfigurationETag = configurationInfo.ETag;
+                }
             }
         }
-        
+
         private TimeSpan DetermineBackOffs()
         {
             if (this.IsCollectingData)

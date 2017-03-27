@@ -3,10 +3,13 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Net;
+    using System.Net.WebSockets;
     using System.Runtime.Serialization.Json;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -176,6 +179,7 @@
             bool? sendMore = serviceClient.SubmitSamples(
                 new[] { sample1, sample2, sample3 },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -248,6 +252,7 @@
             serviceClient.SubmitSamples(
                 new[] { sample1, sample2, sample3 },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -290,7 +295,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample1 }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -337,7 +342,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -408,7 +413,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -472,7 +477,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample1, sample2 }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -596,6 +601,7 @@
             bool? response = serviceClient.SubmitSamples(
                 new QuickPulseDataSample[] { },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -626,6 +632,7 @@
             bool? response = serviceClient.SubmitSamples(
                 new QuickPulseDataSample[] { },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -656,6 +663,7 @@
             bool? response = serviceClient.SubmitSamples(
                 new QuickPulseDataSample[] { },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -686,6 +694,7 @@
             bool? response = serviceClient.SubmitSamples(
                 new QuickPulseDataSample[] { },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -744,6 +753,7 @@
             serviceClient.SubmitSamples(
                 new QuickPulseDataSample[] { },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -832,7 +842,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -918,7 +928,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -996,7 +1006,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag2", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, "ETag2", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1061,7 +1071,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1124,7 +1134,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1182,7 +1192,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1240,7 +1250,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1300,7 +1310,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1358,7 +1368,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1417,7 +1427,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, authApiKey, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, string.Empty, authApiKey, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1448,7 +1458,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, string.Empty, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, true, "ETag1", string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
             serviceClient.Ping(string.Empty, now, "ETag1", string.Empty, out configurationInfo);
 
             // ASSERT
@@ -1496,6 +1506,7 @@
             serviceClient.SubmitSamples(
                 new[] { sample },
                 string.Empty,
+                true,
                 string.Empty,
                 string.Empty,
                 out configurationInfo,
@@ -1542,7 +1553,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1574,7 +1585,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1608,7 +1619,7 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
@@ -1645,13 +1656,45 @@
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
-            serviceClient.SubmitSamples(new[] { sample }, ikey, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+            serviceClient.SubmitSamples(new[] { sample }, ikey, true, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
 
             // ASSERT
             this.listener.Stop();
 
             Assert.AreEqual(1, this.samples.Count);
             Assert.IsTrue(this.samples[0].Item3.TopCpuDataAccessDenied);
+        }
+
+        [TestMethod]
+        public async Task SocketTest()
+        {
+            // this is a test bed for socket communication
+            //var endpoint = @"ws://echo.websocket.org";//"wss://rtdp-dev3.cloudapp.net/QuickPulseService.svc/ws";
+
+            //var socket = new QuickPulseWebSocket(new Uri(endpoint), new Clock(), null);
+
+            ////"ws://localhost:48111/QuickPulseService.svc/ws";   //
+            //await socket.StartAsync().ConfigureAwait(false);
+
+            //socket.RunReceiveLoop(
+            //    msg =>
+            //        {
+            //            Trace.WriteLine("Message received: " + msg);
+            //        }).ConfigureAwait(false);
+
+            ////for (int i = 0; i < 10; i ++)
+            ////{
+            ////    //await socket.SendMessage("Blah " + i).ConfigureAwait(false);
+            ////    Thread.Sleep(TimeSpan.FromSeconds(1));
+            ////}
+
+            //Thread.Sleep(TimeSpan.FromSeconds(60));
+
+            //await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty).ConfigureAwait(false);
+
+            //socket.Dispose();
+
+            Assert.Fail();
         }
 
         public void Dispose()

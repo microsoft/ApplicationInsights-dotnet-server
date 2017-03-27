@@ -33,6 +33,7 @@
         /// </summary>
         /// <param name="samples">Data samples.</param>
         /// <param name="instrumentationKey">InstrumentationKey for which to submit data samples.</param>
+        /// <param name="queryForCollectionConfiguration">Determines whether to ask the service for the latest configuration.</param>
         /// <param name="configurationETag">Current configuration ETag that the client has.</param>
         /// <param name="authApiKey">Authentication API key.</param>
         /// <param name="configurationInfo">When available, the deserialized response data received from the server.</param>
@@ -41,6 +42,7 @@
         bool? SubmitSamples(
             IEnumerable<QuickPulseDataSample> samples,
             string instrumentationKey,
+            bool queryForCollectionConfiguration,
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,

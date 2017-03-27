@@ -139,9 +139,9 @@
       <Project>{DB628EBB-3033-45CF-B2B6-623909D47C28}</Project>
       <Name>Web.Net40.Tests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Net40\Perf.Net40.csproj">
-      <Project>{61fc6e01-b40d-4db2-9dab-b27b82f02244}</Project>
-      <Name>Perf.Net40</Name>
+    <ProjectReference Include="..\Net45\Perf.Net45.csproj">
+      <Project>{FBFCB985-BBFE-4954-A2EF-8124A42F56C7}</Project>
+      <Name>Perf.Net45</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

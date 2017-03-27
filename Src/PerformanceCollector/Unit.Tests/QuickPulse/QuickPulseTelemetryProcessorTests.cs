@@ -45,7 +45,7 @@
         public void QuickPulseTelemetryProcessorRegistersWithModule()
         {
             // ARRANGE
-            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null, null);
 
             TelemetryModules.Instance.Modules.Add(module);
 

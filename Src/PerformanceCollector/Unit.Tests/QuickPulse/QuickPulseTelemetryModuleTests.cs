@@ -46,7 +46,7 @@
         public void QuickPulseTelemetryModuleDoesNotRegisterNullProcessor()
         {
             // ARRANGE
-            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null, null);
 
             // ACT
             module.RegisterTelemetryProcessor(null);
@@ -58,7 +58,7 @@
         public void QuickPulseTelemetryModuleDoesNotRegisterSameProcessorMoreThanOnce()
         {
             // ARRANGE
-            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null, null);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             // ACT
@@ -74,7 +74,7 @@
         public void QuickPulseTelemetryModuleInitializesServiceClientFromConfiguration()
         {
             // ARRANGE
-            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null, null);
 
             module.QuickPulseServiceEndpoint = "https://test.com/api";
 
@@ -89,7 +89,7 @@
         public void QuickPulseTelemetryModuleInitializesServiceClientFromDefault()
         {
             // ARRANGE
-            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null, null);
 
             // ACT
             // do not provide module configuration, force default service client
@@ -112,7 +112,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(null, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(null, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration());
 
@@ -135,7 +135,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             var config = new TelemetryConfiguration();
             module.Initialize(config);
@@ -160,7 +160,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(null, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(null, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
@@ -221,7 +221,7 @@
                 TopProcesses = new List<Tuple<string, int>>() { Tuple.Create("Process1", 25) }
             };
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
             var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
             telemetryProcessor.Initialize(new TelemetryConfiguration());
             module.RegisterTelemetryProcessor(telemetryProcessor);
@@ -287,7 +287,7 @@
                 TopProcesses = new List<Tuple<string, int>>() { Tuple.Create("Process1", 25) }
             };
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
             module.DisableTopCpuProcesses = true;
 
             // ACT
@@ -378,7 +378,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
@@ -406,7 +406,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(null, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(null, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             var timestampStart = DateTimeOffset.UtcNow;
 
@@ -445,6 +445,7 @@
                 collectionTimeSlotManager,
                 accumulatorManager,
                 serviceClient,
+                null,
                 performanceCollector,
                 topCpuCollector,
                 timings);
@@ -555,7 +556,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
@@ -611,7 +612,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1" };
@@ -639,7 +640,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
@@ -737,7 +738,7 @@
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             // ACT & ASSERT
             serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo()
@@ -828,7 +829,7 @@ Parameter name: performanceCounter",
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -856,7 +857,7 @@ Parameter name: performanceCounter",
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -879,7 +880,7 @@ Parameter name: performanceCounter",
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
@@ -903,7 +904,7 @@ Parameter name: performanceCounter",
             var performanceCollector = new PerformanceCollectorMock();
             var topCpuCollector = new QuickPulseTopCpuCollectorMock();
 
-            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, performanceCollector, topCpuCollector, timings);
+            var module = new QuickPulseTelemetryModule(collectionTimeSlotManager, null, serviceClient, null, performanceCollector, topCpuCollector, timings);
 
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 

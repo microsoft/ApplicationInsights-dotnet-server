@@ -85,6 +85,7 @@
                     HttpResponseMessage response = this.SendRequest(
                         request,
                         true,
+                        true,
                         configurationETag,
                         authApiKey,
                         r => this.WritePingData(timestamp, r)))
@@ -103,6 +104,7 @@
         public bool? SubmitSamples(
             IEnumerable<QuickPulseDataSample> samples,
             string instrumentationKey,
+            bool queryForCollectionConfiguration,
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,
@@ -120,6 +122,7 @@
                     HttpResponseMessage response = this.SendRequest(
                         request,
                         false,
+                        queryForCollectionConfiguration,
                         configurationETag,
                         authApiKey,
                         r => this.WriteSamples(samples, instrumentationKey, r, collectionConfigurationErrors)))
@@ -332,7 +335,8 @@
 
         private HttpResponseMessage SendRequest(
             HttpRequestMessage request,
-            bool includeHeaders,
+            bool includeStreamIdentifyingHeaders,
+            bool queryForCollectionConfiguration,
             string configurationETag,
             string authApiKey,
             Action<HttpRequestMessage> onWriteBody)
@@ -342,10 +346,14 @@
                 request.Headers.Add(
                     QuickPulseConstants.XMsQpsTransmissionTimeHeaderName,
                     this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
-                request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
-                request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
 
-                if (includeHeaders)
+                if (queryForCollectionConfiguration)
+                {
+                    request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
+                    request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
+                }
+
+                if (includeStreamIdentifyingHeaders)
                 {
                     request.Headers.Add(QuickPulseConstants.XMsQpsInstanceNameHeaderName, this.instanceName);
                     request.Headers.Add(QuickPulseConstants.XMsQpsStreamIdHeaderName, this.streamId);

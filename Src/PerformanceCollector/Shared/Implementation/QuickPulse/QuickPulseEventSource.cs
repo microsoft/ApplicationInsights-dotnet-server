@@ -47,6 +47,12 @@
         {
             this.WriteEvent(3, counter ?? string.Empty, this.ApplicationName);
         }
+
+        [Event(22, Level = EventLevel.Informational, Message = @"Collection configuration has been updated: {0}")]
+        public void CollectionConfigurationUpdatedEvent(string configuration, string applicationName = "dummy")
+        {
+            this.WriteEvent(22, configuration ?? string.Empty, this.ApplicationName);
+        }
         #endregion
 
         #region Infra init - failure
@@ -90,6 +96,12 @@
         public void ServiceCommunicationFailedEvent(string e, string applicationName = "dummy")
         {
             this.WriteEvent(12, e ?? string.Empty, this.ApplicationName);
+        }
+
+        [Event(21, Level = EventLevel.Verbose, Message = @"Failed to establish a web socket connection to the QuickPulse service. Error text: {0}")]
+        public void ServiceWebSocketConnectionFailedEvent(string e, string applicationName = "dummy")
+        {
+            this.WriteEvent(21, e ?? string.Empty, this.ApplicationName);
         }
         #endregion
 

@@ -98,6 +98,7 @@
         public bool? SubmitSamples(
             IEnumerable<QuickPulseDataSample> samples,
             string instrumentationKey,
+            bool queryForCollectionConfiguration,
             string configurationETag,
             string authApiKey,
             out CollectionConfigurationInfo configurationInfo,

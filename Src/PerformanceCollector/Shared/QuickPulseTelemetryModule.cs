@@ -44,6 +44,8 @@
 
         private IQuickPulseServiceClient serviceClient;
 
+        private IQuickPulseWebSocket webSocket;
+
         private Thread collectionThread;
 
         private QuickPulseThreadState collectionThreadState;
@@ -85,6 +87,7 @@
         /// <param name="collectionTimeSlotManager">Collection time slot manager.</param>
         /// <param name="dataAccumulatorManager">Data hub to sink QuickPulse data to.</param>
         /// <param name="serviceClient">QPS service client.</param>
+        /// <param name="webSocket">QPS web socket client.</param>
         /// <param name="performanceCollector">Performance counter collector.</param>
         /// <param name="topCpuCollector">Top N CPU collector.</param>
         /// <param name="timings">Timings for the module.</param>
@@ -92,6 +95,7 @@
             QuickPulseCollectionTimeSlotManager collectionTimeSlotManager,
             QuickPulseDataAccumulatorManager dataAccumulatorManager,
             IQuickPulseServiceClient serviceClient,
+            IQuickPulseWebSocket webSocket,
             IPerformanceCollector performanceCollector,
             IQuickPulseTopCpuCollector topCpuCollector,
             QuickPulseTimings timings)
@@ -100,6 +104,7 @@
             this.collectionTimeSlotManager = collectionTimeSlotManager;
             this.dataAccumulatorManager = dataAccumulatorManager;
             this.serviceClient = serviceClient;
+            this.webSocket = webSocket;
             this.performanceCollector = performanceCollector;
             this.topCpuCollector = topCpuCollector;
             this.timings = timings;
@@ -180,9 +185,11 @@
                         this.config.MetricProcessors.Add(this.metricProcessor);
 
                         this.InitializeServiceClient(configuration);
+                        this.InitializeWebSocket();
                         
                         this.stateManager = new QuickPulseCollectionStateManager(
                             this.serviceClient,
+                            this.webSocket,
                             this.timeProvider,
                             this.timings,
                             this.OnStartCollection,
@@ -334,6 +341,56 @@
                 return;
             }
 
+            Uri serviceEndpointUri = this.GetServiceEndpoint();
+
+            // create the default production implementation of the service client with the best service endpoint we could get
+            string instanceName = GetInstanceName(configuration);
+            string streamId = GetStreamId();
+            string machineName = Environment.MachineName;
+            var assemblyVersion = SdkVersionUtils.GetSdkVersion(null);
+            bool isWebApp = PerformanceCounterUtility.IsWebAppRunningInAzure();
+            this.serviceClient = new QuickPulseServiceClient(
+                serviceEndpointUri,
+                instanceName,
+                streamId,
+                machineName,
+                assemblyVersion,
+                this.timeProvider,
+                isWebApp);
+
+            QuickPulseEventSource.Log.TroubleshootingMessageEvent(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Service client initialized. Endpoint: '{0}', instance name: '{1}', assembly version: '{2}'",
+                    serviceEndpointUri,
+                    instanceName,
+                    assemblyVersion));
+        }
+
+        private void InitializeWebSocket()
+        {
+#if NET45
+            if (this.webSocket != null)
+            {
+                // web socket has been passed through a constructor, we don't need to do anything
+                return;
+            }
+
+            UriBuilder uriBuilder = new UriBuilder(this.GetServiceEndpoint());
+            uriBuilder.Scheme = "wss";
+            uriBuilder.Query = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", uriBuilder.Query.TrimEnd('/'), "ws");
+            Uri serviceEndpointUri = uriBuilder.Uri;
+
+            this.webSocket = new QuickPulseWebSocket(serviceEndpointUri, this.timeProvider, null);
+
+            // create the default production implementation of the service client with the best service endpoint we could get
+            QuickPulseEventSource.Log.TroubleshootingMessageEvent(
+                string.Format(CultureInfo.InvariantCulture, "Web socket client initialized. Endpoint: '{0}'", serviceEndpointUri));
+#endif
+        }
+
+        private Uri GetServiceEndpoint()
+        {
             Uri serviceEndpointUri;
             if (string.IsNullOrWhiteSpace(this.QuickPulseServiceEndpoint))
             {
@@ -358,28 +415,7 @@
                 }
             }
 
-            // create the default production implementation of the service client with the best service endpoint we could get
-            string instanceName = GetInstanceName(configuration);
-            string streamId = GetStreamId();
-            string machineName = Environment.MachineName;
-            var assemblyVersion = SdkVersionUtils.GetSdkVersion(null);
-            bool isWebApp = PerformanceCounterUtility.IsWebAppRunningInAzure();
-            this.serviceClient = new QuickPulseServiceClient(
-                serviceEndpointUri,
-                instanceName,
-                streamId,
-                machineName,
-                assemblyVersion,
-                this.timeProvider,
-                isWebApp);
-
-            QuickPulseEventSource.Log.TroubleshootingMessageEvent(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "Service client initialized. Endpoint: '{0}', instance name: '{1}', assembly version: '{2}'",
-                    serviceEndpointUri,
-                    instanceName,
-                    assemblyVersion));
+            return serviceEndpointUri;
         }
 
         private static string GetInstanceName(TelemetryConfiguration configuration)
@@ -562,7 +598,7 @@
                 topCpuDataAccessDenied);
         }
 
-        #region Callbacks from the state manager
+#region Callbacks from the state manager
 
         private void OnStartCollection()
         {
@@ -666,7 +702,6 @@
 
         private CollectionConfigurationError[] OnUpdatedConfiguration(CollectionConfigurationInfo configurationInfo)
         {
-            // we need to preserve the current quota for each document stream that still exists in the new configuration
             CollectionConfigurationError[] errorsConfig;
             var newCollectionConfiguration = new CollectionConfiguration(configurationInfo, out errorsConfig, this.timeProvider, this.collectionConfiguration?.DocumentStreams);
 
@@ -676,10 +711,12 @@
             CollectionConfigurationError[] errorsPerformanceCounters;
             this.UpdatePerformanceCollector(newCollectionConfiguration.PerformanceCounters, out errorsPerformanceCounters);
 
+            QuickPulseEventSource.Log.CollectionConfigurationUpdatedEvent(configurationInfo.ETag);
+
             return errorsConfig.Concat(errorsPerformanceCounters).ToArray();
         }
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Dispose implementation.
@@ -705,6 +742,8 @@
                     this.collectionThread.Join();
                     this.collectionThread = null;
                 }
+
+                this.webSocket?.Dispose();
             }
         }
     }
