@@ -42,6 +42,8 @@
 
         private readonly HttpClient httpClient;
 
+        private readonly Dictionary<string, string> authOpaqueHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
+
         public QuickPulseServiceClient(
             Uri serviceUri,
             string instanceName,
@@ -62,6 +64,11 @@
             this.timeout = timeout ?? this.timeout;
 
             this.httpClient = new HttpClient() { Timeout = this.timeout };
+
+            foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+            {
+                authOpaqueHeaderValues.Add(headerName, null);
+            }
         }
 
         public Uri ServiceUri { get; }
@@ -164,6 +171,15 @@
 
             string configurationETagHeaderValue;
             headers.TryGetValue(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, out configurationETagHeaderValue);
+
+            foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+            {
+                string headerValue;
+                if (headers.TryGetValue(headerName, out headerValue))
+                {
+                    this.authOpaqueHeaderValues[headerName] = headerValue;
+                }
+            }
 
             try
             {
@@ -332,25 +348,14 @@
 
         private HttpResponseMessage SendRequest(
             HttpRequestMessage request,
-            bool includeHeaders,
+            bool includeIdentityHeaders,
             string configurationETag,
             string authApiKey,
             Action<HttpRequestMessage> onWriteBody)
         {
             try
             {
-                request.Headers.Add(
-                    QuickPulseConstants.XMsQpsTransmissionTimeHeaderName,
-                    this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
-                request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
-                request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
-
-                if (includeHeaders)
-                {
-                    request.Headers.Add(QuickPulseConstants.XMsQpsInstanceNameHeaderName, this.instanceName);
-                    request.Headers.Add(QuickPulseConstants.XMsQpsStreamIdHeaderName, this.streamId);
-                    request.Headers.Add(QuickPulseConstants.XMsQpsMachineNameHeaderName, this.machineName);
-                }
+                this.AddHeaders(request, includeIdentityHeaders, configurationETag, authApiKey);
 
                 onWriteBody?.Invoke(request);
 
@@ -370,6 +375,26 @@
             }
 
             return null;
+        }
+
+        private void AddHeaders(HttpRequestMessage request, bool includeIdentityHeaders, string configurationETag, string authApiKey)
+        {
+            request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
+
+            request.Headers.Add(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, configurationETag);
+
+            request.Headers.Add(QuickPulseConstants.XMsQpsAuthApiKeyHeaderName, authApiKey ?? string.Empty);
+            foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+            {
+                request.Headers.Add(headerName, this.authOpaqueHeaderValues[headerName]);
+            }
+
+            if (includeIdentityHeaders)
+            {
+                request.Headers.Add(QuickPulseConstants.XMsQpsInstanceNameHeaderName, this.instanceName);
+                request.Headers.Add(QuickPulseConstants.XMsQpsStreamIdHeaderName, this.streamId);
+                request.Headers.Add(QuickPulseConstants.XMsQpsMachineNameHeaderName, this.machineName);
+            }
         }
     }
 }

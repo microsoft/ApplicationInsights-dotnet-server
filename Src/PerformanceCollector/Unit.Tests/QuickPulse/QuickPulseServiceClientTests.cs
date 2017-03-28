@@ -37,6 +37,8 @@
 
         private Action<HttpListenerResponse> submitResponse;
 
+        private readonly Dictionary<string, string> opaqueAuthHeaderValuesToRespondWith = new Dictionary<string, string>(StringComparer.Ordinal);
+
         private HttpListener listener;
 
         private int pingCount;
@@ -50,6 +52,8 @@
         private string lastVersion;
 
         private string lastAuthApiKey;
+
+        private readonly Dictionary<string, string> lastOpaqueAuthHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
 
         private bool emulateTimeout;
 
@@ -72,17 +76,29 @@
             this.lastPingInstance = string.Empty;
             this.lastVersion = string.Empty;
             this.lastAuthApiKey = string.Empty;
+            Array.ForEach(QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames, headerName => this.lastOpaqueAuthHeaderValues.Add(headerName, null));
+            Array.ForEach(QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames, headerName => this.opaqueAuthHeaderValuesToRespondWith.Add(headerName, null));
             this.samples.Clear();
             this.emulateTimeout = false;
 
             this.pingResponse = response =>
                 {
                     response.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+
+                    foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+                    {
+                        response.AddHeader(headerName, opaqueAuthHeaderValuesToRespondWith[headerName]);
+                    }
                 };
 
             this.submitResponse = response =>
                 {
                     response.AddHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName, true.ToString());
+
+                    foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+                    {
+                        response.AddHeader(headerName, opaqueAuthHeaderValuesToRespondWith[headerName]);
+                    }
                 };
 
             string uriPrefix = string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}/", Port);
@@ -1427,6 +1443,87 @@
         }
 
         [TestMethod]
+        public void QuickPulseServiceClientResubmitsAuthOpaqueHeadersToServiceWithPing()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            foreach (var pair in this.opaqueAuthHeaderValuesToRespondWith.ToList())
+            {
+                this.opaqueAuthHeaderValuesToRespondWith[pair.Key] = pair.Key + "1";
+            }
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.Ping("some ikey", now, string.Empty, string.Empty, out configurationInfo);
+
+            // received the proper headers, now re-submit them
+            serviceClient.Ping("some ikey", now, string.Empty, string.Empty, out configurationInfo);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(2, this.pingCount);
+            Assert.AreEqual("x-ms-qps-auth-app-id1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-app-id"]);
+            Assert.AreEqual("x-ms-qps-auth-status1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-status"]);
+            Assert.AreEqual("x-ms-qps-auth-token-expiry1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-expiry"]);
+            Assert.AreEqual("x-ms-qps-auth-token-signature1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-signature"]);
+            Assert.AreEqual("x-ms-qps-auth-token-signature-alg1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-signature-alg"]);
+        }
+
+        [TestMethod]
+        public void QuickPulseServiceClientResubmitsAuthOpaqueHeadersToServiceWithSubmitSamples()
+        {
+            // ARRANGE
+            var now = DateTimeOffset.UtcNow;
+            var serviceClient = new QuickPulseServiceClient(
+                this.serviceEndpoint,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                new Clock(),
+                false);
+
+            foreach (var pair in this.opaqueAuthHeaderValuesToRespondWith.ToList())
+            {
+                this.opaqueAuthHeaderValuesToRespondWith[pair.Key] = pair.Key + "1";
+            }
+
+            var sample =
+                new QuickPulseDataSample(
+                    new QuickPulseDataAccumulator(this.emptyCollectionConfiguration) { StartTimestamp = now, EndTimestamp = now.AddSeconds(1) },
+                    new Dictionary<string, Tuple<PerformanceCounterData, double>>(),
+                    Enumerable.Empty<Tuple<string, int>>(),
+                    false);
+
+            // ACT
+            CollectionConfigurationInfo configurationInfo;
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+
+            // received the proper headers, now re-submit them
+            serviceClient.SubmitSamples(new[] { sample }, string.Empty, string.Empty, string.Empty, out configurationInfo, new CollectionConfigurationError[0]);
+
+            // ASSERT
+            this.listener.Stop();
+
+            Assert.AreEqual(2, this.samples.Count);
+            Assert.AreEqual("x-ms-qps-auth-app-id1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-app-id"]);
+            Assert.AreEqual("x-ms-qps-auth-status1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-status"]);
+            Assert.AreEqual("x-ms-qps-auth-token-expiry1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-expiry"]);
+            Assert.AreEqual("x-ms-qps-auth-token-signature1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-signature"]);
+            Assert.AreEqual("x-ms-qps-auth-token-signature-alg1", this.lastOpaqueAuthHeaderValues["x-ms-qps-auth-token-signature-alg"]);
+        }
+
+        [TestMethod]
         public void QuickPulseServiceClientSubmitsCollectionConfigurationETagToService()
         {
             // ARRANGE
@@ -1673,6 +1770,10 @@
                 var request = context.Request;
 
                 this.lastAuthApiKey = context.Request.Headers[QuickPulseConstants.XMsQpsAuthApiKeyHeaderName];
+                foreach (var headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
+                {
+                    this.lastOpaqueAuthHeaderValues[headerName] = context.Request.Headers[headerName];
+                }
 
                 switch (request.Url.LocalPath)
                 {

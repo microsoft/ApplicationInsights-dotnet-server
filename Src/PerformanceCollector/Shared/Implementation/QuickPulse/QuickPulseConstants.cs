@@ -3,7 +3,7 @@
     /// <summary>
     /// Constants related to quick pulse service.
     /// </summary>
-    internal class QuickPulseConstants
+    internal static class QuickPulseConstants
     {
         /// <summary>
         /// Subscribed header.
@@ -21,11 +21,6 @@
         internal const string XMsQpsConfigurationETagHeaderName = "x-ms-qps-configuration-etag";
 
         /// <summary>
-        /// Authentication API key.
-        /// </summary>
-        internal const string XMsQpsAuthApiKeyHeaderName = "x-ms-qps-auth-api-key";
-
-        /// <summary>
         /// Instance name header.
         /// </summary>
         internal const string XMsQpsInstanceNameHeaderName = "x-ms-qps-instance-name";
@@ -39,5 +34,22 @@
         /// Machine name header.
         /// </summary>
         internal const string XMsQpsMachineNameHeaderName = "x-ms-qps-machine-name";
+
+        /// <summary>
+        /// Authentication API key.
+        /// </summary>
+        internal const string XMsQpsAuthApiKeyHeaderName = "x-ms-qps-auth-api-key";
+
+        /// <summary>
+        /// The following authentication headers must be received and submitted back to the service with no modification.
+        /// </summary>
+        internal static readonly string[] XMsQpsAuthOpaqueHeaderNames =
+        {
+            "x-ms-qps-auth-app-id",
+            "x-ms-qps-auth-status",
+            "x-ms-qps-auth-token-expiry",
+            "x-ms-qps-auth-token-signature",
+            "x-ms-qps-auth-token-signature-alg"
+        };
     }
 }
