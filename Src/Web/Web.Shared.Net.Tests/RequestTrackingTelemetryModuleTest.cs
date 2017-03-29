@@ -8,6 +8,7 @@
 
     using Common;
     using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
@@ -102,7 +103,6 @@
         public void OnEndSetsDurationToZeroIfBeginWasNotCalled()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
-
             var module = this.RequestTrackingTelemetryModuleFactory();
             module.Initialize(TelemetryConfiguration.CreateDefault());
             module.OnEndRequest(context);
@@ -114,6 +114,7 @@
         public void OnEndDoesNotOverrideResponseCode()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
+            context.CreateRequestTelemetryPrivate();
             context.Response.StatusCode = 300;
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -384,6 +385,36 @@
 
             // VALIDATE
             Assert.Equal(appIdInSourceField, context.GetRequestTelemetry().Source);
+        }
+
+        [TestMethod]
+        public void OnPreRequestHandlerExecuteSetsCallContext()
+        {
+            var context = HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
+            {
+                ["Request-Id"] = "|guid1.1",
+                ["Correlation-Context"] = "k=v"
+            });
+
+            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+
+            var module = this.RequestTrackingTelemetryModuleFactory();
+            var config = TelemetryConfiguration.CreateDefault();
+
+            config.InstrumentationKey = Guid.NewGuid().ToString();
+            module.Initialize(config);
+
+            // start operation, there is no callcontext, so OnPreRequestHandlerExecute will set it
+            module.OnPreRequestHandlerExecute(context);
+
+            // if OnPreRequestHandlerExecute set a CallContext, child telemetry will be properly filled
+            var telemetryClient = new TelemetryClient(config);
+            using (var dependency = telemetryClient.StartOperation<DependencyTelemetry>("child"))
+            {
+                Assert.Equal(requestTelemetry.Context.Operation.Id, dependency.Telemetry.Context.Operation.Id);
+                Assert.Equal(requestTelemetry.Id, dependency.Telemetry.Context.Operation.ParentId);
+                Assert.Equal("v", dependency.Telemetry.Context.GetCorrelationContext()["k"]);
+            }
         }
 
         private RequestTrackingTelemetryModule RequestTrackingTelemetryModuleFactory()

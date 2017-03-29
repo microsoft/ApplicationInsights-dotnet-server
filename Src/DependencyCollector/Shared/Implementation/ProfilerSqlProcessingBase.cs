@@ -40,7 +40,7 @@
 
             // For directly using TrackDependency(), version will be simply what is set by core
             string prefix = "rdd" + RddSource.Profiler + ":";
-            this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion(prefix);
+            this.telemetryClient.Context.GetInternalContext().SdkVersion = Web.Implementation.SdkVersionUtils.GetSdkVersion(prefix);
             if (!string.IsNullOrEmpty(agentVersion))
             {
                 this.telemetryClient.Context.GetInternalContext().AgentVersion = agentVersion;

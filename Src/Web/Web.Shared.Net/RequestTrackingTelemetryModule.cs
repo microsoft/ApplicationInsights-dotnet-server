@@ -7,6 +7,7 @@
 
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -62,7 +63,7 @@
                 return string.IsNullOrEmpty(this.ProfileQueryEndpoint) ? this.telemetryChannelEnpoint : this.ProfileQueryEndpoint;
             }
         }
-        
+
         /// <summary>
         /// Implements on begin callback of http module.
         /// </summary>
@@ -79,13 +80,43 @@
                 return;
             }
 
-            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
+            var telemetry = context.ReadOrCreateRequestTelemetryPrivate();
 
             // NB! Whatever is saved in RequestTelemetry on Begin is not guaranteed to be sent because Begin may not be called; Keep it in context
             // In WCF there will be 2 Begins and 1 End. We need time from the first one
-            if (requestTelemetry.Timestamp == DateTimeOffset.MinValue)
+            if (telemetry.Timestamp == DateTimeOffset.MinValue)
             {
-                requestTelemetry.Start();
+                telemetry.Start();
+            }
+        }
+
+        /// <summary>
+        /// Implements on begin callback of http module.
+        /// </summary>
+        public void OnPreRequestHandlerExecute(HttpContext context)
+        {
+            if (this.telemetryClient == null)
+            {
+                throw new InvalidOperationException("Initialize has not been called on this module yet.");
+            }
+
+            if (context == null)
+            {
+                WebEventSource.Log.NoHttpContextWarning();
+                return;
+            }
+
+            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
+            var operationContext = CallContextHelpers.GetCurrentOperationContext();
+            if (operationContext == null)
+            {
+                operationContext = new OperationContextForCallContext
+                {
+                    RootOperationId = requestTelemetry.Context.Operation.Id,
+                    ParentOperationId = requestTelemetry.Id,
+                    CorrelationContext = requestTelemetry.Context.CorrelationContext
+                };
+                CallContextHelpers.SaveOperationContext(operationContext);
             }
         }
 
@@ -104,8 +135,7 @@
                 return;
             }
 
-            var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
-            requestTelemetry.Stop();
+            RequestTelemetry requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
 
             // Success will be set in Sanitize on the base of ResponseCode 
             if (string.IsNullOrEmpty(requestTelemetry.ResponseCode))
@@ -209,7 +239,7 @@
         public void Initialize(TelemetryConfiguration configuration)
         {
             this.telemetryClient = new TelemetryClient(configuration);
-            this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
+            this.telemetryClient.Context.GetInternalContext().SdkVersion = Implementation.SdkVersionUtils.GetSdkVersion("web:");
 
             if (configuration != null && configuration.TelemetryChannel != null)
             {

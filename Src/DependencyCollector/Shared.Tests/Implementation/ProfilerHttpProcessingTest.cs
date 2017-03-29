@@ -166,6 +166,9 @@
             {
                 this.httpProcessingProfiler.OnBeginForGetResponse(request);
                 Assert.IsNotNull(request.Headers[RequestResponseHeaders.StandardRootIdHeader]);
+                Assert.IsNotNull(request.Headers[RequestResponseHeaders.RequestIdHeader]);
+                Assert.AreEqual(request.Headers[RequestResponseHeaders.StandardParentIdHeader], request.Headers[RequestResponseHeaders.RequestIdHeader]);
+
                 Assert.AreEqual(request.Headers[RequestResponseHeaders.StandardRootIdHeader], op.Telemetry.Context.Operation.Id);
             }
         }
@@ -185,6 +188,8 @@
             {
                 this.httpProcessingProfiler.OnBeginForGetResponse(request);
                 Assert.IsNotNull(request.Headers[RequestResponseHeaders.StandardParentIdHeader]);
+                Assert.IsNotNull(request.Headers[RequestResponseHeaders.RequestIdHeader]);
+                Assert.AreEqual(request.Headers[RequestResponseHeaders.StandardParentIdHeader], request.Headers[RequestResponseHeaders.RequestIdHeader]);
                 Assert.AreNotEqual(request.Headers[RequestResponseHeaders.StandardParentIdHeader], op.Telemetry.Context.Operation.Id);
             }
         }

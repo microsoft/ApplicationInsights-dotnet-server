@@ -45,33 +45,16 @@
             OperationContext parentContext = requestTelemetry.Context.Operation;
             HttpRequest currentRequest = platformContext.Request;
 
-            // Make sure that RequestTelemetry is initialized.
-            if (string.IsNullOrEmpty(parentContext.ParentId))
-            {
-                if (!string.IsNullOrWhiteSpace(this.ParentOperationIdHeaderName))
-                {
-                    var parentId = currentRequest.UnvalidatedGetHeader(this.ParentOperationIdHeaderName);
-                    if (!string.IsNullOrEmpty(parentId))
-                    {
-                        parentContext.ParentId = parentId;
-                    }
-                }
-            }
-
+            // We either have both root Id and parent Id or just rootId.
+            // having single parentId is inconsistent and invalid and we'll update it.
             if (string.IsNullOrEmpty(parentContext.Id))
             {
-                if (!string.IsNullOrWhiteSpace(this.RootOperationIdHeaderName))
+                // no, standard headers, parse custom
+                if (!this.TryParseCustomHeaders(requestTelemetry, currentRequest))
                 {
-                    var rootId = currentRequest.UnvalidatedGetHeader(this.RootOperationIdHeaderName);
-                    if (!string.IsNullOrEmpty(rootId))
-                    {
-                        parentContext.Id = rootId;
-                    }
-                }
-
-                if (string.IsNullOrEmpty(parentContext.Id))
-                {
-                    parentContext.Id = requestTelemetry.Id;
+                    // there was nothing in the headers, mimic Activity API behavior
+                    requestTelemetry.Id = AppInsightsActivity.GenerateRequestId();
+                    parentContext.Id = AppInsightsActivity.GetRootId(requestTelemetry.Id);
                 }
             }
 
@@ -87,6 +70,38 @@
                     telemetry.Context.Operation.Id = parentContext.Id;
                 }
             }
+        }
+
+        private bool TryParseCustomHeaders(
+            RequestTelemetry requestTelemetry,
+            HttpRequest request)
+        {
+            var parentId = request.UnvalidatedGetHeader(this.ParentOperationIdHeaderName);
+            var rootId = request.UnvalidatedGetHeader(this.RootOperationIdHeaderName);
+
+            if (string.IsNullOrEmpty(rootId) && string.IsNullOrEmpty(parentId))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(rootId))
+            {
+                requestTelemetry.Context.Operation.Id = rootId;
+                requestTelemetry.Id = AppInsightsActivity.GenerateRequestId(rootId);
+            }
+            else 
+            {
+                // we received invalid request with parent, but without root
+                requestTelemetry.Context.Operation.Id = parentId;
+                requestTelemetry.Id = AppInsightsActivity.GenerateRequestId(parentId);
+            }
+
+            if (!string.IsNullOrEmpty(parentId))
+            {
+                requestTelemetry.Context.Operation.ParentId = parentId;
+            }
+
+            return true;
         }
     }
 }

@@ -5,6 +5,7 @@
 
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Web.Helpers;
+    using Microsoft.ApplicationInsights.Web.Implementation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -99,7 +100,6 @@
                 {
                     { "User-Agent", userAgent }
                 });
-
             source.Filters = this.botSubstrings;
 
             source.Initialize(eventTelemetry);
@@ -114,6 +114,12 @@
             public TestableSyntheticUserAgentTelemetryInitializer(IDictionary<string, string> headers = null)
             {
                 this.fakeContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                this.fakeContext.CreateRequestTelemetryPrivate();
+            }
+
+            public HttpContext FakeContext
+            {
+                get { return this.fakeContext; }
             }
 
             protected override HttpContext ResolvePlatformContext()

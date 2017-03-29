@@ -130,7 +130,7 @@
     "reservedBytes": 33546240,
     "timeInGC": 610,
     "timeInGCBase": 38909248,
-    "allocatedBytes": 9028220,
+    "allocatedBytes": 9035980,
     "gen0HeapSize": 2883580,
     "gen1HeapSize": 24448,
     "gen2HeapSize": 1181112,

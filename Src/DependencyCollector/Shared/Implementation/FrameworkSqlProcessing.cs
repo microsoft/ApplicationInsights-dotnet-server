@@ -35,7 +35,7 @@
 
             // For directly using TrackDependency(), version will be simply what is set by core
             string prefix = "rdd" + RddSource.Framework + ":";
-            this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion(prefix);
+            this.telemetryClient.Context.GetInternalContext().SdkVersion = Web.Implementation.SdkVersionUtils.GetSdkVersion(prefix);
         }
 
         #region Sql callbacks

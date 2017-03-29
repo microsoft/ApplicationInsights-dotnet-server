@@ -12,6 +12,9 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.Web</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Common\AppInsightsActivity.cs">
+      <Link>AppInsightsActivity.cs</Link>
+    </Compile>  
     <Compile Include="$(MSBuildThisFileDirectory)AccountIdTelemetryInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApplicationInsightsHttpModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuthenticatedUserIdTelemetryInitializer.cs" />
