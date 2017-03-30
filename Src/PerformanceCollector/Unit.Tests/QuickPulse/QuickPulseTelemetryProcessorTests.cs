@@ -586,7 +586,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorHandlesRequestItemSuccessSpecialCaseCorrectly()
+        public void QuickPulseTelemetryProcessorHandlesRequestSuccessSpecialCaseCorrectly()
         {
             // ARRANGE
             var documentStreamInfo = new DocumentStreamInfo()
