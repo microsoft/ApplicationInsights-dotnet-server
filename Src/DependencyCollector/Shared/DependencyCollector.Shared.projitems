@@ -13,6 +13,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)HttpDependenciesParsingTelemetryInitializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpParsers\AzureBlobHttpParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpParsers\AzureQueueHttpParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpParsers\AzureTableHttpParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)HttpParsers\GenericServiceHttpParser.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\ClientServerDependencyTracker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\DependencyTargetNameHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\ProfilerSqlConnectionProcessing.cs" />
