@@ -20,6 +20,9 @@
         public string Name { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public string Target { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public DateTimeOffset StartTime { get; set; }
 
         [DataMember(EmitDefaultValue = false)]

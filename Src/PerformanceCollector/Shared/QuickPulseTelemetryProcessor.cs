@@ -202,6 +202,7 @@
                 Version = TelemetryDocumentContractVersion,
                 Timestamp = dependencyTelemetry.Timestamp,
                 Name = TruncateValue(dependencyTelemetry.Name),
+                Target = TruncateValue(dependencyTelemetry.Target),
                 Success = dependencyTelemetry.Success,
                 Duration = dependencyTelemetry.Duration,
                 OperationId = TruncateValue(dependencyTelemetry.Context?.Operation?.Id),
