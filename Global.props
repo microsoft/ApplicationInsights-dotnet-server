@@ -26,7 +26,7 @@
         </ImportGroup>
      -->
 
-     <PropertyGroup>
+    <PropertyGroup>
         <!--  The common project structure looks like this:                                                               -->
         <!--  d:\DDGit\                                                                                                   -->
         <!--          ServiceFoo\                                                                                         -->
@@ -55,7 +55,7 @@
         <!--  The Obj folder contains all intermediate build files (like the obj folder).                                 -->
         <!--  The Packages folder contains ALL packages downloaded by NuGet.                                              -->
         <!--  The above folders contain NOTHING that is checked in (they are not checked in themselves).                  -->
-        <!--  The Src folder contains EVERYTHING that is checked in and ALL that is checked in.                           -->
+        <!--  The Src folder contains EVERHYTHNG that is checked in and ALL that is checked in.                           -->
         <!--  No build output or temp files should end up in the Src folder! (barring a few *small* VS temporaries)       -->
         <!--                                                                                                              -->
         <!--  Src MUST contain the EnlistmentRoot.marker file which marks the EnlistmentRoot.                             -->        
@@ -96,13 +96,13 @@
         <NugetVersionFilePath>$(MSBuildThisFileDirectory).nugetVersion</NugetVersionFilePath>
         <BuildNugetVersion Condition="Exists($(NugetVersionFilePath))">$([System.IO.File]::ReadAllText($(NugetVersionFilePath)))</BuildNugetVersion>
 
-        <CoreSdkVersion>2.3.0-beta3</CoreSdkVersion>
+        <CoreSdkVersion>2.4.0-beta1-build06467</CoreSdkVersion>
 
         <!-- Forces EventRegister target to generate ETW manifest file --> 
         <EtwManifestForceAll>true</EtwManifestForceAll>
         <EtwManifestOutDir>$(BinRoot)\$(Configuration)\ETW\</EtwManifestOutDir>              
     </PropertyGroup>
-
+   
     <PropertyGroup>
         <!-- Enable NuGet package restore during build -->
         <RestorePackages>true</RestorePackages>

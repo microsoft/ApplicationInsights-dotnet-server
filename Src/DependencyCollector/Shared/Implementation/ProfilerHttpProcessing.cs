@@ -8,13 +8,14 @@
 #if !NET40
     using System.Web;
 #endif
+    using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
-    
+
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the calls backs
     /// received from Profiler instrumentation for HTTP .   
@@ -26,11 +27,12 @@
         private TelemetryClient telemetryClient;
         private ICollection<string> correlationDomainExclusionList;
         private bool setCorrelationHeaders;
+        private CorrelationIdLookupHelper correlationIdLookupHelper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProfilerHttpProcessing"/> class.
         /// </summary>
-        public ProfilerHttpProcessing(TelemetryConfiguration configuration, string agentVersion, ObjectInstanceBasedOperationHolder telemetryTupleHolder, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList)
+        public ProfilerHttpProcessing(TelemetryConfiguration configuration, string agentVersion, ObjectInstanceBasedOperationHolder telemetryTupleHolder, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, string appIdEndpoint)
         {
             if (configuration == null)
             {
@@ -52,6 +54,7 @@
             this.telemetryClient = new TelemetryClient(configuration);
             this.correlationDomainExclusionList = correlationDomainExclusionList;
             this.setCorrelationHeaders = setCorrelationHeaders;
+            this.correlationIdLookupHelper = new CorrelationIdLookupHelper(appIdEndpoint);
 
             // Since dependencySource is no longer set, sdk version is prepended with information which can identify whether RDD was collected by profiler/framework
             // For directly using TrackDependency(), version will be simply what is set by core
@@ -206,6 +209,15 @@
         }
 
         /// <summary>
+        /// Simple test hook, that allows for using a stub rather than the implementation that calls the original service.
+        /// </summary>
+        /// <param name="correlationIdLookupHelper">Lookup header to use.</param>
+        internal void OverrideCorrelationIdLookupHelper(CorrelationIdLookupHelper correlationIdLookupHelper)
+        {
+            this.correlationIdLookupHelper = correlationIdLookupHelper;
+        }
+
+        /// <summary>
         /// Common helper for all Begin Callbacks.
         /// </summary>
         /// <param name="thisObj">This object.</param>        
@@ -285,10 +297,21 @@
                 if (this.setCorrelationHeaders
                     && !this.correlationDomainExclusionList.Contains(url.Host))
                 {
-                    if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
-                        && webRequest.Headers[RequestResponseHeaders.SourceInstrumentationKeyHeader] == null)
+                    try
                     {
-                        webRequest.Headers.Add(RequestResponseHeaders.SourceInstrumentationKeyHeader, InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey));
+                        if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
+                            && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextSourceKey) == null)
+                        {
+                            string appId;
+                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out appId))
+                            {
+                                webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextSourceKey, appId);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        CrossComponentCorrelationEventSource.Log.SetHeaderFailed(ex.ToInvariantString());
                     }
 
                     // Add the root ID
@@ -352,8 +375,6 @@
                     this.TelemetryTable.Remove(thisObj);
                     DependencyTelemetry telemetry = telemetryTuple.Item1;
 
-                    int statusCode = -1;
-
                     var responseObj = returnValue as HttpWebResponse;
 
                     if (responseObj == null && exception != null)
@@ -364,34 +385,62 @@
                         {
                             responseObj = webException.Response as HttpWebResponse;
                         }
-#if !NET40
-                        if (responseObj == null)
-                        {
-                            var httpException = exception as HttpException;
+                    }
 
-                            if (httpException != null)
-                            {
-                                statusCode = httpException.GetHttpCode();
-                            }
+                    if (responseObj != null)
+                    {
+                        int statusCode = -1;
+
+                        try
+                        {
+                            statusCode = (int)responseObj.StatusCode;
                         }
-#endif
+                        catch (ObjectDisposedException)
+                        {
+                            // ObjectDisposedException is expected here in the following sequence: httpWebRequest.GetResponse().Dispose() -> httpWebRequest.GetResponse()
+                            // on the second call to GetResponse() we cannot determine the statusCode.
+                        }
+
+                        telemetry.ResultCode = statusCode > 0 ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
+                        telemetry.Success = (statusCode > 0) && (statusCode < 400);
+                    }
+                    else if (exception != null)
+                    {
+                        var webException = exception as WebException;
+                        if (webException != null)
+                        {
+                            telemetry.ResultCode = webException.Status.ToString();
+                        }
+
+                        telemetry.Success = false;
                     }
 
                     if (responseObj != null)
                     {
                         try
                         {
-                            statusCode = (int)responseObj.StatusCode;
-
                             if (responseObj.Headers != null)
                             {
-                                var targetIkeyHash = responseObj.Headers[RequestResponseHeaders.TargetInstrumentationKeyHeader];
-                                
-                                // We only add the cross component correlation key if the key does not remain the current component.
-                                if (!string.IsNullOrEmpty(targetIkeyHash) && targetIkeyHash != InstrumentationKeyHashLookupHelper.GetInstrumentationKeyHash(telemetry.Context.InstrumentationKey))
+                                string targetAppId = null;
+
+                                try
                                 {
-                                    telemetry.Type = RemoteDependencyConstants.AI;
-                                    telemetry.Target += " | " + targetIkeyHash;
+                                    targetAppId = responseObj.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextTargetKey);
+                                }
+                                catch (Exception ex)
+                                {
+                                    CrossComponentCorrelationEventSource.Log.GetHeaderFailed(ex.ToInvariantString());
+                                }
+
+                                string currentComponentAppId;
+                                if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out currentComponentAppId))
+                                {
+                                    // We only add the cross component correlation key if the key does not remain the current component.
+                                    if (!string.IsNullOrEmpty(targetAppId) && targetAppId != currentComponentAppId)
+                                    {
+                                        telemetry.Type = RemoteDependencyConstants.AI;
+                                        telemetry.Target += " | " + targetAppId;
+                                    }
                                 }
                             }
                         }
@@ -401,9 +450,6 @@
                             // on the second call to GetResponse() we cannot determine the statusCode.
                         }
                     }
-                    
-                    telemetry.ResultCode = statusCode > 0 ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
-                    telemetry.Success = (statusCode > 0) && (statusCode < 400);
 
                     ClientServerDependencyTracker.EndTracking(this.telemetryClient, telemetry);
                 }
