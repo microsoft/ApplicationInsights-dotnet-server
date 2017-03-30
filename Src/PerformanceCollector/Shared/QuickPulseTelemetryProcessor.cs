@@ -186,7 +186,7 @@
                 Timestamp = requestTelemetry.Timestamp,
                 OperationId = TruncateValue(requestTelemetry.Context?.Operation?.Id),
                 Name = TruncateValue(requestTelemetry.Name),
-                Success = IsRequestSuccessful(requestTelemetry),
+                Success = requestTelemetry.Success,
                 Duration = requestTelemetry.Duration,
                 ResponseCode = requestTelemetry.ResponseCode,
                 Url = requestTelemetry.Url,
@@ -339,24 +339,21 @@
 
             if (string.IsNullOrWhiteSpace(responseCode))
             {
-                responseCode = "200";
-                success = true;
+                return true;
             }
 
-            if (success == null)
+            if (success != null)
             {
-                int responseCodeInt;
-                if (int.TryParse(responseCode, NumberStyles.Any, CultureInfo.InvariantCulture, out responseCodeInt))
-                {
-                    success = (responseCodeInt < 400) || (responseCodeInt == 401);
-                }
-                else
-                {
-                    success = true;
-                }
+                return success.Value;
             }
 
-            return success.Value;
+            int responseCodeInt;
+            if (int.TryParse(responseCode, NumberStyles.Any, CultureInfo.InvariantCulture, out responseCodeInt))
+            {
+                return (responseCodeInt < 400) || (responseCodeInt == 401);
+            }
+
+            return true;
         }
 
         private static string TruncateValue(string value)
@@ -372,160 +369,173 @@
         private void ProcessTelemetry(ITelemetry telemetry)
         {
             // only process items that are going to the instrumentation key that our module is initialized with
-            if (!string.IsNullOrWhiteSpace(this.config?.InstrumentationKey)
-                && string.Equals(telemetry?.Context?.InstrumentationKey, this.config.InstrumentationKey, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(this.config?.InstrumentationKey)
+                || !string.Equals(telemetry?.Context?.InstrumentationKey, this.config.InstrumentationKey, StringComparison.OrdinalIgnoreCase))
             {
-                var telemetryAsRequest = telemetry as RequestTelemetry;
-                var telemetryAsDependency = telemetry as DependencyTelemetry;
-                var telemetryAsException = telemetry as ExceptionTelemetry;
-                var telemetryAsEvent = telemetry as EventTelemetry;
-                var telemetryAsTrace = telemetry as TraceTelemetry;
+                return;
+            }
 
-                // update aggregates
-                if (telemetryAsRequest != null)
+            var telemetryAsRequest = telemetry as RequestTelemetry;
+            var telemetryAsDependency = telemetry as DependencyTelemetry;
+            var telemetryAsException = telemetry as ExceptionTelemetry;
+            var telemetryAsEvent = telemetry as EventTelemetry;
+            var telemetryAsTrace = telemetry as TraceTelemetry;
+
+            // update aggregates
+            bool? originalRequestTelemetrySuccessValue = null;
+            if (telemetryAsRequest != null)
+            {
+                // special treatment for RequestTelemetry.Success
+                originalRequestTelemetrySuccessValue = telemetryAsRequest.Success;
+                telemetryAsRequest.Success = IsRequestSuccessful(telemetryAsRequest);
+
+                this.UpdateRequestAggregates(telemetryAsRequest);
+            }
+            else if (telemetryAsDependency != null)
+            {
+                this.UpdateDependencyAggregates(telemetryAsDependency);
+            }
+            else if (telemetryAsException != null)
+            {
+                this.UpdateExceptionAggregates();
+            }
+
+            // get a local reference, the accumulator might get swapped out at any time
+            // in case we continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
+            CollectionConfigurationAccumulator configurationAccumulatorLocal =
+                this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
+
+            //!!! better solution?
+            // if the accumulator is swapped out and a sample is created and sent out - all while between these two lines, this telemetry item gets lost
+            // however, that is not likely to happen
+            Interlocked.Increment(ref configurationAccumulatorLocal.ReferenceCount);
+
+            try
+            {
+                // collect full telemetry items
+                if (!this.disableFullTelemetryItems)
                 {
-                    this.UpdateRequestAggregates(telemetryAsRequest);
-                }
-                else if (telemetryAsDependency != null)
-                {
-                    this.UpdateDependencyAggregates(telemetryAsDependency);
-                }
-                else if (telemetryAsException != null)
-                {
-                    this.UpdateExceptionAggregates();
-                }
+                    ITelemetryDocument telemetryDocument = null;
+                    IEnumerable<DocumentStream> documentStreams = configurationAccumulatorLocal.CollectionConfiguration.DocumentStreams;
 
-                // get a local reference, the accumulator might get swapped out a any time
-                // in case we continue to process this configuration once the accumulator is out, increase the reference count so that this accumulator is not sent out before we're done
-                CollectionConfigurationAccumulator configurationAccumulatorLocal =
-                    this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
-
-                //!!! better solution?
-                // if the accumulator is swapped out, a sample is created and sent out - all while between these two lines, this telemetry item gets lost
-                // however, that is not likely to happen
-                Interlocked.Increment(ref configurationAccumulatorLocal.ReferenceCount);
-
-                try
-                {
-                    // collect full telemetry items
-                    if (!this.disableFullTelemetryItems)
-                    {
-                        ITelemetryDocument telemetryDocument = null;
-                        IEnumerable<DocumentStream> documentStreams = configurationAccumulatorLocal.CollectionConfiguration.DocumentStreams;
-
-                        //!!! report runtime errors for filter groups?
-                        CollectionConfigurationError[] groupErrors;
-
-                        if (telemetryAsRequest != null)
-                        {
-                            telemetryDocument = CreateTelemetryDocument(
-                                telemetryAsRequest,
-                                documentStreams,
-                                documentStream => documentStream.RequestQuotaTracker,
-                                documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                                ConvertRequestToTelemetryDocument);
-                        }
-                        else if (telemetryAsDependency != null)
-                        {
-                            telemetryDocument = CreateTelemetryDocument(
-                                telemetryAsDependency,
-                                documentStreams,
-                                documentStream => documentStream.DependencyQuotaTracker,
-                                documentStream => documentStream.CheckFilters(telemetryAsDependency, out groupErrors),
-                                ConvertDependencyToTelemetryDocument);
-                        }
-                        else if (telemetryAsException != null)
-                        {
-                            telemetryDocument = CreateTelemetryDocument(
-                                telemetryAsException,
-                                documentStreams,
-                                documentStream => documentStream.ExceptionQuotaTracker,
-                                documentStream => documentStream.CheckFilters(telemetryAsException, out groupErrors),
-                                ConvertExceptionToTelemetryDocument);
-                        }
-                        else if (telemetryAsEvent != null)
-                        {
-                            telemetryDocument = CreateTelemetryDocument(
-                                telemetryAsEvent,
-                                documentStreams,
-                                documentStream => documentStream.EventQuotaTracker,
-                                documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors),
-                                ConvertEventToTelemetryDocument);
-                        }
-                        else if (telemetryAsTrace != null)
-                        {
-                            telemetryDocument = CreateTelemetryDocument(
-                                telemetryAsTrace,
-                                documentStreams,
-                                documentStream => documentStream.TraceQuotaTracker,
-                                documentStream => documentStream.CheckFilters(telemetryAsTrace, out groupErrors),
-                                ConvertTraceToTelemetryDocument);
-                        }
-
-                        if (telemetryDocument != null)
-                        {
-                            this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
-                        }
-
-                        this.dataAccumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached = this.globalQuotaTracker.QuotaExhausted;
-                    }
-
-                    // collect operationalized metrics
-                    CollectionConfigurationError[] filteringErrors;
-                    string projectionError = null;
+                    //!!! report runtime errors for filter groups?
+                    CollectionConfigurationError[] groupErrors;
 
                     if (telemetryAsRequest != null)
                     {
-                        QuickPulseTelemetryProcessor.ProcessMetrics(
-                            configurationAccumulatorLocal,
-                            configurationAccumulatorLocal.CollectionConfiguration.RequestMetrics,
+                        telemetryDocument = this.CreateTelemetryDocument(
                             telemetryAsRequest,
-                            out filteringErrors,
-                            ref projectionError);
+                            documentStreams,
+                            documentStream => documentStream.RequestQuotaTracker,
+                            documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
+                            ConvertRequestToTelemetryDocument);
                     }
                     else if (telemetryAsDependency != null)
                     {
-                        QuickPulseTelemetryProcessor.ProcessMetrics(
-                            configurationAccumulatorLocal,
-                            configurationAccumulatorLocal.CollectionConfiguration.DependencyMetrics,
+                        telemetryDocument = this.CreateTelemetryDocument(
                             telemetryAsDependency,
-                            out filteringErrors,
-                            ref projectionError);
+                            documentStreams,
+                            documentStream => documentStream.DependencyQuotaTracker,
+                            documentStream => documentStream.CheckFilters(telemetryAsDependency, out groupErrors),
+                            ConvertDependencyToTelemetryDocument);
                     }
                     else if (telemetryAsException != null)
                     {
-                        QuickPulseTelemetryProcessor.ProcessMetrics(
-                            configurationAccumulatorLocal,
-                            configurationAccumulatorLocal.CollectionConfiguration.ExceptionMetrics,
+                        telemetryDocument = this.CreateTelemetryDocument(
                             telemetryAsException,
-                            out filteringErrors,
-                            ref projectionError);
+                            documentStreams,
+                            documentStream => documentStream.ExceptionQuotaTracker,
+                            documentStream => documentStream.CheckFilters(telemetryAsException, out groupErrors),
+                            ConvertExceptionToTelemetryDocument);
                     }
                     else if (telemetryAsEvent != null)
                     {
-                        QuickPulseTelemetryProcessor.ProcessMetrics(
-                            configurationAccumulatorLocal,
-                            configurationAccumulatorLocal.CollectionConfiguration.EventMetrics,
+                        telemetryDocument = this.CreateTelemetryDocument(
                             telemetryAsEvent,
-                            out filteringErrors,
-                            ref projectionError);
+                            documentStreams,
+                            documentStream => documentStream.EventQuotaTracker,
+                            documentStream => documentStream.CheckFilters(telemetryAsEvent, out groupErrors),
+                            ConvertEventToTelemetryDocument);
                     }
                     else if (telemetryAsTrace != null)
                     {
-                        QuickPulseTelemetryProcessor.ProcessMetrics(
-                            configurationAccumulatorLocal,
-                            configurationAccumulatorLocal.CollectionConfiguration.TraceMetrics,
+                        telemetryDocument = this.CreateTelemetryDocument(
                             telemetryAsTrace,
-                            out filteringErrors,
-                            ref projectionError);
+                            documentStreams,
+                            documentStream => documentStream.TraceQuotaTracker,
+                            documentStream => documentStream.CheckFilters(telemetryAsTrace, out groupErrors),
+                            ConvertTraceToTelemetryDocument);
                     }
 
-                    //!!! report errors from string[] errors; and string projectionError;
+                    if (telemetryDocument != null)
+                    {
+                        this.dataAccumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Push(telemetryDocument);
+                    }
+
+                    this.dataAccumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached = this.globalQuotaTracker.QuotaExhausted;
                 }
-                finally
+
+                // collect operationalized metrics
+                CollectionConfigurationError[] filteringErrors;
+                string projectionError = null;
+
+                if (telemetryAsRequest != null)
                 {
-                    Interlocked.Decrement(ref configurationAccumulatorLocal.ReferenceCount);
+                    QuickPulseTelemetryProcessor.ProcessMetrics(
+                        configurationAccumulatorLocal,
+                        configurationAccumulatorLocal.CollectionConfiguration.RequestMetrics,
+                        telemetryAsRequest,
+                        out filteringErrors,
+                        ref projectionError);
                 }
+                else if (telemetryAsDependency != null)
+                {
+                    QuickPulseTelemetryProcessor.ProcessMetrics(
+                        configurationAccumulatorLocal,
+                        configurationAccumulatorLocal.CollectionConfiguration.DependencyMetrics,
+                        telemetryAsDependency,
+                        out filteringErrors,
+                        ref projectionError);
+                }
+                else if (telemetryAsException != null)
+                {
+                    QuickPulseTelemetryProcessor.ProcessMetrics(
+                        configurationAccumulatorLocal,
+                        configurationAccumulatorLocal.CollectionConfiguration.ExceptionMetrics,
+                        telemetryAsException,
+                        out filteringErrors,
+                        ref projectionError);
+                }
+                else if (telemetryAsEvent != null)
+                {
+                    QuickPulseTelemetryProcessor.ProcessMetrics(
+                        configurationAccumulatorLocal,
+                        configurationAccumulatorLocal.CollectionConfiguration.EventMetrics,
+                        telemetryAsEvent,
+                        out filteringErrors,
+                        ref projectionError);
+                }
+                else if (telemetryAsTrace != null)
+                {
+                    QuickPulseTelemetryProcessor.ProcessMetrics(
+                        configurationAccumulatorLocal,
+                        configurationAccumulatorLocal.CollectionConfiguration.TraceMetrics,
+                        telemetryAsTrace,
+                        out filteringErrors,
+                        ref projectionError);
+                }
+
+                //!!! report errors from string[] errors; and string projectionError;
+            }
+            finally
+            {
+                // special treatment for RequestTelemetry.Success - restore the value
+                if (telemetryAsRequest != null)
+                {
+                    telemetryAsRequest.Success = originalRequestTelemetrySuccessValue;
+                }
+
+                Interlocked.Decrement(ref configurationAccumulatorLocal.ReferenceCount);
             }
         }
 
@@ -617,13 +627,11 @@
 
         private void UpdateRequestAggregates(RequestTelemetry requestTelemetry)
         {
-            bool success = IsRequestSuccessful(requestTelemetry);
-
             long requestCountAndDurationInTicks = QuickPulseDataAccumulator.EncodeCountAndDuration(1, requestTelemetry.Duration.Ticks);
 
             Interlocked.Add(ref this.dataAccumulatorManager.CurrentDataAccumulator.AIRequestCountAndDurationInTicks, requestCountAndDurationInTicks);
 
-            if (success)
+            if (requestTelemetry.Success == true)
             {
                 Interlocked.Increment(ref this.dataAccumulatorManager.CurrentDataAccumulator.AIRequestSuccessCount);
             }

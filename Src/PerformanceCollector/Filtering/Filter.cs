@@ -101,14 +101,14 @@
                 if (fieldNameType == FieldNameType.AnyField)
                 {
                     // multiple fields => multiple comparison expressions connected with ORs
-                    comparisonExpression = this.ProduceComparatorExpression(documentExpression);
+                    comparisonExpression = this.ProduceComparatorExpressionForAnyFieldCondition(documentExpression);
                 }
                 else
                 {
                     // a single field filterInfo.FieldName of type fieldType => a single comparison expression
                     Expression fieldExpression = ProduceFieldExpression(documentExpression, filterInfo.FieldName, fieldNameType);
 
-                    comparisonExpression = this.ProduceComparatorExpression(fieldExpression, fieldType);
+                    comparisonExpression = this.ProduceComparatorExpressionForSingleFieldCondition(fieldExpression, fieldType);
                 }
             }
             catch (Exception e)
@@ -293,7 +293,7 @@
                    ?? false;
         }
 
-        private Expression ProduceComparatorExpression(Expression fieldExpression, Type fieldType)
+        private Expression ProduceComparatorExpressionForSingleFieldCondition(Expression fieldExpression, Type fieldType)
         {
             // this must determine an appropriate runtime comparison given the field type, the predicate, and the comparand
             TypeCode fieldTypeCode = Type.GetTypeCode(fieldType);
@@ -500,9 +500,15 @@
             return null;
         }
 
-        private Expression ProduceComparatorExpression(ParameterExpression documentExpression)
+        private Expression ProduceComparatorExpressionForAnyFieldCondition(ParameterExpression documentExpression)
         {
             // this.predicate is either Predicate.Contains or Predicate.DoesNotContain at this point
+            if (this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain)
+            {
+                throw new InvalidOperationException(
+                    "ProduceComparatorExpressionForAnyFieldCondition is called while this.predicate is neither Predicate.Contains nor Predicate.DoesNotContain");
+            }
+
             Expression comparisonExpression = this.predicate == Predicate.Contains ? Expression.Constant(false) : Expression.Constant(true);
 
             foreach (PropertyInfo propertyInfo in typeof(TTelemetry).GetProperties(BindingFlags.Instance | BindingFlags.Public))
@@ -544,7 +550,7 @@
                     {
                         // regular property, create a comparator
                         Expression fieldExpression = ProduceFieldExpression(documentExpression, propertyInfo.Name, FieldNameType.FieldName);
-                        propertyComparatorExpression = this.ProduceComparatorExpression(fieldExpression, propertyInfo.PropertyType);
+                        propertyComparatorExpression = this.ProduceComparatorExpressionForSingleFieldCondition(fieldExpression, propertyInfo.PropertyType);
                     }
 
                     comparisonExpression = this.predicate == Predicate.Contains

@@ -586,6 +586,85 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryProcessorHandlesRequestItemSuccessSpecialCaseCorrectly()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "True" }
+                                        }
+                                }
+                        }
+                    }
+            };
+
+            var filterInfo = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "True" };
+            var metricInfo = new[]
+            {
+                new OperationalizedMetricInfo()
+                {
+                    Id = "Metric1",
+                    TelemetryType = TelemetryType.Request,
+                    Projection = "Count()",
+                    Aggregation = AggregationType.Avg,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo } } }
+                }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                Metrics = metricInfo,
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var request = new RequestTelemetry()
+            {
+                Name = Guid.NewGuid().ToString(),
+                Success = false,
+                ResponseCode = string.Empty,
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+          
+            telemetryProcessor.Process(request);
+
+            // ASSERT
+            // even though Success is set to false, since ResponseCode is empty the special case logic must have turned it into true
+            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray().Single();
+            double metricValue = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators["Metric1"].Value.Single();
+
+            Assert.AreEqual(true, ((RequestTelemetryDocument)collectedTelemetry).Success);
+            Assert.AreEqual(1, metricValue);
+
+            // the value must have been restored
+            Assert.AreEqual(false, request.Success);
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsIfTypeIsNotMentionedInDocumentStream()
         {
             // ARRANGE
@@ -672,8 +751,7 @@
             };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos };
-
-
+            
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -691,6 +769,7 @@
                 var request = new RequestTelemetry()
                 {
                     Success = i == 0,
+                    ResponseCode = "200",
                     Duration = TimeSpan.FromSeconds(counter++),
                     Context = { InstrumentationKey = instrumentationKey }
                 };
@@ -705,6 +784,7 @@
                 var request = new RequestTelemetry()
                 {
                     Success = i < 20,
+                    ResponseCode = "200",
                     Duration = TimeSpan.FromSeconds(counter++),
                     Context = { InstrumentationKey = instrumentationKey }
                 };
