@@ -12,7 +12,7 @@
         /// Get the string representation of this Exception with special handling for AggregateExceptions.
         /// </summary>
         /// <param name="ex">The exception to convert to a string.</param>
-        /// <returns></returns>
+        /// <returns>The detailed string version of the provided exception.</returns>
         internal static string GetExceptionDetailString(Exception ex)
         {
             var ae = ex as AggregateException;
