@@ -809,7 +809,8 @@
             Assert.AreEqual("ETag1", errors[0].Data["ETag"]);
 
             Assert.AreEqual(CollectionConfigurationErrorType.PerformanceCounterParsing, errors[1].ErrorType);
-            Assert.AreEqual(@"Error parsing performance counter: '(PerformanceCounter3, NonParseable)'. Invalid performance counter name format: NonParseable. Expected formats are \category(instance)\counter or \category\counter
+            Assert.AreEqual(
+                @"Error parsing performance counter: '(PerformanceCounter3, NonParseable)'. Invalid performance counter name format: NonParseable. Expected formats are \category(instance)\counter or \category\counter
 Parameter name: performanceCounter",
                 errors[1].Message);
             Assert.AreEqual(string.Empty, errors[1].FullException);

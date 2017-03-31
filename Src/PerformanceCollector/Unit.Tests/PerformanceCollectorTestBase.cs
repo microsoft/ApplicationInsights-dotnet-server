@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
@@ -115,18 +116,23 @@
             var counters = new[]
                                {
                                    new PerformanceCounter("Processor", "% Processor Time", "_Total"),
-                                   new PerformanceCounter("Memory", "Available Bytes", "")
+                                   new PerformanceCounter("Memory", "Available Bytes", string.Empty)
                                };
 
             foreach (var pc in counters)
             {
                 string error;
-                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), pc.GetHashCode().ToString(), true, out error, false);
+                collector.RegisterCounter(
+                    PerformanceCounterUtility.FormatPerformanceCounter(pc),
+                    pc.GetHashCode().ToString(CultureInfo.InvariantCulture),
+                    true,
+                    out error,
+                    false);
             }
 
             var twoCounters = collector.PerformanceCounters.ToArray();
 
-            collector.RemoveCounter(@"\PROCESSOR(_Total)\% Processor Time", counters[0].GetHashCode().ToString());
+            collector.RemoveCounter(@"\PROCESSOR(_Total)\% Processor Time", counters[0].GetHashCode().ToString(CultureInfo.InvariantCulture));
 
             var oneCounter = collector.PerformanceCounters.ToArray();
 
@@ -148,12 +154,19 @@
             foreach (var pc in counters)
             {
                 string error;
-                collector.RegisterCounter(PerformanceCounterUtility.FormatPerformanceCounter(pc), pc.GetHashCode().ToString(), true, out error, false);
+                collector.RegisterCounter(
+                    PerformanceCounterUtility.FormatPerformanceCounter(pc),
+                    pc.GetHashCode().ToString(CultureInfo.InvariantCulture),
+                    true,
+                    out error,
+                    false);
             }
 
             var twoCounters = collector.PerformanceCounters.ToArray();
 
-            collector.RemoveCounter(@"\ASP.NET APPLICATIONS(??APP_W3SVC_PROC??)\Request Execution Time", counters[0].GetHashCode().ToString());
+            collector.RemoveCounter(
+                @"\ASP.NET APPLICATIONS(??APP_W3SVC_PROC??)\Request Execution Time",
+                counters[0].GetHashCode().ToString(CultureInfo.InvariantCulture));
 
             var oneCounter = collector.PerformanceCounters.ToArray();
 

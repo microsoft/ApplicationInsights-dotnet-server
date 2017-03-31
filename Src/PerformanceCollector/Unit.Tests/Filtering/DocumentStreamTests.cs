@@ -88,7 +88,7 @@
             // ACT
             var results = new bool[requests.Length];
             bool errorsEncountered = false;
-            for (int i = 0; i < requests.Length; i ++)
+            for (int i = 0; i < requests.Length; i++)
             {
                 CollectionConfigurationError[] runtimeErrors;
                 results[i] = documentStream.CheckFilters(requests[i], out runtimeErrors);

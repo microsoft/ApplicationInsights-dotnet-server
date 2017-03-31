@@ -34,45 +34,11 @@
 
         private readonly List<Tuple<string, string>> performanceCounters = new List<Tuple<string, string>>();
 
-        public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
-
-        public IEnumerable<OperationalizedMetric<DependencyTelemetry>> DependencyMetrics => this.dependencyTelemetryMetrics;
-
-        public IEnumerable<OperationalizedMetric<ExceptionTelemetry>> ExceptionMetrics => this.exceptionTelemetryMetrics;
-
-        public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics;
-
-        public IEnumerable<OperationalizedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
-
-        public IEnumerable<OperationalizedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
-
-        /// <summary>
-        /// Telemetry types only (handled by QuickPulseTelemetryProcessor)
-        /// </summary>
-        public IEnumerable<Tuple<string, AggregationType>> TelemetryMetadata => this.telemetryMetadata;
-
-        /// <summary>
-        /// Metric type only (handled by QuickPulseMetricProcessor)
-        /// </summary>
-        public IEnumerable<Tuple<string, AggregationType>> MetricMetadata => this.metricMetadata;
-
-        /// <summary>
-        /// Document streams (handled by QuickPulseTelemetryProcessor)
-        /// </summary>
-        public IEnumerable<DocumentStream> DocumentStreams => this.documentStreams; 
-        
-        public string ETag => this.info.ETag;
-
-        /// <remarks>
-        /// Performance counter name is stored in OperationalizedMetricInfo.Projection
-        /// </remarks>
-        public IEnumerable<Tuple<string, string>> PerformanceCounters => this.performanceCounters;
-        
         public CollectionConfiguration(
-            CollectionConfigurationInfo info,
-            out CollectionConfigurationError[] errors,
-            Clock timeProvider,
-            IEnumerable<DocumentStream> previousDocumentStreams = null)
+           CollectionConfigurationInfo info,
+           out CollectionConfigurationError[] errors,
+           Clock timeProvider,
+           IEnumerable<DocumentStream> previousDocumentStreams = null)
         {
             if (info == null)
             {
@@ -101,6 +67,70 @@
             foreach (var error in errors)
             {
                 error.Data["ETag"] = this.info.ETag;
+            }
+        }
+
+        public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<DependencyTelemetry>> DependencyMetrics => this.dependencyTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<ExceptionTelemetry>> ExceptionMetrics => this.exceptionTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
+
+        public IEnumerable<OperationalizedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
+
+        /// <summary>
+        /// Telemetry types only (handled by QuickPulseTelemetryProcessor).
+        /// </summary>
+        public IEnumerable<Tuple<string, AggregationType>> TelemetryMetadata => this.telemetryMetadata;
+
+        /// <summary>
+        /// Metric type only (handled by QuickPulseMetricProcessor).
+        /// </summary>
+        public IEnumerable<Tuple<string, AggregationType>> MetricMetadata => this.metricMetadata;
+
+        /// <summary>
+        /// Document streams (handled by QuickPulseTelemetryProcessor).
+        /// </summary>
+        public IEnumerable<DocumentStream> DocumentStreams => this.documentStreams; 
+        
+        public string ETag => this.info.ETag;
+
+        /// <summary>
+        /// Gets a list of performance counters.
+        /// </summary>
+        /// <remarks>
+        /// Performance counter name is stored in OperationalizedMetricInfo.Projection.
+        /// </remarks>
+        public IEnumerable<Tuple<string, string>> PerformanceCounters => this.performanceCounters;
+
+        private static void AddMetric<TTelemetry>(
+          OperationalizedMetricInfo metricInfo,
+          List<OperationalizedMetric<TTelemetry>> metrics,
+          out CollectionConfigurationError[] errors)
+        {
+            errors = new CollectionConfigurationError[] { };
+
+            try
+            {
+                metrics.Add(new OperationalizedMetric<TTelemetry>(metricInfo, out errors));
+            }
+            catch (Exception e)
+            {
+                // error creating the metric
+                errors =
+                    errors.Concat(
+                        new[]
+                        {
+                            CollectionConfigurationError.CreateError(
+                                CollectionConfigurationErrorType.MetricFailureToCreate,
+                                string.Format(CultureInfo.InvariantCulture, "Failed to create metric {0}.", metricInfo),
+                                e,
+                                Tuple.Create("MetricId", metricInfo.Id))
+                        }).ToArray();
             }
         }
 
@@ -154,7 +184,7 @@
                         documentStream.EventQuotaTracker.CurrentQuota,
                         documentStream.TraceQuotaTracker.CurrentQuota));
 
-            foreach (DocumentStreamInfo documentStreamInfo in info.DocumentStreams ?? new DocumentStreamInfo[0])
+            foreach (DocumentStreamInfo documentStreamInfo in this.info.DocumentStreams ?? new DocumentStreamInfo[0])
             {
                 if (documentStreamIds.Contains(documentStreamInfo.Id))
                 {
@@ -254,7 +284,6 @@
                         // no need to create a wrapper, we rely on the underlying CollectionConfigurationInfo to provide data about performance counters
                         // move on to the next metric
                         continue;
-                        break;
                     case TelemetryType.Trace:
                         CollectionConfiguration.AddMetric(metricInfo, this.traceTelemetryMetrics, out localErrors);
                         break;
@@ -292,33 +321,6 @@
             foreach (var metricIds in this.metricMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
             {
                 this.metricMetadata.Add(metricIds);
-            }
-        }
-
-        private static void AddMetric<TTelemetry>(
-            OperationalizedMetricInfo metricInfo,
-            List<OperationalizedMetric<TTelemetry>> metrics,
-            out CollectionConfigurationError[] errors)
-        {
-            errors = new CollectionConfigurationError[] { };
-
-            try
-            {
-                metrics.Add(new OperationalizedMetric<TTelemetry>(metricInfo, out errors));
-            }
-            catch (Exception e)
-            {
-                // error creating the metric
-                errors =
-                    errors.Concat(
-                        new[]
-                        {
-                            CollectionConfigurationError.CreateError(
-                                CollectionConfigurationErrorType.MetricFailureToCreate,
-                                string.Format(CultureInfo.InvariantCulture, "Failed to create metric {0}.", metricInfo),
-                                e,
-                                Tuple.Create("MetricId", metricInfo.Id))
-                        }).ToArray();
             }
         }
     }

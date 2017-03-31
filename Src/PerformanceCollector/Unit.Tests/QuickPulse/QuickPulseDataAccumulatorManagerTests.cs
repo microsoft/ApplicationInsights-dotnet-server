@@ -39,9 +39,11 @@
         {
             // ARRANGE
             CollectionConfigurationError[] errors;
-            CollectionConfiguration collectionConfiguration = new CollectionConfiguration(
-                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                out errors, new ClockMock());
+            CollectionConfiguration collectionConfiguration =
+                new CollectionConfiguration(
+                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                    out errors,
+                    new ClockMock());
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
             int taskCount = 100;
             var writeTasks = new List<Task>(taskCount);

@@ -24,7 +24,8 @@
         private static readonly CollectionConfiguration EmptyCollectionConfiguration =
             new CollectionConfiguration(
                 new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
-                out errors, new ClockMock());
+                out errors,
+                new ClockMock());
 
         private static CollectionConfigurationError[] errors;
 
@@ -810,7 +811,6 @@
                     .Cast<RequestTelemetryDocument>()
                     .ToArray();
 
-
             // the quota is 3 initially, then 0.5 every second (but not more than 30)
 
             // StreamAll has collected the initial quota of the first 100, then the additional accrued quota from the second 100
@@ -836,7 +836,7 @@
             Assert.AreEqual(0, collectedTelemetryStreamSuccessOnly[0].Duration.TotalSeconds);
 
             // 17 (15 accrued quota + 2 left over quota) from the second 100
-            for (int i = 0; i < 17; i ++)
+            for (int i = 0; i < 17; i++)
             {
                 Assert.AreEqual(100 + i, collectedTelemetryStreamSuccessOnly[1 + i].Duration.TotalSeconds);
             }
@@ -881,7 +881,6 @@
             };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos };
-
 
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
@@ -938,7 +937,6 @@
                     .Reverse()
                     .Cast<DependencyTelemetryDocument>()
                     .ToArray();
-
 
             // the quota is 3 initially, then 0.5 every second (but not more than 30)
 
@@ -1012,7 +1010,6 @@
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos };
 
-
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1031,7 +1028,7 @@
                 {
                     Exception = new Exception(i == 0 ? "true" : "false"),
                     Message = i == 0 ? "true" : "false",
-                    Context = { InstrumentationKey = instrumentationKey, Operation = { Id = counter++.ToString() } }
+                    Context = { InstrumentationKey = instrumentationKey, Operation = { Id = counter ++.ToString(CultureInfo.InvariantCulture) } }
                 };
 
                 telemetryProcessor.Process(request);
@@ -1045,7 +1042,7 @@
                 {
                     Exception = new Exception(i < 20 ? "true" : "false"),
                     Message = i < 20 ? "true" : "false",
-                    Context = { InstrumentationKey = instrumentationKey, Operation = { Id = counter++.ToString() } }
+                    Context = { InstrumentationKey = instrumentationKey, Operation = { Id = counter ++.ToString(CultureInfo.InvariantCulture) } }
                 };
 
                 telemetryProcessor.Process(request);
@@ -1069,7 +1066,6 @@
                     .Cast<ExceptionTelemetryDocument>()
                     .ToArray();
 
-
             // the quota is 3 initially, then 0.5 every second (but not more than 30)
 
             // StreamAll has collected the initial quota of the first 100, then the additional accrued quota from the second 100
@@ -1078,13 +1074,13 @@
             // out of the first 100 items we expect to see the initial quota of 3
             for (int i = 0; i < 3; i++)
             {
-                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].OperationId));
+                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].OperationId, CultureInfo.InvariantCulture));
             }
 
             // out of the second 100 items we expect to see items 100 through 114 (the new quota for 30 seconds is 15)
             for (int i = 0; i < 15; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].OperationId));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].OperationId, CultureInfo.InvariantCulture));
             }
 
             // StreamSuccessOnly never hit the quota during the first 100. It got 1 and had 2 quota left at the end of it. 
@@ -1092,12 +1088,12 @@
             Assert.AreEqual(1 + 17, collectedTelemetryStreamSuccessOnly.Length);
 
             // just one item of the first 100
-            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].OperationId));
+            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].OperationId, CultureInfo.InvariantCulture));
 
             // 17 (15 accrued quota + 2 left over quota) from the second 100
             for (int i = 0; i < 17; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].OperationId));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].OperationId, CultureInfo.InvariantCulture));
             }
         }
 
@@ -1132,7 +1128,8 @@
                                 Filters =
                                     new FilterConjunctionGroupInfo
                                     {
-                                        Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "true" } }
+                                        Filters =
+                                            new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "true" } }
                                     }
                             }
                         }
@@ -1140,7 +1137,6 @@
             };
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos };
-
 
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
@@ -1158,7 +1154,7 @@
             {
                 var request = new EventTelemetry()
                 {
-                    Name = $"{(i == 0 ? "true" : "false")}#{counter ++}",
+                    Name = string.Format(CultureInfo.InvariantCulture, "{0}#{1}", i == 0 ? "true" : "false", counter++),
                     Context = { InstrumentationKey = instrumentationKey },
                 };
 
@@ -1171,7 +1167,7 @@
             {
                 var request = new EventTelemetry()
                 {
-                    Name = $"{(i < 20 ? "true" : "false")}#{counter++}",
+                    Name = string.Format(CultureInfo.InvariantCulture, "{0}#{1}", i < 20 ? "true" : "false", counter++),
                     Context = { InstrumentationKey = instrumentationKey }
                 };
 
@@ -1190,12 +1186,7 @@
 
             var collectedTelemetryStreamSuccessOnly =
                 accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Where(
-                    document => document.DocumentStreamIds.Contains("StreamSuccessOnly"))
-                    .ToArray()
-                    .Reverse()
-                    .Cast<EventTelemetryDocument>()
-                    .ToArray();
-
+                    document => document.DocumentStreamIds.Contains("StreamSuccessOnly")).ToArray().Reverse().Cast<EventTelemetryDocument>().ToArray();
 
             // the quota is 3 initially, then 0.5 every second (but not more than 30)
 
@@ -1205,13 +1196,13 @@
             // out of the first 100 items we expect to see the initial quota of 3
             for (int i = 0; i < 3; i++)
             {
-                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].Name.Split('#')[1]));
+                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].Name.Split('#')[1], CultureInfo.InvariantCulture));
             }
 
             // out of the second 100 items we expect to see items 100 through 114 (the new quota for 30 seconds is 15)
             for (int i = 0; i < 15; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].Name.Split('#')[1]));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].Name.Split('#')[1], CultureInfo.InvariantCulture));
             }
 
             // StreamSuccessOnly never hit the quota during the first 100. It got 1 and had 2 quota left at the end of it. 
@@ -1219,12 +1210,12 @@
             Assert.AreEqual(1 + 17, collectedTelemetryStreamSuccessOnly.Length);
 
             // just one item of the first 100
-            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].Name.Split('#')[1]));
+            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].Name.Split('#')[1], CultureInfo.InvariantCulture));
 
             // 17 (15 accrued quota + 2 left over quota) from the second 100
             for (int i = 0; i < 17; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].Name.Split('#')[1]));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].Name.Split('#')[1], CultureInfo.InvariantCulture));
             }
         }
 
@@ -1268,7 +1259,6 @@
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "ETag1", DocumentStreams = documentStreamInfos };
 
-
             var timeProvider = new ClockMock();
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, timeProvider);
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -1285,7 +1275,7 @@
             {
                 var request = new TraceTelemetry()
                 {
-                    Message = $"{(i == 0 ? "true" : "false")}#{counter++}",
+                    Message = string.Format(CultureInfo.InvariantCulture, "{0}#{1}", i == 0 ? "true" : "false", counter++),
                     Context = { InstrumentationKey = instrumentationKey },
                 };
 
@@ -1298,7 +1288,7 @@
             {
                 var request = new TraceTelemetry()
                 {
-                    Message = $"{(i < 20 ? "true" : "false")}#{counter++}",
+                    Message = string.Format(CultureInfo.InvariantCulture, "{0}#{1}", i < 20 ? "true" : "false", counter++),
                     Context = { InstrumentationKey = instrumentationKey }
                 };
 
@@ -1323,7 +1313,6 @@
                     .Cast<TraceTelemetryDocument>()
                     .ToArray();
 
-
             // the quota is 3 initially, then 0.5 every second (but not more than 30)
 
             // StreamAll has collected the initial quota of the first 100, then the additional accrued quota from the second 100
@@ -1332,13 +1321,13 @@
             // out of the first 100 items we expect to see the initial quota of 3
             for (int i = 0; i < 3; i++)
             {
-                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].Message.Split('#')[1]));
+                Assert.AreEqual(i, int.Parse(collectedTelemetryStreamAll[i].Message.Split('#')[1], CultureInfo.InvariantCulture));
             }
 
             // out of the second 100 items we expect to see items 100 through 114 (the new quota for 30 seconds is 15)
             for (int i = 0; i < 15; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].Message.Split('#')[1]));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamAll[3 + i].Message.Split('#')[1], CultureInfo.InvariantCulture));
             }
 
             // StreamSuccessOnly never hit the quota during the first 100. It got 1 and had 2 quota left at the end of it. 
@@ -1346,12 +1335,12 @@
             Assert.AreEqual(1 + 17, collectedTelemetryStreamSuccessOnly.Length);
 
             // just one item of the first 100
-            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].Message.Split('#')[1]));
+            Assert.AreEqual(0, int.Parse(collectedTelemetryStreamSuccessOnly[0].Message.Split('#')[1], CultureInfo.InvariantCulture));
 
             // 17 (15 accrued quota + 2 left over quota) from the second 100
             for (int i = 0; i < 17; i++)
             {
-                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].Message.Split('#')[1]));
+                Assert.AreEqual(100 + i, int.Parse(collectedTelemetryStreamSuccessOnly[1 + i].Message.Split('#')[1], CultureInfo.InvariantCulture));
             }
         }
 
@@ -1363,12 +1352,12 @@
 
             // we have 15 streams (global quota is 10 * 30 documents per minute (5 documents per second), which is 10x the per-stream quota
             var streamCount = 15;
-            for (int i = 0; i < streamCount; i ++)
+            for (int i = 0; i < streamCount; i++)
             {
                 documentStreamInfos.Add(
                     new DocumentStreamInfo()
                     {
-                        Id = $"Stream{i}#",
+                        Id = string.Format(CultureInfo.InvariantCulture, "Stream{0}#", i),
                         DocumentFilterGroups =
                             new[]
                             {
@@ -1400,9 +1389,9 @@
             timeProvider.FastForward(TimeSpan.FromHours(1));
 
             // push 10 items to each stream
-            for (int i = 0; i < 10; i ++)
+            for (int i = 0; i < 10; i++)
             {
-                telemetryProcessor.Process(new RequestTelemetry() { Name = i.ToString(), Context = { InstrumentationKey = "some ikey" } });
+                telemetryProcessor.Process(new RequestTelemetry() { Name = i.ToString(CultureInfo.InvariantCulture), Context = { InstrumentationKey = "some ikey" } });
             }
 
             // ASSERT
@@ -1413,9 +1402,9 @@
             // we expect to see the first 6 documents in each stream, which is the global quota
             Assert.AreEqual(maxGlobalTelemetryQuota, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
 
-            for (int i = 0; i < streamCount; i ++)
+            for (int i = 0; i < streamCount; i++)
             {
-                var streamId = $"Stream{i}#";
+                var streamId = string.Format(CultureInfo.InvariantCulture, "Stream{0}#", i);
                 var collectedTelemetryForStream =
                     accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Where(document => document.DocumentStreamIds.Contains(streamId))
                         .ToArray()
@@ -1425,9 +1414,9 @@
 
                 Assert.AreEqual(maxGlobalTelemetryQuota, collectedTelemetryForStream.Length);
 
-                for (int j = 0; j < collectedTelemetryForStream.Length; j ++)
+                for (int j = 0; j < collectedTelemetryForStream.Length; j++)
                 {
-                    Assert.AreEqual(j, int.Parse(collectedTelemetryForStream[j].Name));
+                    Assert.AreEqual(j, int.Parse(collectedTelemetryForStream[j].Name, CultureInfo.InvariantCulture));
                 }
             }
         }
@@ -2291,7 +2280,12 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups =
                         new[]
-                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoResponseCodeGreaterThanOrEqualTo500, filterInfoFailed } } }
+                        {
+                            new FilterConjunctionGroupInfo()
+                            {
+                                Filters = new[] { filterInfoResponseCodeGreaterThanOrEqualTo500, filterInfoFailed }
+                            }
+                        }
                 },
                 new OperationalizedMetricInfo()
                 {
@@ -2709,7 +2703,12 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups =
                         new[]
-                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast } } }
+                        {
+                            new FilterConjunctionGroupInfo()
+                            {
+                                Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
+                            }
+                        }
                 },
                 new OperationalizedMetricInfo()
                 {
@@ -2748,7 +2747,12 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups =
                         new[]
-                        { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast } } }
+                        {
+                            new FilterConjunctionGroupInfo()
+                            {
+                                Filters = new[] { filterInfoAll200, filterInfoAllSuccessful, filterInfoAllFast }
+                            }
+                        }
                 },
                 new OperationalizedMetricInfo()
                 {
@@ -2780,7 +2784,7 @@
             {
                 var requestTelemetry = new RequestTelemetry()
                 {
-                    Id = i.ToString(),
+                    Id = i.ToString(CultureInfo.InvariantCulture),
                     ResponseCode = (i % 2 == 0) ? "200" : "500",
                     Success = i % 2 == 0,
                     Duration = TimeSpan.FromDays(i),

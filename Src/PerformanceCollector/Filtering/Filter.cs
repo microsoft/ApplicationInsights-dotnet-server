@@ -129,7 +129,18 @@
                 throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Could not compile the filter."), e);
             }
         }
-        
+
+        internal enum FieldNameType
+        {
+            FieldName,
+
+            CustomMetricName,
+
+            CustomDimensionName,
+
+            AnyField
+        }
+
         public bool Check(TTelemetry document)
         {
             try
@@ -555,9 +566,9 @@
 
                     comparisonExpression = this.predicate == Predicate.Contains
                                                ? Expression.OrElse(comparisonExpression, propertyComparatorExpression)
-                                               : Expression.AndAlso(comparisonExpression, (propertyComparatorExpression));
+                                               : Expression.AndAlso(comparisonExpression, propertyComparatorExpression);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // probably an unsupported property (e.g. bool), ignore and continue
                 }
@@ -572,17 +583,6 @@
             {
                 throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "The filter is invalid. Field: '{0}', field type: '{1}', predicate: '{2}', comparand: '{3}', document type: '{4}'", this.fieldName, fieldType?.FullName ?? "---", this.predicate, this.comparand, typeof(TTelemetry).FullName));
             }
-        }
-
-        internal enum FieldNameType
-        {
-            FieldName,
-
-            CustomMetricName,
-
-            CustomDimensionName,
-
-            AnyField
         }
     }
 }

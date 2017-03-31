@@ -36,15 +36,15 @@
                 {
                     filterPassed = filter.Check(document);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // the filter has failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out by this conjunction group
-                    //!!!
-                    //errorList.Add(
-                    //    CollectionConfigurationError.CreateError(
-                    //        CollectionConfigurationErrorType.FilterFailureToRun,
-                    //        string.Format(CultureInfo.InvariantCulture, "Failter failed to run: {0}.", filter),
-                    //        e));
+                    ////!!!
+                    ////errorList.Add(
+                    ////    CollectionConfigurationError.CreateError(
+                    ////        CollectionConfigurationErrorType.FilterFailureToRun,
+                    ////        string.Format(CultureInfo.InvariantCulture, "Failter failed to run: {0}.", filter),
+                    ////        e));
                     filterPassed = false;
                 }
 

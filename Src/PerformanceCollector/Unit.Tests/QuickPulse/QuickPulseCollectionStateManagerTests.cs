@@ -500,7 +500,13 @@
             var collectionConfigurationInfos = new List<CollectionConfigurationInfo>();
             var manager = CreateManager(serviceClient, new Clock(), actions, collectionConfigurationInfos: collectionConfigurationInfos);
 
-            var filters = new [] { new FilterConjunctionGroupInfo() { Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } } } };
+            var filters = new[]
+            {
+                new FilterConjunctionGroupInfo()
+                {
+                    Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } }
+                }
+            };
             var metrics = new[]
                               {
                                   new OperationalizedMetricInfo()

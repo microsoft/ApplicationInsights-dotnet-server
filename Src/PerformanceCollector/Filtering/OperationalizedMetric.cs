@@ -12,17 +12,15 @@
     /// </summary>
     internal class OperationalizedMetric<TTelemetry>
     {
-        private static string ProjectionCount = "Count()";
+        private const string ProjectionCount = "Count()";
 
         private static readonly MethodInfo DoubleParseMethodInfo = typeof(double).GetMethod(
-            "Parse",
-            new[] { typeof(string), typeof(IFormatProvider) });
+           "Parse",
+           new[] { typeof(string), typeof(IFormatProvider) });
 
         private static readonly MethodInfo ObjectToStringMethodInfo = typeof(object).GetMethod(
             "ToString",
             BindingFlags.Public | BindingFlags.Instance);
-
-        private Func<TTelemetry, double> projectionLambda;
 
         private readonly OperationalizedMetricInfo info;
 
@@ -30,11 +28,9 @@
         /// OR-connected collection of AND-connected filter groups.
         /// </summary>
         private readonly List<FilterConjunctionGroup<TTelemetry>> filterGroups = new List<FilterConjunctionGroup<TTelemetry>>();
-
-        public string Id => this.info.Id;
-
-        public AggregationType AggregationType => this.info.Aggregation;
-
+        
+        private Func<TTelemetry, double> projectionLambda;
+        
         public OperationalizedMetric(OperationalizedMetricInfo info, out CollectionConfigurationError[] errors)
         {
             if (info == null)
@@ -48,7 +44,32 @@
 
             this.CreateProjection();
         }
-        
+
+        public string Id => this.info.Id;
+
+        public AggregationType AggregationType => this.info.Aggregation;
+
+        public static double Aggregate(double[] accumulatedValue, AggregationType aggregationType)
+        {
+            IEnumerable<double> defaultIfEmpty = accumulatedValue.DefaultIfEmpty(0);
+            switch (aggregationType)
+            {
+                case AggregationType.Avg:
+                    return defaultIfEmpty.Average();
+                case AggregationType.Sum:
+                    return defaultIfEmpty.Sum();
+                case AggregationType.Min:
+                    return defaultIfEmpty.Min();
+                case AggregationType.Max:
+                    return defaultIfEmpty.Max();
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(aggregationType),
+                        aggregationType,
+                        string.Format(CultureInfo.InvariantCulture, "AggregationType is not supported"));
+            }
+        }
+
         public bool CheckFilters(TTelemetry document, out CollectionConfigurationError[] errors)
         {
             if (this.filterGroups.Count < 1)
@@ -87,31 +108,10 @@
             }
             catch (FormatException e)
             {
-                //  the projected value could not be parsed by double.Parse()
+                // the projected value could not be parsed by double.Parse()
                 throw new ArgumentOutOfRangeException(
                     string.Format(CultureInfo.InvariantCulture, "Projected field {0} was not a number", this.info.Projection),
                     e);
-            }
-        }
-
-        public static double Aggregate(double[] accumulatedValue, AggregationType aggregationType)
-        {
-            IEnumerable<double> defaultIfEmpty = accumulatedValue.DefaultIfEmpty(0);
-            switch (aggregationType)
-            {
-                case AggregationType.Avg:
-                    return defaultIfEmpty.Average();
-                case AggregationType.Sum:
-                    return defaultIfEmpty.Sum();
-                case AggregationType.Min:
-                    return defaultIfEmpty.Min();
-                case AggregationType.Max:
-                    return defaultIfEmpty.Max();
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(aggregationType),
-                        aggregationType,
-                        string.Format(CultureInfo.InvariantCulture, "AggregationType is not supported"));
             }
         }
 

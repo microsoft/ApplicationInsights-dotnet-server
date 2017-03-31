@@ -27,19 +27,7 @@
         private readonly List<FilterConjunctionGroup<EventTelemetry>> eventFilterGroups = new List<FilterConjunctionGroup<EventTelemetry>>();
 
         private readonly List<FilterConjunctionGroup<TraceTelemetry>> traceFilterGroups = new List<FilterConjunctionGroup<TraceTelemetry>>();
-
-        public QuickPulseQuotaTracker RequestQuotaTracker { get; }
-
-        public QuickPulseQuotaTracker DependencyQuotaTracker { get; }
-
-        public QuickPulseQuotaTracker ExceptionQuotaTracker { get; }
-
-        public QuickPulseQuotaTracker EventQuotaTracker { get; }
-
-        public QuickPulseQuotaTracker TraceQuotaTracker { get; }
-
-        public string Id => this.info.Id;
-
+        
         public DocumentStream(
             DocumentStreamInfo info,
             out CollectionConfigurationError[] errors,
@@ -59,31 +47,24 @@
 
             this.CreateFilters(out errors);
 
-            this.RequestQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                MaxTelemetryQuota,
-                initialRequestQuota ?? InitialTelemetryQuota);
-
-            this.DependencyQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                MaxTelemetryQuota,
-                initialDependencyQuota ?? InitialTelemetryQuota);
-
-            this.ExceptionQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                MaxTelemetryQuota,
-                initialExceptionQuota ?? InitialTelemetryQuota);
-
-            this.EventQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider,
-                MaxTelemetryQuota,
-                initialEventQuota ?? InitialTelemetryQuota);
-
-            this.TraceQuotaTracker = new QuickPulseQuotaTracker(
-                timeProvider, 
-                MaxTelemetryQuota,
-                initialTraceQuota ?? InitialTelemetryQuota);
+            this.RequestQuotaTracker = new QuickPulseQuotaTracker(timeProvider, MaxTelemetryQuota, initialRequestQuota ?? InitialTelemetryQuota);
+            this.DependencyQuotaTracker = new QuickPulseQuotaTracker(timeProvider, MaxTelemetryQuota, initialDependencyQuota ?? InitialTelemetryQuota);
+            this.ExceptionQuotaTracker = new QuickPulseQuotaTracker(timeProvider, MaxTelemetryQuota, initialExceptionQuota ?? InitialTelemetryQuota);
+            this.EventQuotaTracker = new QuickPulseQuotaTracker(timeProvider, MaxTelemetryQuota, initialEventQuota ?? InitialTelemetryQuota);
+            this.TraceQuotaTracker = new QuickPulseQuotaTracker(timeProvider, MaxTelemetryQuota, initialTraceQuota ?? InitialTelemetryQuota);
         }
+
+        public QuickPulseQuotaTracker RequestQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker DependencyQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker ExceptionQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker EventQuotaTracker { get; }
+
+        public QuickPulseQuotaTracker TraceQuotaTracker { get; }
+
+        public string Id => this.info.Id;
 
         public bool CheckFilters(RequestTelemetry document, out CollectionConfigurationError[] errors)
         {
@@ -167,7 +148,7 @@
         {
             errors = new CollectionConfigurationError[0];
             var errorList = new List<CollectionConfigurationError>();
-            bool atLeastOneConjunctionGroupPassed = false;
+            bool leastOneConjunctionGroupPassed = false;
 
             if (filterGroups.Count == 0)
             {
@@ -183,29 +164,29 @@
                 {
                     conjunctionGroupPassed = checkFilters(conjunctionFilterGroup, errorList);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // the filters have failed to run (possibly incompatible field value in telemetry), consider the telemetry item filtered out by this conjunction group
-                    //!!!
-                    //errorList.Add(
-                    //    CollectionConfigurationError.CreateError(
-                    //        CollectionConfigurationErrorType.DocumentStreamFilterFailureToRun,
-                    //        string.Format(CultureInfo.InvariantCulture, "Document stream filter failed to run"),
-                    //        e));
+                    ////!!!
+                    ////errorList.Add(
+                    ////    CollectionConfigurationError.CreateError(
+                    ////        CollectionConfigurationErrorType.DocumentStreamFilterFailureToRun,
+                    ////        string.Format(CultureInfo.InvariantCulture, "Document stream filter failed to run"),
+                    ////        e));
                     conjunctionGroupPassed = false;
                 }
 
                 if (conjunctionGroupPassed)
                 {
                     // no need to check remaining groups, one OR-connected group has passed
-                    atLeastOneConjunctionGroupPassed = true;
+                    leastOneConjunctionGroupPassed = true;
                     break;
                 }
             }
 
             errors = errorList.ToArray();
 
-            return atLeastOneConjunctionGroupPassed;
+            return leastOneConjunctionGroupPassed;
         }
 
         private void CreateFilters(out CollectionConfigurationError[] errors)
@@ -244,10 +225,7 @@
                     errorList.Add(
                         CollectionConfigurationError.CreateError(
                             CollectionConfigurationErrorType.DocumentStreamFailureToCreateFilterUnexpected,
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Failed to create a document stream filter {0}.",
-                                documentFilterConjunctionGroupInfo),
+                            string.Format(CultureInfo.InvariantCulture, "Failed to create a document stream filter {0}.", documentFilterConjunctionGroupInfo),
                             e,
                             Tuple.Create("DocumentStreamId", this.info.Id)));
                 }

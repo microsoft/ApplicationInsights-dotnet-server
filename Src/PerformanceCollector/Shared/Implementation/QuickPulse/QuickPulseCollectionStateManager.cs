@@ -28,6 +28,10 @@
 
         private readonly Func<CollectionConfigurationInfo, CollectionConfigurationError[]> onUpdatedConfiguration;
 
+        private readonly TimeSpan coolDownTimeout = TimeSpan.FromMilliseconds(50);
+
+        private readonly List<CollectionConfigurationError> collectionConfigurationErrors = new List<CollectionConfigurationError>();
+
         private DateTimeOffset lastSuccessfulPing;
         
         private DateTimeOffset lastSuccessfulSubmit;
@@ -37,10 +41,6 @@
         private bool firstStateUpdate = true;
 
         private string currentConfigurationETag = string.Empty;
-
-        private readonly TimeSpan coolDownTimeout = TimeSpan.FromMilliseconds(50);
-
-        private readonly List<CollectionConfigurationError> collectionConfigurationErrors = new List<CollectionConfigurationError>(); 
 
         public QuickPulseCollectionStateManager(
             IQuickPulseServiceClient serviceClient, 
@@ -151,7 +151,7 @@
                     // we have samples
                     if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.ReferenceCount != 0))
                     {
-                        //!!! better solution?
+                        ////!!! better solution?
                         // some samples are still being processed, wait a little to give them a chance to finish
                         Thread.Sleep(this.coolDownTimeout);
 
@@ -248,10 +248,7 @@
                     this.collectionConfigurationErrors.Add(
                         CollectionConfigurationError.CreateError(
                             CollectionConfigurationErrorType.CollectionConfigurationFailureToCreateUnexpected,
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Unexpected error applying configuration. ETag: {0}",
-                                configurationInfo.ETag ?? string.Empty),
+                            string.Format(CultureInfo.InvariantCulture, "Unexpected error applying configuration. ETag: {0}", configurationInfo.ETag ?? string.Empty),
                             e,
                             Tuple.Create("ETag", configurationInfo.ETag)));
                 }

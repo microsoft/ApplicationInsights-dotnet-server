@@ -14,8 +14,7 @@
 
         DocumentStreamFailureToCreateFilterUnexpected,
 
-        //DocumentStreamFilterFailureToRun,
-
+        // DocumentStreamFilterFailureToRun,
         MetricDuplicateIds,
 
         MetricTelemetryTypeUnsupported,
@@ -26,8 +25,7 @@
 
         FilterFailureToCreateUnexpected,
 
-        //FilterFailureToRun,
-
+        // FilterFailureToRun,
         CollectionConfigurationFailureToCreateUnexpected
     }
 }

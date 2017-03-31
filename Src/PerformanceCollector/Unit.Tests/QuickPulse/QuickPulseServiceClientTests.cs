@@ -33,11 +33,13 @@
 
         private readonly CollectionConfiguration emptyCollectionConfiguration;
 
+        private readonly Dictionary<string, string> opaqueAuthHeaderValuesToRespondWith = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        private readonly Dictionary<string, string> lastOpaqueAuthHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
+
         private Action<HttpListenerResponse> pingResponse;
 
         private Action<HttpListenerResponse> submitResponse;
-
-        private readonly Dictionary<string, string> opaqueAuthHeaderValuesToRespondWith = new Dictionary<string, string>(StringComparer.Ordinal);
 
         private HttpListener listener;
 
@@ -52,8 +54,6 @@
         private string lastVersion;
 
         private string lastAuthApiKey;
-
-        private readonly Dictionary<string, string> lastOpaqueAuthHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
 
         private bool emulateTimeout;
 

@@ -18,13 +18,6 @@
         /// </summary>
         public long ReferenceCount = 0;
 
-        /// <summary>
-        /// metricId => AccumulatedValue
-        /// </summary>
-        public Dictionary<string, AccumulatedValue> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValue>();
-
-        public CollectionConfiguration CollectionConfiguration { get; }
-
         public CollectionConfigurationAccumulator(CollectionConfiguration collectionConfiguration)
         {
             this.CollectionConfiguration = collectionConfiguration;
@@ -39,5 +32,12 @@
                 this.MetricAccumulators.Add(metricId.Item1, accumulatedValue);
             }
         }
+
+        /// <summary>
+        /// Gets a dictionary of metricId => AccumulatedValue.
+        /// </summary>
+        public Dictionary<string, AccumulatedValue> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValue>();
+
+        public CollectionConfiguration CollectionConfiguration { get; }
     }
 }
