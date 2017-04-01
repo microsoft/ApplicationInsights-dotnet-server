@@ -24,12 +24,8 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>7286ce46</NuGetPackageImportStamp>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFA92.tmp\Debug\</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFA92.tmp\Release\</IntermediateOutputPath>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "/>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "/>
   <ItemGroup>
     <None Include="Package.nuspec">
       <SubType>Designer</SubType>

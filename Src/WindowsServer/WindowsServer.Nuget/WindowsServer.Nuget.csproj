@@ -24,11 +24,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Prefer32Bit>false</Prefer32Bit>
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFAF0.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Prefer32Bit>false</Prefer32Bit>
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFAF0.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="ApplicationInsights.config.install.xdt">

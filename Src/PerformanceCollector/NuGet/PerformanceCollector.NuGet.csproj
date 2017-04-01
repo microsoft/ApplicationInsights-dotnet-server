@@ -19,12 +19,8 @@
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>dd2813bf</NuGetPackageImportStamp>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFBBC.tmp\Debug\</IntermediateOutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <IntermediateOutputPath>C:\Users\alkaplan\AppData\Local\Temp\vsFBBC.tmp\Release\</IntermediateOutputPath>
-  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "/>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "/>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="ApplicationInsights.config.transform">
