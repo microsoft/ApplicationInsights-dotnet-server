@@ -6,7 +6,6 @@
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Net.Http;
     using System.Runtime.Serialization.Json;
 
     using Helpers;
@@ -40,8 +39,6 @@
 
         private readonly DataContractJsonSerializer deserializerServerResponse = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
 
-        private readonly HttpClient httpClient;
-
         private readonly Dictionary<string, string> authOpaqueHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
 
         public QuickPulseServiceClient(
@@ -63,11 +60,9 @@
             this.isWebApp = isWebApp;
             this.timeout = timeout ?? this.timeout;
 
-            this.httpClient = new HttpClient() { Timeout = this.timeout };
-
             foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
             {
-                authOpaqueHeaderValues.Add(headerName, null);
+                this.authOpaqueHeaderValues.Add(headerName, null);
             }
         }
 
@@ -86,25 +81,13 @@
                 this.ServiceUri.AbsoluteUri.TrimEnd('/'),
                 Uri.EscapeUriString(instrumentationKey));
 
-            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUri))
-            {
-                using (
-                    HttpResponseMessage response = this.SendRequest(
-                        request,
-                        true,
-                        configurationETag,
-                        authApiKey,
-                        r => this.WritePingData(timestamp, r)))
-                {
-                    if (response == null)
-                    {
-                        configurationInfo = null;
-                        return null;
-                    }
-
-                    return this.ProcessResponse(response, configurationETag, out configurationInfo);
-                }
-            }
+            return this.SendRequest(
+                requestUri,
+                true,
+                configurationETag,
+                authApiKey,
+                out configurationInfo,
+                requestStream => this.WritePingData(timestamp, requestStream));
         }
 
         public bool? SubmitSamples(
@@ -121,45 +104,76 @@
                 this.ServiceUri.AbsoluteUri.TrimEnd('/'),
                 Uri.EscapeUriString(instrumentationKey));
 
-            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, requestUri))
-            {
-                using (
-                    HttpResponseMessage response = this.SendRequest(
-                        request,
-                        false,
-                        configurationETag,
-                        authApiKey,
-                        r => this.WriteSamples(samples, instrumentationKey, r, collectionConfigurationErrors)))
-                {
-
-                    if (response == null)
-                    {
-                        configurationInfo = null;
-                        return null;
-                    }
-
-                    return this.ProcessResponse(response, configurationETag, out configurationInfo);
-                }
-            }
+            return this.SendRequest(
+                requestUri,
+                false,
+                configurationETag,
+                authApiKey,
+                out configurationInfo,
+                requestStream => this.WriteSamples(samples, instrumentationKey, requestStream, collectionConfigurationErrors));
         }
 
-        private bool? ProcessResponse(HttpResponseMessage response, string configurationETag, out CollectionConfigurationInfo configurationInfo)
+        private bool? SendRequest(
+            string requestUri,
+            bool includeIdentityHeaders,
+            string configurationETag,
+            string authApiKey,
+            out CollectionConfigurationInfo configurationInfo,
+            Action<Stream> onWriteRequestBody)
+        {
+            try
+            {
+                HttpWebRequest request = WebRequest.Create(requestUri) as HttpWebRequest;
+                request.Method = "POST";
+                request.Timeout = (int)this.timeout.TotalMilliseconds;
+
+                this.AddHeaders(request, includeIdentityHeaders, configurationETag, authApiKey);
+
+                using (Stream requestStream = request.GetRequestStream())
+                {
+                    onWriteRequestBody(requestStream);
+
+                    using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+                    {
+                        if (response == null)
+                        {
+                            configurationInfo = null;
+                            return null;
+                        }
+
+                        return this.ProcessResponse(response, configurationETag, out configurationInfo);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                QuickPulseEventSource.Log.ServiceCommunicationFailedEvent(e.ToInvariantString());
+            }
+
+            configurationInfo = null;
+            return null;
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times", Justification = "Dispose is known to perform safely on Stream and StreamReader types.")]
+        private bool? ProcessResponse(HttpWebResponse response, string configurationETag, out CollectionConfigurationInfo configurationInfo)
         {
             configurationInfo = null;
 
-            Dictionary<string, string> headers = response.Headers.Concat(response.Content.Headers)
-                .ToDictionary(pair => pair.Key, pair => pair.Value.FirstOrDefault());
-
-            string subscribedHeaderValue;
-            headers.TryGetValue(QuickPulseConstants.XMsQpsSubscribedHeaderName, out subscribedHeaderValue);
-
             bool isSubscribed;
-            if (!bool.TryParse(subscribedHeaderValue, out isSubscribed))
+            if (!bool.TryParse(response.GetResponseHeader(QuickPulseConstants.XMsQpsSubscribedHeaderName), out isSubscribed))
             {
+                // could not parse the isSubscribed value
+
                 // read the response out to avoid issues with TCP connections not being freed up
                 try
                 {
-                    var responseBytes = response.Content.ReadAsByteArrayAsync().Result;
+                    using (var responseStream = response.GetResponseStream())
+                    {
+                        using (var sr = new StreamReader(responseStream))
+                        {
+                            sr.ReadToEnd();
+                        }
+                    }
                 }
                 catch (Exception)
                 {
@@ -169,24 +183,19 @@
                 return null;
             }
 
-            string configurationETagHeaderValue;
-            headers.TryGetValue(QuickPulseConstants.XMsQpsConfigurationETagHeaderName, out configurationETagHeaderValue);
-
             foreach (string headerName in QuickPulseConstants.XMsQpsAuthOpaqueHeaderNames)
             {
-                string headerValue;
-                if (headers.TryGetValue(headerName, out headerValue))
-                {
-                    this.authOpaqueHeaderValues[headerName] = headerValue;
-                }
+                this.authOpaqueHeaderValues[headerName] = response.GetResponseHeader(headerName);
             }
+
+            string configurationETagHeaderValue = response.GetResponseHeader(QuickPulseConstants.XMsQpsConfigurationETagHeaderName);
 
             try
             {
-                using (Stream responseStream = response.Content.ReadAsStreamAsync().Result)
+                using (Stream responseStream = response.GetResponseStream())
                 {
                     if (isSubscribed && !string.IsNullOrEmpty(configurationETagHeaderValue)
-                        && !string.Equals(configurationETagHeaderValue, configurationETag, StringComparison.Ordinal))
+                        && !string.Equals(configurationETagHeaderValue, configurationETag, StringComparison.Ordinal) && responseStream != null)
                     {
                         configurationInfo = this.deserializerServerResponse.ReadObject(responseStream) as CollectionConfigurationInfo;
                     }
@@ -206,7 +215,7 @@
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
         }
 
-        private void WritePingData(DateTimeOffset timestamp, HttpRequestMessage request)
+        private void WritePingData(DateTimeOffset timestamp, Stream stream)
         {
             var dataPoint = new MonitoringDataPoint
             {
@@ -220,14 +229,10 @@
                 IsWebApp = this.isWebApp
             };
 
-            var ms = new MemoryStream();
-            this.serializerDataPoint.WriteObject(ms, dataPoint);
-
-            ms.Position = 0;
-            request.Content = new StreamContent(ms);
+            this.serializerDataPoint.WriteObject(stream, dataPoint);
         }
 
-        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, HttpRequestMessage request, CollectionConfigurationError[] errors)
+        private void WriteSamples(IEnumerable<QuickPulseDataSample> samples, string instrumentationKey, Stream stream, CollectionConfigurationError[] errors)
         {
             var monitoringPoints = new List<MonitoringDataPoint>();
 
@@ -269,11 +274,7 @@
                 monitoringPoints.Add(dataPoint);
             }
 
-            var ms = new MemoryStream();
-            this.serializerDataPointArray.WriteObject(ms, monitoringPoints.ToArray());
-
-            ms.Position = 0;
-            request.Content = new StreamContent(ms);
+            this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
         }
 
         private static IEnumerable<MetricPoint> CreateOperationalizedMetrics(QuickPulseDataSample sample)
@@ -346,38 +347,7 @@
             };
         }
 
-        private HttpResponseMessage SendRequest(
-            HttpRequestMessage request,
-            bool includeIdentityHeaders,
-            string configurationETag,
-            string authApiKey,
-            Action<HttpRequestMessage> onWriteBody)
-        {
-            try
-            {
-                this.AddHeaders(request, includeIdentityHeaders, configurationETag, authApiKey);
-
-                onWriteBody?.Invoke(request);
-
-                HttpResponseMessage response = this.httpClient.SendAsync(request).Result;
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new WebException(
-                        string.Format(CultureInfo.InvariantCulture, "Unable to contact the server. Response code: {0}", (int)response.StatusCode));
-                }
-
-                return response;
-            }
-            catch (Exception e)
-            {
-                QuickPulseEventSource.Log.ServiceCommunicationFailedEvent(e.ToInvariantString());
-            }
-
-            return null;
-        }
-
-        private void AddHeaders(HttpRequestMessage request, bool includeIdentityHeaders, string configurationETag, string authApiKey)
+        private void AddHeaders(HttpWebRequest request, bool includeIdentityHeaders, string configurationETag, string authApiKey)
         {
             request.Headers.Add(QuickPulseConstants.XMsQpsTransmissionTimeHeaderName, this.timeProvider.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
 
