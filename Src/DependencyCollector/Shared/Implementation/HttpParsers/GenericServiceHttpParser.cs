@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.HttpParsers
+﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.HttpParsers
 {
     using System;
     using DataContracts;

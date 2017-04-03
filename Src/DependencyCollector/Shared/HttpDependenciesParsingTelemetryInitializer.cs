@@ -4,8 +4,8 @@
     using Channel;
     using DataContracts;
     using Extensibility;
-    using HttpParsers;
     using Implementation;
+    using Implementation.HttpParsers;
 
     /// <summary>
     /// Telemetry Initializer that parses http dependencies into well-known types like Azure Storage.
