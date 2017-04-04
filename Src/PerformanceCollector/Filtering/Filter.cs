@@ -23,6 +23,8 @@
 
         private const string CustomDimensionsPropertyName = "Properties";
 
+        private const char FieldNameTrainSeparator = '.';
+
         private static readonly MethodInfo DoubleToStringMethodInfo = GetMethodInfo<double, string>(x => x.ToString(CultureInfo.InvariantCulture));
 
         private static readonly MethodInfo UriToStringMethodInfo = GetMethodInfo<Uri, string>(x => x.ToString());
@@ -161,7 +163,7 @@
             switch (fieldNameType)
             {
                 case FieldNameType.FieldName:
-                    return fieldName.Split('.').Aggregate<string, Expression>(documentExpression, Expression.Property);
+                    return fieldName.Split(FieldNameTrainSeparator).Aggregate<string, Expression>(documentExpression, Expression.Property);
                 case FieldNameType.CustomMetricName:
                     string customMetricName = fieldName.Substring(
                         FieldNameCustomMetricsPrefix.Length,
@@ -211,7 +213,7 @@
 
             // no special case in filterInfo.FieldName, treat it as the name of a property in TTelemetry type
             fieldNameType = FieldNameType.FieldName;
-            return GetPropertyTypeFromName(fieldName);
+            return GetPropertyTypeFromFieldName(fieldName);
         }
 
         private static Expression CreateDictionaryAccessExpression(ParameterExpression documentExpression, string dictionaryName, MethodInfo tryGetValueMethodInfo, Type valueType, string keyValue)
@@ -252,11 +254,11 @@
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Expression is not a method"), nameof(expression));
         }
 
-        private static Type GetPropertyTypeFromName(string fieldName)
+        private static Type GetPropertyTypeFromFieldName(string fieldName)
         {
             try
             {
-                Type propertyType = fieldName.Split('.')
+                Type propertyType = fieldName.Split(FieldNameTrainSeparator)
                     .Aggregate(
                         typeof(TTelemetry),
                         (type, propertyName) => type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public).PropertyType);

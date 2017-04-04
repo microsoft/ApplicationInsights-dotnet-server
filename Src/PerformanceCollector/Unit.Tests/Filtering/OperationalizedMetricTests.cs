@@ -258,6 +258,58 @@
         }
 
         [TestMethod]
+        public void OperationalizedMetricProjectsCorrectlyWhenTrain()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Context.Operation.Name",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = new FilterConjunctionGroupInfo[0]
+            };
+
+            var telemetry = new RequestTelemetry() { Context = { Operation = { Name = "123.56" } } };
+
+            // ACT
+            CollectionConfigurationError[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            double projection = metric.Project(telemetry);
+
+            // ASSERT
+            Assert.AreEqual(AggregationType.Sum, metric.AggregationType);
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(123.56, projection);
+        }
+
+        [TestMethod]
+        public void OperationalizedMetricProjectsCorrectlyWhenTimeSpan()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "Duration",
+                Aggregation = AggregationType.Avg,
+                FilterGroups = new FilterConjunctionGroupInfo[0]
+            };
+
+            var telemetry = new RequestTelemetry() { Duration = TimeSpan.FromMilliseconds(120) };
+
+            // ACT
+            CollectionConfigurationError[] errors;
+            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            double projection = metric.Project(telemetry);
+
+            // ASSERT
+            Assert.AreEqual(AggregationType.Avg, metric.AggregationType);
+            Assert.AreEqual(0, errors.Length);
+            Assert.AreEqual(120, projection);
+        }
+
+        [TestMethod]
         public void OperationalizedMetricAggregatesCorrectly()
         {
             // ARRANGE
@@ -386,6 +438,27 @@
             }
 
             Assert.Fail();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void OperationalizedMetricReportsErrorWhenProjectionIsAsterisk()
+        {
+            // ARRANGE
+            var metricInfo = new OperationalizedMetricInfo()
+            {
+                Id = "Metric1",
+                TelemetryType = TelemetryType.Request,
+                Projection = "*",
+                Aggregation = AggregationType.Sum,
+                FilterGroups = new FilterConjunctionGroupInfo[0]
+            };
+
+            // ACT
+            CollectionConfigurationError[] errors;
+            new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+
+            // ASSERT
         }
     }
 }

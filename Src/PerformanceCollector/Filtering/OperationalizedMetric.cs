@@ -175,8 +175,20 @@
                 else
                 {
                     Filter<TTelemetry>.FieldNameType fieldNameType;
-                    Filter<TTelemetry>.GetFieldType(this.info.Projection, out fieldNameType);
+                    Type fieldType = Filter<TTelemetry>.GetFieldType(this.info.Projection, out fieldNameType);
+                    if (fieldNameType == Filter<TTelemetry>.FieldNameType.AnyField)
+                    {
+                        throw new ArgumentOutOfRangeException(
+                            string.Format(CultureInfo.InvariantCulture, "Unsupported field type for projection: {0}", this.info.Projection));
+                    }
+
                     fieldExpression = Filter<TTelemetry>.ProduceFieldExpression(documentExpression, this.info.Projection, fieldNameType);
+
+                    // special case - for TimeSpan values ToString() will not result in a value convertable to double, so we must take care of that ourselves
+                    if (fieldType == typeof(TimeSpan))
+                    {
+                        fieldExpression = Expression.Property(fieldExpression, "TotalMilliseconds");
+                    }
                 }
 
                 // double.Parse(((object)fieldExpression).ToString());
