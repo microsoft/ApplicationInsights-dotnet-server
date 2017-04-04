@@ -149,13 +149,14 @@
                 else
                 {
                     // we have samples
-                    if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.ReferenceCount != 0))
+                    if (dataSamplesToSubmit.Any(sample => Interlocked.Read(ref sample.CollectionConfigurationAccumulator.ReferenceCount) != 0))
                     {
                         ////!!! better solution?
                         // some samples are still being processed, wait a little to give them a chance to finish
                         Thread.Sleep(this.coolDownTimeout);
 
-                        bool allCooledDown = dataSamplesToSubmit.All(sample => sample.CollectionConfigurationAccumulator.ReferenceCount == 0);
+                        bool allCooledDown =
+                            dataSamplesToSubmit.All(sample => Interlocked.Read(ref sample.CollectionConfigurationAccumulator.ReferenceCount) == 0);
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent(
                             string.Format(
@@ -234,6 +235,7 @@
 
         private void UpdateConfiguration(CollectionConfigurationInfo configurationInfo)
         {
+            // we only get here if Etag in the header is different from the current one, but we still want to check if Etag in the body is also different
             if (configurationInfo != null && !string.Equals(configurationInfo.ETag, this.currentConfigurationETag, StringComparison.Ordinal))
             {
                 this.collectionConfigurationErrors.Clear();
