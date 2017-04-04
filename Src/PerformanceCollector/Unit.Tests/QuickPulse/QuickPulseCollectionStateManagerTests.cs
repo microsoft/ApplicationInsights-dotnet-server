@@ -638,7 +638,7 @@
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[0].Message);
             Assert.IsTrue(
                 errors[0].FullException.Contains(
-                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+                    "Error finding property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(5, errors[0].Data.Count);
             Assert.AreEqual("Metric0", errors[0].Data["MetricId"]);
             Assert.AreEqual("1", errors[0].Data["ETag"]);
@@ -650,7 +650,7 @@
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[1].Message);
             Assert.IsTrue(
                 errors[1].FullException.Contains(
-                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+                    "Error finding property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(5, errors[1].Data.Count);
             Assert.AreEqual("Metric0", errors[1].Data["MetricId"]);
             Assert.AreEqual("1", errors[1].Data["ETag"]);
@@ -671,7 +671,7 @@
             Assert.AreEqual("Failed to create a filter NonExistentNameInFilter Equal Request1.", errors[3].Message);
             Assert.IsTrue(
                 errors[3].FullException.Contains(
-                    "Could not find the property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+                    "Error finding property NonExistentNameInFilter in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(5, errors[3].Data.Count);
             Assert.AreEqual("Metric1", errors[3].Data["MetricId"]);
             Assert.AreEqual("1", errors[3].Data["ETag"]);

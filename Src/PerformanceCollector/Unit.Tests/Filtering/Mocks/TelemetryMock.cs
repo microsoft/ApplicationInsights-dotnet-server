@@ -1,13 +1,12 @@
 ﻿namespace Unit.Tests
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
 
-    class TelemetryMock : ITelemetry
+    internal class TelemetryMock : ITelemetry
     {
         public bool BooleanField { get; set; }
 
@@ -24,12 +23,12 @@
         public Uri UriField { get; set; }
 
         public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
-        
+
         public IDictionary<string, double> Metrics { get; } = new Dictionary<string, double>();
-        
+
         public DateTimeOffset Timestamp { get; set; }
 
-        public TelemetryContext Context { get; }
+        public TelemetryContext Context { get; set; } = new TelemetryContext();
 
         public string Sequence { get; set; }
 
