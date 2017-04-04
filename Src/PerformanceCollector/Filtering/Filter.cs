@@ -163,7 +163,7 @@
             switch (fieldNameType)
             {
                 case FieldNameType.FieldName:
-                    return Expression.Property(documentExpression, fieldName);
+                    return fieldName.Split('.').Aggregate<string, Expression>(documentExpression, Expression.Property);
                 case FieldNameType.CustomMetricName:
                     string customMetricName = fieldName.Substring(
                         FieldNameCustomMetricsPrefix.Length,
@@ -254,21 +254,23 @@
             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "Expression is not a method"), nameof(expression));
         }
 
-        private static Type GetPropertyTypeFromName(string propertyName)
+        private static Type GetPropertyTypeFromName(string fieldName)
         {
             PropertyInfo fieldPropertyInfo;
             try
             {
-                fieldPropertyInfo = typeof(TTelemetry).GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+                fieldPropertyInfo = fieldName.Split('.').Aggregate<string, PropertyInfo>(documentExpression, Expression.Property);
+
+                fieldPropertyInfo = typeof(TTelemetry).GetProperty(fieldName, BindingFlags.Instance | BindingFlags.Public);
             }
             catch (Exception e)
             {
-                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Error finding property {0} in the type {1}", propertyName, typeof(TTelemetry).FullName), e);
+                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Error finding property {0} in the type {1}", fieldName, typeof(TTelemetry).FullName), e);
             }
 
             if (fieldPropertyInfo == null)
             {
-                throw new ArgumentOutOfRangeException(nameof(propertyName), string.Format(CultureInfo.InvariantCulture, "Could not find the property {0} in the type {1}", propertyName, typeof(TTelemetry).FullName));
+                throw new ArgumentOutOfRangeException(nameof(fieldName), string.Format(CultureInfo.InvariantCulture, "Could not find the property {0} in the type {1}", fieldName, typeof(TTelemetry).FullName));
             }
 
             return fieldPropertyInfo.PropertyType;
