@@ -28,7 +28,7 @@
 
         public DateTimeOffset Timestamp { get; set; }
 
-        public TelemetryContext Context { get; } = new TelemetryContext();
+        public TelemetryContext Context { get; set; } = new TelemetryContext();
 
         public string Sequence { get; set; }
 

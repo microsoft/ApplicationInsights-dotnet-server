@@ -342,7 +342,7 @@
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField1 Contains apple.",
                 errors[0].Message);
-            Assert.IsTrue(errors[0].FullException.Contains("Could not find the property NonExistentField1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsTrue(errors[0].FullException.Contains("Error finding property NonExistentField1 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(3, errors[0].Data.Count);
             Assert.AreEqual("NonExistentField1", errors[0].Data["FilterFieldName"]);
             Assert.AreEqual(Predicate.Contains.ToString(), errors[0].Data["FilterPredicate"]);
@@ -352,7 +352,7 @@
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField2 Contains orange.",
                 errors[1].Message);
-            Assert.IsTrue(errors[1].FullException.Contains("Could not find the property NonExistentField2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsTrue(errors[1].FullException.Contains("Error finding property NonExistentField2 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(3, errors[1].Data.Count);
             Assert.AreEqual("NonExistentField2", errors[1].Data["FilterFieldName"]);
             Assert.AreEqual(Predicate.Contains.ToString(), errors[1].Data["FilterPredicate"]);
@@ -362,7 +362,7 @@
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField3 Contains mango.",
                 errors[2].Message);
-            Assert.IsTrue(errors[2].FullException.Contains("Could not find the property NonExistentField3 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
+            Assert.IsTrue(errors[2].FullException.Contains("Error finding property NonExistentField3 in the type Microsoft.ApplicationInsights.DataContracts.RequestTelemetry"));
             Assert.AreEqual(3, errors[2].Data.Count);
             Assert.AreEqual("NonExistentField3", errors[2].Data["FilterFieldName"]);
             Assert.AreEqual(Predicate.Contains.ToString(), errors[2].Data["FilterPredicate"]);

@@ -1091,11 +1091,24 @@
                 new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Context = { Operation = { Name = "ImportantOperation" } } });
             bool result3 =
                 new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { Context = { Operation = { Name = "ImportantOperation1" } } });
-
+            
             // ASSERT
             Assert.IsFalse(result1);
             Assert.IsTrue(result2);
             Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void FilterTrainWreck()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "Context.NonExistentField.Name", Predicate = Predicate.Equal, Comparand = "ImportantOperation" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock());
+            
+            // ASSERT
         }
 
         #endregion

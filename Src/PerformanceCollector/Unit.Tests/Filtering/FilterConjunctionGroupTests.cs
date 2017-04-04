@@ -166,7 +166,7 @@
             Assert.AreEqual(
                 "Failed to create a filter NonExistentField Contains apple.",
                 errors[0].Message);
-            Assert.IsTrue(errors[0].FullException.Contains("Could not find the property NonExistentField in the type Unit.Tests.TelemetryMock"));
+            Assert.IsTrue(errors[0].FullException.Contains("Error finding property NonExistentField in the type Unit.Tests.TelemetryMock"));
             Assert.AreEqual(3, errors[0].Data.Count);
             Assert.AreEqual("NonExistentField", errors[0].Data["FilterFieldName"]);
             Assert.AreEqual(Predicate.Contains.ToString(), errors[0].Data["FilterPredicate"]);

@@ -256,24 +256,32 @@
 
         private static Type GetPropertyTypeFromName(string fieldName)
         {
-            PropertyInfo fieldPropertyInfo;
             try
             {
-                fieldPropertyInfo = fieldName.Split('.').Aggregate<string, PropertyInfo>(documentExpression, Expression.Property);
+                Type propertyType = fieldName.Split('.')
+                    .Aggregate(
+                        typeof(TTelemetry),
+                        (type, propertyName) => type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public).PropertyType);
 
-                fieldPropertyInfo = typeof(TTelemetry).GetProperty(fieldName, BindingFlags.Instance | BindingFlags.Public);
+                if (propertyType == null)
+                {
+                    string propertyNotFoundMessage = string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Error finding property {0} in the type {1}",
+                        fieldName,
+                        typeof(TTelemetry).FullName);
+
+                    throw new ArgumentOutOfRangeException(nameof(fieldName), propertyNotFoundMessage);
+                }
+
+                return propertyType;
             }
             catch (Exception e)
             {
-                throw new ArgumentOutOfRangeException(string.Format(CultureInfo.InvariantCulture, "Error finding property {0} in the type {1}", fieldName, typeof(TTelemetry).FullName), e);
+                throw new ArgumentOutOfRangeException(
+                    string.Format(CultureInfo.InvariantCulture, "Error finding property {0} in the type {1}", fieldName, typeof(TTelemetry).FullName),
+                    e);
             }
-
-            if (fieldPropertyInfo == null)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fieldName), string.Format(CultureInfo.InvariantCulture, "Could not find the property {0} in the type {1}", fieldName, typeof(TTelemetry).FullName));
-            }
-
-            return fieldPropertyInfo.PropertyType;
         }
 
         private static void ValidateInput(FilterInfo filterInfo)
