@@ -1100,17 +1100,29 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void FilterTrainWreck()
+        public void FilterTrainNonExistentCar()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "Context.NonExistentField.Name", Predicate = Predicate.Equal, Comparand = "ImportantOperation" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock());
+            new Filter<TelemetryMock>(equalsValue);
             
             // ASSERT
         }
 
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void FilterTrainWreckRuntimeNull()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "ContextMock.Operation.Name", Predicate = Predicate.Equal, Comparand = "ImportantOperation" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { ContextMock = null });
+           
+            // ASSERT
+        }
         #endregion
 
         #region Custom dimensions

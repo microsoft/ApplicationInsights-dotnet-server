@@ -30,11 +30,23 @@
 
         public TelemetryContext Context { get; set; } = new TelemetryContext();
 
+        public TelemetryContextMock ContextMock { get; set; } = new TelemetryContextMock();
+
         public string Sequence { get; set; }
 
         public void Sanitize()
         {
             throw new NotImplementedException();
+        }
+
+        public class TelemetryContextMock
+        {
+            public OperationContextMock Operation { get; set; }
+
+            public class OperationContextMock
+            {
+                public string Name { get; set; }
+            }
         }
     }
 }
