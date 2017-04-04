@@ -300,6 +300,121 @@
         }
 
         [TestMethod]
+        public void FirstChanceExceptionStatisticsTelemetryModuleWillDimCapAfterCacheTimeout()
+        {
+            var metrics = new List<KeyValuePair<Metric, double>>();
+            this.configuration.MetricProcessors.Add(new StubMetricProcessor()
+            {
+                OnTrack = (m, v) =>
+                {
+                    metrics.Add(new KeyValuePair<Metric, double>(m, v));
+                }
+            });
+
+            int operationId = 0;
+
+            this.configuration.TelemetryInitializers.Add(new StubTelemetryInitializer()
+            {
+                OnInitialize = (item) =>
+                {
+                    item.Context.Operation.Name = "operationName " + (operationId++);
+                }
+            });
+
+            using (var module = new FirstChanceExceptionStatisticsTelemetryModule())
+            {
+                module.Initialize(this.configuration);
+
+                module.DimCapTimeout = DateTime.UtcNow.Ticks - 1;
+
+                for (int i = 0; i < 200; i++)
+                {
+                    if (i == 101)
+                    {
+                        module.DimCapTimeout = DateTime.UtcNow.Ticks - 1;
+                    }
+
+                    try
+                    {
+                        // FirstChanceExceptionStatisticsTelemetryModule will process this exception
+                        throw new Exception("test");
+                    }
+                    catch (Exception exc)
+                    {
+                        // code to prevent profiler optimizations
+                        Assert.Equal("test", exc.Message);
+                    }
+                }
+            }
+
+            Assert.Equal(200, metrics.Count);
+            Assert.Equal(200, this.items.Count);
+        }
+
+        [TestMethod]
+        public void FirstChanceExceptionStatisticsTelemetryExceptionsAreThrottled()
+        {
+            var metrics = new List<KeyValuePair<Metric, double>>();
+            this.configuration.MetricProcessors.Add(new StubMetricProcessor()
+            {
+                OnTrack = (m, v) =>
+                {
+                    metrics.Add(new KeyValuePair<Metric, double>(m, v));
+                }
+            });
+
+            this.configuration.TelemetryInitializers.Add(new StubTelemetryInitializer()
+            {
+                OnInitialize = (item) =>
+                {
+                    item.Context.Operation.Name = "operationName";
+                }
+            });
+
+            using (var module = new FirstChanceExceptionStatisticsTelemetryModule())
+            {
+                module.Initialize(this.configuration);
+
+                module.TargetMovingAverage = 50;
+
+                for (int i = 0; i < 200; i++)
+                {
+                    try
+                    {
+                        // FirstChanceExceptionStatisticsTelemetryModule will process this exception
+                        throw new Exception("test");
+                    }
+                    catch (Exception exc)
+                    {
+                        // code to prevent profiler optimizations
+                        Assert.Equal("test", exc.Message);
+                    }
+                }
+            }
+
+            int countProcessed = 0;
+            int countThrottled = 0;
+
+            foreach (KeyValuePair<Metric, double> items in metrics)
+            {
+                if (items.Key.Dimensions.Count == 1)
+                {
+                    countThrottled++;
+                }
+                else
+                {
+                    countProcessed++;
+                }
+            }
+
+            // The test starts with the current moving average being 0. With the setting of the
+            // weight for the new sample being .3 and the target moving average being 50 (as
+            // set in the test), this means 50 / .3 = 166 becomes the throttle limit for this window.
+            Assert.Equal(166, countProcessed);
+            Assert.Equal(34, countThrottled);
+        }
+
+        [TestMethod]
         public void FirstChanceExceptionStatisticsTelemetryModuleDoNotIncrementOnRethrow()
         {
             var metrics = new List<KeyValuePair<Metric, double>>();
