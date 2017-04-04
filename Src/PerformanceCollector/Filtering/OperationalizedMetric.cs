@@ -8,7 +8,10 @@
     using System.Reflection;
 
     /// <summary>
-    /// Operationalized metric defines a configured metric that needs to be collected and reported.
+    /// Represents a single configured metric that needs to be calculated and reported on top of the telemetry items 
+    /// that pass through the pipeline. Includes a set of filters that define which telemetry items to consider, a projection 
+    /// which defines which field to use as a value, and an aggregation which dictates the algorithm of arriving at 
+    /// a single reportable value within a second.
     /// </summary>
     internal class OperationalizedMetric<TTelemetry>
     {

@@ -7,8 +7,6 @@
     using System.Linq.Expressions;
     using System.Reflection;
 
-    using Microsoft.ApplicationInsights.DataContracts;
-
     /// <summary>
     /// Filter determines whether a telemetry document matches the criterion.
     /// </summary>

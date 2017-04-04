@@ -111,6 +111,12 @@
             this.WriteEvent(14, message ?? string.Empty, this.ApplicationName);
         }
 
+        [Event(21, Message = "Waited for samples to cool down. {0}", Level = EventLevel.Verbose)]
+        public void CollectionConfigurationSampleCooldownEvent(bool cooledDown, string applicationName = "dummy")
+        {
+            this.WriteEvent(21, cooledDown, this.ApplicationName);
+        }
+
         [Event(15, Message = "Sample submitted. Response: '{0}'", Level = EventLevel.Verbose)]
         public void SampleSubmittedEvent(string response, string applicationName = "dummy")
         {

@@ -8,7 +8,9 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
     /// <summary>
-    /// Document stream defines a stream of full telemetry documents that need to be collected and reported.
+    /// Represents a concept of a uniquely identifiable set of full telemetry documents that are being reported by the SDK. 
+    /// The notion of a stream is needed since multiple UX sessions might be querying for full telemetry documents with 
+    /// different filtering criteria simultaneously.
     /// </summary>
     internal class DocumentStream
     {

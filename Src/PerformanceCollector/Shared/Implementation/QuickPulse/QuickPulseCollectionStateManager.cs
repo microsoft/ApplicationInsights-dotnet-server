@@ -149,20 +149,16 @@
                 else
                 {
                     // we have samples
-                    if (dataSamplesToSubmit.Any(sample => Interlocked.Read(ref sample.CollectionConfigurationAccumulator.ReferenceCount) != 0))
+                    if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.GetRef() != 0))
                     {
                         ////!!! better solution?
                         // some samples are still being processed, wait a little to give them a chance to finish
                         Thread.Sleep(this.coolDownTimeout);
 
                         bool allCooledDown =
-                            dataSamplesToSubmit.All(sample => Interlocked.Read(ref sample.CollectionConfigurationAccumulator.ReferenceCount) == 0);
+                            dataSamplesToSubmit.All(sample => sample.CollectionConfigurationAccumulator.GetRef() == 0);
 
-                        QuickPulseEventSource.Log.TroubleshootingMessageEvent(
-                            string.Format(
-                                CultureInfo.InvariantCulture,
-                                "Waited for a sample to cool down... {0}",
-                                allCooledDown ? "Success" : "Failed"));
+                        QuickPulseEventSource.Log.CollectionConfigurationSampleCooldownEvent(allCooledDown);
                     }
                 }
 

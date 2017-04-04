@@ -8,6 +8,10 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
+    /// <summary>
+    /// Represents the collection configuration - a customizable description of performance counters, metrics, and full telemetry documents
+    /// to be collected by the SDK.
+    /// </summary>
     internal class CollectionConfiguration
     {
         private readonly CollectionConfigurationInfo info;

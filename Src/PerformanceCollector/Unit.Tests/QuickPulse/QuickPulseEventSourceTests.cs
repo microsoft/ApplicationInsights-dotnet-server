@@ -22,6 +22,7 @@
             QuickPulseEventSource.Log.ProcessesReadingFailedEvent("Test exception");
             QuickPulseEventSource.Log.ServiceCommunicationFailedEvent("Test exception");
             QuickPulseEventSource.Log.UnknownErrorEvent("Test exception");
+            QuickPulseEventSource.Log.CollectionConfigurationSampleCooldownEvent(true);
         }
     }
 }

@@ -3,12 +3,13 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
 
     /// <summary>
-    /// Represents the operationalized metric-related component of the QuickPulse accumulator.
+    /// Represents the part of the QuickPulse accumulator which holds operationalized metric data.
     /// Unlike the main accumulator, this one might not have finished being processed at swap time,
     /// so the consumer should keep the reference to it post-swap and make the best effort not to send
-    /// prematurely. <see cref="ReferenceCount"/> indicates that the accumulator is still being processed
+    /// prematurely. <see cref="referenceCount"/> indicates that the accumulator is still being processed
     /// when non-zero.
     /// </summary>
     internal class CollectionConfigurationAccumulator
@@ -16,8 +17,8 @@
         /// <summary>
         /// Used by writers to indicate that a processing operation is still in progress.
         /// </summary>
-        public long ReferenceCount = 0;
-
+        private long referenceCount = 0;
+        
         public CollectionConfigurationAccumulator(CollectionConfiguration collectionConfiguration)
         {
             this.CollectionConfiguration = collectionConfiguration;
@@ -39,5 +40,20 @@
         public Dictionary<string, AccumulatedValue> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValue>();
 
         public CollectionConfiguration CollectionConfiguration { get; }
+
+        public void AddRef()
+        {
+            Interlocked.Increment(ref this.referenceCount);
+        }
+
+        public void Release()
+        {
+            Interlocked.Decrement(ref this.referenceCount);
+        }
+
+        public long GetRef()
+        {
+            return Interlocked.Read(ref this.referenceCount);
+        }
     }
 }
