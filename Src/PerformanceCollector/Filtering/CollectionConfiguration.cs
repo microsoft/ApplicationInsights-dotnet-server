@@ -98,17 +98,17 @@
         public IEnumerable<CalculatedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
 
         /// <summary>
-        /// Telemetry types only (handled by QuickPulseTelemetryProcessor).
+        /// Telemetry types only. Used by QuickPulseTelemetryProcessor.
         /// </summary>
         public IEnumerable<Tuple<string, AggregationType>> TelemetryMetadata => this.telemetryMetadata;
 
         /// <summary>
-        /// Metric type only (handled by QuickPulseMetricProcessor).
+        /// Metric type only. Used by QuickPulseMetricProcessor.
         /// </summary>
         public IEnumerable<Tuple<string, AggregationType>> MetricMetadata => this.metricMetadata;
 
         /// <summary>
-        /// Document streams (handled by QuickPulseTelemetryProcessor).
+        /// Document streams. Telemetry items are provided by QuickPulseTelemetryProcessor.
         /// </summary>
         public IEnumerable<DocumentStream> DocumentStreams => this.documentStreams; 
         
