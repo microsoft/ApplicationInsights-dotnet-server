@@ -27,6 +27,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseProcess.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseProcessProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseTopCpuCollector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\QuickPulseMetricProcessor.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\ProcessCpuData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\TelemetryDocument\DependencyTelemetryDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Service contract\TelemetryDocument\EventTelemetryDocument.cs" />
@@ -72,9 +75,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebAppPerformanceCollector\SumUpCountersGauge.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\WebAppPerformanceCollector\WebAppPerformanceCollector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IQuickPulseTelemetryProcessor.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)QuickPulseMetricProcessor.cs">
-      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
-    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)QuickPulseTelemetryModule.cs">
       <!--C# 6-->
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>

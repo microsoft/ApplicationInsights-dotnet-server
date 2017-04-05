@@ -125,6 +125,8 @@
 
         /// <summary>
         /// Gets the auth API key.
+        /// API key is created in the Azure Portal for an application and ensures secure distribution of
+        /// the collection configuration when using QuickPulse.
         /// </summary>
         /// <remarks>Loaded from configuration.</remarks>
         public string AuthApiKey { get; set; }

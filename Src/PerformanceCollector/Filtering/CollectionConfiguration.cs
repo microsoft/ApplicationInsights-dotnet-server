@@ -224,11 +224,11 @@
                         documentStreamInfo,
                         out localErrors,
                         timeProvider,
-                        initialQuotas?.Item1,
-                        initialQuotas?.Item2,
-                        initialQuotas?.Item3,
-                        initialQuotas?.Item4,
-                        initialQuotas?.Item5);
+                        initialRequestQuota: initialQuotas?.Item1,
+                        initialDependencyQuota: initialQuotas?.Item2,
+                        initialExceptionQuota: initialQuotas?.Item3,
+                        initialEventQuota: initialQuotas?.Item4,
+                        initialTraceQuota: initialQuotas?.Item5);
 
                     documentStreamIds.Add(documentStreamInfo.Id);
                     this.documentStreams.Add(documentStream);
