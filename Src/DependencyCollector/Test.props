@@ -3,6 +3,6 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)\..', 'Test.props'))\Test.props" />
   <PropertyGroup>
     <AssemblyName>$(RootNamespace).$(MSBuildProjectName)</AssemblyName>
-    <CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
   </PropertyGroup>
 </Project>
