@@ -52,9 +52,9 @@
 
         public AggregationType AggregationType => this.info.Aggregation;
 
-        public static double Aggregate(double[] accumulatedValue, AggregationType aggregationType)
+        public static double Aggregate(double[] accumulatedValues, AggregationType aggregationType)
         {
-            IEnumerable<double> defaultIfEmpty = accumulatedValue.DefaultIfEmpty(0);
+            IEnumerable<double> defaultIfEmpty = accumulatedValues.DefaultIfEmpty(0);
             switch (aggregationType)
             {
                 case AggregationType.Avg:

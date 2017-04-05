@@ -5,11 +5,11 @@
     /// <summary>
     /// Accumulator for calculated metrics.
     /// </summary>
-    internal class AccumulatedValue
+    internal class AccumulatedValues
     {
         public readonly ConcurrentStack<double> Value = new ConcurrentStack<double>();
 
-        public AccumulatedValue(string metricId, AggregationType aggregationType)
+        public AccumulatedValues(string metricId, AggregationType aggregationType)
         {
             this.MetricId = metricId;
             this.AggregationType = aggregationType;

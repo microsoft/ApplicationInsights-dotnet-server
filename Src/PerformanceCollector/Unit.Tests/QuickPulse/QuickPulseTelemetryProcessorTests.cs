@@ -2326,7 +2326,7 @@
             Array.ForEach(requests, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
@@ -2401,7 +2401,7 @@
             Array.ForEach(dependencies, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
@@ -2471,7 +2471,7 @@
             Array.ForEach(exceptions, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
@@ -2541,7 +2541,7 @@
             Array.ForEach(events, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
@@ -2611,7 +2611,7 @@
             Array.ForEach(traces, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
@@ -2659,7 +2659,7 @@
             Array.ForEach(requests, telemetryProcessor.Process);
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(1, calculatedMetrics.Count);
@@ -2835,7 +2835,7 @@
             var allBadSlow2 = new List<double>();
             foreach (var accumulator in accumulators)
             {
-                Dictionary<string, AccumulatedValue> metricsValues = accumulator.CollectionConfigurationAccumulator.MetricAccumulators;
+                Dictionary<string, AccumulatedValues> metricsValues = accumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
                 try
                 {

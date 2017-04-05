@@ -28,16 +28,16 @@
                 collectionConfiguration?.TelemetryMetadata.Concat(collectionConfiguration.MetricMetadata)
                 ?? Enumerable.Empty<Tuple<string, AggregationType>>())
             {
-                var accumulatedValue = new AccumulatedValue(metricId.Item1, metricId.Item2);
+                var accumulatedValues = new AccumulatedValues(metricId.Item1, metricId.Item2);
 
-                this.MetricAccumulators.Add(metricId.Item1, accumulatedValue);
+                this.MetricAccumulators.Add(metricId.Item1, accumulatedValues);
             }
         }
 
         /// <summary>
-        /// Gets a dictionary of metricId => AccumulatedValue.
+        /// Gets a dictionary of metricId => AccumulatedValues.
         /// </summary>
-        public Dictionary<string, AccumulatedValue> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValue>();
+        public Dictionary<string, AccumulatedValues> MetricAccumulators { get; } = new Dictionary<string, AccumulatedValues>();
 
         public CollectionConfiguration CollectionConfiguration { get; }
 

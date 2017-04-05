@@ -281,17 +281,17 @@
         {
             var metrics = new List<MetricPoint>();
 
-            foreach (AccumulatedValue metricAccumulatedValue in
+            foreach (AccumulatedValues metricAccumulatedValues in
                 sample.CollectionConfigurationAccumulator.MetricAccumulators.Values)
             {
                 try
                 {
-                    double[] accumulatedValues = metricAccumulatedValue.Value.ToArray();
+                    double[] accumulatedValues = metricAccumulatedValues.Value.ToArray();
 
                     MetricPoint metricPoint = new MetricPoint
                     {
-                        Name = metricAccumulatedValue.MetricId,
-                        Value = CalculatedMetric<int>.Aggregate(accumulatedValues, metricAccumulatedValue.AggregationType),
+                        Name = metricAccumulatedValues.MetricId,
+                        Value = CalculatedMetric<int>.Aggregate(accumulatedValues, metricAccumulatedValues.AggregationType),
                         Weight = accumulatedValues.Length
                     };
                     metrics.Add(metricPoint);

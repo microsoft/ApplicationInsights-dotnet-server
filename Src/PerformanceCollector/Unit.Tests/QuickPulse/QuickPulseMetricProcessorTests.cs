@@ -64,7 +64,7 @@
             metricProcessor.StopCollection();
 
             // ASSERT
-            Dictionary<string, AccumulatedValue> calculatedMetrics =
+            Dictionary<string, AccumulatedValues> calculatedMetrics =
                 accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators;
 
             Assert.AreEqual(2, calculatedMetrics.Count);
