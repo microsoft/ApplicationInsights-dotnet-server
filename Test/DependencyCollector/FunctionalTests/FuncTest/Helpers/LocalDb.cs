@@ -1,7 +1,6 @@
 ﻿namespace FuncTest.Helpers
 {
     using System;
-    using System.Data;
     using System.Data.SqlClient;
     using System.Globalization;
     using System.IO;
@@ -11,6 +10,7 @@
     {
         public const string LocalDbConnectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog={0};Integrated Security=True;Connection Timeout=300";
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2234:Pass System.Uri objects instead of strings", Justification = "Not a normal URI.")]
         public static void CreateLocalDb(string databaseName, string scriptName)
         {
             string codeBase = Assembly.GetExecutingAssembly().CodeBase;
