@@ -70,7 +70,7 @@ namespace FW40Shared
         public static string MakeHttpCallUsingHttpClient(string url)
         {
             HttpClient httpClient = new HttpClient();
-            return httpClient.GetStringAsync(url).Result;
+            return httpClient.GetStringAsync(new Uri(url)).Result;
         }
 
         /// <summary>

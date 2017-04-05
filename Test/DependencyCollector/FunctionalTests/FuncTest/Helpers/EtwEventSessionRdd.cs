@@ -94,7 +94,7 @@
                 if ((id > 0) && (id < 65534))
                 {
                     string domainName = data.PayloadString(data.PayloadNames.Length - 1);
-                    result = domainName.StartsWith("/LM/W3SVC", StringComparison.InvariantCulture);
+                    result = domainName.StartsWith("/LM/W3SVC", StringComparison.Ordinal);
                 }
             }
 

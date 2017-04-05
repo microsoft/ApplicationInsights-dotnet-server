@@ -1,6 +1,7 @@
 ﻿namespace FuncTest.Helpers
 {
     using System;
+    using System.Data;
     using System.Data.SqlClient;
     using System.Globalization;
     using System.IO;
@@ -34,6 +35,7 @@
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
         private static void ExecuteScript(string databaseName, string scriptName)
         {
             string connectionString = string.Format(CultureInfo.InvariantCulture, LocalDbConnectionString, databaseName);
@@ -64,9 +66,11 @@
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                SqlCommand cmd = connection.CreateCommand();
+                SqlCommand cmd = new SqlCommand(
+                    "SELECT name FROM master.dbo.sysdatabases WHERE ('[' + name + ']' = '@databaseName' OR name = '@databaseName')",
+                    connection);
 
-                cmd.CommandText = string.Format(CultureInfo.InvariantCulture, "SELECT name FROM master.dbo.sysdatabases WHERE ('[' + name + ']' = '{0}' OR name = '{1}')", databaseName, databaseName);
+                cmd.Parameters.Add(new SqlParameter("@databaseName", databaseName));
                 object result = cmd.ExecuteScalar();
                 if (result != null)
                 {
@@ -83,9 +87,10 @@
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                SqlCommand cmd = connection.CreateCommand();
+                SqlCommand cmd = new SqlCommand("CREATE DATABASE {0} ON (NAME = N'@databaseName', FILENAME = '@databaseFileName')");
 
-                cmd.CommandText = string.Format(CultureInfo.InvariantCulture, "CREATE DATABASE {0} ON (NAME = N'{0}', FILENAME = '{1}')", databaseName, databaseFileName);
+                cmd.Parameters.Add(new SqlParameter("@databaseName", databaseName));
+                cmd.Parameters.Add(new SqlParameter("@databaseFileName", databaseFileName));
                 cmd.ExecuteNonQuery();
             }
         }
