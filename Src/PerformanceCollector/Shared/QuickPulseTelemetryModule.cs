@@ -124,12 +124,12 @@
         public bool DisableTopCpuProcesses { get; set; }
 
         /// <summary>
-        /// Gets the auth API key.
-        /// API key is created in the Azure Portal for an application and ensures secure distribution of
+        /// Gets the authentication API key.
+        /// Authentication API key is created in the Azure Portal for an application and ensures secure distribution of
         /// the collection configuration when using QuickPulse.
         /// </summary>
         /// <remarks>Loaded from configuration.</remarks>
-        public string AuthApiKey { get; set; }
+        public string AuthenticationApiKey { get; set; }
 
         /// <summary>
         /// Disposes resources allocated by this type.
@@ -156,7 +156,7 @@
                             this.QuickPulseServiceEndpoint,
                             this.DisableFullTelemetryItems,
                             this.DisableTopCpuProcesses,
-                            this.AuthApiKey);
+                            this.AuthenticationApiKey);
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Validating configuration...");
                         this.ValidateConfiguration(configuration);
@@ -424,7 +424,7 @@
 
                     stopwatch.Restart();
 
-                    timeToNextUpdate = this.stateManager.UpdateState(this.config.InstrumentationKey, this.AuthApiKey);
+                    timeToNextUpdate = this.stateManager.UpdateState(this.config.InstrumentationKey, this.AuthenticationApiKey);
 
                     QuickPulseEventSource.Log.StateTimerTickFinishedEvent(stopwatch.ElapsedMilliseconds);
                 }
