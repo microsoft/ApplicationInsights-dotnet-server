@@ -3,7 +3,7 @@
     using System.Collections.Concurrent;
 
     /// <summary>
-    /// Accumulator for operationalized metrics.
+    /// Accumulator for calculated metrics.
     /// </summary>
     internal class AccumulatedValue
     {

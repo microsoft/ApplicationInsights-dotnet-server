@@ -19,7 +19,7 @@
             CollectionConfigurationError[] errors;
             CollectionConfiguration collectionConfiguration =
                 new CollectionConfiguration(
-                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                     out errors,
                     new ClockMock());
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
@@ -41,7 +41,7 @@
             CollectionConfigurationError[] errors;
             CollectionConfiguration collectionConfiguration =
                 new CollectionConfiguration(
-                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                     out errors,
                     new ClockMock());
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);

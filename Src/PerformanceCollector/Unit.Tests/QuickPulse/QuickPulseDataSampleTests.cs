@@ -15,7 +15,7 @@
         private static readonly CollectionConfigurationInfo EmptyCollectionConfigurationInfo = new CollectionConfigurationInfo()
         {
             ETag = string.Empty,
-            Metrics = new OperationalizedMetricInfo[0]
+            Metrics = new CalculatedMetricInfo[0]
         };
 
         private readonly DateTimeOffset now = new DateTimeOffset(2017, 1, 1, 0, 0, 0, 0, TimeSpan.Zero);

@@ -476,7 +476,7 @@
                     this.dataAccumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached = this.globalQuotaTracker.QuotaExhausted;
                 }
 
-                // collect operationalized metrics
+                // collect calculated metrics
                 CollectionConfigurationError[] filteringErrors;
                 string projectionError = null;
 
@@ -576,14 +576,14 @@
 
         internal static void ProcessMetrics<TTelemetry>(
             CollectionConfigurationAccumulator configurationAccumulatorLocal,
-            IEnumerable<OperationalizedMetric<TTelemetry>> metrics,
+            IEnumerable<CalculatedMetric<TTelemetry>> metrics,
             TTelemetry telemetry,
             out CollectionConfigurationError[] filteringErrors,
             ref string projectionError)
         {
             filteringErrors = new CollectionConfigurationError[] { };
 
-            foreach (OperationalizedMetric<TTelemetry> metric in metrics)
+            foreach (CalculatedMetric<TTelemetry> metric in metrics)
             {
                 if (metric.CheckFilters(telemetry, out filteringErrors))
                 {

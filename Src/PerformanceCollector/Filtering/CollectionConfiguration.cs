@@ -16,19 +16,19 @@
     {
         private readonly CollectionConfigurationInfo info;
 
-        private readonly List<OperationalizedMetric<RequestTelemetry>> requestTelemetryMetrics = new List<OperationalizedMetric<RequestTelemetry>>();
+        private readonly List<CalculatedMetric<RequestTelemetry>> requestTelemetryMetrics = new List<CalculatedMetric<RequestTelemetry>>();
 
-        private readonly List<OperationalizedMetric<DependencyTelemetry>> dependencyTelemetryMetrics =
-            new List<OperationalizedMetric<DependencyTelemetry>>();
+        private readonly List<CalculatedMetric<DependencyTelemetry>> dependencyTelemetryMetrics =
+            new List<CalculatedMetric<DependencyTelemetry>>();
 
-        private readonly List<OperationalizedMetric<ExceptionTelemetry>> exceptionTelemetryMetrics =
-            new List<OperationalizedMetric<ExceptionTelemetry>>();
+        private readonly List<CalculatedMetric<ExceptionTelemetry>> exceptionTelemetryMetrics =
+            new List<CalculatedMetric<ExceptionTelemetry>>();
 
-        private readonly List<OperationalizedMetric<EventTelemetry>> eventTelemetryMetrics = new List<OperationalizedMetric<EventTelemetry>>();
+        private readonly List<CalculatedMetric<EventTelemetry>> eventTelemetryMetrics = new List<CalculatedMetric<EventTelemetry>>();
 
-        private readonly List<OperationalizedMetric<TraceTelemetry>> traceTelemetryMetrics = new List<OperationalizedMetric<TraceTelemetry>>();
+        private readonly List<CalculatedMetric<TraceTelemetry>> traceTelemetryMetrics = new List<CalculatedMetric<TraceTelemetry>>();
 
-        private readonly List<OperationalizedMetric<MetricValue>> metricMetrics = new List<OperationalizedMetric<MetricValue>>();
+        private readonly List<CalculatedMetric<MetricValue>> metricMetrics = new List<CalculatedMetric<MetricValue>>();
 
         private readonly List<Tuple<string, AggregationType>> telemetryMetadata = new List<Tuple<string, AggregationType>>();
 
@@ -74,17 +74,17 @@
             }
         }
 
-        public IEnumerable<OperationalizedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
+        public IEnumerable<CalculatedMetric<RequestTelemetry>> RequestMetrics => this.requestTelemetryMetrics;
 
-        public IEnumerable<OperationalizedMetric<DependencyTelemetry>> DependencyMetrics => this.dependencyTelemetryMetrics;
+        public IEnumerable<CalculatedMetric<DependencyTelemetry>> DependencyMetrics => this.dependencyTelemetryMetrics;
 
-        public IEnumerable<OperationalizedMetric<ExceptionTelemetry>> ExceptionMetrics => this.exceptionTelemetryMetrics;
+        public IEnumerable<CalculatedMetric<ExceptionTelemetry>> ExceptionMetrics => this.exceptionTelemetryMetrics;
 
-        public IEnumerable<OperationalizedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics;
+        public IEnumerable<CalculatedMetric<EventTelemetry>> EventMetrics => this.eventTelemetryMetrics;
 
-        public IEnumerable<OperationalizedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
+        public IEnumerable<CalculatedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
 
-        public IEnumerable<OperationalizedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
+        public IEnumerable<CalculatedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
 
         /// <summary>
         /// Telemetry types only (handled by QuickPulseTelemetryProcessor).
@@ -107,20 +107,20 @@
         /// Gets a list of performance counters.
         /// </summary>
         /// <remarks>
-        /// Performance counter name is stored in OperationalizedMetricInfo.Projection.
+        /// Performance counter name is stored in CalculatedMetricInfo.Projection.
         /// </remarks>
         public IEnumerable<Tuple<string, string>> PerformanceCounters => this.performanceCounters;
 
         private static void AddMetric<TTelemetry>(
-          OperationalizedMetricInfo metricInfo,
-          List<OperationalizedMetric<TTelemetry>> metrics,
+          CalculatedMetricInfo metricInfo,
+          List<CalculatedMetric<TTelemetry>> metrics,
           out CollectionConfigurationError[] errors)
         {
             errors = new CollectionConfigurationError[] { };
 
             try
             {
-                metrics.Add(new OperationalizedMetric<TTelemetry>(metricInfo, out errors));
+                metrics.Add(new CalculatedMetric<TTelemetry>(metricInfo, out errors));
             }
             catch (Exception e)
             {
@@ -142,8 +142,8 @@
         {
             var errorList = new List<CollectionConfigurationError>();
 
-            OperationalizedMetricInfo[] performanceCounterMetrics =
-                (this.info.Metrics ?? new OperationalizedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.PerformanceCounter)
+            CalculatedMetricInfo[] performanceCounterMetrics =
+                (this.info.Metrics ?? new CalculatedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.PerformanceCounter)
                     .ToArray();
 
             this.performanceCounters.AddRange(
@@ -251,7 +251,7 @@
             var errorList = new List<CollectionConfigurationError>();
             var metricIds = new HashSet<string>();
 
-            foreach (OperationalizedMetricInfo metricInfo in info.Metrics ?? new OperationalizedMetricInfo[0])
+            foreach (CalculatedMetricInfo metricInfo in info.Metrics ?? new CalculatedMetricInfo[0])
             {
                 if (metricIds.Contains(metricInfo.Id))
                 {

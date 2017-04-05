@@ -8,15 +8,15 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
-    public class OperationalizedMetricTests
+    public class CalculatedMetricTests
     {
         [TestMethod]
-        public void OperationalizedMetricFiltersCorrectly()
+        public void CalculatedMetricFiltersCorrectly()
         {
             // ARRANGE
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "dog" };
             var filterInfo2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "cat" };
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -31,7 +31,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
             Assert.AreEqual(0, errors.Length);
@@ -47,10 +47,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricHandlesNoFiltersCorrectly()
+        public void CalculatedMetricHandlesNoFiltersCorrectly()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -63,7 +63,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
             Assert.AreEqual(0, errors.Length);
@@ -73,10 +73,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricHandlesNullFiltersCorrectly()
+        public void CalculatedMetricHandlesNullFiltersCorrectly()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -89,7 +89,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
             Assert.AreEqual(0, errors.Length);
@@ -99,14 +99,14 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricPerformsLogicalConnectionsBetweenFiltersCorrectly()
+        public void CalculatedMetricPerformsLogicalConnectionsBetweenFiltersCorrectly()
         {
             // ARRANGE
             var filterInfoDog = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "dog" };
             var filterInfoCat = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "cat" };
             var filterInfoApple = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "apple" };
             var filterInfoOrange = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Contains, Comparand = "orange" };
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -129,7 +129,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
             Assert.AreEqual(0, errors.Length);
@@ -154,10 +154,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectly()
+        public void CalculatedMetricProjectsCorrectly()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -170,7 +170,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -180,10 +180,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyWhenCustomDimension()
+        public void CalculatedMetricProjectsCorrectlyWhenCustomDimension()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -196,7 +196,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -206,10 +206,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyWhenCustomMetric()
+        public void CalculatedMetricProjectsCorrectlyWhenCustomMetric()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -222,7 +222,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -232,10 +232,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyWhenCount()
+        public void CalculatedMetricProjectsCorrectlyWhenCount()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -248,7 +248,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -258,10 +258,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyWhenTrain()
+        public void CalculatedMetricProjectsCorrectlyWhenTrain()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -274,7 +274,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -284,10 +284,10 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricProjectsCorrectlyWhenTimeSpan()
+        public void CalculatedMetricProjectsCorrectlyWhenTimeSpan()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -300,7 +300,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
             double projection = metric.Project(telemetry);
 
             // ASSERT
@@ -310,16 +310,16 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricAggregatesCorrectly()
+        public void CalculatedMetricAggregatesCorrectly()
         {
             // ARRANGE
             double[] accumulatedValues = { 1d, 3d };
 
             // ACT
-            double avg = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
-            double sum = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
-            double min = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
-            double max = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
+            double avg = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
+            double sum = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
+            double min = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
+            double max = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
 
             // ASSERT
             Assert.AreEqual(2d, avg);
@@ -329,16 +329,16 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricAggregatesCorrectlyForEmptyDataSet()
+        public void CalculatedMetricAggregatesCorrectlyForEmptyDataSet()
         {
             // ARRANGE
             double[] accumulatedValues = { };
 
             // ACT
-            double avg = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
-            double sum = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
-            double min = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
-            double max = OperationalizedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
+            double avg = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
+            double sum = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
+            double min = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
+            double max = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
 
             // ASSERT
             Assert.AreEqual(0d, avg);
@@ -348,12 +348,12 @@
         }
 
         [TestMethod]
-        public void OperationalizedMetricReportsErrorsForInvalidFilters()
+        public void CalculatedMetricReportsErrorsForInvalidFilters()
         {
             // ARRANGE
             var filterInfo1 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Sky" };
             var filterInfo2 = new FilterInfo() { FieldName = "NonExistentField", Predicate = Predicate.Equal, Comparand = "Comparand" };
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -364,7 +364,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
             Assert.AreEqual(CollectionConfigurationErrorType.FilterFailureToCreateUnexpected, errors.Single().ErrorType);
@@ -388,10 +388,10 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void OperationalizedMetricThrowsWhenInvalidProjection()
+        public void CalculatedMetricThrowsWhenInvalidProjection()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -402,16 +402,16 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
         }
 
         [TestMethod]
-        public void OperationalizedMetricReportsErrorWhenProjectionIsNotDouble()
+        public void CalculatedMetricReportsErrorWhenProjectionIsNotDouble()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -423,7 +423,7 @@
             var telemetry = new RequestTelemetry() { Id = "NotDoubleValue" };
 
             CollectionConfigurationError[] errors;
-            var metric = new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            var metric = new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ACT
             try
@@ -442,10 +442,10 @@
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void OperationalizedMetricReportsErrorWhenProjectionIsAsterisk()
+        public void CalculatedMetricReportsErrorWhenProjectionIsAsterisk()
         {
             // ARRANGE
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
             {
                 Id = "Metric1",
                 TelemetryType = TelemetryType.Request,
@@ -456,7 +456,7 @@
 
             // ACT
             CollectionConfigurationError[] errors;
-            new OperationalizedMetric<RequestTelemetry>(metricInfo, out errors);
+            new CalculatedMetric<RequestTelemetry>(metricInfo, out errors);
 
             // ASSERT
         }

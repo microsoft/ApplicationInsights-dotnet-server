@@ -196,7 +196,7 @@
             };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric0",
                     TelemetryType = TelemetryType.Request,
@@ -204,7 +204,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filter1
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Metric,
@@ -434,7 +434,7 @@
             var accumulatorManager =
                 new QuickPulseDataAccumulatorManager(
                     new CollectionConfiguration(
-                        new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                        new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                         out errors,
                         new ClockMock()));
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
@@ -648,19 +648,19 @@
                 Metrics =
                     new[]
                     {
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter1",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\Memory\Cache Bytes"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter2",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\Memory\Cache Bytes Peak"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter3",
                             TelemetryType = TelemetryType.PerformanceCounter,
@@ -695,13 +695,13 @@
                 Metrics =
                     new[]
                     {
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter1",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\MEMORY\Cache Bytes"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter5",
                             TelemetryType = TelemetryType.PerformanceCounter,
@@ -746,31 +746,31 @@
                 Metrics =
                     new[]
                     {
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter1",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\SomeCategory(SomeInstance)\SomeCounter"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter2",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\Memory\Cache Bytes Peak"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter3",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"NonParseable"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter4",
                             TelemetryType = TelemetryType.PerformanceCounter,
                             Projection = @"\SomeObject\SomeCounter"
                         },
-                        new OperationalizedMetricInfo()
+                        new CalculatedMetricInfo()
                         {
                             Id = "PerformanceCounter4",
                             TelemetryType = TelemetryType.PerformanceCounter,

@@ -14,7 +14,7 @@
         {
             // ARRANGE
             CollectionConfigurationError[] error;
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
                                  {
                                      Id = "Metric1",
                                      TelemetryType = TelemetryType.Request,
@@ -40,7 +40,7 @@
         {
             // ARRANGE
             CollectionConfigurationError[] error;
-            var metricInfo = new OperationalizedMetricInfo()
+            var metricInfo = new CalculatedMetricInfo()
                                  {
                                      Id = "Metric1",
                                      TelemetryType = TelemetryType.Metric,

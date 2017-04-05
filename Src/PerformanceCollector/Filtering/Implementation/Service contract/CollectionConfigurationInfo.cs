@@ -13,7 +13,7 @@
         public string ETag { get; set; }
 
         [DataMember]
-        public OperationalizedMetricInfo[] Metrics { get; set; }
+        public CalculatedMetricInfo[] Metrics { get; set; }
 
         [DataMember]
         public DocumentStreamInfo[] DocumentStreams { get; set; }

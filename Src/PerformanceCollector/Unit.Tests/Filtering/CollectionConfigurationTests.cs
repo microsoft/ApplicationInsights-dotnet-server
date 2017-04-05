@@ -42,7 +42,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric0",
                     TelemetryType = TelemetryType.Request,
@@ -50,7 +50,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -58,7 +58,7 @@
                     Aggregation = AggregationType.Sum,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric2",
                     TelemetryType = TelemetryType.Dependency,
@@ -66,7 +66,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric3",
                     TelemetryType = TelemetryType.Exception,
@@ -74,7 +74,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric4",
                     TelemetryType = TelemetryType.Event,
@@ -82,7 +82,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric5",
                     TelemetryType = TelemetryType.Trace,
@@ -90,7 +90,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = filters
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric6",
                     TelemetryType = TelemetryType.Metric,
@@ -127,7 +127,7 @@
             var filter2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "PerformanceCounter1",
                     TelemetryType = TelemetryType.PerformanceCounter,
@@ -135,7 +135,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter1 } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "PerformanceCounter1",
                     TelemetryType = TelemetryType.PerformanceCounter,
@@ -172,7 +172,7 @@
             var filter2 = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -180,7 +180,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter1 } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -188,7 +188,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter2 } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric2",
                     TelemetryType = TelemetryType.Request,
@@ -225,7 +225,7 @@
             var filterInfo = new FilterInfo() { FieldName = "NonExistentFieldName", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -267,7 +267,7 @@
             var filterInfo = new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -306,7 +306,7 @@
             var filterInfo2 = new FilterInfo() { FieldName = "NonExistentFilterFieldName2", Predicate = Predicate.Equal, Comparand = "Request" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -314,7 +314,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric2",
                     TelemetryType = TelemetryType.Request,

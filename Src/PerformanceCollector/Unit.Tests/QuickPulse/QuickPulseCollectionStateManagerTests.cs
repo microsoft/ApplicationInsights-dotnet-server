@@ -24,7 +24,7 @@
         private static readonly CollectionConfigurationInfo EmptyCollectionConfigurationInfo = new CollectionConfigurationInfo()
                                                                                                    {
                                                                                                        ETag = string.Empty,
-                                                                                                       Metrics = new OperationalizedMetricInfo[0]
+                                                                                                       Metrics = new CalculatedMetricInfo[0]
                                                                                                    };
 
         [TestMethod]
@@ -456,7 +456,7 @@
                               };
             var metrics = new[]
                               {
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
@@ -464,7 +464,7 @@
                                           Aggregation = AggregationType.Avg,
                                           FilterGroups = filters
                                       },
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
@@ -509,7 +509,7 @@
             };
             var metrics = new[]
                               {
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
@@ -517,7 +517,7 @@
                                           Aggregation = AggregationType.Avg,
                                           FilterGroups = filters
                                       },
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
@@ -560,7 +560,7 @@
             var filters = new[] { new FilterConjunctionGroupInfo { Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } } } };
             var metrics = new[]
                               {
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric0",
                                           TelemetryType = TelemetryType.Request,
@@ -568,7 +568,7 @@
                                           Aggregation = AggregationType.Avg,
                                           FilterGroups = filters
                                       },
-                                  new OperationalizedMetricInfo()
+                                  new CalculatedMetricInfo()
                                       {
                                           Id = "Metric1",
                                           TelemetryType = TelemetryType.Request,
@@ -583,7 +583,7 @@
             collectionConfigurationInfos.Clear();
 
             // ACT
-            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = new OperationalizedMetricInfo[0] };
+            serviceClient.CollectionConfigurationInfo = new CollectionConfigurationInfo() { ETag = "1", Metrics = new CalculatedMetricInfo[0] };
             manager.UpdateState("empty iKey", string.Empty);
 
             // ASSERT
@@ -603,7 +603,7 @@
             var filter = new FilterInfo() { FieldName = "NonExistentNameInFilter", Predicate = Predicate.Equal, Comparand = "Request1" };
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric0",
                     TelemetryType = TelemetryType.Request,
@@ -611,7 +611,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filter, filter } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,

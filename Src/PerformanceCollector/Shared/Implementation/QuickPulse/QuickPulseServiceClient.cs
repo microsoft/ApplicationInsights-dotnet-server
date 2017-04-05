@@ -245,7 +245,7 @@
                 metricPoints.AddRange(
                     sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
 
-                metricPoints.AddRange(CreateOperationalizedMetrics(sample));
+                metricPoints.AddRange(CreateCalculatedMetrics(sample));
 
                 ITelemetryDocument[] documents = sample.TelemetryDocuments.ToArray();
                 Array.Reverse(documents);
@@ -277,7 +277,7 @@
             this.serializerDataPointArray.WriteObject(stream, monitoringPoints.ToArray());
         }
 
-        private static IEnumerable<MetricPoint> CreateOperationalizedMetrics(QuickPulseDataSample sample)
+        private static IEnumerable<MetricPoint> CreateCalculatedMetrics(QuickPulseDataSample sample)
         {
             var metrics = new List<MetricPoint>();
 
@@ -291,7 +291,7 @@
                     MetricPoint metricPoint = new MetricPoint
                     {
                         Name = metricAccumulatedValue.MetricId,
-                        Value = OperationalizedMetric<int>.Aggregate(accumulatedValues, metricAccumulatedValue.AggregationType),
+                        Value = CalculatedMetric<int>.Aggregate(accumulatedValues, metricAccumulatedValue.AggregationType),
                         Weight = accumulatedValues.Length
                     };
                     metrics.Add(metricPoint);

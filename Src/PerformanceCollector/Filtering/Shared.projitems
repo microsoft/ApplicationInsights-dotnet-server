@@ -21,9 +21,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\FilterConjunctionGroupInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MetricValue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DocumentStream.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)OperationalizedMetric.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CalculatedMetric.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Filter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\OperationalizedMetricInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CalculatedMetricInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\FilterInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\Predicate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\AggregationType.cs" />

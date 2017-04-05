@@ -6,7 +6,7 @@
     using System.Runtime.Serialization;
 
     [DataContract]
-    internal class OperationalizedMetricInfo
+    internal class CalculatedMetricInfo
     {
         [DataMember]
         public string Id { get; set; }

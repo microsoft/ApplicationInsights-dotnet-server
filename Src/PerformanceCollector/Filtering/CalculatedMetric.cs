@@ -13,7 +13,7 @@
     /// which defines which field to use as a value, and an aggregation which dictates the algorithm of arriving at 
     /// a single reportable value within a second.
     /// </summary>
-    internal class OperationalizedMetric<TTelemetry>
+    internal class CalculatedMetric<TTelemetry>
     {
         private const string ProjectionCount = "Count()";
 
@@ -25,7 +25,7 @@
             "ToString",
             BindingFlags.Public | BindingFlags.Instance);
 
-        private readonly OperationalizedMetricInfo info;
+        private readonly CalculatedMetricInfo info;
 
         /// <summary>
         /// OR-connected collection of AND-connected filter groups.
@@ -34,7 +34,7 @@
         
         private Func<TTelemetry, double> projectionLambda;
         
-        public OperationalizedMetric(OperationalizedMetricInfo info, out CollectionConfigurationError[] errors)
+        public CalculatedMetric(CalculatedMetricInfo info, out CollectionConfigurationError[] errors)
         {
             if (info == null)
             {

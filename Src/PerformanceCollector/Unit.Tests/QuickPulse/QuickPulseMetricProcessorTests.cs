@@ -1,16 +1,12 @@
 ﻿namespace Unit.Tests
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
 
-    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
-    using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -23,7 +19,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseMetricProcessorCollectsOperationalizedMetrics()
+        public void QuickPulseMetricProcessorCollectsCalculatedMetrics()
         {
             // ARRANGE
             var filterInfo1 = new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Contains, Comparand = "Awesome" };
@@ -31,7 +27,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Metric,
@@ -39,7 +35,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfo1, filterInfo2 } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric2",
                     TelemetryType = TelemetryType.Metric,

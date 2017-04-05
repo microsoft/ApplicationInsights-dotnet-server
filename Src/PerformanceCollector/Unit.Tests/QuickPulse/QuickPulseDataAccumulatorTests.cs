@@ -83,7 +83,7 @@
             var accumulator =
                 new QuickPulseDataAccumulator(
                     new CollectionConfiguration(
-                        new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                        new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                         out errors,
                         new ClockMock()));
 

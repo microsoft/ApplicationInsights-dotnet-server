@@ -23,7 +23,7 @@
 
         private static readonly CollectionConfiguration EmptyCollectionConfiguration =
             new CollectionConfiguration(
-                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                 out errors,
                 new ClockMock());
 
@@ -615,7 +615,7 @@
             var filterInfo = new FilterInfo() { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "True" };
             var metricInfo = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -2257,7 +2257,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForRequests()
+        public void QuickPulseTelemetryProcessorCalculatesCalculatedMetricsForRequests()
         {
             // ARRANGE
             var filterInfoResponseCodeGreaterThanOrEqualTo500 = new FilterInfo()
@@ -2272,7 +2272,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AverageIdOfFailedRequestsGreaterThanOrEqualTo500",
                     TelemetryType = TelemetryType.Request,
@@ -2287,7 +2287,7 @@
                             }
                         }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "SumIdsOfSuccessfulRequestsEqualTo201",
                     TelemetryType = TelemetryType.Request,
@@ -2338,7 +2338,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForDependencies()
+        public void QuickPulseTelemetryProcessorCalculatesCalculatedMetricsForDependencies()
         {
             // ARRANGE
             var filterInfoDataGreaterThanOrEqualTo500 = new FilterInfo()
@@ -2353,7 +2353,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AverageIdOfFailedDependenciesGreaterThanOrEqualTo500",
                     TelemetryType = TelemetryType.Dependency,
@@ -2362,7 +2362,7 @@
                     FilterGroups =
                         new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoDataGreaterThanOrEqualTo500, filterInfoFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "SumIdsOfSuccessfulDependenciesEqualTo201",
                     TelemetryType = TelemetryType.Dependency,
@@ -2413,7 +2413,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForExceptions()
+        public void QuickPulseTelemetryProcessorCalculatesCalculatedMetricsForExceptions()
         {
             // ARRANGE
             var filterInfoMessageGreaterThanOrEqualTo500 = new FilterInfo()
@@ -2428,7 +2428,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AverageIdOfFailedMessageGreaterThanOrEqualTo500",
                     TelemetryType = TelemetryType.Exception,
@@ -2437,7 +2437,7 @@
                     FilterGroups =
                         new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoMessageGreaterThanOrEqualTo500, filterInfoFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "SumIdsOfSuccessfulMessageEqualTo201",
                     TelemetryType = TelemetryType.Exception,
@@ -2483,7 +2483,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForEvents()
+        public void QuickPulseTelemetryProcessorCalculatesCalculatedMetricsForEvents()
         {
             // ARRANGE
             var filterInfoNameGreaterThanOrEqualTo500 = new FilterInfo()
@@ -2498,7 +2498,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AverageIdOfFailedEventsGreaterThanOrEqualTo500",
                     TelemetryType = TelemetryType.Event,
@@ -2507,7 +2507,7 @@
                     FilterGroups =
                         new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "SumIdsOfSuccessfulEventsEqualTo201",
                     TelemetryType = TelemetryType.Event,
@@ -2553,7 +2553,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorCalculatesOperationalizedMetricsForTraces()
+        public void QuickPulseTelemetryProcessorCalculatesCalculatedMetricsForTraces()
         {
             // ARRANGE
             var filterInfoNameGreaterThanOrEqualTo500 = new FilterInfo()
@@ -2568,7 +2568,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AverageIdOfFailedTracesGreaterThanOrEqualTo500",
                     TelemetryType = TelemetryType.Trace,
@@ -2577,7 +2577,7 @@
                     FilterGroups =
                         new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoNameGreaterThanOrEqualTo500, filterInfoFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "SumIdsOfSuccessfulTracesEqualTo201",
                     TelemetryType = TelemetryType.Trace,
@@ -2623,12 +2623,12 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorOperationalizedMetricsIgnoresTelemetryWhereProjectionIsNotDouble()
+        public void QuickPulseTelemetryProcessorCalculatedMetricsIgnoresTelemetryWhereProjectionIsNotDouble()
         {
             // ARRANGE
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -2667,7 +2667,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryProcessorHandlesOperationalizedMetricsInThreadSafeManner()
+        public void QuickPulseTelemetryProcessorHandlesCalculatedMetricsInThreadSafeManner()
         {
             // ARRANGE
             var filterInfoAll200 = new FilterInfo() { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "200" };
@@ -2679,7 +2679,7 @@
 
             var metrics1 = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllGood1",
                     TelemetryType = TelemetryType.Request,
@@ -2687,7 +2687,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllBad1",
                     TelemetryType = TelemetryType.Request,
@@ -2695,7 +2695,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllGoodFast1",
                     TelemetryType = TelemetryType.Request,
@@ -2710,7 +2710,7 @@
                             }
                         }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllBadSlow1",
                     TelemetryType = TelemetryType.Request,
@@ -2723,7 +2723,7 @@
 
             var metrics2 = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllGood2",
                     TelemetryType = TelemetryType.Request,
@@ -2731,7 +2731,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll200, filterInfoAllSuccessful } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllBad2",
                     TelemetryType = TelemetryType.Request,
@@ -2739,7 +2739,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new[] { filterInfoAll500, filterInfoAllFailed } } }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllGoodFast2",
                     TelemetryType = TelemetryType.Request,
@@ -2754,7 +2754,7 @@
                             }
                         }
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "AllBadSlow2",
                     TelemetryType = TelemetryType.Request,

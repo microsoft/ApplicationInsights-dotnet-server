@@ -62,7 +62,7 @@
             CollectionConfigurationError[] errors;
             this.emptyCollectionConfiguration =
                 new CollectionConfiguration(
-                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new OperationalizedMetricInfo[0] },
+                    new CollectionConfigurationInfo() { ETag = string.Empty, Metrics = new CalculatedMetricInfo[0] },
                     out errors,
                     new ClockMock());
         }
@@ -793,7 +793,7 @@
                     var collectionConfigurationInfo = new CollectionConfigurationInfo()
                     {
                         ETag = "ETag2",
-                        Metrics = new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                        Metrics = new[] { new CalculatedMetricInfo() { Id = "Id1" } }
                     };
 
                     var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
@@ -839,7 +839,7 @@
                     var collectionConfigurationInfo = new CollectionConfigurationInfo()
                     {
                         ETag = "ETag2",
-                        Metrics = new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                        Metrics = new[] { new CalculatedMetricInfo() { Id = "Id1" } }
                     };
 
                     var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
@@ -878,7 +878,7 @@
                     var collectionConfigurationInfo = new CollectionConfigurationInfo()
                     {
                         ETag = "ETag2",
-                        Metrics = new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                        Metrics = new[] { new CalculatedMetricInfo() { Id = "Id1" } }
                     };
 
                     var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
@@ -925,7 +925,7 @@
                     var collectionConfigurationInfo = new CollectionConfigurationInfo()
                     {
                         ETag = "ETag2",
-                        Metrics = new[] { new OperationalizedMetricInfo() { Id = "Id1" } }
+                        Metrics = new[] { new CalculatedMetricInfo() { Id = "Id1" } }
                     };
 
                     var serializer = new DataContractJsonSerializer(typeof(CollectionConfigurationInfo));
@@ -1021,7 +1021,7 @@
         }
 
         [TestMethod]
-        public void QuickPulseServiceClientProducesOperationalizedMetricsCorrectly()
+        public void QuickPulseServiceClientProducesCalculatedMetricsCorrectly()
         {
             // ARRANGE
             var now = DateTimeOffset.UtcNow;
@@ -1036,7 +1036,7 @@
 
             var metrics = new[]
             {
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Request,
@@ -1044,7 +1044,7 @@
                     Aggregation = AggregationType.Avg,
                     FilterGroups = new FilterConjunctionGroupInfo[0]
                 },
-                new OperationalizedMetricInfo()
+                new CalculatedMetricInfo()
                 {
                     Id = "Metric2",
                     TelemetryType = TelemetryType.Request,
