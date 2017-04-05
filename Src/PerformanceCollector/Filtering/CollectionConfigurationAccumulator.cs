@@ -7,6 +7,8 @@
 
     /// <summary>
     /// Represents the part of the QuickPulse accumulator which holds calculated metric data.
+    /// As telemetry item pass through the pipeline, they are being filtered, projected, and the resulting
+    /// values are stored here - both for calculated metrics and full telemetry document streams.
     /// Unlike the main accumulator, this one might not have finished being processed at swap time,
     /// so the consumer should keep the reference to it post-swap and make the best effort not to send
     /// prematurely. <see cref="referenceCount"/> indicates that the accumulator is still being processed
