@@ -12,10 +12,19 @@
     /// Represents the collection configuration - a customizable description of performance counters, metrics, and full telemetry documents
     /// to be collected by the SDK.
     /// </summary>
+    /// <remarks>
+    /// This class is a hub for all pieces of configurable collection configuration.
+    /// Upon initialization
+    ///   - it creates collection-time instances of <see cref="CalculatedMetric&lt;T&gt;"/> and maintains them in separate collections by telemetry type.
+    ///     These are used to filter and calculated calculated metrics configured by the service.
+    ///   - it creates collection-time instances of <see cref="DocumentStream"/> which are used to filter and send out full telemetry documents.
+    ///   - it creates certain metadata collections which are used by other collection-time components to learn more about what is being collected at any given time.
+    /// </remarks>
     internal class CollectionConfiguration
     {
         private readonly CollectionConfigurationInfo info;
 
+        #region Collection-time instances used to filter and calculate data on telemetry passing through the pipeline
         private readonly List<CalculatedMetric<RequestTelemetry>> requestTelemetryMetrics = new List<CalculatedMetric<RequestTelemetry>>();
 
         private readonly List<CalculatedMetric<DependencyTelemetry>> dependencyTelemetryMetrics =
@@ -30,13 +39,16 @@
 
         private readonly List<CalculatedMetric<MetricValue>> metricMetrics = new List<CalculatedMetric<MetricValue>>();
 
+        private readonly List<DocumentStream> documentStreams = new List<DocumentStream>();
+        #endregion
+
+        #region Metadata used by other components
         private readonly List<Tuple<string, AggregationType>> telemetryMetadata = new List<Tuple<string, AggregationType>>();
 
         private readonly List<Tuple<string, AggregationType>> metricMetadata = new List<Tuple<string, AggregationType>>();
-
-        private readonly List<DocumentStream> documentStreams = new List<DocumentStream>();
-
+        
         private readonly List<Tuple<string, string>> performanceCounters = new List<Tuple<string, string>>();
+        #endregion
 
         public CollectionConfiguration(
            CollectionConfigurationInfo info,
