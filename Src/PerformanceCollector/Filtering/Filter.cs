@@ -9,6 +9,7 @@
 
     /// <summary>
     /// Filter determines whether a telemetry document matches the criterion.
+    /// The filter's configuration (condition) is specified in a <see cref="FilterInfo"/> DTO.
     /// </summary>
     /// <typeparam name="TTelemetry">Type of telemetry documents.</typeparam>
     internal class Filter<TTelemetry>
