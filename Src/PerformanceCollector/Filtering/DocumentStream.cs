@@ -158,7 +158,7 @@
                 return false;
             }
 
-            // iterate over AND-connected filter groups (groups are connected via OR)
+            // iterate over filter groups (filters within each group are evaluated as AND, the groups are evaluated as OR)
             foreach (FilterConjunctionGroup<TTelemetry> conjunctionFilterGroup in filterGroups)
             {
                 bool conjunctionGroupPassed;
