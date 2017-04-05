@@ -36,9 +36,9 @@
         private static readonly MethodInfo StringEqualsMethodInfo =
             GetMethodInfo<string, string, bool>((x, y) => x.Equals(y, StringComparison.OrdinalIgnoreCase));
 
-        private static readonly MethodInfo DoubleParseMethodInfo = typeof(double).GetMethod(
-            "Parse",
-            new[] { typeof(string), typeof(IFormatProvider) });
+        private static readonly MethodInfo DoubleTryParseMethodInfo = typeof(double).GetMethod(
+            "TryParse",
+            new[] { typeof(string), typeof(double).MakeByRefType() });
 
         private static readonly MethodInfo DictionaryStringStringTryGetValueMethodInfo = typeof(IDictionary<string, string>).GetMethod("TryGetValue");
 
@@ -405,25 +405,12 @@
                                 // !(fieldValue ?? string.Empty).Equals(this.comparand, StringComparison.OrdinalIgnoreCase)
                                 return Expression.Not(Expression.Call(fieldValueOrEmptyString, StringEqualsMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase)));
                             case Predicate.LessThan:
-                                // double.Parse(fieldValue) < comparandDouble
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                MethodCallExpression fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
-                                return Expression.LessThan(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.GreaterThan:
-                                // double.Parse(fieldValue) > comparandDouble
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
-                                return Expression.GreaterThan(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.LessThanOrEqual:
-                                // double.Parse(fieldValue) <= comparandDouble
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
-                                return Expression.LessThanOrEqual(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
                             case Predicate.GreaterThanOrEqual:
-                                // double.Parse(fieldValue) >= comparandDouble
+                                // double.TryParse(fieldValue, out temp) && temp {<, <=, >, >=} comparandDouble
                                 this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                fieldParsedIntoDouble = Expression.Call(DoubleParseMethodInfo, fieldExpression, Expression.Constant(CultureInfo.InvariantCulture));
-                                return Expression.GreaterThanOrEqual(fieldParsedIntoDouble, Expression.Constant(this.comparandDouble.Value));
+                                return this.CreateStringToDoubleComparisonBlock(fieldExpression, this.predicate);
                             case Predicate.Contains:
                                 // fieldValue => (fieldValue ?? string.Empty).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1;
                                 return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
@@ -521,7 +508,7 @@
 
             return null;
         }
-
+        
         private Expression ProduceComparatorExpressionForAnyFieldCondition(ParameterExpression documentExpression)
         {
             // this.predicate is either Predicate.Contains or Predicate.DoesNotContain at this point
@@ -586,6 +573,37 @@
             }
 
             return comparisonExpression;
+        }
+
+        private Expression CreateStringToDoubleComparisonBlock(Expression fieldExpression, Predicate predicate)
+        {
+            ParameterExpression tempVariable = Expression.Variable(typeof(double));
+            MethodCallExpression doubleTryParseCall = Expression.Call(DoubleTryParseMethodInfo, fieldExpression, tempVariable);
+
+            BinaryExpression comparisonExpression;
+            switch (predicate)
+            {
+                case Predicate.LessThan:
+                    comparisonExpression = Expression.LessThan(tempVariable, Expression.Constant(this.comparandDouble.Value));
+                    break;
+                case Predicate.LessThanOrEqual:
+                    comparisonExpression = Expression.LessThanOrEqual(tempVariable, Expression.Constant(this.comparandDouble.Value));
+                    break;
+                case Predicate.GreaterThan:
+                    comparisonExpression = Expression.GreaterThan(tempVariable, Expression.Constant(this.comparandDouble.Value));
+                    break;
+                case Predicate.GreaterThanOrEqual:
+                    comparisonExpression = Expression.GreaterThanOrEqual(tempVariable, Expression.Constant(this.comparandDouble.Value));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(predicate));
+            }
+
+            BinaryExpression andExpression = Expression.AndAlso(
+                doubleTryParseCall,
+                comparisonExpression);
+
+            return Expression.Block(typeof(bool), new[] { tempVariable }, andExpression);
         }
 
         private void ThrowOnInvalidFilter(Type fieldType, bool conditionToThrow = true)

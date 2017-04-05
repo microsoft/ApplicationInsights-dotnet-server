@@ -897,16 +897,16 @@
         }
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void FilterStringGarbageFieldValue()
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "StringField", Predicate = Predicate.LessThan, Comparand = "123.0" };
 
             // ACT
-            new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "Not at all a number" });
+            bool result = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { StringField = "Not at all a number" });
 
             // ASSERT
+            Assert.IsFalse(result);
         }
 
         [TestMethod]
