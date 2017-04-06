@@ -157,6 +157,8 @@
             this.knownCorrelationIds[ikey] = string.Format(CultureInfo.InvariantCulture, CorrelationIdFormat, appId);
         }
 
+#if !NET40
+        
         /// <summary>
         /// Retrieves the app id given the instrumentation key.
         /// </summary>
@@ -186,7 +188,42 @@
                 SdkInternalOperationsMonitor.Exit();
             }
         }
+#else
+        /// <summary>
+        /// Retrieves the app id given the instrumentation key.
+        /// </summary>
+        /// <param name="instrumentationKey">Instrumentation key for which app id is to be retrieved.</param>
+        /// <returns>App id.</returns>
+        private Task<string> FetchAppIdFromService(string instrumentationKey)
+        {
+            var task = new Task<string>(() =>
+            {
+                try
+                {
+                    SdkInternalOperationsMonitor.Enter();
 
+                    Uri appIdEndpoint = this.GetAppIdEndPointUri(instrumentationKey);
+
+                    WebRequest request = WebRequest.Create(appIdEndpoint);
+                    request.Method = "GET";
+
+                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                    {
+                        using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                        {
+                            return reader.ReadToEnd();
+                        }
+                    }
+                }
+                finally
+                {
+                    SdkInternalOperationsMonitor.Exit();
+                }
+            });
+
+            return task;
+        }
+#endif
         /// <summary>
         /// Strips off any relative path at the end of the base URI and then appends the known relative path to get the app id uri.
         /// </summary>
