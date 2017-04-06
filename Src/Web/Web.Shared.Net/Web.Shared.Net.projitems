@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HttpContextExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\HttpContextExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\HttpRequestExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\HttpRouteData.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\RequestTrackingConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\RequestTrackingExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\SyntheticUserAgentFilter.cs" />
