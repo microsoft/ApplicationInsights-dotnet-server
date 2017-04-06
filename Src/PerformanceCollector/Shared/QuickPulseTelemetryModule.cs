@@ -408,6 +408,8 @@
 
         private void StateThreadWorker(object state)
         {
+            SdkInternalOperationsMonitor.Enter();
+
             var stopwatch = new Stopwatch();
             TimeSpan? timeToNextUpdate = null;
 
@@ -419,6 +421,8 @@
                 {
                     if (this.stateThreadState.IsStopRequested)
                     {
+                        SdkInternalOperationsMonitor.Exit();
+
                         return;
                     }
 
@@ -447,6 +451,8 @@
 
         private void CollectionThreadWorker(object state)
         {
+            SdkInternalOperationsMonitor.Enter();
+
             var stopwatch = new Stopwatch();
             var threadState = (QuickPulseThreadState)state;
 
@@ -459,6 +465,8 @@
                     if (threadState.IsStopRequested)
                     {
                         this.CloseCollectionThread();
+
+                        SdkInternalOperationsMonitor.Exit();
 
                         return;
                     }
