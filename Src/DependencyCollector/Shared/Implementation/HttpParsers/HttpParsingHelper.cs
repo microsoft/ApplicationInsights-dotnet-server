@@ -1,5 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.HttpParsers
 {
+    using System;
     using System.Collections.Generic;
 
     internal static class HttpParsingHelper
@@ -16,8 +17,11 @@
         {
             var tokens = new List<string>(4 * resourcePath.Count + 2);
 
-            tokens.Add(verb);
-            tokens.Add(" ");
+            if (!string.IsNullOrEmpty(verb))
+            {
+                tokens.Add(verb);
+                tokens.Add(" ");
+            }
 
             foreach (var resource in resourcePath)
             {
@@ -116,6 +120,24 @@
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Checks if a string ends with any of the specified suffixes.
+        /// </summary>
+        /// <param name="str">The string to check.</param>
+        /// <param name="suffixes">The suffixes.</param>
+        /// <returns><code>true</code> if string ends with any of the suffixes.</returns>
+        internal static bool EndsWithAny(string str, params string[] suffixes)
+        {
+            foreach (var suffix in suffixes)
+            {
+                if (str.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
