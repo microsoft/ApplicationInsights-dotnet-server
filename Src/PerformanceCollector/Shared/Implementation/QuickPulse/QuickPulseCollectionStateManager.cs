@@ -151,7 +151,6 @@
                     // we have samples
                     if (dataSamplesToSubmit.Any(sample => sample.CollectionConfigurationAccumulator.GetRef() != 0))
                     {
-                        ////!!! better solution?
                         // some samples are still being processed, wait a little to give them a chance to finish
                         Thread.Sleep(this.coolDownTimeout);
 

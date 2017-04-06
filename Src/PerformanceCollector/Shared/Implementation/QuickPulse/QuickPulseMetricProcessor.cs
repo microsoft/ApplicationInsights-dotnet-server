@@ -53,10 +53,8 @@
                 CollectionConfigurationAccumulator configurationAccumulatorLocal =
                     this.dataAccumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator;
 
-                //!!! better solution?
                 // if the accumulator is swapped out, a sample is created and sent out - all while between these two lines, this telemetry item gets lost
                 // however, that is not likely to happen
-
                 configurationAccumulatorLocal.AddRef();
                 try
                 {
