@@ -31,6 +31,11 @@
         /// <param name="queryString">The query string.</param>
         internal string ExecuteAnonymousRequest(string queryString)
         {
+            if (!queryString.StartsWith("?"))
+            {
+                queryString = "?" + queryString;
+            }
+            
             string url = string.Format("http://localhost:{0}/{1}{2}", this.Port, this.ExternalCallPath, queryString);
 
             string response;
