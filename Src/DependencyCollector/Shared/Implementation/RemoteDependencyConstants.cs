@@ -10,6 +10,7 @@
         public const string AzureTable = "Azure table";
         public const string AzureQueue = "Azure queue";
         public const string AzureDocumentDb = "Azure DocumentDB";
+        public const string AzureServiceBus = "Azure Service Bus";
 
         public const string WcfService = "WCF Service";
         public const string WebService = "Web Service";
