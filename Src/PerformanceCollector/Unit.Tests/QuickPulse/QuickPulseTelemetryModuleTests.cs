@@ -866,7 +866,8 @@ Parameter name: performanceCounter",
 
             // ASSERT
             // it shouldn't throw and must keep pinging
-            Assert.IsTrue(serviceClient.PingCount > 5);
+            int pingCount = serviceClient.PingCount;
+            Assert.IsTrue(pingCount > 5, string.Format(CultureInfo.InvariantCulture, "PingCount is not high enough, the value is {0}", pingCount));
         }
 
         [TestMethod]
