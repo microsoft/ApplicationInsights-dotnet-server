@@ -284,7 +284,7 @@
             }
         }
 
-        private void HttpDependenciesParsingTelemetryInitializerConvertsServices(string verb, string url, string expectedType, string expectedName)
+        public void HttpDependenciesParsingTelemetryInitializerConvertsServices(string verb, string url, string expectedType, string expectedName)
         {
             HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
             Uri parsedUrl = new Uri(url);
