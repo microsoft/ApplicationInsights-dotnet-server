@@ -284,7 +284,7 @@
             }
         }
 
-        private void HttpDependenciesParsingTelemetryInitializerConvertsServices(string verb, string url, string expectedType, string expectedName)
+        public void HttpDependenciesParsingTelemetryInitializerConvertsServices(string verb, string url, string expectedType, string expectedName)
         {
             HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
             Uri parsedUrl = new Uri(url);
@@ -314,6 +314,62 @@
             Assert.AreEqual(expectedType, d.Type);
             Assert.AreEqual(parsedUrl.Host, d.Target);
             Assert.AreEqual(expectedName, d.Name);
+        }
+
+        [TestMethod]
+        public void HttpDependenciesParsingTelemetryInitializerConvertsDocumentDb()
+        {
+            // check if DocumentDB parsing is enabled
+            // detailed parsing validation is in DocumentDbHttpParserTests
+            HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
+            Uri parsedUrl = new Uri("https://myaccount.documents.azure.com/dbs/myDatabase");
+
+            var d = new DependencyTelemetry(
+                dependencyTypeName: RemoteDependencyConstants.HTTP,
+                target: parsedUrl.Host,
+                dependencyName: "GET " + parsedUrl.AbsolutePath,
+                data: parsedUrl.OriginalString);
+
+            initializer.Initialize(d);
+
+            Assert.AreEqual(RemoteDependencyConstants.AzureDocumentDb, d.Type);
+        }
+
+        [TestMethod]
+        public void HttpDependenciesParsingTelemetryInitializerConvertsServiceBus()
+        {
+            // check if Service Bus parsing is enabled
+            // detailed parsing validation is in AzureServiceBusHttpParserTests
+            HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
+            Uri parsedUrl = new Uri("https://myaccount.servicebus.windows.net/myQueue/messages");
+
+            var d = new DependencyTelemetry(
+                dependencyTypeName: RemoteDependencyConstants.HTTP,
+                target: parsedUrl.Host,
+                dependencyName: "POST " + parsedUrl.AbsolutePath,
+                data: parsedUrl.OriginalString);
+
+            initializer.Initialize(d);
+
+            Assert.AreEqual(RemoteDependencyConstants.AzureServiceBus, d.Type);
+        }
+
+        [TestMethod]
+        public void HttpDependenciesParsingTelemetryInitializerConvertsIotHub()
+        {
+            // check if IoT Hub parsing is enabled
+            HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
+            Uri parsedUrl = new Uri("https://myaccount.azure-devices.net/devices");
+
+            var d = new DependencyTelemetry(
+                dependencyTypeName: RemoteDependencyConstants.HTTP,
+                target: parsedUrl.Host,
+                dependencyName: "GET " + parsedUrl.AbsolutePath,
+                data: parsedUrl.OriginalString);
+
+            initializer.Initialize(d);
+
+            Assert.AreEqual(RemoteDependencyConstants.AzureIotHub, d.Type);
         }
     }
 }

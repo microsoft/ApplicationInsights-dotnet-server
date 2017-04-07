@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project=".\Global.props" />
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project=".\Directory.Build.props" />
 
   <PropertyGroup>
     <PreReleaseVersion>$([MSBuild]::Divide($([System.DateTime]::Now.Subtract($([System.DateTime]::Parse($(SemanticVersionDate)))).TotalHours), 6).ToString('F0'))</PreReleaseVersion>
@@ -17,8 +17,6 @@
 
   <Target Name="Build">
     <!-- Generate build version -->
-    <WriteLinesToFile File="$(PreReleaseVersionFileName)" Lines="$(PreReleaseVersion)" Overwrite="true" Encoding="Unicode"/>
-
     <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="RestoreAndBuildSolution" Properties="SolutionToBuild=%(Solution.Identity)" ContinueOnError="ErrorAndStop" />
   </Target>
 
@@ -44,7 +42,7 @@
 
     <Exec Command='IF EXIST "$(SolutionToBuild)" nuget.exe restore "$(SolutionToBuild)" -NonInteractive' ContinueOnError="ErrorAndStop"/>
 
-    <MSBuild Projects="$(SolutionToBuild)" ContinueOnError="ErrorAndStop"/>
+    <MSBuild Projects="$(SolutionToBuild)" ContinueOnError="ErrorAndStop" Properties="PreReleaseVersion=$(PreReleaseVersion)" />
 
     <Exec Condition="$(DisableLocalDebugNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsDebugPackages -ConfigFile NuGet.config'/>
     <Exec Condition="$(DisableLocalReleaseNuget)" Command='nuget.exe sources Enable -Name LocallyBuiltApplicationInsightsReleasePackages -ConfigFile NuGet.config'/>
