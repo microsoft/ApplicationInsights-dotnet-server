@@ -28,6 +28,12 @@
 
         private static readonly MethodInfo DoubleToStringMethodInfo = GetMethodInfo<double, string>(x => x.ToString(CultureInfo.InvariantCulture));
 
+        private static readonly MethodInfo NullableDoubleToStringMethodInfo = GetMethodInfo<double?, string>(x => x.ToString());
+
+        private static readonly MethodInfo ObjectToStringMethodInfo = GetMethodInfo<object, string>(x => x.ToString());
+
+        private static readonly MethodInfo ValueTypeToStringMethodInfo = GetMethodInfo<ValueType, string>(x => x.ToString());
+
         private static readonly MethodInfo UriToStringMethodInfo = GetMethodInfo<Uri, string>(x => x.ToString());
 
         private static readonly MethodInfo StringIndexOfMethodInfo =
@@ -315,7 +321,7 @@
                    ?? false;
         }
 
-        private Expression ProduceComparatorExpressionForSingleFieldCondition(Expression fieldExpression, Type fieldType)
+        private Expression ProduceComparatorExpressionForSingleFieldCondition(Expression fieldExpression, Type fieldType, bool isFieldTypeNullable = false)
         {
             // this must determine an appropriate runtime comparison given the field type, the predicate, and the comparand
             TypeCode fieldTypeCode = Type.GetTypeCode(fieldType);
@@ -328,11 +334,11 @@
                         switch (this.predicate)
                         {
                             case Predicate.Equal:
-                                Func<bool, bool> comparator = fieldValue => fieldValue == this.comparandBoolean.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // fieldValue == this.comparandBoolean.Value;
+                                return Expression.Equal(fieldExpression, Expression.Constant(this.comparandBoolean.Value, isFieldTypeNullable ? typeof(bool?) : typeof(bool)));
                             case Predicate.NotEqual:
-                                comparator = fieldValue => fieldValue != this.comparandBoolean.Value;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
+                                // fieldValue != this.comparandBoolean.Value;
+                                return Expression.NotEqual(fieldExpression, Expression.Constant(this.comparandBoolean.Value, isFieldTypeNullable ? typeof(bool?) : typeof(bool)));
                             default:
                                 this.ThrowOnInvalidFilter(fieldType);
                                 break;
@@ -340,52 +346,143 @@
                     }
 
                     break;
+                case TypeCode.SByte:
                 case TypeCode.Int16:
                 case TypeCode.Int32:
                 case TypeCode.Int64:
+                case TypeCode.Byte:
                 case TypeCode.UInt16:
                 case TypeCode.UInt32:
                 case TypeCode.UInt64:
                 case TypeCode.Single:
                 case TypeCode.Double:
                     {
-                        // in order for the expression to compile, we must cast to double unless it's already double
-                        // we're using double as the common lowest denominator for all numerical types
-                        Expression fieldConvertedExpression = fieldTypeCode == TypeCode.Double ? fieldExpression : Expression.ConvertChecked(fieldExpression, typeof(double));
-
-                        switch (this.predicate)
+                        if (fieldType.IsEnum)
                         {
-                            case Predicate.Equal:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.Equal(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.NotEqual:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.NotEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.LessThan:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.LessThan(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.GreaterThan:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.GreaterThan(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.LessThanOrEqual:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.LessThanOrEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.GreaterThanOrEqual:
-                                this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
-                                return Expression.GreaterThanOrEqual(fieldConvertedExpression, Expression.Constant(this.comparandDouble.Value));
-                            case Predicate.Contains:
-                                // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1
-                                Expression toStringCall = Expression.Call(fieldConvertedExpression, DoubleToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
-                                Expression indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
-                                return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
-                            case Predicate.DoesNotContain:
-                                // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1
-                                toStringCall = Expression.Call(fieldConvertedExpression, DoubleToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
-                                indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
-                                return Expression.Equal(indexOfCall, Expression.Constant(-1));
-                            default:
-                                this.ThrowOnInvalidFilter(fieldType);
-                                break;
+                            // this is actually an Enum
+                            object enumValue = null;
+                            try
+                            {
+                                enumValue = Enum.Parse(fieldType, this.comparand, true);
+                            }
+                            catch (Exception)
+                            {
+                                // we must throw unless this.predicate is either Contains or DoesNotContain, in which case it's ok
+                                this.ThrowOnInvalidFilter(fieldType, this.predicate != Predicate.Contains && this.predicate != Predicate.DoesNotContain);
+                            }
+
+                            Type enumUnderlyingType = fieldType.GetEnumUnderlyingType();
+
+                            switch (this.predicate)
+                            {
+                                case Predicate.Equal:
+                                    // fieldValue == enumValue
+                                    return Expression.Equal(fieldExpression, Expression.Constant(enumValue, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(fieldType) : fieldType));
+                                case Predicate.NotEqual:
+                                    // fieldValue != enumValue
+                                    return Expression.NotEqual(fieldExpression, Expression.Constant(enumValue, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(fieldType) : fieldType));
+                                case Predicate.LessThan:
+                                    // (int)fieldValue < (int)enumValue
+                                    // (int?)fieldValue < (int?)enumValue
+                                    Type underlyingType = isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(enumUnderlyingType) : enumUnderlyingType;
+                                    return Expression.LessThan(
+                                        Expression.Convert(fieldExpression, underlyingType),
+                                        Expression.Convert(Expression.Constant(enumValue, fieldType), underlyingType));
+                                case Predicate.GreaterThan:
+                                    // (int)fieldValue > (int)enumValue
+                                    // (int?)fieldValue > (int?)enumValue
+                                    underlyingType = isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(enumUnderlyingType) : enumUnderlyingType;
+                                    return Expression.GreaterThan(
+                                        Expression.Convert(fieldExpression, underlyingType),
+                                        Expression.Convert(Expression.Constant(enumValue, fieldType), underlyingType));
+                                case Predicate.LessThanOrEqual:
+                                    // (int)fieldValue <= (int)enumValue
+                                    // (int?)fieldValue <= (int?)enumValue
+                                    underlyingType = isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(enumUnderlyingType) : enumUnderlyingType;
+                                    return Expression.LessThanOrEqual(
+                                        Expression.Convert(fieldExpression, underlyingType),
+                                        Expression.Convert(Expression.Constant(enumValue, fieldType), underlyingType));
+                                case Predicate.GreaterThanOrEqual:
+                                    // (int)fieldValue >= (int)enumValue
+                                    // (int?)fieldValue >= (int?)enumValue
+                                    underlyingType = isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(enumUnderlyingType) : enumUnderlyingType;
+                                    return Expression.GreaterThanOrEqual(
+                                        Expression.Convert(fieldExpression, underlyingType),
+                                        Expression.Convert(Expression.Constant(enumValue, fieldType), underlyingType));
+                                case Predicate.Contains:
+                                    // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1
+                                    Expression toStringCall = Expression.Call(fieldExpression, isFieldTypeNullable ? ValueTypeToStringMethodInfo : ObjectToStringMethodInfo);
+                                    Expression indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                    return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
+                                case Predicate.DoesNotContain:
+                                    // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1
+                                    toStringCall = Expression.Call(fieldExpression, isFieldTypeNullable ? ValueTypeToStringMethodInfo : ObjectToStringMethodInfo);
+                                    indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                    return Expression.Equal(indexOfCall, Expression.Constant(-1));
+                                default:
+                                    this.ThrowOnInvalidFilter(fieldType);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // this is a regular numerical type
+                            // in order for the expression to compile, we must cast to double unless it's already double
+                            // we're using double as the lowest common denominator for all numerical types
+                            Expression fieldConvertedExpression = fieldTypeCode == TypeCode.Double
+                                                                      ? fieldExpression
+                                                                      : Expression.ConvertChecked(fieldExpression, isFieldTypeNullable ? typeof(double?) : typeof(double));
+
+                            switch (this.predicate)
+                            {
+                                case Predicate.Equal:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.Equal(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.NotEqual:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.NotEqual(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.LessThan:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.LessThan(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.GreaterThan:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.GreaterThan(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.LessThanOrEqual:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.LessThanOrEqual(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.GreaterThanOrEqual:
+                                    this.ThrowOnInvalidFilter(fieldType, !this.comparandDouble.HasValue);
+                                    return Expression.GreaterThanOrEqual(
+                                        fieldConvertedExpression,
+                                        Expression.Constant(this.comparandDouble.Value, isFieldTypeNullable ? typeof(Nullable<>).MakeGenericType(typeof(double)) : typeof(double)));
+                                case Predicate.Contains:
+                                    // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) != -1
+                                    Expression toStringCall = isFieldTypeNullable
+                                                                  ? Expression.Call(fieldConvertedExpression, NullableDoubleToStringMethodInfo)
+                                                                  : Expression.Call(fieldConvertedExpression, DoubleToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
+                                    Expression indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                    return Expression.NotEqual(indexOfCall, Expression.Constant(-1));
+                                case Predicate.DoesNotContain:
+                                    // fieldValue.ToString(CultureInfo.InvariantCulture).IndexOf(this.comparand, StringComparison.OrdinalIgnoreCase) == -1
+                                    toStringCall = isFieldTypeNullable
+                                                       ? Expression.Call(fieldConvertedExpression, NullableDoubleToStringMethodInfo)
+                                                       : Expression.Call(fieldConvertedExpression, DoubleToStringMethodInfo, Expression.Constant(CultureInfo.InvariantCulture));
+                                    indexOfCall = Expression.Call(toStringCall, StringIndexOfMethodInfo, Expression.Constant(this.comparand), Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                    return Expression.Equal(indexOfCall, Expression.Constant(-1));
+                                default:
+                                    this.ThrowOnInvalidFilter(fieldType);
+                                    break;
+                            }
                         }
                     }
 
@@ -425,24 +522,8 @@
 
                     break;
                 default:
-                    if (fieldType == typeof(bool?))
-                    {
-                        this.ThrowOnInvalidFilter(fieldType, !this.comparandBoolean.HasValue && !string.Equals(this.comparand, "null", StringComparison.OrdinalIgnoreCase));
-
-                        switch (this.predicate)
-                        {
-                            case Predicate.Equal:
-                                Func<bool?, bool> comparator = fieldValue => fieldValue == this.comparandBoolean;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
-                            case Predicate.NotEqual:
-                                comparator = fieldValue => fieldValue != this.comparandBoolean;
-                                return Expression.Call(Expression.Constant(comparator.Target), comparator.Method, fieldExpression);
-                            default:
-                                this.ThrowOnInvalidFilter(fieldType);
-                                break;
-                        }
-                    }
-                    else if (fieldType == typeof(TimeSpan))
+                    Type nullableUnderlyingType;
+                    if (fieldType == typeof(TimeSpan))
                     {
                         this.ThrowOnInvalidFilter(fieldType, !this.comparandTimeSpan.HasValue);
 
@@ -498,6 +579,11 @@
                                 break;
                         }
                     }
+                    else if ((nullableUnderlyingType = Nullable.GetUnderlyingType(fieldType)) != null)
+                    {
+                        // make a recursive call for the underlying type
+                        return ProduceComparatorExpressionForSingleFieldCondition(fieldExpression, nullableUnderlyingType, true);
+                    }
                     else
                     {
                         this.ThrowOnInvalidFilter(fieldType);
@@ -508,7 +594,7 @@
 
             return null;
         }
-        
+
         private Expression ProduceComparatorExpressionForAnyFieldCondition(ParameterExpression documentExpression)
         {
             // this.predicate is either Predicate.Contains or Predicate.DoesNotContain at this point

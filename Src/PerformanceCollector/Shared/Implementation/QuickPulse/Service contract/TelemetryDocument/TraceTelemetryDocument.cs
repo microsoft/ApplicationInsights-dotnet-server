@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.Runtime.Serialization;
 
+    using Microsoft.ApplicationInsights.DataContracts;
+
     [DataContract]
     internal struct TraceTelemetryDocument : ITelemetryDocument
     {
@@ -18,7 +20,10 @@
 
         [DataMember(EmitDefaultValue = false)]
         public string Message { get; set; }
-        
+
+        [DataMember(EmitDefaultValue = false)]
+        public string SeverityLevel { get; set; }
+
         [DataMember(EmitDefaultValue = false)]
         public KeyValuePair<string, string>[] Properties { get; set; }
 

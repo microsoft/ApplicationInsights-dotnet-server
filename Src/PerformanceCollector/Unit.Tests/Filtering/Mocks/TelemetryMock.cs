@@ -8,19 +8,34 @@
 
     internal class TelemetryMock : ITelemetry
     {
+        public enum EnumType
+        {
+            Value1 = 0,
+            Value2,
+            Value3
+        }
+
         public bool BooleanField { get; set; }
 
         public bool? NullableBooleanField { get; set; }
 
         public int IntField { get; set; }
 
+        public int? NullableIntField { get; set; }
+
         public double DoubleField { get; set; }
+
+        public double? NullableDoubleField { get; set; }
 
         public string StringField { get; set; }
 
         public TimeSpan TimeSpanField { get; set; }
 
         public Uri UriField { get; set; }
+
+        public EnumType EnumField { get; set; }
+
+        public EnumType? NullableEnumField { get; set; }
 
         public IDictionary<string, string> Properties { get; } = new Dictionary<string, string>();
 
@@ -38,7 +53,7 @@
         {
             throw new NotImplementedException();
         }
-
+        
         public class TelemetryContextMock
         {
             public OperationContextMock Operation { get; set; }

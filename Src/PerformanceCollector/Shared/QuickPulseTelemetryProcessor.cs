@@ -265,6 +265,7 @@
                 Version = TelemetryDocumentContractVersion,
                 Timestamp = traceTelemetry.Timestamp,
                 Message = TruncateValue(traceTelemetry.Message),
+                SeverityLevel = traceTelemetry.SeverityLevel.ToString(),
                 Properties = GetProperties(traceTelemetry)
             };
 

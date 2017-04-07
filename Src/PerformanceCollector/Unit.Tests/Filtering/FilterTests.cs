@@ -308,23 +308,6 @@
 
             // ASSERT
         }
-
-        [TestMethod]
-        public void FilterNullableBooleanNullEqual()
-        {
-            // ARRANGE
-            var equalsTrue = new FilterInfo() { FieldName = "NullableBooleanField", Predicate = Predicate.Equal, Comparand = "NULL" };
-
-            // ACT
-            bool result1 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = true });
-            bool result2 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = false });
-            bool result3 = new Filter<TelemetryMock>(equalsTrue).Check(new TelemetryMock() { NullableBooleanField = null });
-
-            // ASSERT
-            Assert.IsFalse(result1);
-            Assert.IsFalse(result2);
-            Assert.IsTrue(result3);
-        }
         #endregion
 
         #region Int
@@ -472,6 +455,167 @@
 
         #endregion
 
+        #region Nullable<Int>
+
+        [TestMethod]
+        public void FilterNullableIntEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.Equal, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntNotEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.NotEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntGreaterThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 122 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntLessThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.LessThan, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 122 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntGreaterThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 122 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntLessThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 122 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntContains()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.Contains, Comparand = "2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 152 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 160 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableIntDoesNotContain()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 152 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = 160 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableIntField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableIntGarbageComparand()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableIntField", Predicate = Predicate.Equal, Comparand = "garbage" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        #endregion
+
         #region Double
 
         [TestMethod]
@@ -608,6 +752,167 @@
         {
             // ARRANGE
             var equalsValue = new FilterInfo() { FieldName = "DoubleField", Predicate = Predicate.Equal, Comparand = "garbage" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        #endregion
+
+        #region Nullable<Double>
+
+        [TestMethod]
+        public void FilterNullableNullableDoubleEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.Equal, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleNotEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.NotEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 124 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleGreaterThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.GreaterThan, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 122.5 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123.5 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleLessThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.LessThan, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 122.5 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123.5 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleGreaterThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 122.5 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123.5 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleLessThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.LessThanOrEqual, Comparand = "123.0" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 122.5 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123.5 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 123 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleContains()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.Contains, Comparand = "2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 157.2 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 160 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableDoubleDoesNotContain()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.DoesNotContain, Comparand = "2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 157.2 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = 160 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableDoubleField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterNullableDoubleGarbageComparand()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableDoubleField", Predicate = Predicate.Equal, Comparand = "garbage" };
 
             // ACT
             new Filter<TelemetryMock>(equalsValue);
@@ -1073,6 +1378,299 @@
             
             // ASSERT
             Assert.IsFalse(result1);
+        }
+
+        #endregion
+
+        #region Enum
+
+        [TestMethod]
+        public void FilterEnumEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.Equal, Comparand = "Value1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+        }
+        
+        [TestMethod]
+        public void FilterEnumNotEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.NotEqual, Comparand = "Value1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+        }
+
+        [TestMethod]
+        public void FilterEnumGreaterThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.GreaterThan, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value3 });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterEnumLessThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.LessThan, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value3 });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterEnumGreaterThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value3 });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterEnumLessThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.LessThanOrEqual, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value3 });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterEnumContains()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.Contains, Comparand = "1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+        }
+
+        [TestMethod]
+        public void FilterEnumDoesNotContain()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.DoesNotContain, Comparand = "1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { EnumField = TelemetryMock.EnumType.Value2 });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(Exception), AllowDerivedTypes = true)]
+        public void FilterEnumGarbageComparand()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "EnumField", Predicate = Predicate.Equal, Comparand = "garbage" };
+
+            // ACT
+            new Filter<TelemetryMock>(equalsValue);
+
+            // ASSERT
+        }
+
+        #endregion
+
+        #region Nullable<Enum>
+
+        [TestMethod]
+        public void FilterNullableEnumEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.Equal, Comparand = "Value1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumNotEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.NotEqual, Comparand = "Value1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumGreaterThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.GreaterThan, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value3 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsFalse(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumLessThan()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.LessThan, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value3 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumGreaterThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.GreaterThanOrEqual, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value3 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumLessThanOrEqual()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.LessThanOrEqual, Comparand = "Value2" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value3 });
+            bool result4 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsTrue(result2);
+            Assert.IsFalse(result3);
+            Assert.IsFalse(result4);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumContains()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.Contains, Comparand = "1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsTrue(result1);
+            Assert.IsFalse(result2);
+            Assert.IsFalse(result3);
+        }
+
+        [TestMethod]
+        public void FilterNullableEnumDoesNotContain()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "NullableEnumField", Predicate = Predicate.DoesNotContain, Comparand = "1" };
+
+            // ACT
+            bool result1 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value1 });
+            bool result2 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = TelemetryMock.EnumType.Value2 });
+            bool result3 = new Filter<TelemetryMock>(equalsValue).Check(new TelemetryMock() { NullableEnumField = null });
+
+            // ASSERT
+            Assert.IsFalse(result1);
+            Assert.IsTrue(result2);
+            Assert.IsTrue(result3);
         }
 
         #endregion
