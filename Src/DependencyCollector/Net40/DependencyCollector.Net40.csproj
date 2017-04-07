@@ -27,7 +27,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.4.0-beta1-build06467\lib\net40\Microsoft.ApplicationInsights.dll</HintPath>
+      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.4.0-beta1-build07987\lib\net40\Microsoft.ApplicationInsights.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Diagnostics.Tracing.EventSource, Version=1.1.28.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -79,6 +79,9 @@
     <Compile Include="..\..\Web\Web.Net45\Implementation\SdkVersionUtils.cs">
       <Link>SdkVersionUtils.cs</Link>
     </Compile>
+    <Compile Include="..\..\Common\ApplicationInsightsActivity.cs">
+      <Link>ApplicationInsightsActivity.cs</Link>
+    </Compile>       
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\..\..\..\packages\Desktop.Analyzers.1.1.0\analyzers\dotnet\cs\Desktop.Analyzers.dll" />

@@ -23,8 +23,8 @@
     }
   },
   "dependencies": {
-    "Microsoft.ApplicationInsights": "2.3.0-beta3",
-    "Microsoft.Extensions.DiagnosticAdapter": "1.0.0",
+    "Microsoft.ApplicationInsights": "2.4.0-beta1-build07987",
+    "Microsoft.Extensions.DiagnosticAdapter": "1.1.0",
     "NETStandard.Library": "1.6.1",
     "System.Diagnostics.DiagnosticSource": "4.3.0"
   },

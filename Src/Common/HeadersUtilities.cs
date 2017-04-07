@@ -3,7 +3,6 @@
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using System.Text;
 
     /// <summary>
     /// Generic functions that can be used to get and set Http headers.
@@ -31,6 +30,34 @@
             }
 
             return null;
+        }
+
+        public static IDictionary<string, string> GetHeaderDictionary(IEnumerable<string> headerValues)
+        {
+            IDictionary<string, string> result = new Dictionary<string, string>();
+
+            if (headerValues != null)
+            {
+                foreach (string keyNameValue in headerValues)
+                {
+                    string[] keyNameValueParts = keyNameValue.Trim().Split('=');
+                    if (keyNameValueParts.Length == 2)
+                    {
+                        string keyName = keyNameValueParts[0].Trim();
+                        if (!result.ContainsKey(keyName))
+                        {
+                            result.Add(keyName, keyNameValueParts[1].Trim());
+                        }
+                    }
+                }
+            }
+
+            if (!result.Any())
+            {
+                result = null;
+            }
+
+            return result;
         }
 
         /// <summary>
