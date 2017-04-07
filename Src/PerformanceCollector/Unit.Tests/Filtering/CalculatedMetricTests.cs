@@ -308,45 +308,7 @@
             Assert.AreEqual(0, errors.Length);
             Assert.AreEqual(120, projection);
         }
-
-        [TestMethod]
-        public void CalculatedMetricAggregatesCorrectly()
-        {
-            // ARRANGE
-            double[] accumulatedValues = { 1d, 3d };
-
-            // ACT
-            double avg = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
-            double sum = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
-            double min = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
-            double max = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
-
-            // ASSERT
-            Assert.AreEqual(2d, avg);
-            Assert.AreEqual(4d, sum);
-            Assert.AreEqual(1d, min);
-            Assert.AreEqual(3d, max);
-        }
-
-        [TestMethod]
-        public void CalculatedMetricAggregatesCorrectlyForEmptyDataSet()
-        {
-            // ARRANGE
-            double[] accumulatedValues = { };
-
-            // ACT
-            double avg = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Avg);
-            double sum = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Sum);
-            double min = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Min);
-            double max = CalculatedMetric<object>.Aggregate(accumulatedValues, AggregationType.Max);
-
-            // ASSERT
-            Assert.AreEqual(0d, avg);
-            Assert.AreEqual(0d, sum);
-            Assert.AreEqual(0d, min);
-            Assert.AreEqual(0d, max);
-        }
-
+        
         [TestMethod]
         public void CalculatedMetricReportsErrorsForInvalidFilters()
         {

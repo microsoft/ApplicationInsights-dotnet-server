@@ -625,7 +625,7 @@
                     {
                         double projection = metric.Project(telemetry);
 
-                        configurationAccumulatorLocal.MetricAccumulators[metric.Id].Value.Push(projection);
+                        configurationAccumulatorLocal.MetricAccumulators[metric.Id].AddValue(projection);
                     }
                     catch (Exception e)
                     {

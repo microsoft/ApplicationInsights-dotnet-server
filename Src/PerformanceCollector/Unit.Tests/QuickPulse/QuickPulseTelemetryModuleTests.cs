@@ -263,13 +263,13 @@
                 serviceClient.SnappedSamples.Any(
                     s =>
                     s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
-                        a => a.Value.MetricId == "Metric0" && (a.Value.Value.Any() && a.Value.Value.Single() == 1.0d))));
+                        a => a.Value.MetricId == "Metric0" && a.Value.CalculateAggregation(out long count) == 1.0d && count == 1)));
 
             Assert.IsTrue(
                 serviceClient.SnappedSamples.Any(
                     s =>
                     s.CollectionConfigurationAccumulator.MetricAccumulators.Any(
-                        a => a.Value.MetricId == "Metric1" && a.Value.Value.Any() && a.Value.Value.Single() == 5.0d)));
+                        a => a.Value.MetricId == "Metric1" && a.Value.CalculateAggregation(out long count) == 5.0d && count == 1)));
         }
 
         [TestMethod]

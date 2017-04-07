@@ -32,7 +32,6 @@
             // ASSERT
             Assert.AreSame(collectionConfiguration, accumulator.CollectionConfiguration);
             Assert.AreEqual("Metric1", accumulator.MetricAccumulators.Single().Key);
-            Assert.AreEqual(AggregationType.Min, accumulator.MetricAccumulators.Single().Value.AggregationType);
         }
 
         [TestMethod]
@@ -58,7 +57,6 @@
             // ASSERT
             Assert.AreSame(collectionConfiguration, accumulator.CollectionConfiguration);
             Assert.AreEqual("Metric1", accumulator.MetricAccumulators.Single().Key);
-            Assert.AreEqual(AggregationType.Min, accumulator.MetricAccumulators.Single().Value.AggregationType);
         }
     }
 }

@@ -69,8 +69,10 @@
 
             Assert.AreEqual(2, calculatedMetrics.Count);
 
-            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics["Metric1"].Value.Reverse().ToArray()));
-            Assert.AreEqual("1, 2, 3", string.Join(", ", calculatedMetrics["Metric2"].Value.Reverse().ToArray()));
+            Assert.AreEqual(2d, calculatedMetrics["Metric1"].CalculateAggregation(out long count));
+            Assert.AreEqual(3, count);
+            Assert.AreEqual(1d + 2d + 3d, calculatedMetrics["Metric2"].CalculateAggregation(out count));
+            Assert.AreEqual(3, count);
         }
     }
 }

@@ -51,28 +51,7 @@
         public string Id => this.info.Id;
 
         public AggregationType AggregationType => this.info.Aggregation;
-
-        public static double Aggregate(double[] accumulatedValues, AggregationType aggregationType)
-        {
-            IEnumerable<double> defaultIfEmpty = accumulatedValues.DefaultIfEmpty(0);
-            switch (aggregationType)
-            {
-                case AggregationType.Avg:
-                    return defaultIfEmpty.Average();
-                case AggregationType.Sum:
-                    return defaultIfEmpty.Sum();
-                case AggregationType.Min:
-                    return defaultIfEmpty.Min();
-                case AggregationType.Max:
-                    return defaultIfEmpty.Max();
-                default:
-                    throw new ArgumentOutOfRangeException(
-                        nameof(aggregationType),
-                        aggregationType,
-                        string.Format(CultureInfo.InvariantCulture, "AggregationType is not supported"));
-            }
-        }
-
+        
         public bool CheckFilters(TTelemetry document, out CollectionConfigurationError[] errors)
         {
             if (this.filterGroups.Count < 1)

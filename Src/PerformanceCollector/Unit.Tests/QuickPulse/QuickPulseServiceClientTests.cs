@@ -1068,12 +1068,12 @@
                     false);
 
             var accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators["Metric1"];
-            accumulator.Value.Push(1.0d);
-            accumulator.Value.Push(2.0d);
+            accumulator.AddValue(1.0d);
+            accumulator.AddValue(2.0d);
 
             accumulator = sample.CollectionConfigurationAccumulator.MetricAccumulators["Metric2"];
-            accumulator.Value.Push(1.0d);
-            accumulator.Value.Push(2.0d);
+            accumulator.AddValue(1.0d);
+            accumulator.AddValue(2.0d);
 
             // ACT
             CollectionConfigurationInfo configurationInfo;
