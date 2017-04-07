@@ -118,10 +118,10 @@
 
                     // We wait for <getAppIdTimeout> seconds (which is 0 at this point) to retrieve the appId. If retrieved during that time, we return success setting the correlation id.
                     // If we are still waiting on the result beyond the timeout - for this particular call we return the failure but queue a task continuation for it to be cached for next time.
-                    Task<string> getAppIdTask = this.provideAppId(instrumentationKey.ToLowerInvariant());
+                    Task<string> getAppIdTask = this.provideAppId(instrumentationKey.ToLowerInvariant());           
                     if (getAppIdTask.Wait(GetAppIdTimeout))
                     {
-                        this.GenerateCorrelationIdAndAddToDictionary(instrumentationKey, getAppIdTask.GetAwaiter().GetResult());
+                        this.GenerateCorrelationIdAndAddToDictionary(instrumentationKey, getAppIdTask.Result);
                         correlationId = this.knownCorrelationIds[instrumentationKey];
                         return true;
                     }
@@ -131,7 +131,7 @@
                         {
                             try
                             {
-                                this.GenerateCorrelationIdAndAddToDictionary(instrumentationKey, appId.GetAwaiter().GetResult());
+                                this.GenerateCorrelationIdAndAddToDictionary(instrumentationKey, appId.Result);
                             }
                             catch (Exception ex)
                             {
@@ -154,7 +154,10 @@
 
         private void GenerateCorrelationIdAndAddToDictionary(string ikey, string appId)
         {
-            this.knownCorrelationIds[ikey] = string.Format(CultureInfo.InvariantCulture, CorrelationIdFormat, appId);
+            if (appId != null)
+            {
+                this.knownCorrelationIds[ikey] = string.Format(CultureInfo.InvariantCulture, CorrelationIdFormat, appId);
+            }
         }
 
 #if !NET40
@@ -214,6 +217,11 @@
                             return reader.ReadToEnd();
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
+                    return null;
                 }
                 finally
                 {
