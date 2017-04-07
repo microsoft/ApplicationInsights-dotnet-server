@@ -28,7 +28,8 @@
                     || AzureQueueHttpParser.TryParse(ref httpDependency)
                     || DocumentDbHttpParser.TryParse(ref httpDependency)
                     || AzureServiceBusHttpParser.TryParse(ref httpDependency)
-                    || GenericServiceHttpParser.TryParse(ref httpDependency);
+                    || GenericServiceHttpParser.TryParse(ref httpDependency)
+                    || AzureIotHubHttpParser.TryParse(ref httpDependency);
             }
         }
     }

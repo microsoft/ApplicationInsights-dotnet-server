@@ -353,5 +353,23 @@
 
             Assert.AreEqual(RemoteDependencyConstants.AzureServiceBus, d.Type);
         }
+
+        [TestMethod]
+        public void HttpDependenciesParsingTelemetryInitializerConvertsIotHub()
+        {
+            // check if IoT Hub parsing is enabled
+            HttpDependenciesParsingTelemetryInitializer initializer = new HttpDependenciesParsingTelemetryInitializer();
+            Uri parsedUrl = new Uri("https://myaccount.azure-devices.net/devices");
+
+            var d = new DependencyTelemetry(
+                dependencyTypeName: RemoteDependencyConstants.HTTP,
+                target: parsedUrl.Host,
+                dependencyName: "GET " + parsedUrl.AbsolutePath,
+                data: parsedUrl.OriginalString);
+
+            initializer.Initialize(d);
+
+            Assert.AreEqual(RemoteDependencyConstants.AzureIotHub, d.Type);
+        }
     }
 }
