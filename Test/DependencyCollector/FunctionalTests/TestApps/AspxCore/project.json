@@ -5,7 +5,7 @@
       "type": "platform"
     },
     "Microsoft.ApplicationInsights.AspNetCore": "2.0.0",
-    "Microsoft.ApplicationInsights.DependencyCollector": "2.4.0-beta1-build119",
+    "Microsoft.ApplicationInsights.DependencyCollector": "2.4.0-beta1-build121",
     "Microsoft.AspNetCore.Mvc": "1.0.1",
     "Microsoft.AspNetCore.Routing": "1.0.1",
     "Microsoft.AspNetCore.Server.IISIntegration": "1.0.0",
