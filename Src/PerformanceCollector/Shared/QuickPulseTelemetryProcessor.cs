@@ -179,7 +179,7 @@
 
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
-            return new RequestTelemetryDocument()
+            ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
                 Version = TelemetryDocumentContractVersion,
@@ -192,11 +192,15 @@
                 Url = requestTelemetry.Url,
                 Properties = GetProperties(requestTelemetry)
             };
+
+            SetCommonTelemetryDocumentData(telemetryDocument, requestTelemetry);
+
+            return telemetryDocument;
         }
 
         private static ITelemetryDocument ConvertDependencyToTelemetryDocument(DependencyTelemetry dependencyTelemetry)
         {
-            return new DependencyTelemetryDocument()
+            ITelemetryDocument telemetryDocument = new DependencyTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
                 Version = TelemetryDocumentContractVersion,
@@ -211,11 +215,15 @@
                 DependencyTypeName = dependencyTelemetry.Type,
                 Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName)
             };
+
+            SetCommonTelemetryDocumentData(telemetryDocument, dependencyTelemetry);
+
+            return telemetryDocument;
         }
 
         private static ITelemetryDocument ConvertExceptionToTelemetryDocument(ExceptionTelemetry exceptionTelemetry)
         {
-            return new ExceptionTelemetryDocument()
+            ITelemetryDocument telemetryDocument = new ExceptionTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
                 Version = TelemetryDocumentContractVersion,
@@ -226,11 +234,15 @@
                 OperationId = TruncateValue(exceptionTelemetry.Context?.Operation?.Id),
                 Properties = GetProperties(exceptionTelemetry)
             };
+
+            SetCommonTelemetryDocumentData(telemetryDocument, exceptionTelemetry);
+
+            return telemetryDocument;
         }
 
         private static ITelemetryDocument ConvertEventToTelemetryDocument(EventTelemetry eventTelemetry)
         {
-            return new EventTelemetryDocument()
+            ITelemetryDocument telemetryDocument = new EventTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
                 Version = TelemetryDocumentContractVersion,
@@ -239,11 +251,15 @@
                 Name = TruncateValue(eventTelemetry.Name),
                 Properties = GetProperties(eventTelemetry)
             };
+
+            SetCommonTelemetryDocumentData(telemetryDocument, eventTelemetry);
+
+            return telemetryDocument;
         }
 
         private static ITelemetryDocument ConvertTraceToTelemetryDocument(TraceTelemetry traceTelemetry)
         {
-            return new TraceTelemetryDocument()
+            ITelemetryDocument telemetryDocument = new TraceTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
                 Version = TelemetryDocumentContractVersion,
@@ -251,6 +267,23 @@
                 Message = TruncateValue(traceTelemetry.Message),
                 Properties = GetProperties(traceTelemetry)
             };
+
+            SetCommonTelemetryDocumentData(telemetryDocument, traceTelemetry);
+
+            return telemetryDocument;
+        }
+
+        private static void SetCommonTelemetryDocumentData(ITelemetryDocument telemetryDocument, ITelemetry telemetry)
+        {
+            if (telemetry.Context == null)
+            {
+                return;
+            }
+
+            telemetryDocument.OperationName = TruncateValue(telemetry.Context.Operation?.Name);
+            telemetryDocument.InternalNodeName = TruncateValue(telemetry.Context.GetInternalContext()?.NodeName);
+            telemetryDocument.CloudRoleName = TruncateValue(telemetry.Context.Cloud?.RoleName);
+            telemetryDocument.CloudRoleInstance = TruncateValue(telemetry.Context.Cloud?.RoleInstance);
         }
 
         private static string ExpandExceptionMessage(ExceptionTelemetry exceptionTelemetry)

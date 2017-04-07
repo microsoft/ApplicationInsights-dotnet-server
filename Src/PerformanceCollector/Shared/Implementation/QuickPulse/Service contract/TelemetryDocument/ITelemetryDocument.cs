@@ -8,6 +8,14 @@
         Guid Id { get; }
 
         string Version { get; }
+
+        string OperationName { get; set; }
+
+        string InternalNodeName { get; set; }
+
+        string CloudRoleName { get; set; }
+
+        string CloudRoleInstance { get; set; }
         
         KeyValuePair<string, string>[] Properties { get; set; }
         

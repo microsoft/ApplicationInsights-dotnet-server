@@ -47,6 +47,18 @@
         public KeyValuePair<string, string>[] Properties { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public string OperationName { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string InternalNodeName { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string CloudRoleName { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public string CloudRoleInstance { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public string DocumentType
         {
             get
