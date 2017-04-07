@@ -1,13 +1,14 @@
 ﻿namespace Microsoft.ApplicationInsights.DependencyCollector
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Threading.Tasks;
     using VisualStudio.TestTools.UnitTesting;
 
+    /// <summary>
+    /// Tests for the HttpHeadersUtilities class.
+    /// </summary>
     public class HttpHeadersUtilitiesTests
     {
         /// <summary>
