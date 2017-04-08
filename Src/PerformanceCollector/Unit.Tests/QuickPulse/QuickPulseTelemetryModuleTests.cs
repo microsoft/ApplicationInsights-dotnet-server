@@ -187,13 +187,6 @@
                     Filters = new[] { new FilterInfo() { FieldName = "Name", Predicate = Predicate.Equal, Comparand = "Request1" } }
                 }
             };
-            var filter2 = new[]
-            {
-                new FilterConjunctionGroupInfo()
-                {
-                    Filters = new[] { new FilterInfo() { FieldName = "MetricName", Predicate = Predicate.Equal, Comparand = "Metric1" } }
-                }
-            };
             var metrics = new[]
             {
                 new CalculatedMetricInfo()
@@ -208,9 +201,9 @@
                 {
                     Id = "Metric1",
                     TelemetryType = TelemetryType.Metric,
-                    Projection = "Value",
+                    Projection = "Metric1",
                     Aggregation = AggregationType.Sum,
-                    FilterGroups = filter2
+                    FilterGroups = new FilterConjunctionGroupInfo[0]
                 }
             };
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };

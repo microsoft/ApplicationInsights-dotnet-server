@@ -115,7 +115,7 @@
             Assert.AreEqual("Metric3", collectionConfiguration.ExceptionMetrics.Single().Id);
             Assert.AreEqual("Metric4", collectionConfiguration.EventMetrics.Single().Id);
             Assert.AreEqual("Metric5", collectionConfiguration.TraceMetrics.Single().Id);
-            Assert.AreEqual("Metric6", collectionConfiguration.MetricMetrics.Single().Id);
+            Assert.AreEqual("Metric6", collectionConfiguration.MetricMetrics.Single().Item1);
         }
 
         [TestMethod]

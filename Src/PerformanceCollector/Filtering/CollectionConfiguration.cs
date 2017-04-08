@@ -36,17 +36,16 @@
 
         private readonly List<CalculatedMetric<TraceTelemetry>> traceTelemetryMetrics = new List<CalculatedMetric<TraceTelemetry>>();
 
-        private readonly List<CalculatedMetric<MetricValue>> metricMetrics = new List<CalculatedMetric<MetricValue>>();
-
         private readonly List<DocumentStream> documentStreams = new List<DocumentStream>();
         #endregion
 
         #region Metadata used by other components
         private readonly List<Tuple<string, AggregationType>> telemetryMetadata = new List<Tuple<string, AggregationType>>();
 
-        private readonly List<Tuple<string, AggregationType>> metricMetadata = new List<Tuple<string, AggregationType>>();
-        
         private readonly List<Tuple<string, string>> performanceCounters = new List<Tuple<string, string>>();
+
+        // (id, metricName, AggregationType)
+        private readonly List<Tuple<string, string, AggregationType>> metricMetrics = new List<Tuple<string, string, AggregationType>>();
         #endregion
 
         public CollectionConfiguration(
@@ -63,21 +62,22 @@
             this.info = info;
 
             // create metrics based on descriptions in info
-            CollectionConfigurationError[] metricErrors;
-            this.CreateMetrics(info, out metricErrors);
+            this.CreateTelemetryMetrics(info, out CollectionConfigurationError[] metricErrors);
+
+            // create Metric metrics
+            this.CreateMetricMetrics(out CollectionConfigurationError[] metricMetricsErrors);
 
             // maintain a separate collection of all (Id, AggregationType) pairs with some additional data - to allow for uniform access to all types of metrics
+            // this includes both telemetry metrics and Metric metrics
             this.CreateMetadata();
 
             // create document streams based on description in info
-            CollectionConfigurationError[] documentStreamErrors;
-            this.CreateDocumentStreams(out documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
+            this.CreateDocumentStreams(out CollectionConfigurationError[] documentStreamErrors, timeProvider, previousDocumentStreams ?? new DocumentStream[0]);
 
-            // check performance counters
-            CollectionConfigurationError[] performanceCounterErrors;
-            this.CreatePerformanceCounters(out performanceCounterErrors);
-
-            errors = metricErrors.Concat(documentStreamErrors).Concat(performanceCounterErrors).ToArray();
+            // create performance counters
+            this.CreatePerformanceCounters(out CollectionConfigurationError[] performanceCounterErrors);
+            
+            errors = metricErrors.Concat(documentStreamErrors).Concat(performanceCounterErrors).Concat(metricMetricsErrors).ToArray();
 
             foreach (var error in errors)
             {
@@ -95,25 +95,16 @@
 
         public IEnumerable<CalculatedMetric<TraceTelemetry>> TraceMetrics => this.traceTelemetryMetrics;
 
-        public IEnumerable<CalculatedMetric<MetricValue>> MetricMetrics => this.metricMetrics;
-
         /// <summary>
         /// Telemetry types only. Used by QuickPulseTelemetryProcessor.
         /// </summary>
         public IEnumerable<Tuple<string, AggregationType>> TelemetryMetadata => this.telemetryMetadata;
-
-        /// <summary>
-        /// Metric type only. Used by QuickPulseMetricProcessor.
-        /// </summary>
-        public IEnumerable<Tuple<string, AggregationType>> MetricMetadata => this.metricMetadata;
-
+        
         /// <summary>
         /// Document streams. Telemetry items are provided by QuickPulseTelemetryProcessor.
         /// </summary>
         public IEnumerable<DocumentStream> DocumentStreams => this.documentStreams; 
         
-        public string ETag => this.info.ETag;
-
         /// <summary>
         /// Gets a list of performance counters.
         /// </summary>
@@ -121,6 +112,16 @@
         /// Performance counter name is stored in CalculatedMetricInfo.Projection.
         /// </remarks>
         public IEnumerable<Tuple<string, string>> PerformanceCounters => this.performanceCounters;
+
+        /// <summary>
+        /// Gets a list of Metric metrics.
+        /// </summary>
+        /// <remarks>
+        /// Metric name is stored in CalculatedMetricInfo.Projection.
+        /// </remarks>
+        public IEnumerable<Tuple<string, string, AggregationType>> MetricMetrics => this.metricMetrics;
+
+        public string ETag => this.info.ETag;
 
         private static void AddMetric<TTelemetry>(
           CalculatedMetricInfo metricInfo,
@@ -171,6 +172,33 @@
                     CollectionConfigurationError.CreateError(
                         CollectionConfigurationErrorType.PerformanceCounterDuplicateIds,
                         string.Format(CultureInfo.InvariantCulture, "Duplicate performance counter id '{0}'", duplicateMetricId),
+                        null,
+                        Tuple.Create("MetricId", duplicateMetricId)));
+            }
+
+            errors = errorList.ToArray();
+        }
+
+        private void CreateMetricMetrics(out CollectionConfigurationError[] errors)
+        {
+            var errorList = new List<CollectionConfigurationError>();
+
+            CalculatedMetricInfo[] metrics = (this.info.Metrics ?? new CalculatedMetricInfo[0]).Where(metric => metric.TelemetryType == TelemetryType.Metric).ToArray();
+
+            this.metricMetrics.AddRange(metrics.GroupBy(metric => metric.Id, StringComparer.Ordinal)
+                .Select(group => group.First())
+                .Select(m => Tuple.Create(m.Id, m.Projection, m.Aggregation)));
+
+            IEnumerable<string> duplicateMetricIds = metrics.GroupBy(m => m.Id, StringComparer.Ordinal)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key);
+
+            foreach (var duplicateMetricId in duplicateMetricIds)
+            {
+                errorList.Add(
+                    CollectionConfigurationError.CreateError(
+                        CollectionConfigurationErrorType.MetricDuplicateIds,
+                        string.Format(CultureInfo.InvariantCulture, "Duplicate metric id '{0}'", duplicateMetricId),
                         null,
                         Tuple.Create("MetricId", duplicateMetricId)));
             }
@@ -257,7 +285,7 @@
             errors = errorList.ToArray();
         }
 
-        private void CreateMetrics(CollectionConfigurationInfo info, out CollectionConfigurationError[] errors)
+        private void CreateTelemetryMetrics(CollectionConfigurationInfo info, out CollectionConfigurationError[] errors)
         {
             var errorList = new List<CollectionConfigurationError>();
             var metricIds = new HashSet<string>();
@@ -293,8 +321,9 @@
                         CollectionConfiguration.AddMetric(metricInfo, this.eventTelemetryMetrics, out localErrors);
                         break;
                    case TelemetryType.Metric:
-                        CollectionConfiguration.AddMetric(metricInfo, this.metricMetrics, out localErrors);
-                        break;
+                       // no need to create a wrapper, we rely on the underlying CollectionConfigurationInfo to provide data about Metric metrics
+                       // move on to the next metric
+                       continue;
                     case TelemetryType.PerformanceCounter:
                         // no need to create a wrapper, we rely on the underlying CollectionConfigurationInfo to provide data about performance counters
                         // move on to the next metric
@@ -325,17 +354,12 @@
         {
             foreach (var metricIds in
                 this.requestTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))
-                    .Concat(this.dependencyTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
-                    .Concat(this.exceptionTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
-                    .Concat(this.eventTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
-                    .Concat(this.traceTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))))
+                .Concat(this.dependencyTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
+                .Concat(this.exceptionTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
+                .Concat(this.eventTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
+                .Concat(this.traceTelemetryMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType))))
             {
                 this.telemetryMetadata.Add(metricIds);
-            }
-
-            foreach (var metricIds in this.metricMetrics.Select(metric => Tuple.Create(metric.Id, metric.AggregationType)))
-            {
-                this.metricMetadata.Add(metricIds);
             }
         }
     }

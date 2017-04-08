@@ -607,7 +607,7 @@
             return telemetryDocument;
         }
 
-        internal static void ProcessMetrics<TTelemetry>(
+        private static void ProcessMetrics<TTelemetry>(
             CollectionConfigurationAccumulator configurationAccumulatorLocal,
             IEnumerable<CalculatedMetric<TTelemetry>> metrics,
             TTelemetry telemetry,

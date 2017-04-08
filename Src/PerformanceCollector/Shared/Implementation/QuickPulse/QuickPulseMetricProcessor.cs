@@ -58,17 +58,14 @@
                 configurationAccumulatorLocal.AddRef();
                 try
                 {
-                    CollectionConfigurationError[] filteringErrors;
-                    string projectionError = null;
-
-                    QuickPulseTelemetryProcessor.ProcessMetrics(
-                        configurationAccumulatorLocal,
-                        configurationAccumulatorLocal.CollectionConfiguration.MetricMetrics,
-                        new MetricValue(metric, value),
-                        out filteringErrors,
-                        ref projectionError);
-                   
-                    //!!! report errors from string[] errors; and string projectionError;
+                    foreach (Tuple<string, string, AggregationType> metricToCollect in configurationAccumulatorLocal.CollectionConfiguration.MetricMetrics)
+                    {
+                        if (string.Equals(metric.Name, metricToCollect.Item2, StringComparison.OrdinalIgnoreCase))
+                        {
+                            configurationAccumulatorLocal.MetricAccumulators[metricToCollect.Item1].AddValue(value);
+                            break;
+                        }
+                    }
                 }
                 finally
                 {

@@ -20,15 +20,14 @@
         /// Used by writers to indicate that a processing operation is still in progress.
         /// </summary>
         private long referenceCount = 0;
-        
+
         public CollectionConfigurationAccumulator(CollectionConfiguration collectionConfiguration)
         {
             this.CollectionConfiguration = collectionConfiguration;
 
             // prepare the accumulators based on the collection configuration
-            foreach (Tuple<string, AggregationType> metricId in
-                collectionConfiguration?.TelemetryMetadata.Concat(collectionConfiguration.MetricMetadata)
-                ?? Enumerable.Empty<Tuple<string, AggregationType>>())
+            IEnumerable<Tuple<string, AggregationType>> allMetrics = collectionConfiguration?.TelemetryMetadata.Concat(collectionConfiguration.MetricMetrics.Select(metric => Tuple.Create(metric.Item1, metric.Item3)));
+            foreach (Tuple<string, AggregationType> metricId in allMetrics ?? Enumerable.Empty<Tuple<string, AggregationType>>())
             {
                 var accumulatedValues = new AccumulatedValues(metricId.Item1, metricId.Item2);
 
