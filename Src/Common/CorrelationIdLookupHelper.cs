@@ -286,6 +286,7 @@
         /// <param name="ex">Exception indicating failure.</param>
         private void RegisterFailure(string instrumentationKey, Exception ex)
         {
+#if !NETCORE
             var webException = ex as WebException;
             if (webException != null)
             {
@@ -295,8 +296,11 @@
             }
             else
             {
+#endif
                 this.failingInstrumenationKeys[instrumentationKey] = new FailedResult(DateTime.UtcNow);
+#if !NETCORE
             }
+#endif
 
             CrossComponentCorrelationEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
         }
