@@ -102,6 +102,8 @@
     <Compile Include="Helpers\AzureStorageHelper.cs" />
     <Compile Include="Helpers\DataItem.cs" />
     <Compile Include="Helpers\DeploymentAndValidationTools.cs" />
+    <Compile Include="Helpers\DotNetCoreProcess.cs" />
+    <Compile Include="Helpers\DotNetCoreTestWebApplication.cs" />
     <Compile Include="Helpers\DotNetVersionCheck.cs" />
     <Compile Include="Helpers\EtwEventSessionRdd.cs" />
     <Compile Include="Helpers\ExecutionEnvironment.cs" />
@@ -111,6 +113,7 @@
     <Compile Include="Helpers\ProcessHelper.cs" />
     <Compile Include="Helpers\RequestHelper.cs" />
     <Compile Include="Helpers\TelemetryItemFactory.cs" />
+    <Compile Include="Helpers\IISTestWebApplication.cs" />
     <Compile Include="Helpers\TestWebApplication.cs" />
     <Compile Include="IIS\Iis.cs" />
     <Compile Include="IIS\IisApplicationPool.cs" />
@@ -121,6 +124,7 @@
     <Compile Include="Serialization\TelemetryExtensions.cs" />
     <Compile Include="Serialization\TelemetryItemFactory.cs" />
     <Compile Include="SqlTests.cs" />
+    <Compile Include="TestCategory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
