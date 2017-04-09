@@ -278,7 +278,6 @@
                 bool isCustomCreated = false;
 
                 var telemetry = ClientServerDependencyTracker.BeginTracking(this.telemetryClient);
-
                 telemetry.Name = resourceName;
                 telemetry.Target = DependencyTargetNameHelper.GetDependencyTargetName(url);
                 telemetry.Type = RemoteDependencyConstants.HTTP;
@@ -323,9 +322,12 @@
 
                     // Add the parent ID
                     var parentId = telemetry.Id;
-                    if (!string.IsNullOrEmpty(parentId) && webRequest.Headers[RequestResponseHeaders.StandardParentIdHeader] == null)
+                    if (!string.IsNullOrEmpty(parentId))
                     {
-                        webRequest.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                        if (webRequest.Headers[RequestResponseHeaders.StandardParentIdHeader] == null)
+                            webRequest.Headers.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                        if (webRequest.Headers[RequestResponseHeaders.RequestIdHeader] == null)
+                            webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);
                     }
                 }
             }

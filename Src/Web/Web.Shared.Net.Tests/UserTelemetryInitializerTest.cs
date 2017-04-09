@@ -23,7 +23,7 @@
         {
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableUserTelemetryInitializer();
-            var requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            var requestTelemetry = source.Telemetry;
 
             requestTelemetry.Context.User.Id = "1";
             source.Initialize(eventTelemetry);
@@ -36,7 +36,7 @@
         {
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableUserTelemetryInitializer();
-            var requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            var requestTelemetry = source.Telemetry;
 
             requestTelemetry.Context.User.Id = "1";
             eventTelemetry.Context.User.Id = "2";
@@ -48,11 +48,9 @@
         [TestMethod]
         public void InitializeReadSessionIdFromSimpleCookie()
         {
-            var requestTelemetry = new RequestTelemetry();
-
             var initializer = new TestableUserTelemetryInitializer();
-            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", "123|" + DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)))
-                .AddRequestTelemetry(requestTelemetry);
+            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", "123|" + DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)));
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
 
@@ -65,11 +63,9 @@
         [TestMethod]
         public void InitializeDoNotReadCookieWithDateOnly()
         {
-            var requestTelemetry = new RequestTelemetry();
-
             var initializer = new TestableUserTelemetryInitializer();
-            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)))
-                .AddRequestTelemetry(requestTelemetry);
+            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture)));
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
 
@@ -82,13 +78,12 @@
         [TestMethod]
         public void InitializeReadCookieWithMoreThanTwoParts()
         {
-            var requestTelemetry = new RequestTelemetry();
             var time = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
             var cookie = new HttpCookie("ai_user", "1|" + time + "|3");
 
             var initializer = new TestableUserTelemetryInitializer();
-            initializer.FakeContext.AddRequestCookie(cookie)
-                .AddRequestTelemetry(requestTelemetry);
+            initializer.FakeContext.AddRequestCookie(cookie);
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
 
@@ -101,14 +96,12 @@
         [TestMethod]
         public void InitializeDoNotReadCookieWhenTimeIsMalformed()
         {
-            var requestTelemetry = new RequestTelemetry();
             var time = DateTimeOffset.Now.ToString("O", CultureInfo.InvariantCulture);
             var cookie = new HttpCookie("ai_user", "1|NotATime");
 
             var initializer = new TestableUserTelemetryInitializer();
-            initializer.FakeContext.AddRequestCookie(cookie)
-                .AddRequestTelemetry(requestTelemetry);
-
+            initializer.FakeContext.AddRequestCookie(cookie);
+            var requestTelemetry = initializer.Telemetry;
             var telemetry = new EventTelemetry();
 
             initializer.Initialize(telemetry);
@@ -120,11 +113,11 @@
         [TestMethod]
         public void InitializeDoNotReadCookieFromEmptyValue()
         {
-            var requestTelemetry = new RequestTelemetry();
+
 
             var initializer = new TestableUserTelemetryInitializer();
-            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", string.Empty))
-                .AddRequestTelemetry(requestTelemetry);
+            initializer.FakeContext.AddRequestCookie(new HttpCookie("ai_user", string.Empty));
+            var requestTelemetry = initializer.Telemetry;
 
             var telemetry = new EventTelemetry();
 
@@ -137,9 +130,16 @@
         private class TestableUserTelemetryInitializer : UserTelemetryInitializer
         {
             private readonly HttpContext fakeContext = HttpModuleHelper.GetFakeHttpContext();
+            private readonly RequestTelemetry telemetry;
 
             public TestableUserTelemetryInitializer()
             {
+                telemetry = fakeContext.SetOperationHolder().Telemetry;
+            }
+
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
             }
 
             public HttpContext FakeContext

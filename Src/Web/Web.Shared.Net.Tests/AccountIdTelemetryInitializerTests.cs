@@ -33,7 +33,7 @@
             // Arrange
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableAccountIdTelemetryInitializer();
-            RequestTelemetry requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            RequestTelemetry requestTelemetry = source.Telemetry;
             requestTelemetry.Context.User.AccountId = "1";
             
             // Act
@@ -49,7 +49,7 @@
             // Arrange
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableAccountIdTelemetryInitializer();
-            RequestTelemetry requestTelemetry = source.FakeContext.CreateRequestTelemetryPrivate();
+            RequestTelemetry requestTelemetry = source.Telemetry;
             requestTelemetry.Context.User.AccountId = "1";
             eventTelemetry.Context.User.AccountId = "2";
 
@@ -153,10 +153,21 @@
         private class TestableAccountIdTelemetryInitializer : AccountIdTelemetryInitializer
         {
             private readonly HttpContext fakeContext = HttpModuleHelper.GetFakeHttpContext();
+            private readonly RequestTelemetry telemetry;
+
+            public TestableAccountIdTelemetryInitializer()
+            {
+                telemetry = fakeContext.SetOperationHolder().Telemetry;
+            }
 
             public HttpContext FakeContext
             {
                 get { return this.fakeContext; }
+            }
+
+            public RequestTelemetry Telemetry
+            {
+                get { return this.telemetry; }
             }
 
             protected override HttpContext ResolvePlatformContext()

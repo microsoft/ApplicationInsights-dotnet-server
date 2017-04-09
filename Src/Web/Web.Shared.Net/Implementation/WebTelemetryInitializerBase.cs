@@ -38,8 +38,20 @@
                     return;
                 }
 
-                var requestTelemetry = platformContext.ReadOrCreateRequestTelemetryPrivate();
-                this.OnInitializeTelemetry(platformContext, requestTelemetry, telemetry);
+                var operationHolder = platformContext.GetOperation();
+                if (operationHolder != null)
+                {
+                    //If OnBeginRequest was called, there will always be a RequestTelemetry operation holder in the HttpContext
+                    //If it was not called, and request failed before reaching AppInsights module, then we came here from the OnEndRequest
+                    //That also creates RequestTelemetry operation holder in the HttpContext if it's missing
+                    this.OnInitializeTelemetry(platformContext, operationHolder.Telemetry, telemetry);
+                }
+                else if (telemetry is RequestTelemetry)
+                {
+                    //However we initialize RequestTelemetry BEFORE it was stored in the HttpContext
+                    //so we are dealing with RequestTelemetry itself here
+                    this.OnInitializeTelemetry(platformContext, (RequestTelemetry) telemetry, telemetry);
+                }
             }
             catch (Exception exc)
             {

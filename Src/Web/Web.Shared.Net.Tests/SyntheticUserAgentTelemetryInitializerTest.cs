@@ -99,7 +99,6 @@
                 {
                     { "User-Agent", userAgent }
                 });
-
             source.Filters = this.botSubstrings;
 
             source.Initialize(eventTelemetry);
@@ -111,9 +110,15 @@
         {
             private readonly HttpContext fakeContext;
 
+            public HttpContext FakeContext
+            {
+                get { return this.fakeContext; }
+            }
+
             public TestableSyntheticUserAgentTelemetryInitializer(IDictionary<string, string> headers = null)
             {
                 this.fakeContext = HttpModuleHelper.GetFakeHttpContext(headers);
+                fakeContext.SetOperationHolder();
             }
 
             protected override HttpContext ResolvePlatformContext()

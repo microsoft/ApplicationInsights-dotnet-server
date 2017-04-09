@@ -35,7 +35,7 @@
             var startTime = DateTimeOffset.UtcNow;
 
             var context = HttpModuleHelper.GetFakeHttpContext();
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Timestamp = startTime;
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -49,7 +49,7 @@
         public void OnBeginRequestSetsTimeIfItWasNotAssignedBefore()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Timestamp = default(DateTimeOffset);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -63,7 +63,7 @@
         public void RequestIdIsAvailableAfterOnBegin()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
 
             var module = this.RequestTrackingTelemetryModuleFactory();
 
@@ -102,7 +102,7 @@
         public void OnEndSetsDurationToZeroIfBeginWasNotCalled()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
-
+            context.SetOperationHolder();
             var module = this.RequestTrackingTelemetryModuleFactory();
             module.Initialize(TelemetryConfiguration.CreateDefault());
             module.OnEndRequest(context);
@@ -114,6 +114,7 @@
         public void OnEndDoesNotOverrideResponseCode()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
+            context.SetOperationHolder();
             context.Response.StatusCode = 300;
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -199,7 +200,7 @@
             context.Response.StatusCode = 200;
             context.Handler = new System.Web.Handlers.AssemblyResourceLoader();
 
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Start();
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -217,7 +218,7 @@
             context.Response.StatusCode = 200;
             context.Handler = new FakeHttpHandler();
 
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Start();
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -234,7 +235,7 @@
             context.Response.StatusCode = 200;
             context.Handler = new FakeHttpHandler();
 
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Start();
 
             var module = this.RequestTrackingTelemetryModuleFactory();
@@ -252,7 +253,7 @@
             context.Response.StatusCode = 500;
             context.Handler = new System.Web.Handlers.AssemblyResourceLoader();
 
-            var requestTelemetry = context.CreateRequestTelemetryPrivate();
+            var requestTelemetry = context.SetOperationHolder().Telemetry;
             requestTelemetry.Start();
 
             var module = this.RequestTrackingTelemetryModuleFactory();
