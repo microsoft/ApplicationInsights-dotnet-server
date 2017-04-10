@@ -366,6 +366,7 @@
             string machineName = Environment.MachineName;
             var assemblyVersion = SdkVersionUtils.GetSdkVersion(null);
             bool isWebApp = PerformanceCounterUtility.IsWebAppRunningInAzure();
+            int processorCount = PerformanceCounterUtility.GetProcessorCount();
             this.serviceClient = new QuickPulseServiceClient(
                 serviceEndpointUri,
                 instanceName,
@@ -373,7 +374,8 @@
                 machineName,
                 assemblyVersion,
                 this.timeProvider,
-                isWebApp);
+                isWebApp,
+                processorCount);
 
             QuickPulseEventSource.Log.TroubleshootingMessageEvent(
                 string.Format(
