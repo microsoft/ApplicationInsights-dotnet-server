@@ -82,45 +82,43 @@
         /// <summary>
         /// Gets the processor count from the appropriate environment variable depending on whether the app is a WebApp or not.
         /// </summary>
-        /// <returns>The number of processors in the system or 0 if failed to determine.</returns>
-        public static int GetProcessorCount()
+        /// <param name="isWebApp">Indicates whether the application is a WebApp or not.</param>
+        /// <returns>The number of processors in the system or null if failed to determine.</returns>
+        public static int? GetProcessorCount(bool isWebApp)
         {
-            if (IsWebAppRunningInAzure())
-            {
-                // this is a WebApp, read from an environment variable
-                int count;
-                try
-                {
-                    string countString = Environment.GetEnvironmentVariable(ProcessorsCountEnvironmentVariable);
-                    if (!int.TryParse(countString, out count))
-                    {
-                        count = 0;
-                        PerformanceCollectorEventSource.Log.AccessingEnvironmentVariableFailedWarning(
-                            ProcessorsCountEnvironmentVariable,
-                            string.Format(CultureInfo.InvariantCulture, "Invalid value for NUMBER_OF_PROCESSORS: {0}", countString));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    count = 0;
-                    PerformanceCollectorEventSource.Log.AccessingEnvironmentVariableFailedWarning(ProcessorsCountEnvironmentVariable, ex.ToString());
-                }
+            int count;
 
-                return count;
+            if (!isWebApp)
+            {
+                count = Environment.ProcessorCount;
             }
             else
             {
-                // this is a regular app
+                string countString;
                 try
                 {
-                    return Environment.ProcessorCount;
+                    countString = Environment.GetEnvironmentVariable(ProcessorsCountEnvironmentVariable);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // something went horribly wrong
-                    return 0;
+                    PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(ex.ToString());
+                    return null;
+                }
+
+                if (!int.TryParse(countString, out count))
+                {
+                    PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(countString);
+                    return null;
                 }
             }
+
+            if (count < 1 || count > 1000)
+            {
+                PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(count.ToString(CultureInfo.InvariantCulture));
+                return null;
+            }
+
+            return count;
         }
 
         /// <summary>
