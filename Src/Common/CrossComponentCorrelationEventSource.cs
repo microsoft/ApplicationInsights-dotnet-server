@@ -84,8 +84,12 @@
             try
             {
 #if NETCORE
+#if NETSTANDARD1_3
+                name = "Undefined"; // netstandard1.3 does not have API to retrieve Assembly/AppDomain name
+#else // not NETSTANDARD1_3
                 name = Assembly.GetEntryAssembly().FullName;
-#else
+#endif 
+#else // not NETCORE
                 name = AppDomain.CurrentDomain.FriendlyName;
 #endif
             }
