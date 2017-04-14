@@ -6,7 +6,7 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-#if !NETCORE
+#if !NETSTANDARD
     using Microsoft.Diagnostics.Instrumentation.Extensions.Intercept;
 #else
     using Microsoft.Extensions.PlatformAbstractions;
@@ -19,14 +19,14 @@
     {
         private readonly object lockObject = new object();
 
-#if !NET40 && !NETCORE
+#if !NET40 && !NETSTANDARD
         // Net40 does not support framework event source
         private HttpDiagnosticSourceListener httpDiagnosticSourceListener;
         private FrameworkHttpEventListener httpEventListener;
         private FrameworkSqlEventListener sqlEventListener;
 #endif
 
-#if !NETCORE
+#if !NETSTANDARD
         private ProfilerSqlCommandProcessing sqlCommandProcessing;
         private ProfilerSqlConnectionProcessing sqlConnectionProcessing;
         private ProfilerHttpProcessing httpProcessing;        
@@ -108,7 +108,7 @@
                         {                            
                             this.telemetryConfiguration = configuration;
 
-#if !NETCORE
+#if !NETSTANDARD
                             // Net40 only supports runtime instrumentation
                             // Net45 supports either but not both to avoid duplication
                             this.InitializeForRuntimeInstrumentationOrFramework();
@@ -119,7 +119,7 @@
                         catch (Exception exc)
                         {
                             string clrVersion;
-#if NETCORE
+#if NETSTANDARD
                             clrVersion = PlatformServices.Default.Application.RuntimeFramework.FullName;
 #else
                             clrVersion = Environment.Version.ToString();
@@ -133,7 +133,7 @@
             }
         }
 
-#if !NETCORE
+#if !NETSTANDARD
         internal virtual void InitializeForRuntimeProfiler()
         {
             // initialize instrumentation extension
@@ -173,7 +173,7 @@
             {
                 if (disposing)
                 {
-#if !NET40 && !NETCORE
+#if !NET40 && !NETSTANDARD
                     // Net40 does not support framework event source and diagnostic source
                     if (this.httpDiagnosticSourceListener != null)
                     {
@@ -196,7 +196,7 @@
             }
         }
 
-#if !NETCORE
+#if !NETSTANDARD
         /// <summary>
         /// Initialize for framework event source (not supported for Net40).
         /// </summary>

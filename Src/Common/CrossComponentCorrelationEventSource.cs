@@ -1,10 +1,10 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
     using System;
-#if NETCORE || NET45
+#if NETSTANDARD || NET45
     using System.Diagnostics.Tracing;
 #endif
-#if NETCORE
+#if NETSTANDARD
     using System.Reflection;
 #endif
     using Extensibility.Implementation.Tracing;
@@ -83,13 +83,11 @@
             string name;
             try
             {
-#if NETCORE
 #if NETSTANDARD1_3
                 name = "Undefined"; // netstandard1.3 does not have API to retrieve Assembly/AppDomain name
-#else // not NETSTANDARD1_3
+#elif NETSTANDARD1_5
                 name = Assembly.GetEntryAssembly().FullName;
-#endif 
-#else // not NETCORE
+#else // not NETSTANDARD
                 name = AppDomain.CurrentDomain.FriendlyName;
 #endif
             }

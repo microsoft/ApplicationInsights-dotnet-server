@@ -53,5 +53,11 @@
     <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.3\Microsoft.AI.DependencyCollector.dll" target="lib\netstandard1.3" />
     <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.3\Microsoft.AI.DependencyCollector.pdb" target="lib\netstandard1.3" />
     <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.3\Microsoft.AI.DependencyCollector.xml" target="lib\netstandard1.3" />
+
+    <!-- For .NET Standard 1.5 projects -->
+    <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.5\Microsoft.AI.DependencyCollector.dll" target="lib\netstandard1.5" />
+    <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.5\Microsoft.AI.DependencyCollector.pdb" target="lib\netstandard1.5" />
+    <file src="$configuration$\Src\DependencyCollector\NetCore\netstandard1.5\Microsoft.AI.DependencyCollector.xml" target="lib\netstandard1.5" />
+
   </files>
 </package>

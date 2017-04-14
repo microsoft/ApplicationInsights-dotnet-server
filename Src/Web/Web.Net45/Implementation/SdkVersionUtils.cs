@@ -4,7 +4,7 @@
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
-#if NETCORE
+#if NETSTANDARD
     using System.Collections.Generic;
 #endif
 
@@ -15,8 +15,8 @@
             // Since dependencySource is no longer set, sdk version is prepended with information which can identify whether RDD was collected by profiler/framework
             // For directly using TrackDependency(), version will be simply what is set by core
             Type sdkVersionUtilsType = typeof(SdkVersionUtils);
-            
-#if NETCORE
+
+#if NETSTANDARD
             IEnumerable<Attribute> assemblyCustomAttributes = sdkVersionUtilsType.GetTypeInfo().Assembly.GetCustomAttributes();
 #else
             object[] assemblyCustomAttributes = sdkVersionUtilsType.Assembly.GetCustomAttributes(false);

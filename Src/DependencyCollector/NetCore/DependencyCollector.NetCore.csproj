@@ -5,7 +5,7 @@
     <VersionPrefix>2.4.0-beta1</VersionPrefix>
     <Authors>Microsoft</Authors>
     <TargetFrameworks>netstandard1.3;netstandard1.5</TargetFrameworks>
-    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
     <DelaySign>true</DelaySign>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Microsoft.AI.DependencyCollector</AssemblyName>
@@ -17,9 +17,6 @@
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);NETSTANDARD1_3</DefineConstants>    
   </PropertyGroup>
 
   <ItemGroup>
