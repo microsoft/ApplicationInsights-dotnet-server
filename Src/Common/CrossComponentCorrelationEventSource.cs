@@ -84,7 +84,13 @@
             try
             {
 #if NETSTANDARD1_3
-                name = "Undefined"; // netstandard1.3 does not have API to retrieve Assembly/AppDomain name
+                // Assembly.GetEntryAssembly() is not available on netstandard1.3, but is available in runtime
+                var getEntryAssemblyMethod =
+                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.NonPublic) ??
+                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.Public);
+
+                var assembly = getEntryAssemblyMethod.Invoke(obj: null, parameters: Array.Empty<object>()) as Assembly;
+                name = assembly.FullName;
 #elif NETSTANDARD1_5
                 name = Assembly.GetEntryAssembly().FullName;
 #else // not NETSTANDARD
