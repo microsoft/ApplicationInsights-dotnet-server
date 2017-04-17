@@ -269,8 +269,7 @@
 #if NETSTANDARD1_3
                 // Assembly.GetEntryAssembly() is not available on netstandard1.3, but is available in runtime
                 var getEntryAssemblyMethod =
-                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.NonPublic) ??
-                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.Public);
+                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
                 var assembly = getEntryAssemblyMethod.Invoke(obj: null, parameters: Array.Empty<object>()) as Assembly;
                 name = assembly.FullName;
