@@ -1,10 +1,10 @@
 ﻿namespace Microsoft.ApplicationInsights.Common
 {
     using System;
-#if NETCORE || NET45
+#if NETSTANDARD || NET45
     using System.Diagnostics.Tracing;
 #endif
-#if NETCORE
+#if NETSTANDARD
     using System.Reflection;
 #endif
     using Extensibility.Implementation.Tracing;
@@ -83,9 +83,16 @@
             string name;
             try
             {
-#if NETCORE
+#if NETSTANDARD1_3
+                // Assembly.GetEntryAssembly() is not available on netstandard1.3, but is available in runtime
+                var getEntryAssemblyMethod =
+                    typeof(Assembly).GetMethod("GetEntryAssembly", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+                var assembly = getEntryAssemblyMethod.Invoke(obj: null, parameters: Array.Empty<object>()) as Assembly;
+                name = assembly.FullName;
+#elif NETSTANDARD1_5
                 name = Assembly.GetEntryAssembly().FullName;
-#else
+#else // not NETSTANDARD
                 name = AppDomain.CurrentDomain.FriendlyName;
 #endif
             }

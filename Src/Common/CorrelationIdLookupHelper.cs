@@ -8,7 +8,7 @@
     using System.Threading.Tasks;
     using Extensibility;
     using Extensibility.Implementation.Tracing;
-#if NETCORE
+#if NETSTANDARD
     using System.Net.Http;
 #endif
 
@@ -174,11 +174,11 @@
         {
             try
             {
-#if !NETCORE
+#if !NETSTANDARD
                 SdkInternalOperationsMonitor.Enter();
 #endif
                 Uri appIdEndpoint = this.GetAppIdEndPointUri(instrumentationKey);
-#if !NETCORE
+#if !NETSTANDARD
                 WebRequest request = WebRequest.Create(appIdEndpoint);
                 request.Method = "GET";
 
@@ -196,7 +196,7 @@
             }
             finally
             {
-#if !NETCORE
+#if !NETSTANDARD
                 SdkInternalOperationsMonitor.Exit();
 #endif
             }
@@ -257,7 +257,7 @@
         /// <param name="ex">Exception indicating failure.</param>
         private void RegisterFailure(string instrumentationKey, Exception ex)
         {
-#if !NETCORE
+#if !NETSTANDARD
             var ae = ex as AggregateException;
 
             if (ae != null)
@@ -281,7 +281,7 @@
             {
 #endif
                 this.failingInstrumenationKeys[instrumentationKey] = new FailedResult(DateTime.UtcNow);
-#if !NETCORE
+#if !NETSTANDARD
             }
 #endif
 

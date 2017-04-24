@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Copyright>Copyright � Microsoft. All Rights Reserved.</Copyright>
+    <Copyright>Copyright © Microsoft. All Rights Reserved.</Copyright>
     <VersionPrefix>2.4.0-beta1</VersionPrefix>
     <Authors>Microsoft</Authors>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFrameworks>netstandard1.3;netstandard1.5</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
     <DelaySign>true</DelaySign>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Microsoft.AI.DependencyCollector</AssemblyName>
@@ -30,7 +31,4 @@
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
-  </PropertyGroup>
 </Project>
