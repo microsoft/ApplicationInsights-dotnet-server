@@ -17,8 +17,6 @@
 
         string CloudRoleInstance { get; set; }
         
-        KeyValuePair<string, string>[] Properties { get; set; }
-        
         string DocumentType { get; }
 
         string[] DocumentStreamIds { get; set; }

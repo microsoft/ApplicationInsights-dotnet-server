@@ -32,6 +32,9 @@
         public KeyValuePair<string, string>[] Properties { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public KeyValuePair<string, double>[] Metrics { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public string OperationName { get; set; }
 
         [DataMember(EmitDefaultValue = false)]

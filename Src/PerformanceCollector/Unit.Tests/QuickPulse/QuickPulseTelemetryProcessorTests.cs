@@ -508,6 +508,7 @@
                 ResponseCode = "500",
                 Duration = TimeSpan.FromSeconds(1),
                 Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Metrics = { { "Metric1", 1 }, { "Metric2", 2 }, { "Metric3", 3 }, { "Metric4", 4 } },
                 Context = { InstrumentationKey = instrumentationKey }
             };
 
@@ -517,12 +518,14 @@
                 Success = false,
                 Duration = TimeSpan.FromSeconds(1),
                 Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" }, { "ErrorMessage", "EMValue" } },
+                Metrics = { { "Metric1", 1 }, { "Metric2", 2 }, { "Metric3", 3 }, { "Metric4", 4 } },
                 Context = { InstrumentationKey = instrumentationKey }
             };
 
             var exception = new ExceptionTelemetry(new ArgumentNullException())
             {
                 Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Metrics = { { "Metric1", 1 }, { "Metric2", 2 }, { "Metric3", 3 }, { "Metric4", 4 } },
                 Context = { InstrumentationKey = instrumentationKey }
             };
 
@@ -530,6 +533,7 @@
             {
                 Name = "Event1",
                 Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Metrics = { { "Metric1", 1 }, { "Metric2", 2 }, { "Metric3", 3 }, { "Metric4", 4 } },
                 Context = { InstrumentationKey = instrumentationKey }
             };
 
@@ -555,38 +559,46 @@
 
             Assert.AreEqual(TelemetryDocumentType.Request, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[0].DocumentType));
             Assert.AreEqual(request.Name, ((RequestTelemetryDocument)collectedTelemetry[0]).Name);
-            Assert.AreEqual(3, collectedTelemetry[0].Properties.Length);
+            Assert.AreEqual(3, ((RequestTelemetryDocument)collectedTelemetry[0]).Properties.Length);
+            Assert.AreEqual(3, ((RequestTelemetryDocument)collectedTelemetry[0]).Metrics.Length);
             Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[0].DocumentStreamIds.Single());
-            Assert.IsTrue(collectedTelemetry[0].Properties.ToList().TrueForAll(pair => pair.Key.Contains("Prop") && pair.Value.Contains("Val")));
+            Assert.IsTrue(((RequestTelemetryDocument)collectedTelemetry[0]).Properties.ToList().TrueForAll(pair => pair.Key.Contains("Prop") && pair.Value.Contains("Val")));
+            Assert.IsTrue(((RequestTelemetryDocument)collectedTelemetry[0]).Metrics.ToList().TrueForAll(pair => pair.Key.Contains("Metric") && pair.Value >= 1 && pair.Value <= 4));
 
             Assert.AreEqual(TelemetryDocumentType.RemoteDependency, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[1].DocumentType));
             Assert.AreEqual(dependency.Name, ((DependencyTelemetryDocument)collectedTelemetry[1]).Name);
-            Assert.AreEqual(3 + 1, collectedTelemetry[1].Properties.Length);
+            Assert.AreEqual(3 + 1, ((DependencyTelemetryDocument)collectedTelemetry[1]).Properties.Length);
+            Assert.AreEqual(3, ((DependencyTelemetryDocument)collectedTelemetry[1]).Metrics.Length);
             Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[1].DocumentStreamIds.Single());
             Assert.IsTrue(
-                collectedTelemetry[1].Properties.ToList()
+                ((DependencyTelemetryDocument)collectedTelemetry[1]).Properties.ToList()
                     .TrueForAll(
                         pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val")) || (pair.Key == "ErrorMessage" && pair.Value == "EMValue")));
+            Assert.IsTrue(((DependencyTelemetryDocument)collectedTelemetry[1]).Metrics.ToList().TrueForAll(pair => pair.Key.Contains("Metric") && pair.Value >= 1 && pair.Value <= 4));
 
             Assert.AreEqual(TelemetryDocumentType.Exception, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[2].DocumentType));
             Assert.AreEqual(exception.Exception.ToString(), ((ExceptionTelemetryDocument)collectedTelemetry[2]).Exception);
-            Assert.AreEqual(3, collectedTelemetry[2].Properties.Length);
+            Assert.AreEqual(3, ((ExceptionTelemetryDocument)collectedTelemetry[2]).Properties.Length);
+            Assert.AreEqual(3, ((ExceptionTelemetryDocument)collectedTelemetry[2]).Metrics.Length);
             Assert.AreEqual(2, collectedTelemetry[2].DocumentStreamIds.Length);
             Assert.AreEqual("StreamRequestsAndDependenciesAndExceptions", collectedTelemetry[2].DocumentStreamIds.First());
             Assert.AreEqual("StreamExceptionsEventsTraces", collectedTelemetry[2].DocumentStreamIds.Last());
-            Assert.IsTrue(collectedTelemetry[2].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+            Assert.IsTrue(((ExceptionTelemetryDocument)collectedTelemetry[2]).Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+            Assert.IsTrue(((ExceptionTelemetryDocument)collectedTelemetry[2]).Metrics.ToList().TrueForAll(pair => pair.Key.Contains("Metric") && pair.Value >= 1 && pair.Value <= 4));
 
             Assert.AreEqual(TelemetryDocumentType.Event, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[3].DocumentType));
             Assert.AreEqual(@event.Name, ((EventTelemetryDocument)collectedTelemetry[3]).Name);
-            Assert.AreEqual(3, collectedTelemetry[3].Properties.Length);
+            Assert.AreEqual(3, ((EventTelemetryDocument)collectedTelemetry[3]).Properties.Length);
+            Assert.AreEqual(3, ((EventTelemetryDocument)collectedTelemetry[3]).Metrics.Length);
             Assert.AreEqual("StreamExceptionsEventsTraces", collectedTelemetry[3].DocumentStreamIds.Single());
-            Assert.IsTrue(collectedTelemetry[3].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+            Assert.IsTrue(((EventTelemetryDocument)collectedTelemetry[3]).Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+            Assert.IsTrue(((EventTelemetryDocument)collectedTelemetry[3]).Metrics.ToList().TrueForAll(pair => pair.Key.Contains("Metric") && pair.Value >= 1 && pair.Value <= 4));
 
             Assert.AreEqual(TelemetryDocumentType.Trace, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[4].DocumentType));
             Assert.AreEqual(trace.Message, ((TraceTelemetryDocument)collectedTelemetry[4]).Message);
-            Assert.AreEqual(3, collectedTelemetry[4].Properties.Length);
+            Assert.AreEqual(3, ((TraceTelemetryDocument)collectedTelemetry[4]).Properties.Length);
             Assert.AreEqual("StreamExceptionsEventsTraces", collectedTelemetry[4].DocumentStreamIds.Single());
-            Assert.IsTrue(collectedTelemetry[4].Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
+            Assert.IsTrue(((TraceTelemetryDocument)collectedTelemetry[4]).Properties.ToList().TrueForAll(pair => (pair.Key.Contains("Prop") && pair.Value.Contains("Val"))));
         }
 
         [TestMethod]
@@ -1587,6 +1599,70 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryProcessorTruncatesLongFullRequestTelemetryItemMetrics()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var requestShort = new RequestTelemetry("requestShort", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
+            {
+                Metrics = { { new string('p', MaxFieldLength), 1 } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            var requestLong = new RequestTelemetry("requestLong", DateTimeOffset.Now, TimeSpan.FromSeconds(1), "500", false)
+            {
+                Metrics = { { new string('p', MaxFieldLength + 1), 1 } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            // process in the opposite order to allow for an easier validation order
+            telemetryProcessor.Process(requestLong);
+            telemetryProcessor.Process(requestShort);
+
+            // ASSERT
+            var telemetryDocuments = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Cast<RequestTelemetryDocument>().ToList();
+
+            var actual = telemetryDocuments[0].Metrics.First();
+            var expected = requestShort.Metrics.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+
+            actual = telemetryDocuments[1].Metrics.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemCommandName()
         {
             // ARRANGE
@@ -1799,6 +1875,86 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryProcessorTruncatesLongFullDependencyTelemetryItemMetrics()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var dependencyShort = new DependencyTelemetry(
+                "dependencyShort",
+                "dependencyShort",
+                "dependencyShort",
+                "dependencyShort",
+                DateTimeOffset.Now,
+                TimeSpan.FromSeconds(1),
+                "dependencyShort",
+                false)
+            {
+                Metrics = { { new string('p', MaxFieldLength), 1 } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            var dependencyLong = new DependencyTelemetry(
+                "dependencyLong",
+                "dependencyLong",
+                "dependencyLong",
+                "dependencyLong",
+                DateTimeOffset.Now,
+                TimeSpan.FromSeconds(1),
+                "dependencyLong",
+                false)
+            {
+                Metrics = { { new string('p', MaxFieldLength + 1), 1 } },
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            // process in the opposite order to allow for an easier validation order
+            telemetryProcessor.Process(dependencyLong);
+            telemetryProcessor.Process(dependencyShort);
+
+            // ASSERT
+            var telemetryDocuments = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Cast<DependencyTelemetryDocument>().ToList();
+
+            var expected = dependencyShort.Metrics.First();
+            var actual = telemetryDocuments[0].Metrics.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+
+            actual = telemetryDocuments[1].Metrics.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemMessage()
         {
             // ARRANGE
@@ -1916,6 +2072,72 @@
             Assert.AreEqual(expected.Value, actual.Value);
 
             actual = telemetryDocuments[1].Properties.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryProcessorTruncatesLongFullExceptionTelemetryItemMetrics()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] }
+                        },
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var exceptionShort = new ExceptionTelemetry(new ArgumentException())
+            {
+                Metrics = { { new string('p', MaxFieldLength), 1 } },
+                Message = new string('m', MaxFieldLength),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            var exceptionLong = new ExceptionTelemetry(new ArgumentException())
+            {
+                Metrics = { { new string('p', MaxFieldLength + 1), 1 } },
+                Message = new string('m', MaxFieldLength),
+                Context = { InstrumentationKey = instrumentationKey }
+            };
+
+            // process in the opposite order to allow for an easier validation order
+            telemetryProcessor.Process(exceptionLong);
+            telemetryProcessor.Process(exceptionShort);
+
+            // ASSERT
+            var telemetryDocuments = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Cast<ExceptionTelemetryDocument>().ToList();
+
+            var expected = exceptionShort.Metrics.First();
+            var actual = telemetryDocuments[0].Metrics.First();
+            Assert.AreEqual(expected.Key, actual.Key);
+            Assert.AreEqual(expected.Value, actual.Value);
+
+            actual = telemetryDocuments[1].Metrics.First();
             Assert.AreEqual(expected.Key, actual.Key);
             Assert.AreEqual(expected.Value, actual.Value);
         }
