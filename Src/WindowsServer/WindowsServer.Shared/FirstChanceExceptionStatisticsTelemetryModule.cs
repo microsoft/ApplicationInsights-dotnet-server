@@ -387,6 +387,7 @@
                 }
 
                 // this property allows to differentiate examples from regular exceptions tracked using TrackException
+                // the same property is used in QuickPulse to filter these out, please keep in sync (search for '_MS.Example')
                 exceptionTelemetry.Properties.Add("_MS.Example", "(Name: Exceptions, Ver: 1.0)");
 
                 ((ISupportSampling)exceptionTelemetry).SamplingPercentage = 100;

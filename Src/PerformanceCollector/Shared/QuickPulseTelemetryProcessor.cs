@@ -38,6 +38,8 @@
 
         private const string ExceptionMessageSeparator = " <--- ";
 
+        private const string FirstChanceExceptionMarkerDimensionName = "_MS.Example";
+
         private IQuickPulseDataAccumulatorManager dataAccumulatorManager = null;
 
         private Uri serviceEndpoint = QuickPulseDefaults.ServiceEndpoint;
@@ -416,6 +418,12 @@
             var telemetryAsEvent = telemetry as EventTelemetry;
             var telemetryAsTrace = telemetry as TraceTelemetry;
 
+            // we're not interested in first chance exceptions
+            if(telemetryAsException != null && IsExceptionFirstChance(telemetryAsException))
+            {
+                telemetryAsException = null;
+            }
+
             // update aggregates
             bool? originalRequestTelemetrySuccessValue = null;
             if (telemetryAsRequest != null)
@@ -634,6 +642,11 @@
                     }
                 }
             }
+        }
+
+        private static bool IsExceptionFirstChance(ExceptionTelemetry exception)
+        {
+            return exception.Properties?.ContainsKey(QuickPulseTelemetryProcessor.FirstChanceExceptionMarkerDimensionName) ?? false;
         }
 
         private void UpdateExceptionAggregates()
