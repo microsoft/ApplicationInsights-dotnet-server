@@ -345,10 +345,9 @@
 
             if (telemetry.Properties != null && telemetry.Properties.Count > 0)
             {
-                properties = new Dictionary<string, string>(MaxPropertyCount + 1);
+                properties = new Dictionary<string, string>(MaxPropertyCount + 1, StringComparer.Ordinal);
 
-                foreach (var prop in
-                    telemetry.Properties.Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal)).Take(MaxPropertyCount))
+                foreach (var prop in telemetry.Properties.Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal)).Take(MaxPropertyCount))
                 {
                     string truncatedKey = TruncateValue(prop.Key);
 
@@ -377,7 +376,7 @@
 
             if (telemetry.Metrics != null && telemetry.Metrics.Count > 0)
             {
-                metrics = new Dictionary<string, double>(MaxPropertyCount + 1);
+                metrics = new Dictionary<string, double>(MaxPropertyCount + 1, StringComparer.Ordinal);
 
                 foreach (var metric in telemetry.Metrics.Take(MaxPropertyCount))
                 {
