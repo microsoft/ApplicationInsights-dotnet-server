@@ -300,6 +300,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             {
                                 HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
                             }
+                            else
+                            {
+                                HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, this.correlationIdLookupHelper.EmptyCorrelationId);
+                            }
                         }
                     }
                     catch (Exception e)
@@ -366,7 +370,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         targetApplicationId != sourceApplicationId)
                     {
                         telemetry.Type = RemoteDependencyConstants.AI;
-                        telemetry.Target += " | " + targetApplicationId;
+
+                        if (targetApplicationId != this.correlationIdLookupHelper.EmptyCorrelationId)
+                        {
+                            telemetry.Target += " | " + targetApplicationId;
+                        }
                     }
                 }
             }

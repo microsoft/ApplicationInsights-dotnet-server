@@ -181,10 +181,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
                             && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null)
                         {
-                            string appId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out appId))
+                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out string appId))
                             {
                                 webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, appId);
+                            }
+                            else
+                            {
+                                webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, this.correlationIdLookupHelper.EmptyCorrelationId);
                             }
                         }
                     }
@@ -357,7 +360,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                                     if (!string.IsNullOrEmpty(targetAppId) && targetAppId != currentComponentAppId)
                                     {
                                         telemetry.Type = RemoteDependencyConstants.AI;
-                                        telemetry.Target += " | " + targetAppId;
+
+                                        if (targetAppId != this.correlationIdLookupHelper.EmptyCorrelationId)
+                                        {
+                                            telemetry.Target += " | " + targetAppId;
+                                        }
                                     }
                                 }
 

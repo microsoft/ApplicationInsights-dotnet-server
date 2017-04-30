@@ -395,6 +395,50 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
         }
 
+        [TestMethod]
+        [Description("Ensures that an empty header is added for the first request, but once the appId is retrieved, that's not the case anymore.")]
+        public void RddTestHttpProcessingFrameworkOnBeginAddsEmptyCorrelationHeaderForFirstCall()
+        {
+            var correlationIdLookupHelper = new CorrelationIdLookupHelper((ikey) =>
+            {
+                // Pretend App Id is the same as Ikey
+                var tcs = new TaskCompletionSource<string>();
+                tcs.SetResult(ikey + "-appId");
+                return tcs.Task;
+            });
+
+            this.httpProcessingFramework.OverrideCorrelationIdLookupHelper(correlationIdLookupHelper);
+
+            var request = WebRequest.Create(this.testUrl);
+            this.httpProcessingFramework.OnRequestSend(request);
+
+            // Header with empty app Id.
+            Assert.AreEqual(request.Headers[RequestResponseHeaders.RequestContextHeader], "appId=cid-v1:");
+
+            // Wait for the appId fetch to complete
+            while (correlationIdLookupHelper.IsFetchAppInProgress(this.configuration.InstrumentationKey))
+            {
+                Thread.Sleep(10); // wait 10 ms.
+            }
+
+            request = WebRequest.Create(new Uri("http://www.somehostname.com/somepath"));
+            this.httpProcessingFramework.OnRequestSend(request);
+
+            // This time the header should not have an empty app Id.
+            Assert.AreEqual(request.Headers[RequestResponseHeaders.RequestContextHeader], "appId=cid-v1:" + this.configuration.InstrumentationKey + "-appId");
+        }
+
+        [TestMethod]
+        [Description("Ensures that when an empty correlation header is sent, the resulting dependency is of type 'tracked dependency' and does not appent the appId")]
+        public void RddTestHttpProcessingFrameworkOnEndDoesNotAddTargetPropertyWhenHeaderContainsEmptyAppId()
+        {
+            this.SimulateWebRequestResponseWithAppId(string.Empty /*appId*/);
+
+            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
+            Assert.AreEqual(this.testUrl.Host, ((DependencyTelemetry)this.sendItems[0]).Target);
+            Assert.AreEqual(RemoteDependencyConstants.AI, ((DependencyTelemetry)this.sendItems[0]).Type);
+        }
+
         /// <summary>
         /// Ensures that the source request header is not overwritten if already provided by the user.
         /// </summary>
