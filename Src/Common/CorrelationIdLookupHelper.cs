@@ -23,8 +23,10 @@
         /// </summary>
         private const int MAXSIZE = 100;
 
-        private const string CorrelationIdFormat = "cid-v1:{0}";
+        private const string EmptyCorId = "cid-v1:";
 
+        private const string CorrelationIdFormat = EmptyCorId + "{0}";
+        
         private const string AppIdQueryApiRelativeUriFormat = "api/profiles/{0}/appId";
 
         // We have arbitrarily chosen 5 second delay between trying to get app Id once we get a failure while trying to get it. 
@@ -101,7 +103,7 @@
         {
             get
             {
-                return string.Format(CultureInfo.InvariantCulture, CorrelationIdFormat, string.Empty);
+                return EmptyCorId;
             }
         }
 
