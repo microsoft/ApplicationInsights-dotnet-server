@@ -16,6 +16,7 @@
         <Add>core.cloudapi.de</Add>
         <Add>core.usgovcloudapi.net</Add>
       </ExcludeComponentCorrelationHttpHeadersOnDomains>
+      <DisableDiagnosticSourceInstrumentation>true</DisableDiagnosticSourceInstrumentation>
     </Add>
   </TelemetryModules>
 </ApplicationInsights>
