@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AccumulatedValues.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExternalFieldsSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CollectionConfigurationAccumulator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FilterConjunctionGroup.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\Service contract\CollectionConfigurationInfo.cs" />

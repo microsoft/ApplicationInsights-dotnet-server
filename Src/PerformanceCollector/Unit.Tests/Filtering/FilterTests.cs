@@ -1697,6 +1697,20 @@
         }
 
         [TestMethod]
+        public void TestTest()
+        {
+            // ARRANGE
+            var equalsValue = new FilterInfo() { FieldName = "Exception.InnerException.Message", Predicate = Predicate.Equal, Comparand = "InnerMessage" };
+
+            // ACT
+            var exception = new ExceptionTelemetry(new Exception("Message", new Exception("InnerMessage")));
+            bool result1 = new Filter<ExceptionTelemetry>(equalsValue).Check(exception);
+
+            // ASSERT
+            Assert.IsTrue(result1);
+        }
+        
+        [TestMethod]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
         public void FilterTrainNonExistentCar()
         {

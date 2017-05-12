@@ -18,6 +18,8 @@
 
         private const string FieldNameCustomMetricsPrefix = "CustomMetrics.";
 
+        private const string ExternalFieldPrefix = "#";
+
         private const string FieldNameAsterisk = "*";
 
         private const string CustomMetricsPropertyName = "Metrics";
@@ -72,7 +74,9 @@
 
         private readonly FilterInfo info;
 
-        public Filter(FilterInfo filterInfo)
+        private readonly IExternalFieldsSource<TTelemetry> externalFieldsSource;
+
+        public Filter(FilterInfo filterInfo, IExternalFieldsSource<TTelemetry> externalFieldsSource = null)
         {
             ValidateInput(filterInfo);
 
@@ -81,6 +85,8 @@
             this.fieldName = filterInfo.FieldName;
             this.predicate = filterInfo.Predicate;
             this.comparand = filterInfo.Comparand;
+
+            this.externalFieldsSource = externalFieldsSource;
 
             FieldNameType fieldNameType;
             Type fieldType = GetFieldType(filterInfo.FieldName, out fieldNameType);
@@ -141,6 +147,8 @@
         {
             FieldName,
 
+            ExternalFieldName,
+
             CustomMetricName,
 
             CustomDimensionName,
@@ -171,6 +179,9 @@
             {
                 case FieldNameType.FieldName:
                     return fieldName.Split(FieldNameTrainSeparator).Aggregate<string, Expression>(documentExpression, Expression.Property);
+                case FieldNameType.ExternalFieldName:
+                    string externalFieldName = fieldName.Substring(ExternalFieldPrefix.Length);
+                    return 
                 case FieldNameType.CustomMetricName:
                     string customMetricName = fieldName.Substring(
                         FieldNameCustomMetricsPrefix.Length,
@@ -216,6 +227,12 @@
             {
                 fieldNameType = FieldNameType.AnyField;
                 return null;
+            }
+
+            if (fieldName.StartsWith(ExternalFieldPrefix, StringComparison.Ordinal))
+            {
+                fieldNameType = FieldNameType.ExternalFieldName;
+                return GetPropertyTypeFromFieldName(fieldName);
             }
 
             // no special case in filterInfo.FieldName, treat it as the name of a property in TTelemetry type
@@ -268,7 +285,13 @@
                 Type propertyType = fieldName.Split(FieldNameTrainSeparator)
                     .Aggregate(
                         typeof(TTelemetry),
-                        (type, propertyName) => type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public).PropertyType);
+                        (type, propertyName) =>
+                        {
+                            bool isFieldExternal = propertyName.StartsWith(ExternalFieldPrefix, StringComparison.Ordinal);
+                            return !isFieldExternal ? 
+                            type.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public).PropertyType
+                            : ;
+                        });
 
                 if (propertyType == null)
                 {
