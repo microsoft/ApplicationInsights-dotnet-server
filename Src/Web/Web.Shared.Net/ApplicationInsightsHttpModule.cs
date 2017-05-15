@@ -67,8 +67,8 @@
                 try
                 {
                     context.BeginRequest += this.OnBeginRequest;
-                    context.EndRequest += this.OnEndRequest;
 #if NET40
+                    context.EndRequest += this.OnEndRequest;
                     context.PreRequestHandlerExecute += this.OnPreRequestHandlerExecute;
 #endif
                 }
@@ -165,7 +165,6 @@
                 this.requestModule?.OnPreRequestHandlerExecute(httpApplication.Context);
             }
         }
-#endif
 
         private void OnEndRequest(object sender, EventArgs eventArgs)
         {
@@ -176,7 +175,6 @@
 
                 if (this.IsFirstRequest(httpApplication))
                 {
-#if NET40
                     if (this.exceptionModule != null)
                     {
                         this.exceptionModule.OnError(httpApplication.Context);
@@ -186,7 +184,6 @@
                     {
                         this.requestModule.OnEndRequest(httpApplication.Context);
                     }
-#endif
                 }
                 else
                 {
@@ -216,6 +213,7 @@
 
             return firstRequest;
         }
+#endif
 
         private void TraceCallback(string callback, HttpApplication application)
         {

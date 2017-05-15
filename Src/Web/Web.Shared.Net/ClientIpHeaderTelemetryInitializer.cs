@@ -91,7 +91,7 @@
         private static string CutPort(string address)
         {
             // For Web sites in Azure header contains ip address with port e.g. 50.47.87.223:54464
-            int portSeparatorIndex = address.IndexOf(":", StringComparison.OrdinalIgnoreCase);
+            int portSeparatorIndex = address.LastIndexOf(":", StringComparison.OrdinalIgnoreCase);
 
             if (portSeparatorIndex > 0)
             {
@@ -109,7 +109,11 @@
             // Core SDK does not support setting Location.Ip to malformed ip address
             if (IPAddress.TryParse(address, out outParameter))
             {
-                // Also SDK supports only ipv4!
+                // Even thoug Core SDK supports IPv6 - we do not expect it here
+                // We already have logic to cut the port that simply cuts everything after ":"
+                // meaning it will not work for IPv6 when port was not appended to the IP address
+                // Need to support RFC https://tools.ietf.org/html/rfc7239 better and make sure that 
+                // Bug with IPv6 should be addressed seoparately 
                 if (outParameter.AddressFamily == AddressFamily.InterNetwork)
                 {
                     return true;
@@ -152,8 +156,7 @@
             }
             else
             {
-                var requestWrapper = new HttpRequestWrapper(platformContext.Request);
-                location.Ip = requestWrapper.GetUserHostAddress();
+                location.Ip = platformContext.Request.GetUserHostAddress();
             }
 
             WebEventSource.Log.WebLocationIdSet(location.Ip);
