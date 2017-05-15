@@ -175,7 +175,9 @@
             public override string GetRemoteAddress()
             {
                 if (this.getRemoteAddress != null)
+                {
                     return this.getRemoteAddress();
+                }
                 return base.GetRemoteAddress();
             }
         }
