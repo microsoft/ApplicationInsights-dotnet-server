@@ -669,6 +669,8 @@
             Assert.AreEqual(false, request.Success);
         }
 
+        External fields must take priority over regular fields - for backward compat (more flexibility to override behavior))
+
         [TestMethod]
         public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsIfTypeIsNotMentionedInDocumentStream()
         {
