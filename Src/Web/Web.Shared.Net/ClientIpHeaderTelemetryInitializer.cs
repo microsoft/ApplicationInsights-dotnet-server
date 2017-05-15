@@ -104,20 +104,20 @@
         private static bool IsCorrectIpAddress(string address)
         {
             IPAddress outParameter;
-            address = address.Trim();
 
-            // Core SDK does not support setting Location.Ip to malformed ip address
-            if (IPAddress.TryParse(address, out outParameter))
+            // Base SDK does not support setting Location.Ip to malformed ip address
+            // It also do not have sanitization logic implemented.
+            // In order to minimize behavior changes - keeping this check in place
+            // In future versions we may simply take the content of the header 
+            // and let Base SDK sanitize and reject it
+            if (IPAddress.TryParse(address.Trim(), out outParameter))
             {
-                // Even thoug Core SDK supports IPv6 - we do not expect it here
-                // We already have logic to cut the port that simply cuts everything after ":"
-                // meaning it will not work for IPv6 when port was not appended to the IP address
-                // Need to support RFC https://tools.ietf.org/html/rfc7239 better and make sure that 
-                // Bug with IPv6 should be addressed seoparately 
-                if (outParameter.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return true;
-                }
+                // This logic is faulty. IPv6 address may be used in the header without the port number
+                // IPv6 addresses have colons in them and we have existing code that (mistakenly) 
+                // assumes that everything after a colon is a port number. For now, we'll ignore the problem, 
+                // but eventually we'll need to implement support for it.
+                // We also need to support RFC7239 at least as an option.
+                return true;
             }
 
             return false;
