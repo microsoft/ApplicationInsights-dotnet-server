@@ -2,10 +2,8 @@
 {
     using System;
     using System.Web;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using System.IO;
-    using System.Globalization;
     using Microsoft.ApplicationInsights.Web.Helpers;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class HttpRequestExtensionsTest

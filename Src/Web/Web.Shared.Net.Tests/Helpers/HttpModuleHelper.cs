@@ -178,6 +178,7 @@
                 {
                     return this.getRemoteAddress();
                 }
+
                 return base.GetRemoteAddress();
             }
         }
