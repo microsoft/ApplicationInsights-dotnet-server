@@ -63,7 +63,9 @@
                        </system.web>
                        <system.webServer>
                             <validation validateIntegratedModeConfiguration=""false"" />
-                            <modules></modules>
+                            <modules>
+                                <remove name=""ApplicationInsightsWebTracking"" />
+                            </modules>
                        </system.webServer>
                    </configuration>";
 
@@ -136,6 +138,7 @@
                             <system.webServer>
                                 <modules>
                                     <add name=""abc"" type=""type""/>
+                                    <remove name=""ApplicationInsightsWebTracking"" />
                                 </modules>
                                 <validation validateIntegratedModeConfiguration=""false"" />
                            </system.webServer>
@@ -187,6 +190,7 @@
                             <system.webServer>
                                 <modules>
                                     <add name=""abc"" type=""type""/>
+                                    <remove name=""ApplicationInsightsWebTracking"" />
                                 </modules>
                                 <validation validateIntegratedModeConfiguration=""false"" />
                             </system.webServer>
@@ -236,6 +240,7 @@
                             <system.webServer>
                                 <modules>
                                     <add name=""abc"" type=""type""/>
+                                    <remove name=""ApplicationInsightsWebTracking"" />
                                 </modules>
                              <validation validateIntegratedModeConfiguration=""false"" />
                             </system.webServer>
@@ -282,7 +287,9 @@
                            </system.web>
                            <system.webServer>
                                <validation validateIntegratedModeConfiguration=""false"" />
-                               <modules></modules>
+                               <modules>
+                                    <remove name=""ApplicationInsightsWebTracking"" />
+                                </modules>
                            </system.webServer>
                         </location> 
                         <system.web></system.web> 
@@ -327,7 +334,9 @@
                         </system.web>
                         <system.webServer>
                           <validation validateIntegratedModeConfiguration=""false"" />
-                          <modules></modules>
+                          <modules>
+                                <remove name=""ApplicationInsightsWebTracking"" />
+                          </modules>
                         </system.webServer>
                       </location>
                       <system.web></system.web>
@@ -382,6 +391,7 @@
                         <system.webServer>
                             <modules>
                                 <add name=""abc"" type=""type""/>
+                                <remove name=""ApplicationInsightsWebTracking"" />
                             </modules>
                         </system.webServer>
                     </configuration>";
@@ -426,6 +436,7 @@
                         <system.webServer>
                             <modules>
                                 <add name=""abc"" type=""type""/>
+                                <remove name=""ApplicationInsightsWebTracking"" />
                             </modules>
                             <validation validateIntegratedModeConfiguration=""false"" />
                         </system.webServer>
@@ -480,6 +491,7 @@
                         <system.webServer>
                             <modules>
                                 <add name=""abc"" type=""type""/>
+                                <remove name=""ApplicationInsightsWebTracking"" />
                             </modules>
                         </system.webServer>
                     </configuration>";
@@ -529,6 +541,7 @@
                         <system.webServer>
                             <modules>
                                 <add name=""abc"" type=""type""/>
+                                <remove name=""ApplicationInsightsWebTracking"" />
                             </modules>
                         </system.webServer>
                     </configuration>";

@@ -39,6 +39,7 @@
                     <system.webServer>
                         <validation validateIntegratedModeConfiguration=""false"" />
                         <modules>
+                            <remove name=""ApplicationInsightsWebTracking"" />
                         </modules>
                     </system.webServer>
                 </configuration>";
@@ -77,6 +78,7 @@
                     </system.web>
                     <system.webServer>
                         <modules runAllManagedModulesForAllRequests=""true"">
+                           <remove name=""ApplicationInsightsWebTracking"" />
                            <add name=""UserModule"" type=""UserNamespace.WebModuleFoo""/> 
                         </modules>
                     </system.webServer>

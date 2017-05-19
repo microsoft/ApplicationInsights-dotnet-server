@@ -7,6 +7,7 @@
     using System.IO;
     using System.Security;
     using System.Security.Principal;
+    using System.Threading;
 
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     
@@ -15,8 +16,8 @@
     /// </summary>
     public class FileDiagnosticsTelemetryModule : IDisposable, ITelemetryModule
     {
-        private readonly WindowsIdentity currentIdentity = WindowsIdentity.GetCurrent();
-
+        private string windowsIdentityName;
+        
         private string logFileName;
         private string logFilePath;
 
@@ -126,7 +127,6 @@
             {
                 this.listener.Dispose();
                 this.traceSource.Dispose();
-                this.currentIdentity.Dispose();
             }
         }
 
@@ -180,44 +180,63 @@
                 // The given path's format is not supported
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                     GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                    this.currentIdentity.Name);
+                    LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
             catch (UnauthorizedAccessException exp)
             {
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                     GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                    this.currentIdentity.Name);
+                    LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
             catch (ArgumentException exp)
             {
                 // Path does not specify a valid file path or contains invalid DirectoryInfo characters.
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                     GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                    this.currentIdentity.Name);
+                    LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
             catch (DirectoryNotFoundException exp)
             {
                 // The specified path is invalid, such as being on an unmapped drive.
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                    GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                   this.currentIdentity.Name);
+                   LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
             catch (IOException exp)
             {
                 // The subdirectory cannot be created. -or- A file or directory already has the name specified by path. -or-  The specified path, file name, or both exceed the system-defined maximum length. .
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                    GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                   this.currentIdentity.Name);
+                   LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
             catch (SecurityException exp)
             {
                 // The caller does not have code access permission to create the directory.
                 HostingStartupEventSource.Log.LogStorageAccessDeniedError(
                     GetPathAccessFailureErrorMessage(exp, this.logFilePath, this.logFileName),
-                    this.currentIdentity.Name);
+                    LazyInitializer.EnsureInitialized(ref this.windowsIdentityName, this.GetCurrentIdentityName));
             }
 
             return result;
-        }            
+        }
+
+        private string GetCurrentIdentityName()
+        {
+            string result = string.Empty;
+
+            try
+            {
+                using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+                {
+                    result = identity.Name;
+                }
+            }
+            catch (SecurityException exp)
+            {
+                HostingStartupEventSource.Log.LogWindowsIdentityAccessSecurityException(exp.Message);
+            }
+
+            return result;
+        }
     }
 }

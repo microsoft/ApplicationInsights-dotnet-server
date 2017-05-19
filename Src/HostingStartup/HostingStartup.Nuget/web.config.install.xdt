@@ -8,10 +8,8 @@
 
   <system.webServer xdt:Locator="XPath(//system.webServer[(count(parent::location) = 0) or (count(parent::location[@path != '.' and count(@path) != 0]) = 0)])">
     <modules>
-      <remove name="ApplicationInsightsWebTracking" xdt:Transform="Remove" xdt:Locator="Match(name)"/>
       <add name="ApplicationInsightsWebTracking" type="Microsoft.ApplicationInsights.Web.ApplicationInsightsHttpModule, Microsoft.AI.Web" preCondition="managedHandler" xdt:Transform="Remove" xdt:Locator="Match(type)"/>
 
-      <remove name="TelemetryCorrelationHttpModule" xdt:Transform="Remove" xdt:Locator="Match(name)"/>
       <add name="TelemetryCorrelationHttpModule" type="Microsoft.AspNet.TelemetryCorrelation.TelemetryCorrelationHttpModule, Microsoft.AspNet.TelemetryCorrelation" preCondition="integratedMode,managedHandler" xdt:Transform="Remove" xdt:Locator="Match(type)"/>
     </modules>
   </system.webServer>

@@ -82,6 +82,18 @@
                 this.ApplicationName);
         }
 
+        [Event(
+           6,
+           Message = "Call to WindowsIdentity.Current failed with the exception: {0}.",
+           Level = EventLevel.Warning)]
+        public void LogWindowsIdentityAccessSecurityException(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                6,
+                error ?? string.Empty,
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
