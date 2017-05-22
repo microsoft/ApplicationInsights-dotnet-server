@@ -2,10 +2,7 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project=".\GlobalStaticVersion.props" />
   <ItemGroup>
-    <Solution Include="Src\Microsoft.ApplicationInsights.Web.sln" />
-    <Solution Include="Test\DependencyCollector\FunctionalTests.sln" /> 
-    <Solution Include="Test\PerformanceCollector\FunctionalTests.sln" />
-    <Solution Include="Test\Web\FunctionalTests.sln" />
+    <Solution Include="Src\Microsoft.ApplicationInsights.Web.sln" />    
   </ItemGroup>
   <Target Name="Build">
     <Exec Command='IF EXIST "%(Solution.FullPath)" nuget.exe restore "%(Solution.FullPath)" -NonInteractive' 
