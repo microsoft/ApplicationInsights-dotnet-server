@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" />
+<Import Project="..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+<Import Project="..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+
   <PropertyGroup>
     <Copyright>Copyright © Microsoft. All Rights Reserved.</Copyright>
     <VersionPrefix>2.4.0-beta3</VersionPrefix>
