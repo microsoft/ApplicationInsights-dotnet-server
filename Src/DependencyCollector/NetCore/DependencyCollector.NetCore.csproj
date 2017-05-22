@@ -66,5 +66,7 @@
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.4.0-preview1-25214-03" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0" developmentDependency="true"/>
+
   </ItemGroup>
 </Project>
