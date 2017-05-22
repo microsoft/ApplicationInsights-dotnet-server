@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+<Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Product.props'))\Product.props" />
   <PropertyGroup>
     <Copyright>Copyright © Microsoft. All Rights Reserved.</Copyright>
     <VersionPrefix>2.4.0-beta3</VersionPrefix>
