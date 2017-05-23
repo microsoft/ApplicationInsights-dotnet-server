@@ -18,7 +18,7 @@
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' And '$(NETCORE)' == ''">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <CodeAnalysisRuleSet>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'ApplicationInsightsSDKRules.ruleset'))\ApplicationInsightsSDKRules.ruleset</CodeAnalysisRuleSet>
