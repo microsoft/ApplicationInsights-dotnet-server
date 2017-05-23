@@ -183,7 +183,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStart(currentActivity.Id);
 
-            this.InjectRequestHeaders(request, this.configuration.InstrumentationKey);
+            // even though we have IsEnabled filter to reject ApplicationInsights URLs before any events are fired,
+            // in case of multiple subscribers, if one subscriber returns true to IsEnabled, all subscribers will receive event
+            if (!this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri))
+            {
+                this.InjectRequestHeaders(request, this.configuration.InstrumentationKey);
+            }
         }
 
         //// netcoreapp 2.0 event
@@ -201,6 +206,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(currentActivity.Id);
+
+            // even though we have IsEnabled filter to reject ApplicationInsights URLs before any events are fired,
+            // in case of multiple subscribers, if one subscriber returns true to IsEnabled, all subscribers will receive event
+            if (this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri))
+            {
+                return;
+            }
 
             Uri requestUri = request.RequestUri;
             var resourceName = request.Method.Method + " " + requestUri.AbsolutePath;
