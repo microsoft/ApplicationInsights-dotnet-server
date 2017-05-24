@@ -31,7 +31,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
             catch (Exception ex)
             {
-                DependencyCollectorEventSource.Log.HttpDesktopDiagnosticSubscriberFailsToSubscribe(ex.ToInvariantString());
+                DependencyCollectorEventSource.Log.HttpDesktopDiagnosticSubscriberFailedToSubscribe(ex.ToInvariantString());
             }
         }
 

@@ -88,7 +88,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
 
                         Exception ex = (Exception)value.Value.GetType().GetProperty("Exception")?.GetValue(value.Value);
-                        DependencyCollectorEventSource.Log.HttpHandlerDiagnosticListenerFailsToInitialize(ex?.ToInvariantString());
+                        DependencyCollectorEventSource.Log.HttpHandlerDiagnosticListenerFailedToInitialize(ex?.ToInvariantString());
                         break;
                     }
 

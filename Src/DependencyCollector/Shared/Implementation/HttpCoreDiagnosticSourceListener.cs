@@ -417,7 +417,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 }
                 catch (Exception ex)
                 {
-                    DependencyCollectorEventSource.Log.HttpCoreDiagnosticSubscriberFailsToSubscribe(ex.ToInvariantString());
+                    DependencyCollectorEventSource.Log.HttpCoreDiagnosticSubscriberFailedToSubscribe(ex.ToInvariantString());
                 }
             }
 
