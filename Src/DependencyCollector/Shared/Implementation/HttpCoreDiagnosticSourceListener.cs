@@ -166,8 +166,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerException(currentActivity.Id);
 
-            // even though we have IsEnabled filter to reject ApplicationInsights URLs before any events are fired,
-            // Exceptions are special and fired even if reuqest instrumentation is disabled
+            // Even though we have the IsEnabled filter, to reject ApplicationInsights URLs before any events are fired,
+            // Exceptions are special and fired even if request instrumentation is disabled.
             if (!this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri))
             {
                 this.pendingExceptions.TryAdd(currentActivity.Id, exception);
@@ -191,8 +191,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStart(currentActivity.Id);
 
-            // even though we have IsEnabled filter to reject ApplicationInsights URLs before any events are fired,
-            // in case of multiple subscribers, if one subscriber returns true to IsEnabled, all subscribers will receive event
+            // Even though we have the IsEnabled filter to reject ApplicationInsights URLs before any events are fired, if there
+            // are multiple subscribers and one subscriber returns true to IsEnabled then all subscribers will receive the event.
             if (!this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri))
             {
                 this.InjectRequestHeaders(request, this.configuration.InstrumentationKey);
@@ -215,8 +215,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(currentActivity.Id);
 
-            // even though we have IsEnabled filter to reject ApplicationInsights URLs before any events are fired,
-            // in case of multiple subscribers, if one subscriber returns true to IsEnabled, all subscribers will receive event
+            // Even though we have the IsEnabled filter to reject ApplicationInsights URLs before any events are fired, if there
+            // are multiple subscribers and one subscriber returns true to IsEnabled then all subscribers will receive the event.
             if (this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri))
             {
                 return;
