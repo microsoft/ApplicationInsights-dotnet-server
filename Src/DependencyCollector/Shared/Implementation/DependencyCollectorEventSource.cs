@@ -384,7 +384,7 @@
             Level = EventLevel.Error)]
         public void HttpHandlerDiagnosticListenerFailedToInitialize(string error, string appDomainName = "Incorrect")
         {
-            this.WriteEvent(36, error, this.ApplicationName);
+            this.WriteEvent(36, error ?? string.Empty, this.ApplicationName);
         }
 
         [NonEvent]
