@@ -670,6 +670,63 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryProcessorIgnoresFirstChanceExceptions()
+        {
+            // ARRANGE
+            var documentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "Stream1",
+                DocumentFilterGroups = new[] { new DocumentFilterConjunctionGroupInfo() { TelemetryType = TelemetryType.Exception, Filters = new FilterConjunctionGroupInfo { Filters = new FilterInfo[0] } } }
+            };
+
+            var metricInfo = new[]
+            {
+                new CalculatedMetricInfo()
+                {
+                    Id = "Metric1",
+                    TelemetryType = TelemetryType.Exception,
+                    Projection = "Count()",
+                    Aggregation = AggregationType.Sum,
+                    FilterGroups = new[] { new FilterConjunctionGroupInfo() { Filters = new FilterInfo[0] } }
+                }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                Metrics = metricInfo,
+                DocumentStreams = new[] { documentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var exception1 = new ExceptionTelemetry() { Exception = new InvalidOperationException("Exception 1"), Context = { InstrumentationKey = instrumentationKey, Properties = { { "_MS.Example", "some value" } } } };
+            var exception2 = new ExceptionTelemetry() { Exception = new InvalidOperationException("Exception 2"), Context = { InstrumentationKey = instrumentationKey, Properties = { { "Blah", "blah" } } } };
+
+            telemetryProcessor.Process(exception1);
+            telemetryProcessor.Process(exception2);
+
+            // ASSERT
+            // even though Success is set to false, since ResponseCode is empty the special case logic must have turned it into true
+            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray().Single();
+            double metricValue = accumulatorManager.CurrentDataAccumulator.CollectionConfigurationAccumulator.MetricAccumulators["Metric1"].CalculateAggregation(out long count);
+
+            Assert.AreEqual(1, count);
+            Assert.AreEqual("Exception 2", ((ExceptionTelemetryDocument)collectedTelemetry).ExceptionMessage);
+            Assert.AreEqual("blah", ((ExceptionTelemetryDocument)collectedTelemetry).Properties.Single(pair => pair.Key == "Blah").Value);
+            Assert.AreEqual(1, metricValue);
+        }
+
+        [TestMethod]
         public void QuickPulseTelemetryProcessorDoesNotCollectFullTelemetryItemsIfTypeIsNotMentionedInDocumentStream()
         {
             // ARRANGE
