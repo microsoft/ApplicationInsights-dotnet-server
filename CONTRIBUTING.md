@@ -40,7 +40,7 @@ You also need to configure the Azure Storage Emulator to use specific ports. Edi
     ...
     </StorageEmulatorConfig>
 
-After you've done this, execute the ```runFunctionalTests.cmd``` script as administrator in the repository root. You can also run and debug the functional tests from Visual Studio by opening the solutions under the Test directory in the repository root.
+After you've done this, execute the ```runFunctionalTests.cmd``` script as Administrator in the repository root. You can also run and debug the functional tests from Visual Studio by opening the solutions under the Test directory in the repository root.
 
 If all or most of the Dependency Collector functional tests fail with messages like "Assert.AreEqual failed. Expected:<1>. Actual<0>.", these steps might help you troubleshoot:
 
