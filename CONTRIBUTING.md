@@ -6,7 +6,7 @@ If you're interested in contributing, take a look at the general [contributer's 
 
 To successfully run all the unit tests on your machine, make sure you've installed the following prerequisites:
 
-* Visual Studio 2015 Community or Enterprise
+* Visual Studio 2017 Community or Enterprise
 * .NET 4.6
 
 Several tests also require that you configure a strong name verification exception for Microsoft.WindowsAzure.ServiceRuntime.dll using the [Strong Name Tool](https://msdn.microsoft.com/en-us/library/k5b5tt23(v=vs.110).aspx). Run this command from the repository root to configure the exception (after building Microsoft.ApplicationInsights.Web.sln):
