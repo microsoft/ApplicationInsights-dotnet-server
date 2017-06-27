@@ -76,7 +76,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         }
 
         /// <summary>
-        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
+        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This  will most likely only be used for testing purposes.
         /// </summary>
         internal ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> PendingDependencyTelemetry => this.pendingTelemetry;
 
