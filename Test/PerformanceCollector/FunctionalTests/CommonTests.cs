@@ -2,6 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
@@ -193,11 +195,11 @@
             {
                 var weirdSample = samples.First(s => s.TopCpuProcesses.Any(p => string.IsNullOrWhiteSpace(p.ProcessName) || p.CpuPercentage < 0 || p.CpuPercentage > 100));
 
-                Console.WriteLine("Top CPU test failed, weird sample found. Processes:");
+                Trace.WriteLine("Top CPU test failed, weird sample found. Processes:");
 
                 foreach (var proc in weirdSample.TopCpuProcesses)
                 {
-                    Console.WriteLine("ProcessName: {0}, CpuPercentage: {1}", proc.ProcessName, proc.CpuPercentage);
+                    Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "ProcessName: {0}, CpuPercentage: {1}", proc.ProcessName, proc.CpuPercentage));
                 }
 
                 throw;
