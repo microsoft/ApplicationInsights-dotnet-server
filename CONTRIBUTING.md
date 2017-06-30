@@ -6,7 +6,7 @@ If you're interested in contributing, take a look at the general [contributer's 
 
 To successfully run all the unit tests on your machine, make sure you've installed the following prerequisites:
 
-* Visual Studio 2015 Community or Enterprise
+* Visual Studio 2017 Community or Enterprise
 * .NET 4.6
 
 Several tests also require that you configure a strong name verification exception for Microsoft.WindowsAzure.ServiceRuntime.dll using the [Strong Name Tool](https://msdn.microsoft.com/en-us/library/k5b5tt23(v=vs.110).aspx). Run this command from the repository root to configure the exception (after building Microsoft.ApplicationInsights.Web.sln):
@@ -40,7 +40,7 @@ You also need to configure the Azure Storage Emulator to use specific ports. Edi
     ...
     </StorageEmulatorConfig>
 
-After you've done this, execute the ```runFunctionalTests.cmd``` script as administrator in the repository root. You can also run and debug the functional tests from Visual Studio by opening the solutions under the Test directory in the repository root.
+After you've done this, execute the ```runFunctionalTests.cmd``` script as Administrator in the repository root. You can also run and debug the functional tests from Visual Studio by opening the solutions under the Test directory in the repository root.
 
 If all or most of the Dependency Collector functional tests fail with messages like "Assert.AreEqual failed. Expected:<1>. Actual<0>.", these steps might help you troubleshoot:
 

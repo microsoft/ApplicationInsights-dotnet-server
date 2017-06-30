@@ -76,7 +76,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         }
 
         /// <summary>
-        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
+        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This  will most likely only be used for testing purposes.
         /// </summary>
         internal ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> PendingDependencyTelemetry => this.pendingTelemetry;
 
@@ -89,7 +89,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         }
 
         /// <summary>
-        /// Notifies the observer that the provider has experienced an error condition.
+        /// Notifies the observer that the provider has experienced some error condition.
         /// <seealso cref="IObserver{T}.OnError(Exception)"/>
         /// </summary>
         /// <param name="error">An object that provides additional information about the error.</param>
