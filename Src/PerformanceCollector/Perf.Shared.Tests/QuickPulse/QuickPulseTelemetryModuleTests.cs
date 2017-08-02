@@ -448,8 +448,8 @@
         public void QuickPulseTelemetryModuleManagesTimersCorrectly()
         {
             // ARRANGE
-            var pollingInterval = TimeSpan.FromMilliseconds(200);
-            var collectionInterval = TimeSpan.FromMilliseconds(80);
+            var pollingInterval = TimeSpan.FromSeconds(1);
+            var collectionInterval = TimeSpan.FromMilliseconds(400);
             var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = false, ReturnValueFromSubmitSample = true };
@@ -504,8 +504,8 @@
         public void QuickPulseTelemetryModuleUpdatesCollectionConfiguration()
         {
             // ARRANGE
-            var pollingInterval = TimeSpan.FromMilliseconds(200);
-            var collectionInterval = TimeSpan.FromMilliseconds(80);
+            var pollingInterval = TimeSpan.FromSeconds(1);
+            var collectionInterval = TimeSpan.FromMilliseconds(400);
             var timings = new QuickPulseTimings(pollingInterval, collectionInterval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
             var serviceClient = new QuickPulseServiceClientMock { ReturnValueFromPing = true, ReturnValueFromSubmitSample = true };
