@@ -175,7 +175,7 @@
         public void QuickPulseTelemetryModuleCollectsData()
         {
             // ARRANGE
-            var pause = TimeSpan.FromMilliseconds(150);
+            var pause = TimeSpan.FromSeconds(1);
             var interval = TimeSpan.FromMilliseconds(1);
             var timings = new QuickPulseTimings(interval, interval);
             var collectionTimeSlotManager = new QuickPulseCollectionTimeSlotManagerMock(timings);
@@ -736,7 +736,7 @@ Parameter name: performanceCounter",
 
             // ACT
             // below timeout should be sufficient for the module to get to the maximum storage capacity
-            Thread.Sleep(TimeSpan.FromMilliseconds(300));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             // ASSERT
             Assert.AreEqual(10, serviceClient.LastSampleBatchSize);
@@ -763,7 +763,7 @@ Parameter name: performanceCounter",
             module.Initialize(new TelemetryConfiguration() { InstrumentationKey = "some ikey" });
 
             // ACT
-            Thread.Sleep(TimeSpan.FromMilliseconds(100));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             // ASSERT
             // it shouldn't throw and must keep pinging
