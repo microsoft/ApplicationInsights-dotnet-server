@@ -1,8 +1,8 @@
-﻿using System;
-using System.Threading;
-
-namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers
 {
+    using System;
+    using System.Threading;
+
     internal class QuickPulseThreadModuleScheduler : IQuickPulseModuleScheduler
     {
         public static readonly QuickPulseThreadModuleScheduler Instance = new QuickPulseThreadModuleScheduler();
@@ -30,11 +30,6 @@ namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Imple
                 this.thread.Start(action);
             }
 
-            private void Worker(object state)
-            {
-                (state as Action<CancellationToken>)?.Invoke(this.cancellationTokenSource.Token);
-            }
-
             public void Stop(bool wait)
             {
                 this.Dispose();
@@ -48,6 +43,11 @@ namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Imple
             {
                 this.cancellationTokenSource.Cancel();
                 this.cancellationTokenSource.Dispose();
+            }
+
+            private void Worker(object state)
+            {
+                (state as Action<CancellationToken>)?.Invoke(this.cancellationTokenSource.Token);
             }
         }
     }

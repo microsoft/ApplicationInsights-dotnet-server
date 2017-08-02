@@ -1,12 +1,13 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation
 {
     using System;
+#if !NET40
+    using System.Diagnostics.Tracing;
+#endif
     using System.Reflection;
 
 #if NET40
     using Microsoft.Diagnostics.Tracing;
-#else
-    using System.Diagnostics.Tracing;
 #endif
 
     [EventSource(Name = "Microsoft-ApplicationInsights-Extensibility-PerformanceCollector")]
@@ -29,7 +30,7 @@
 
         public string ApplicationName { [NonEvent]get; [NonEvent]private set; }
 
-        #region Infra init - success
+#region Infra init - success
 
         [Event(1, Level = EventLevel.Informational, Message = @"Performance counter infrastructure is being initialized. {0}")]
         public void ModuleIsBeingInitializedEvent(
@@ -54,9 +55,9 @@
             this.WriteEvent(4, countersRefreshedCount, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Infra init - failure
+#region Infra init - failure
 
         [Event(5, Keywords = Keywords.UserActionable, Level = EventLevel.Warning, Message = @"Performance counter {1} has failed to register with performance collector. Please make sure it exists. Technical details: {0}")]
         public void CounterRegistrationFailedEvent(string e, string counter, string applicationName = "dummy")
@@ -90,9 +91,9 @@
             this.WriteEvent(15, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Data reading - success
+#region Data reading - success
 
         [Event(9, Level = EventLevel.Verbose, Message = @"About to perform counter collection...")]
         public void CounterCollectionAttemptEvent(string applicationName = "dummy")
@@ -109,9 +110,9 @@
             this.WriteEvent(10, counterCount, operationDurationInMs, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Data reading - failure
+#region Data reading - failure
 
         [Event(11, Level = EventLevel.Warning, Message = @"Performance counter {1} has failed the reading operation. Error message: {0}")]
         public void CounterReadingFailedEvent(string e, string counter, string applicationName = "dummy")
@@ -119,13 +120,13 @@
             this.WriteEvent(11, e, counter, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Data sending - success
+#region Data sending - success
 
-        #endregion
+#endregion
 
-        #region Data sending - failure
+#region Data sending - failure
 
         [Event(12, Level = EventLevel.Warning, Message = @"Failed to send a telemetry item for performance collector. Error text: {0}")]
         public void TelemetrySendFailedEvent(string e, string applicationName = "dummy")
@@ -133,9 +134,9 @@
             this.WriteEvent(12, e, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Unknown errors
+#region Unknown errors
 
         [Event(13, Keywords = Keywords.UserActionable, Level = EventLevel.Warning, Message = @"Unknown error in performance counter infrastructure: {0}")]
         public void UnknownErrorEvent(string e, string applicationName = "dummy")
@@ -143,9 +144,9 @@
             this.WriteEvent(13, e, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
-        #region Troubleshooting
+#region Troubleshooting
 
         [Event(14, Message = "{0}", Level = EventLevel.Verbose)]
         public void TroubleshootingMessageEvent(string message, string applicationName = "dummy")
@@ -188,7 +189,7 @@
             this.WriteEvent(20, count, this.ApplicationName);
         }
 
-        #endregion
+#endregion
 
         [NonEvent]
         private string GetApplicationName()

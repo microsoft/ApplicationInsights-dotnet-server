@@ -7,31 +7,23 @@
     {
         private static readonly Uri QuickPulseServiceEndpoint = new Uri("https://rt.services.visualstudio.com/QuickPulseService.svc");
 
-        public static Dictionary<QuickPulseCounter, string> DefaultCountersToCollect
-        {
-            get
-            {
-                return PerformanceCounterUtility.IsWebAppRunningInAzure() ? WebAppDefaultPerformanceCountersToCollect : DefaultPerformanceCountersToCollect;
-            }
-        }
-
         /// <summary>
         /// Dictionary of performance counters to collect for standard framework.
         /// </summary>
         private static readonly Dictionary<QuickPulseCounter, string> DefaultPerformanceCountersToCollect = new Dictionary<QuickPulseCounter, string>
-            {
-                [QuickPulseCounter.Bytes] = @"\Memory\Committed Bytes",
-                [QuickPulseCounter.ProcessorTime] = @"\Processor(_Total)\% Processor Time"
-            };
+        {
+            [QuickPulseCounter.Bytes] = @"\Memory\Committed Bytes",
+            [QuickPulseCounter.ProcessorTime] = @"\Processor(_Total)\% Processor Time"
+        };
 
         /// <summary>
         /// Dictionary of performance counters to collect for WEB APP framework.
         /// </summary>
-       private static readonly Dictionary<QuickPulseCounter, string> WebAppDefaultPerformanceCountersToCollect = new Dictionary<QuickPulseCounter, string>
-            {
-                [QuickPulseCounter.Bytes] = @"\Process(??APP_WIN32_PROC??)\Private Bytes",
-                [QuickPulseCounter.ProcessorTime] = @"\Process(??APP_WIN32_PROC??)\% Processor Time"
-            };
+        private static readonly Dictionary<QuickPulseCounter, string> WebAppDefaultPerformanceCountersToCollect = new Dictionary<QuickPulseCounter, string>
+        {
+            [QuickPulseCounter.Bytes] = @"\Process(??APP_WIN32_PROC??)\Private Bytes",
+            [QuickPulseCounter.ProcessorTime] = @"\Process(??APP_WIN32_PROC??)\% Processor Time"
+        };
 
         /// <summary>
         /// Mapping between the counters collected in WEB APP to the counters collected in Standard Framework.
@@ -41,6 +33,14 @@
             [WebAppDefaultPerformanceCountersToCollect[QuickPulseCounter.Bytes]] = DefaultPerformanceCountersToCollect[QuickPulseCounter.Bytes],
             [WebAppDefaultPerformanceCountersToCollect[QuickPulseCounter.ProcessorTime]] = DefaultPerformanceCountersToCollect[QuickPulseCounter.ProcessorTime],
         };
+
+        public static Dictionary<QuickPulseCounter, string> DefaultCountersToCollect
+        {
+            get
+            {
+                return PerformanceCounterUtility.IsWebAppRunningInAzure() ? WebAppDefaultPerformanceCountersToCollect : DefaultPerformanceCountersToCollect;
+            }
+        }
 
         public static Uri ServiceEndpoint
         {

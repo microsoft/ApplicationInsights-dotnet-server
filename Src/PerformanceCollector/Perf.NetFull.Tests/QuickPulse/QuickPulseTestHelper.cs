@@ -4,6 +4,9 @@
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    /// <summary>
+    /// Part of the <see cref="QuickPulseTestHelper"/> class for full .NET Framework.
+    /// </summary>
     internal static partial class QuickPulseTestHelper
     {
         public static object GetPrivateField(object obj, string fieldName)

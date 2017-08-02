@@ -297,6 +297,19 @@
 #endif
         }
 
+#if !NETCORE        
+        internal static IList<string> GetWin32ProcessInstances()
+        {
+            return GetInstances(Win32ProcessCategoryName);
+        }
+
+        internal static IList<string> GetClrProcessInstances()
+        {
+            return GetInstances(ClrProcessCategoryName);
+        }
+
+#endif
+
         private static string ExpandInstanceName(
             string instanceName,
             IEnumerable<string> win32Instances,
@@ -353,16 +366,6 @@
         }
 
 #if !NETCORE
-        internal static IList<string> GetWin32ProcessInstances()
-        {
-            return GetInstances(Win32ProcessCategoryName);
-        }
-
-        internal static IList<string> GetClrProcessInstances()
-        {
-            return GetInstances(ClrProcessCategoryName);
-        }
-
         private static string FindProcessInstance(
             int pid,
             IEnumerable<string> instances,

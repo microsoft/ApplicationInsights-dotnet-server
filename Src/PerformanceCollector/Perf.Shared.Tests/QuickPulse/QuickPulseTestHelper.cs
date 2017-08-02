@@ -8,6 +8,9 @@
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
 
+    /// <summary>
+    /// Part of the <see cref="QuickPulseTestHelper"/> class for all .NET Frameworks.
+    /// </summary>
     internal static partial class QuickPulseTestHelper
     {
         public static LinkedList<IQuickPulseTelemetryProcessor> GetTelemetryProcessors(QuickPulseTelemetryModule module)

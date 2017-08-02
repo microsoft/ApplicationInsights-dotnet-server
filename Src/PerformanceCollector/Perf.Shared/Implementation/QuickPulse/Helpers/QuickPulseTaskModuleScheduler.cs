@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers
 {
+    using System;
+    using System.Threading;
+    using System.Threading.Tasks;
+
     internal class QuickPulseTaskModuleScheduler : IQuickPulseModuleScheduler
     {
         public static readonly QuickPulseTaskModuleScheduler Instance = new QuickPulseTaskModuleScheduler();

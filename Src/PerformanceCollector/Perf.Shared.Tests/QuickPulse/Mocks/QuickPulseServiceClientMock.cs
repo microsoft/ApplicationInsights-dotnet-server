@@ -9,13 +9,15 @@
 
     internal class QuickPulseServiceClientMock : IQuickPulseServiceClient
     {
-        private List<QuickPulseDataSample> samples = new List<QuickPulseDataSample>();
-
-        private readonly object countersLock = new object();
+        public readonly object ResponseLock = new object();
 
         public volatile bool CountersEnabled = true;
 
-        public readonly object ResponseLock = new object();
+        private readonly object countersLock = new object();
+
+        private List<QuickPulseDataSample> samples = new List<QuickPulseDataSample>();
+
+        private List<int> batches = new List<int>();
 
         public int PingCount { get; private set; }
 
@@ -28,8 +30,6 @@
         public bool? ReturnValueFromSubmitSample { private get; set; }
 
         public int? LastSampleBatchSize { get; private set; }
-
-        private List<int> batches = new List<int>();
 
         public DateTimeOffset? LastPingTimestamp { get; private set; }
 
