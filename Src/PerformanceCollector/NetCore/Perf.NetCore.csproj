@@ -24,7 +24,7 @@
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
     <DelaySign>true</DelaySign>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyName>Microsoft.AI.PerformanceCollector</AssemblyName>
+    <AssemblyName>Microsoft.AI.PerfCounterCollector</AssemblyName>
     <AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
