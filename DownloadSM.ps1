@@ -8,7 +8,7 @@ function Download-AgentMsi
 
 	Write-Host "Start - Agent MSI download process."
 
-	$downloadLink = "http://go.microsoft.com/fwlink/?LinkID=522371&clcid=0x409"
+	$downloadLink = "https://go.microsoft.com/fwlink/?linkid=855750"
 	
 	Write-Host "Downloading from $downloadLink"
 	$wc = New-Object System.Net.WebClient
