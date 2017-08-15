@@ -78,13 +78,13 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Reactive.Core">
-      <HintPath>$(PackagesDir)\Rx-Core.2.1.30214.0\lib\Net45\System.Reactive.Core.dll</HintPath>
+      <HintPath>$(PackagesDir)\Rx-Core.2.1.302.5.0-beta1-build10212\lib\Net45\System.Reactive.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Interfaces">
-      <HintPath>$(PackagesDir)\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+      <HintPath>$(PackagesDir)\Rx-Interfaces.2.1.302.5.0-beta1-build10212\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Linq">
-      <HintPath>$(PackagesDir)\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+      <HintPath>$(PackagesDir)\Rx-Linq.2.1.302.5.0-beta1-build10212\lib\Net45\System.Reactive.Linq.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.XmlTransform">
       <HintPath>$(PackagesDir)\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
