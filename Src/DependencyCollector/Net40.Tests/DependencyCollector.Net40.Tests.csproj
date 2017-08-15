@@ -24,7 +24,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Reference Include="Microsoft.ApplicationInsights, Version=2.5.0-beta1-build10212.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.ApplicationInsights">
       <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.5.0-beta1-build10212\lib\net40\Microsoft.ApplicationInsights.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Diagnostics.Tracing.EventSource, Version=1.1.28.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -84,7 +84,7 @@
       <Name>TestFramework.Net40</Name>
     </ProjectReference>
     <ProjectReference Include="..\Net40\DependencyCollector.Net40.csproj">
-      <Project>{AA823E8E-2EB1-4E82-8D62-A6528E2.5.0-beta1-build10212E}</Project>
+      <Project>{AA823E8E-2EB1-4E82-8D62-A6528E204A0E}</Project>
       <Name>DependencyCollector.Net40</Name>
     </ProjectReference>
   </ItemGroup>
