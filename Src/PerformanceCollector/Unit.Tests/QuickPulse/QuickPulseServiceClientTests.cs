@@ -381,6 +381,7 @@
                 false,
                 0);
             var properties = new Dictionary<string, string>() { { "Prop1", "Val1" } };
+            var metrics = new Dictionary<string, double>() { { "Metric1", 1 } };
             var sample =
                 new QuickPulseDataSample(
                     new QuickPulseDataAccumulator(this.emptyCollectionConfiguration)
@@ -395,25 +396,29 @@
                                     {
                                         DocumentStreamIds = new[] { "Stream1" },
                                         Name = "Request1",
-                                        Properties = properties.ToArray()
+                                        Properties = properties.ToArray(),
+                                        Metrics = metrics.ToArray()
                                     },
                                     new DependencyTelemetryDocument()
                                     {
                                         DocumentStreamIds = new[] { "Stream1" },
                                         Name = "Dependency1",
-                                        Properties = properties.ToArray()
+                                        Properties = properties.ToArray(),
+                                        Metrics = metrics.ToArray()
                                     },
                                     new ExceptionTelemetryDocument()
                                     {
                                         DocumentStreamIds = new[] { "Stream1" },
                                         Exception = "Exception1",
-                                        Properties = properties.ToArray()
+                                        Properties = properties.ToArray(),
+                                        Metrics = metrics.ToArray()
                                     },
                                     new EventTelemetryDocument()
                                     {
                                         DocumentStreamIds = new[] { "Stream1" },
                                         Name = "Event1",
-                                        Properties = properties.ToArray()
+                                        Properties = properties.ToArray(),
+                                        Metrics = metrics.ToArray()
                                     },
                                     new TraceTelemetryDocument()
                                     {
@@ -437,18 +442,26 @@
             Assert.AreEqual("Request1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Name);
             Assert.AreEqual("Prop1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Properties.First().Key);
             Assert.AreEqual("Val1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Properties.First().Value);
+            Assert.AreEqual("Metric1", ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Metrics.First().Key);
+            Assert.AreEqual(1, ((RequestTelemetryDocument)this.samples[0].Item3.Documents[0]).Metrics.First().Value);
 
             Assert.AreEqual("Dependency1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Name);
             Assert.AreEqual("Prop1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Properties.First().Key);
             Assert.AreEqual("Val1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Properties.First().Value);
+            Assert.AreEqual("Metric1", ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Metrics.First().Key);
+            Assert.AreEqual(1, ((DependencyTelemetryDocument)this.samples[0].Item3.Documents[1]).Metrics.First().Value);
 
             Assert.AreEqual("Exception1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Exception);
             Assert.AreEqual("Prop1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Key);
             Assert.AreEqual("Val1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Properties.First().Value);
+            Assert.AreEqual("Metric1", ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Metrics.First().Key);
+            Assert.AreEqual(1, ((ExceptionTelemetryDocument)this.samples[0].Item3.Documents[2]).Metrics.First().Value);
 
             Assert.AreEqual("Event1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Name);
             Assert.AreEqual("Prop1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Key);
             Assert.AreEqual("Val1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Properties.First().Value);
+            Assert.AreEqual("Metric1", ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Metrics.First().Key);
+            Assert.AreEqual(1, ((EventTelemetryDocument)this.samples[0].Item3.Documents[3]).Metrics.First().Value);
 
             Assert.AreEqual("Trace1", ((TraceTelemetryDocument)this.samples[0].Item3.Documents[4]).Message);
             Assert.AreEqual("Prop1", ((TraceTelemetryDocument)this.samples[0].Item3.Documents[4]).Properties.First().Key);

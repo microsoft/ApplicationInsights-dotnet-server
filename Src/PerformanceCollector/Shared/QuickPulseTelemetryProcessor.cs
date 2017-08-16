@@ -190,7 +190,8 @@
                 Duration = requestTelemetry.Duration,
                 ResponseCode = requestTelemetry.ResponseCode,
                 Url = requestTelemetry.Url,
-                Properties = GetProperties(requestTelemetry)
+                Properties = GetProperties(requestTelemetry),
+                Metrics = GetMetrics(requestTelemetry)
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, requestTelemetry);
@@ -213,7 +214,8 @@
                 ResultCode = dependencyTelemetry.ResultCode,
                 CommandName = TruncateValue(dependencyTelemetry.Data),
                 DependencyTypeName = dependencyTelemetry.Type,
-                Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName)
+                Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName),
+                Metrics = GetMetrics(dependencyTelemetry)
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, dependencyTelemetry);
@@ -232,7 +234,8 @@
                 ExceptionType = exceptionTelemetry.Exception != null ? TruncateValue(exceptionTelemetry.Exception.GetType().FullName) : null,
                 ExceptionMessage = TruncateValue(ExpandExceptionMessage(exceptionTelemetry)),
                 OperationId = TruncateValue(exceptionTelemetry.Context?.Operation?.Id),
-                Properties = GetProperties(exceptionTelemetry)
+                Properties = GetProperties(exceptionTelemetry),
+                Metrics = GetMetrics(exceptionTelemetry)
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, exceptionTelemetry);
@@ -249,7 +252,8 @@
                 Timestamp = eventTelemetry.Timestamp,
                 OperationId = TruncateValue(eventTelemetry.Context?.Operation?.Id),
                 Name = TruncateValue(eventTelemetry.Name),
-                Properties = GetProperties(eventTelemetry)
+                Properties = GetProperties(eventTelemetry),
+                Metrics = GetMetrics(eventTelemetry)
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, eventTelemetry);
@@ -341,10 +345,9 @@
 
             if (telemetry.Properties != null && telemetry.Properties.Count > 0)
             {
-                properties = new Dictionary<string, string>(MaxPropertyCount + 1);
+                properties = new Dictionary<string, string>(MaxPropertyCount + 1, StringComparer.Ordinal);
 
-                foreach (var prop in
-                    telemetry.Properties.Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal)).Take(MaxPropertyCount))
+                foreach (var prop in telemetry.Properties.Where(p => !string.Equals(p.Key, specialPropertyName, StringComparison.Ordinal)).Take(MaxPropertyCount))
                 {
                     string truncatedKey = TruncateValue(prop.Key);
 
@@ -364,7 +367,29 @@
                 }
             }
 
-            return properties != null ? properties.ToArray() : null;
+            return properties?.ToArray();
+        }
+
+        private static KeyValuePair<string, double>[] GetMetrics(ISupportMetrics telemetry)
+        {
+            Dictionary<string, double> metrics = null;
+
+            if (telemetry.Metrics != null && telemetry.Metrics.Count > 0)
+            {
+                metrics = new Dictionary<string, double>(MaxPropertyCount + 1, StringComparer.Ordinal);
+
+                foreach (var metric in telemetry.Metrics.Take(MaxPropertyCount))
+                {
+                    string truncatedKey = TruncateValue(metric.Key);
+
+                    if (!metrics.ContainsKey(truncatedKey))
+                    {
+                        metrics.Add(truncatedKey, metric.Value);
+                    }
+                }
+            }
+
+            return metrics?.ToArray();
         }
 
         private static bool IsRequestSuccessful(RequestTelemetry request)
