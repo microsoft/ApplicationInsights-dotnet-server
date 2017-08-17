@@ -68,6 +68,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual("200", telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
 
+            Assert.AreEqual(activity.StartTimeUtc, telemetry.Timestamp);
             Assert.AreEqual(1, telemetry.Duration.TotalSeconds);
 
             Assert.AreEqual(activity.RootId, telemetry.Context.Operation.Id);
