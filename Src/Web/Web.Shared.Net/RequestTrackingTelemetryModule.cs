@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.Web
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Web;
@@ -16,6 +17,13 @@
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
+        private const string RequestIdHeader = "AppInsights-Request-Id";
+
+        /// <summary>
+        /// Using this as a hashset of current active requests. The second value is ignored.
+        /// </summary>
+        private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
+        
         private readonly IList<string> handlersToFilter = new List<string>();
         private TelemetryClient telemetryClient;
         private bool initializationErrorReported;
@@ -69,6 +77,13 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
+            if (context.Request.Headers[RequestIdHeader] == null)
+            {
+                string id = Guid.NewGuid().ToString();
+                activeRequests.TryAdd(id, 0);
+                context.Request.Headers[RequestIdHeader] = id;
+            }
+
             if (this.telemetryClient == null)
             {
                 if (!this.initializationErrorReported)
@@ -216,7 +231,11 @@
                 requestTelemetry.Source = telemetrySource;
             }
 
-            this.telemetryClient.TrackRequest(requestTelemetry);
+            string requestId = context.Request.Headers[RequestIdHeader];
+            if (requestId != null && activeRequests.TryRemove(requestId, out byte value))
+            {
+                this.telemetryClient.TrackRequest(requestTelemetry);
+            }
         }
 
         /// <summary>
