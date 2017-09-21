@@ -29,9 +29,7 @@
         private FrameworkSqlEventListener sqlEventListener;
 #endif
 
-#if NET45 || NETCORE
         private HttpCoreDiagnosticSourceListener httpCoreDiagnosticSourceListener;
-#endif
 
 #if !NETCORE
         private ProfilerSqlCommandProcessing sqlCommandProcessing;
@@ -128,7 +126,6 @@
                             this.InitializeForRuntimeInstrumentationOrFramework();
 #endif
 
-#if NET45 || NETCORE
                             // NET45 referencing .net core System.Net.Http supports diagnostic listener
                             this.httpCoreDiagnosticSourceListener = new HttpCoreDiagnosticSourceListener(
                                 configuration,
@@ -136,7 +133,7 @@
                                 this.SetComponentCorrelationHttpHeaders,
                                 this.ExcludeComponentCorrelationHttpHeadersOnDomains, 
                                 null);
-#endif
+
                             DependencyCollectorEventSource.Log.RemoteDependencyModuleVerbose("Initializing DependencyTrackingModule completed successfully.");
                         }
                         catch (Exception exc)
@@ -150,9 +147,7 @@
                             DependencyCollectorEventSource.Log.RemoteDependencyModuleError(exc.ToInvariantString(), clrVersion);
                         }
 
-#if !NET40
                         this.PrepareActivity();
-#endif
 
                         this.isInitialized = true;
                     }
@@ -218,12 +213,10 @@
                     }
 
 #endif
-#if NET45 || NETCORE
                     if (this.httpCoreDiagnosticSourceListener != null)
                     {
                         this.httpCoreDiagnosticSourceListener.Dispose();
                     }
-#endif
                 }
 
                 this.disposed = true;
