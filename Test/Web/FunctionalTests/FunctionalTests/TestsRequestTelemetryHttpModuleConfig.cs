@@ -12,7 +12,7 @@
     [TestClass]
     public class TestsRequestTelemetryHttpModuleConfig : RequestTelemetryTestBase
     {
-        private const string TestWebApplicaionSourcePath = @"..\TestApps\Wa40Aspx\App";
+        private const string TestWebApplicaionSourcePath = @"..\TestApps\Wa45Aspx\App";
         private const string TestWebApplicaionDestPath = "TestApps_RejectingHttpModule_App";
 
         private const int TestRequestTimeoutInMs = 150000;
