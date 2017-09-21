@@ -27,6 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DependencyCollector", "Depe
 		HostingStartup\HostingStartup.Nuget.Tests\TraceSourceForEventSourceTest.cs = HostingStartup\HostingStartup.Nuget.Tests\TraceSourceForEventSourceTest.cs
 		HostingStartup\HostingStartup.Nuget.Tests\WebConfigTransformTest.cs = HostingStartup\HostingStartup.Nuget.Tests\WebConfigTransformTest.cs
 	EndProjectSection
+	ProjectSection(FolderStartupServices) = postProject
+		{82A7F48D-3B50-4B1E-B82E-3ADA8210C358} = {82A7F48D-3B50-4B1E-B82E-3ADA8210C358}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WindowsServer", "WindowsServer", "{D87119AF-CD35-46F2-84A6-ED54CC42027E}"
 	ProjectSection(SolutionItems) = preProject
@@ -98,13 +101,10 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TestFramework.Shared", "Tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PerformanceCollector", "PerformanceCollector", "{A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf.Net40", "PerformanceCollector\Net40\Perf.Net40.csproj", "{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perf.Net45", "PerformanceCollector\Net45\Perf.Net45.csproj", "{FBFCB985-BBFE-4954-A2EF-8124A42F56C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerformanceCollector.NuGet", "PerformanceCollector\NuGet\PerformanceCollector.NuGet.csproj", "{9392CF11-9063-4FC9-B8D1-922C754007D7}"
 	ProjectSection(ProjectDependencies) = postProject
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244} = {61FC6E01-B40D-4DB2-9DAB-B27B82F02244}
 		{FBFCB985-BBFE-4954-A2EF-8124A42F56C7} = {FBFCB985-BBFE-4954-A2EF-8124A42F56C7}
 	EndProjectSection
 EndProject
@@ -157,9 +157,6 @@ Global
 		Web\Web.Shared.Net\Web.Shared.Net.projitems*{395e03bb-d061-4c9d-9d47-18676566444d}*SharedItemsImports = 13
 		PerformanceCollector\Filtering.Shared\Filtering.Shared.projitems*{568aeb4f-ba4c-47a5-9fa3-68f06cd11fed}*SharedItemsImports = 13
 		WindowsServer\WindowsServer.Shared\WindowsServer.Shared.projitems*{579f42e8-b711-411e-be52-4a3fd208507f}*SharedItemsImports = 13
-		PerformanceCollector\Filtering.Shared\Filtering.Shared.projitems*{61fc6e01-b40d-4db2-9dab-b27b82f02244}*SharedItemsImports = 4
-		PerformanceCollector\Perf.Shared.NetFull\Perf.Shared.NetFull.projitems*{61fc6e01-b40d-4db2-9dab-b27b82f02244}*SharedItemsImports = 4
-		PerformanceCollector\Perf.Shared\Perf.Shared.projitems*{61fc6e01-b40d-4db2-9dab-b27b82f02244}*SharedItemsImports = 4
 		TestFramework\Shared\TestFramework.Shared.projitems*{63e687d2-97ab-4d64-a92d-31b305d5f1b9}*SharedItemsImports = 4
 		DependencyCollector\Shared\DependencyCollector.Shared.projitems*{669e7e58-072d-4b0a-a4dd-4eb2ae2ea4d4}*SharedItemsImports = 13
 		WindowsServer\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems*{7916ae39-ae89-4886-8842-33ac9883905a}*SharedItemsImports = 13
@@ -342,14 +339,6 @@ Global
 		{1BE54EE7-6627-4206-86DD-3D2C709A1500}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1BE54EE7-6627-4206-86DD-3D2C709A1500}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{1BE54EE7-6627-4206-86DD-3D2C709A1500}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Release|Any CPU.Build.0 = Release|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{FBFCB985-BBFE-4954-A2EF-8124A42F56C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FBFCB985-BBFE-4954-A2EF-8124A42F56C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBFCB985-BBFE-4954-A2EF-8124A42F56C7}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -469,7 +458,6 @@ Global
 		{63E687D2-97AB-4D64-A92D-31B305D5F1B9} = {8CA9F9C9-DA39-4159-86F3-C52F1636715E}
 		{1BE54EE7-6627-4206-86DD-3D2C709A1500} = {8CA9F9C9-DA39-4159-86F3-C52F1636715E}
 		{9718F051-147F-4F5F-9FF3-C926430EFCF7} = {8CA9F9C9-DA39-4159-86F3-C52F1636715E}
-		{61FC6E01-B40D-4DB2-9DAB-B27B82F02244} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 		{FBFCB985-BBFE-4954-A2EF-8124A42F56C7} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 		{9392CF11-9063-4FC9-B8D1-922C754007D7} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 		{F254D4FB-428D-408E-8251-39BCA7B4B5CE} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
