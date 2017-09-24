@@ -89,7 +89,7 @@
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.Web.Infrastructure.1.0.0.0\lib\net45\Microsoft.Web.Infrastructure.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
     </Reference>
     <Reference Include="AspNet.ScriptManager.jQuery">
       <HintPath>$(PackagesDir)\AspNet.ScriptManager.jQuery.1.8.2\lib\net45\AspNet.ScriptManager.jQuery.dll</HintPath>
@@ -98,10 +98,10 @@
       <HintPath>$(PackagesDir)\AspNet.ScriptManager.jQuery.UI.Combined.1.8.24\lib\net45\AspNet.ScriptManager.jQuery.UI.Combined.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework, Version=4.4.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>$(PackagesDir)\EntityFramework.5.0.0\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>$(PackagesDir)\EntityFramework.5.0.0\lib\net40\EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Providers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.Providers.Core.1.2\lib\net45\System.Web.Providers.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.Providers.Core.1.2\lib\net40\System.Web.Providers.dll</HintPath>
     </Reference>
     <Reference Include="DotNetOpenAuth.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

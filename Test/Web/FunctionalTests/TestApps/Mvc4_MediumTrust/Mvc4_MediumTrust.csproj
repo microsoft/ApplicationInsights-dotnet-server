@@ -100,7 +100,7 @@
     </Reference>
     <Reference Include="Microsoft.Web.Mvc.FixedDisplayModes, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.Mvc.FixedDisplayModes.1.0.0\lib\net45\Microsoft.Web.Mvc.FixedDisplayModes.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.Mvc.FixedDisplayModes.1.0.0\lib\net40\Microsoft.Web.Mvc.FixedDisplayModes.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesDir)\Newtonsoft.Json.6.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -118,7 +118,7 @@
     </Reference>
     <Reference Include="System.Web.Helpers, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net45\System.Web.Helpers.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.Helpers.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>$(PackagesDir)\Microsoft.AspNet.WebApi.Core.4.0.30506.0\lib\net45\System.Web.Http.dll</HintPath>
@@ -128,14 +128,14 @@
     </Reference>
     <Reference Include="System.Web.Mvc, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.Mvc.4.0.30506.0\lib\net45\System.Web.Mvc.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.Mvc.4.0.30506.0\lib\net40\System.Web.Mvc.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Optimization">
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.Web.Optimization.1.0.0\lib\net45\System.Web.Optimization.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.Web.Optimization.1.0.0\lib\net40\System.Web.Optimization.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.Razor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Web.Razor">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.Razor.2.0.30506.0\lib\net45\System.Web.Razor.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.Razor.2.0.30506.0\lib\net40\System.Web.Razor.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.WebPages, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -143,24 +143,24 @@
     </Reference>
     <Reference Include="System.Web.WebPages.Deployment, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.WebPages.Deployment.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.WebPages.Razor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Web.WebPages.Razor">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.2.0.30506.0\lib\net40\System.Web.WebPages.Razor.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WebMatrix.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.Data.2.0.20710.0\lib\net45\WebMatrix.Data.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.Data.2.0.20710.0\lib\net40\WebMatrix.Data.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.WebPages.OAuth, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.OAuth.2.0.30506.0\lib\net45\Microsoft.Web.WebPages.OAuth.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.OAuth.2.0.30506.0\lib\net40\Microsoft.Web.WebPages.OAuth.dll</HintPath>
     </Reference>
     <Reference Include="WebMatrix.WebData, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.WebData.2.0.30506.0\lib\net45\WebMatrix.WebData.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.WebData.2.0.30506.0\lib\net40\WebMatrix.WebData.dll</HintPath>
     </Reference>
     <Reference Include="DotNetOpenAuth.AspNet, Version=4.1.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
       <Private>True</Private>
@@ -178,29 +178,29 @@
       <Private>True</Private>
       <HintPath>$(PackagesDir)\DotNetOpenAuth.OAuth.Core.4.1.4.12333\lib\net45-full\DotNetOpenAuth.OAuth.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetOpenAuth.OpenId, Version=4.1.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+    <Reference Include="DotNetOpenAuth.OpenId">
       <Private>True</Private>
       <HintPath>$(PackagesDir)\DotNetOpenAuth.OpenId.Core.4.1.4.12333\lib\net45-full\DotNetOpenAuth.OpenId.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetOpenAuth.OpenId.RelyingParty, Version=4.1.0.0, Culture=neutral, PublicKeyToken=2780ccd10d57b246, processorArchitecture=MSIL">
+    <Reference Include="DotNetOpenAuth.OpenId.RelyingParty">
       <Private>True</Private>
       <HintPath>$(PackagesDir)\DotNetOpenAuth.OpenId.RelyingParty.4.1.4.12333\lib\net45-full\DotNetOpenAuth.OpenId.RelyingParty.dll</HintPath>
     </Reference>
-    <Reference Include="System.Web.Http.OData, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Web.Http.OData">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebApi.OData.4.0.30506\lib\net45\System.Web.Http.OData.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebApi.OData.4.0.30506\lib\net40\System.Web.Http.OData.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Data.Edm, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Data.Edm">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.Data.Edm.5.2.0\lib\net45\Microsoft.Data.Edm.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.Data.Edm.5.2.0\lib\net40\Microsoft.Data.Edm.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Data.OData, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Data.OData">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.Data.OData.5.2.0\lib\net45\Microsoft.Data.OData.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.Data.OData.5.2.0\lib\net40\Microsoft.Data.OData.dll</HintPath>
     </Reference>
-    <Reference Include="System.Spatial, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Spatial">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\System.Spatial.5.2.0\lib\net45\System.Spatial.dll</HintPath>
+      <HintPath>$(PackagesDir)\System.Spatial.5.2.0\lib\net40\System.Spatial.dll</HintPath>
     </Reference>
     <Reference Include="WebGrease">
       <Private>True</Private>
