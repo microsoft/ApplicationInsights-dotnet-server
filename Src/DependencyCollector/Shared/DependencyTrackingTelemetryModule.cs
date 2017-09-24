@@ -229,7 +229,6 @@
         /// </summary>
         private void InitializeForDiagnosticAndFrameworkEventSource()
         {
-#if NET45
             if (!this.DisableDiagnosticSourceInstrumentation)
             {
                 DesktopDiagnosticSourceHttpProcessing desktopHttpProcessing = new DesktopDiagnosticSourceHttpProcessing(
@@ -258,7 +257,6 @@
                 config => new FrameworkSqlEventListener(config, DependencyTableStore.Instance.SqlRequestCacheHolder),
                 this.telemetryConfiguration,
                 TimeSpan.FromMilliseconds(10));
-#endif
         }
 
         /// <summary>
@@ -300,7 +298,6 @@
         }
 #endif
 
-#if !NET40
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         private void PrepareActivity()
         {
@@ -312,6 +309,5 @@
             activity.Stop();
         }
 
-#endif
     }
 }
