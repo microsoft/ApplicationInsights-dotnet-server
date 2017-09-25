@@ -26,7 +26,7 @@
 
         public static string GetEmptyConfig()
         {
-            Stream stream = typeof(TelemetryInitailizersTestsNet40).Assembly.GetManifestResourceStream(ApplicationInsightsTransform);
+            Stream stream = typeof(TelemetryInitailizersTestsNet45).Assembly.GetManifestResourceStream(ApplicationInsightsTransform);
             using (var reader = new StreamReader(stream))
             {
                 return reader.ReadToEnd();
