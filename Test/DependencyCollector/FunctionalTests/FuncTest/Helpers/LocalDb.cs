@@ -66,12 +66,10 @@
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                SqlCommand cmd = new SqlCommand(
-                    "SELECT name FROM master.dbo.sysdatabases WHERE ('[' + name + ']' = '@databaseName' OR name = '@databaseName')",
-                    connection);
+                SqlCommand cmd = new SqlCommand("select db_id(@databaseName)", connection);
 
                 cmd.Parameters.Add(new SqlParameter("@databaseName", databaseName));
-                object result = cmd.ExecuteNonQuery();
+                object result = cmd.ExecuteScalar();
                 if (result != null)
                 {
                     return true;
