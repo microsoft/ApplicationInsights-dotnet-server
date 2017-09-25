@@ -85,6 +85,8 @@
                     "Request to page failed with unexpected status code");
             }
 
+            var testFinish = DateTimeOffset.UtcNow;
+
             var request = Listener.ReceiveItemsOfType<TelemetryItem<RequestData>>(1, TestListenerTimeoutInMs)[0];
             
             // Duration will be 0 till we make it optional
@@ -95,9 +97,7 @@
                 true, // 401 is considred success Bug #439318 
                 request, 
                 testStart,
-                testStart);
-
-            Assert.AreEqual(0, TimeSpan.Parse(request.data.baseData.duration).TotalMilliseconds, "Duration will be 0 till we make it optional");
+                testFinish);
         }
     }
 }
