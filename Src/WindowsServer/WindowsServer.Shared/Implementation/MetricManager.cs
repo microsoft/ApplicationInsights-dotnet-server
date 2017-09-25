@@ -26,7 +26,6 @@
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Platform;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
-
     using TaskEx = System.Threading.Tasks.Task;
 
     /// <summary>

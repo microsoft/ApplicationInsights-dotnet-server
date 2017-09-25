@@ -4,7 +4,6 @@
     using System.Diagnostics.Tracing;
     using System.Reflection;
 
-
     [EventSource(Name = "Microsoft-ApplicationInsights-Extensibility-PerformanceCollector-QuickPulse")]
     internal sealed class QuickPulseEventSource : EventSource
     {

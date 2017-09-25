@@ -4,12 +4,9 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Microsoft.ApplicationInsights.Web.Helpers;
 
     [TestClass]
     public class QuickPulseTelemetryModuleNetFullTests

@@ -4,7 +4,6 @@
     using System.Diagnostics.Tracing;
     using System.Reflection;
 
-
     [EventSource(Name = "Microsoft-ApplicationInsights-Extensibility-PerformanceCollector")]
     internal sealed class PerformanceCollectorEventSource : EventSource
     {

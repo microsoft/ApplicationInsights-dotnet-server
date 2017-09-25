@@ -308,6 +308,5 @@
             activity.Start();
             activity.Stop();
         }
-
     }
 }
