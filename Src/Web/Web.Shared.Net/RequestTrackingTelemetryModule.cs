@@ -23,13 +23,27 @@
         /// Using this as a hash-set of current active requests. The second value is ignored.
         /// </summary>
         private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
-        
+
         private readonly IList<string> handlersToFilter = new List<string>();
         private TelemetryClient telemetryClient;
         private bool initializationErrorReported;
         private bool correlationHeadersEnabled = true;
         private string telemetryChannelEnpoint;
         private CorrelationIdLookupHelper correlationIdLookupHelper;
+
+        private Action<HttpContext> ensureActiveRequestIsTracked;
+
+        internal RequestTrackingTelemetryModule(bool enableSafeRequestTracking = false)
+        {
+            if (enableSafeRequestTracking)
+            {
+                this.ensureActiveRequestIsTracked = this.EnsureIsActiveRequestSafe;
+            }
+            else
+            {
+                this.ensureActiveRequestIsTracked = this.EnsureIsActiveRequest;
+            }
+        }
 
         /// <summary>
         /// Gets the list of handler types for which requests telemetry will not be collected
@@ -77,7 +91,7 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
-            this.EnsureIsActiveRequest(context);
+            this.ensureActiveRequestIsTracked(context);
             
             if (this.telemetryClient == null)
             {
@@ -337,7 +351,7 @@
         /// Unit tests will have to initialize the RequestIdHeader.
         /// The second IF will ensure the id is added to the activeRequests.
         /// </remarks>
-        private void EnsureIsActiveRequest(HttpContext context)
+        private void EnsureIsActiveRequestSafe(HttpContext context)
         {
             string requestId;
             if (context.Request.Headers[RequestIdHeader] == null)
@@ -352,6 +366,16 @@
             
             if (!activeRequests.ContainsKey(requestId))
             {
+                activeRequests.TryAdd(requestId, 0);
+            }
+        }
+
+        private void EnsureIsActiveRequest(HttpContext context)
+        {
+            if (context.Request.Headers[RequestIdHeader] == null)
+            {
+                string requestId = Guid.NewGuid().ToString();
+                context.Request.Headers[RequestIdHeader] = requestId;
                 activeRequests.TryAdd(requestId, 0);
             }
         }
