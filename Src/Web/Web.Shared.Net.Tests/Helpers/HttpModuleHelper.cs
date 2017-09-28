@@ -65,13 +65,20 @@
             Thread.GetDomain().SetData(".appPath", string.Empty);
             Thread.GetDomain().SetData(".appVPath", string.Empty);
 
+            if (headers == null)
+            {
+                headers = new Dictionary<string, string>();
+            }
+
+            headers["AppInsights-RequestTrackingTelemetryModule-Request-Id"] = "test-request-id";
+
             var workerRequest = new SimpleWorkerRequestWithHeaders(UrlPath, UrlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers, remoteAddr);
             
             var context = new HttpContext(workerRequest);
             HttpContext.Current = context;
             return context;
         }
-
+        
         public static HttpContextBase GetFakeHttpContextBase(IDictionary<string, string> headers = null)
         {
             return new HttpContextWrapper(GetFakeHttpContext(headers));

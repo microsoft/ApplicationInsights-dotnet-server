@@ -17,7 +17,7 @@
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
-        private const string RequestIdHeader = "AppInsights-Request-Id";
+        private const string RequestIdHeader = "AppInsights-RequestTrackingTelemetryModule-Request-Id";
 
         /// <summary>
         /// Using this as a hash-set of current active requests. The second value is ignored.
@@ -77,13 +77,8 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
-            if (context.Request.Headers[RequestIdHeader] == null)
-            {
-                string id = Guid.NewGuid().ToString();
-                activeRequests.TryAdd(id, 0);
-                context.Request.Headers[RequestIdHeader] = id;
-            }
-
+            this.EnsureIsActiveRequest(context);
+            
             if (this.telemetryClient == null)
             {
                 if (!this.initializationErrorReported)
@@ -325,6 +320,40 @@
         internal void OverrideCorrelationIdLookupHelper(CorrelationIdLookupHelper correlationIdLookupHelper)
         {
             this.correlationIdLookupHelper = correlationIdLookupHelper;
+        }
+
+        /// <summary>
+        /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
+        /// <see cref="System.Web.Handlers.TransferRequestHandler">
+        /// TransferRequestHandler can create a Child request to route extension-less requests to a controller.
+        /// (ex: site/home -> site/HomeController.cs)
+        /// We do not want duplicate telemetry logged for both the Parent and Child requests, so the activeRequests will be created OnBeginRequest.
+        /// When the child request OnEndRequest, the id will be removed from this dictionary and telemetry will not be logged for the parent.
+        /// </see>
+        /// </summary>
+        /// <remarks>
+        /// Unit test projects cannot create an [internal] IIS7WorkerRequest object.
+        /// Without this object, we cannot modify the Request.Headers without throwing a PlatformNotSupportedException.
+        /// Unit tests will have to initialize the RequestIdHeader.
+        /// The second IF will ensure the id is added to the activeRequests.
+        /// </remarks>
+        private void EnsureIsActiveRequest(HttpContext context)
+        {
+            string requestId;
+            if (context.Request.Headers[RequestIdHeader] == null)
+            {
+                requestId = Guid.NewGuid().ToString();
+                context.Request.Headers[RequestIdHeader] = requestId;
+            }
+            else
+            {
+                requestId = context.Request.Headers[RequestIdHeader];
+            }
+            
+            if (!activeRequests.ContainsKey(requestId))
+            {
+                activeRequests.TryAdd(requestId, 0);
+            }
         }
 
         /// <summary>
