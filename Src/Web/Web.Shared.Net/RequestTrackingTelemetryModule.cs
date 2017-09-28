@@ -20,7 +20,7 @@
         private const string RequestIdHeader = "AppInsights-Request-Id";
 
         /// <summary>
-        /// Using this as a hashset of current active requests. The second value is ignored.
+        /// Using this as a hash-set of current active requests. The second value is ignored.
         /// </summary>
         private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
         
