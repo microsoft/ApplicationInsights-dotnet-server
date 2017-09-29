@@ -65,13 +65,6 @@
             Thread.GetDomain().SetData(".appPath", string.Empty);
             Thread.GetDomain().SetData(".appVPath", string.Empty);
 
-            if (headers == null)
-            {
-                headers = new Dictionary<string, string>();
-            }
-
-            headers["AppInsights-RequestTrackingTelemetryModule-Request-Id"] = "test-request-id";
-
             var workerRequest = new SimpleWorkerRequestWithHeaders(UrlPath, UrlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers, remoteAddr);
             
             var context = new HttpContext(workerRequest);

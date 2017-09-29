@@ -525,7 +525,7 @@
 
         private RequestTrackingTelemetryModule RequestTrackingTelemetryModuleFactory(TelemetryConfiguration config = null, CorrelationIdLookupHelper correlationHelper = null)
         {
-            var module = new RequestTrackingTelemetryModule(enableSafeRequestTracking: true);
+            var module = new RequestTrackingTelemetryModule(enableChildRequestsSuppression: false);
             module.OverrideCorrelationIdLookupHelper(correlationHelper ?? this.correlationIdLookupHelper);
             module.Initialize(config ?? this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext()));
             return module;

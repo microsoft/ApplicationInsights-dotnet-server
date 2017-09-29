@@ -314,7 +314,7 @@
 
             AspNetDiagnosticTelemetryModule result = new AspNetDiagnosticTelemetryModule();
 
-            var requestModule = new RequestTrackingTelemetryModule(enableSafeRequestTracking: true);
+            var requestModule = new RequestTrackingTelemetryModule(enableChildRequestsSuppression: false);
             var exceptionModule = new ExceptionTrackingTelemetryModule();
             requestModule.Initialize(this.configuration);
             exceptionModule.Initialize(this.configuration);

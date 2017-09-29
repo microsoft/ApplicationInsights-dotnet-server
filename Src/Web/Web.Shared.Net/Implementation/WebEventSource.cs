@@ -374,6 +374,17 @@
                 this.ApplicationName);
         }
 
+        [Event(
+            39,
+            Message = "RequestTrackingTelemetryModule ChildRequestTrackingSuppressionModule failed to remove request from ActiveRequests.",
+            Level = EventLevel.Warning)]
+        public void FailedToRemoveRequestFromActiveRequests(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                39,
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {

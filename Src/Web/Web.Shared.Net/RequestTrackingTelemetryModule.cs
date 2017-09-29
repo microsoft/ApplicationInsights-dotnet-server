@@ -17,31 +17,33 @@
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
-        private const string RequestIdHeader = "AppInsights-RequestTrackingTelemetryModule-Request-Id";
-
-        /// <summary>
-        /// Using this as a hash-set of current active requests. The second value is ignored.
-        /// </summary>
-        private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
-
         private readonly IList<string> handlersToFilter = new List<string>();
         private TelemetryClient telemetryClient;
         private bool initializationErrorReported;
         private bool correlationHeadersEnabled = true;
         private string telemetryChannelEnpoint;
         private CorrelationIdLookupHelper correlationIdLookupHelper;
+        private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
-        private Action<HttpContext> ensureActiveRequestIsTracked;
-
-        internal RequestTrackingTelemetryModule(bool enableSafeRequestTracking = false)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RequestTrackingTelemetryModule" /> class.
+        /// </summary>
+        public RequestTrackingTelemetryModule() : this(enableChildRequestsSuppression: true)
         {
-            if (enableSafeRequestTracking)
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RequestTrackingTelemetryModule" /> class.
+        /// </summary>
+        /// <remarks>
+        /// Unit tests should disable the <see cref="ChildRequestTrackingSuppressionModule" />.
+        /// </remarks>
+        /// <param name="enableChildRequestsSuppression">Boolean flag to enable/disable child request suppression caused by <see cref="System.Web.Handlers.TransferRequestHandler" /></param>
+        internal RequestTrackingTelemetryModule(bool enableChildRequestsSuppression)
+        {
+            if (enableChildRequestsSuppression)
             {
-                this.ensureActiveRequestIsTracked = this.EnsureIsActiveRequestSafe;
-            }
-            else
-            {
-                this.ensureActiveRequestIsTracked = this.EnsureIsActiveRequest;
+                this.childRequestTrackingSuppressionModule = new ChildRequestTrackingSuppressionModule();
             }
         }
 
@@ -91,7 +93,7 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
-            this.ensureActiveRequestIsTracked(context);
+            this.childRequestTrackingSuppressionModule?.EnsureActiveRequestIsTracked(context);
             
             if (this.telemetryClient == null)
             {
@@ -240,8 +242,7 @@
                 requestTelemetry.Source = telemetrySource;
             }
 
-            string requestId = context.Request.Headers[RequestIdHeader];
-            if (requestId != null && activeRequests.TryRemove(requestId, out byte value))
+            if (this.childRequestTrackingSuppressionModule?.ShouldTrackRequest(context) ?? true)
             {
                 this.telemetryClient.TrackRequest(requestTelemetry);
             }
@@ -337,50 +338,6 @@
         }
 
         /// <summary>
-        /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
-        /// <see cref="System.Web.Handlers.TransferRequestHandler">
-        /// TransferRequestHandler can create a Child request to route extension-less requests to a controller.
-        /// (ex: site/home -> site/HomeController.cs)
-        /// We do not want duplicate telemetry logged for both the Parent and Child requests, so the activeRequests will be created OnBeginRequest.
-        /// When the child request OnEndRequest, the id will be removed from this dictionary and telemetry will not be logged for the parent.
-        /// </see>
-        /// </summary>
-        /// <remarks>
-        /// Unit test projects cannot create an [internal] IIS7WorkerRequest object.
-        /// Without this object, we cannot modify the Request.Headers without throwing a PlatformNotSupportedException.
-        /// Unit tests will have to initialize the RequestIdHeader.
-        /// The second IF will ensure the id is added to the activeRequests.
-        /// </remarks>
-        private void EnsureIsActiveRequestSafe(HttpContext context)
-        {
-            string requestId;
-            if (context.Request.Headers[RequestIdHeader] == null)
-            {
-                requestId = Guid.NewGuid().ToString();
-                context.Request.Headers[RequestIdHeader] = requestId;
-            }
-            else
-            {
-                requestId = context.Request.Headers[RequestIdHeader];
-            }
-            
-            if (!activeRequests.ContainsKey(requestId))
-            {
-                activeRequests.TryAdd(requestId, 0);
-            }
-        }
-
-        private void EnsureIsActiveRequest(HttpContext context)
-        {
-            if (context.Request.Headers[RequestIdHeader] == null)
-            {
-                string requestId = Guid.NewGuid().ToString();
-                context.Request.Headers[RequestIdHeader] = requestId;
-                activeRequests.TryAdd(requestId, 0);
-            }
-        }
-
-        /// <summary>
         /// Checks whether or not handler is a transfer handler.
         /// </summary>
         /// <param name="handler">An instance of handler to validate.</param>
@@ -416,6 +373,76 @@
             }
             catch
             {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="System.Web.Handlers.TransferRequestHandler"/> can create a Child request to route extension-less requests to a controller.
+        /// (ex: site/home -> site/HomeController.cs)
+        /// We do not want duplicate telemetry logged for both the Parent and Child requests, so the activeRequests will be created OnBeginRequest.
+        /// When the child request OnEndRequest, the id will be removed from this dictionary and telemetry will not be logged for the parent.
+        /// </summary>
+        /// <remarks>
+        /// Unit tests should disable the ChildRequestTrackingSuppressionModule.
+        /// Unit test projects cannot create an [internal] IIS7WorkerRequest object.
+        /// Without this object, we cannot modify the Request.Headers without throwing a PlatformNotSupportedException.
+        /// Unit tests will have to initialize the RequestIdHeader.
+        /// The second IF will ensure the id is added to the activeRequests.
+        /// </remarks>
+        private class ChildRequestTrackingSuppressionModule
+        {
+            /// <summary>
+            /// Max number of request ids to cache.
+            /// </summary>
+            private const int MAXSIZE = 100;
+
+            private const string RequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
+
+            /// <summary>
+            /// Using this as a hash-set of current active requests. The second value is ignored.
+            /// </summary>
+            private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
+            
+            /// <summary>
+            /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
+            /// </summary>
+            internal void EnsureActiveRequestIsTracked(HttpContext context)
+            {
+                // Simplistic cleanup to prevent memory leaks.
+                if (activeRequests.Count >= MAXSIZE)
+                {
+                    activeRequests.Clear();
+                }
+
+                if (context.Request.Headers[RequestIdHeader] == null)
+                {
+                    string requestId = Guid.NewGuid().ToString();
+                    context.Request.Headers[RequestIdHeader] = requestId;
+                    activeRequests.TryAdd(requestId, 0);
+                }
+            }
+
+            /// <summary>
+            /// Will compare a request id against a hash-set of active requests.
+            /// Will return true if request id is matched, and remove id from hash-set.
+            /// Additional requests with the same id will return false.
+            /// </summary>
+            internal bool ShouldTrackRequest(HttpContext context)
+            {
+                string requestId = context.Request.Headers[RequestIdHeader];
+
+                if (requestId != null && activeRequests.ContainsKey(requestId))
+                {
+                    if (!activeRequests.TryRemove(requestId, out byte value))
+                    {
+                        // TODO: FAILED TO REMOVE KEY. CREATE LOG
+                        WebEventSource.Log.FailedToRemoveRequestFromActiveRequests();
+                    }
+
+                    return true;
+                }
+
                 return false;
             }
         }
