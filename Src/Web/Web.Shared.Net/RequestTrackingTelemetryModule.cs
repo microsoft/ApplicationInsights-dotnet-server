@@ -41,7 +41,9 @@
         /// <param name="enableChildRequestsSuppression">Boolean flag to enable/disable child request suppression caused by <see cref="System.Web.Handlers.TransferRequestHandler" /></param>
         internal RequestTrackingTelemetryModule(bool enableChildRequestsSuppression)
         {
-            if (enableChildRequestsSuppression)
+            // Headers will be read-only in a classic iis pipeline
+            // Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.
+            if (HttpRuntime.UsingIntegratedPipeline && enableChildRequestsSuppression)
             {
                 this.childRequestTrackingSuppressionModule = new ChildRequestTrackingSuppressionModule();
             }
@@ -387,6 +389,7 @@
         /// Unit tests should disable the ChildRequestTrackingSuppressionModule.
         /// Unit test projects cannot create an [internal] IIS7WorkerRequest object.
         /// Without this object, we cannot modify the Request.Headers without throwing a PlatformNotSupportedException.
+        /// (Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.)
         /// Unit tests will have to initialize the RequestIdHeader.
         /// The second IF will ensure the id is added to the activeRequests.
         /// </remarks>
