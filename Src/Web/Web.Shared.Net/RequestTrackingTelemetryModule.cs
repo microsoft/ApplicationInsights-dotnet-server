@@ -389,9 +389,13 @@
         /// Unit tests should disable the ChildRequestTrackingSuppressionModule.
         /// Unit test projects cannot create an [internal] IIS7WorkerRequest object.
         /// Without this object, we cannot modify the Request.Headers without throwing a PlatformNotSupportedException.
-        /// (Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.)
         /// Unit tests will have to initialize the RequestIdHeader.
         /// The second IF will ensure the id is added to the activeRequests.
+        /// </remarks>
+        /// <remarks>
+        /// IIS Classic Pipeline should disable the ChildRequestTrackingSuppressionModule.
+        /// Classic does not create IIS7WorkerRequest object and Headers will be read-only.
+        /// (Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.)
         /// </remarks>
         private class ChildRequestTrackingSuppressionModule
         {
@@ -439,7 +443,6 @@
                 {
                     if (!activeRequests.TryRemove(requestId, out byte value))
                     {
-                        // TODO: FAILED TO REMOVE KEY. CREATE LOG
                         WebEventSource.Log.FailedToRemoveRequestFromActiveRequests();
                     }
 
