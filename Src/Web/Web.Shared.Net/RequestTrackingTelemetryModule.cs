@@ -402,14 +402,16 @@
             /// <summary>
             /// Max number of request ids to cache.
             /// </summary>
-            private const int MAXSIZE = 100;
+            private const int MAXSIZE = 10000;
 
+            private const int TIMEOUTSECONDS = -3;
+            
             private const string RequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
 
             /// <summary>
-            /// Using this as a hash-set of current active requests. The second value is ignored.
+            /// Using this as a hash-set of current active requests. The second value is used when auditing the dictionary for cleanup.
             /// </summary>
-            private static ConcurrentDictionary<string, byte> activeRequests = new ConcurrentDictionary<string, byte>();
+            private static ConcurrentDictionary<string, long> activeRequests = new ConcurrentDictionary<string, long>(System.Environment.ProcessorCount, MAXSIZE);
             
             /// <summary>
             /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
@@ -419,17 +421,30 @@
                 // Simplistic cleanup to prevent memory leaks.
                 if (activeRequests.Count >= MAXSIZE)
                 {
-                    activeRequests.Clear();
+                    int removeCount = 0;
+                    var timeout = DateTime.UtcNow.AddSeconds(TIMEOUTSECONDS).Ticks;
+                    foreach (var x in activeRequests)
+                    {
+                        if (x.Value < timeout)
+                        {
+                            if (activeRequests.TryRemove(x.Key, out var value))
+                            {
+                                removeCount++;
+                            }
+                        }
+                    }
+
+                    WebEventSource.Log.ChildRequestTrackingClearingActiveRequests(MAXSIZE, TIMEOUTSECONDS, removeCount);
                 }
 
                 if (context.Request.Headers[RequestIdHeader] == null)
                 {
                     string requestId = Guid.NewGuid().ToString();
                     context.Request.Headers[RequestIdHeader] = requestId;
-                    activeRequests.TryAdd(requestId, 0);
+                    activeRequests.TryAdd(requestId, DateTime.UtcNow.Ticks);
                 }
             }
-
+            
             /// <summary>
             /// Will compare a request id against a hash-set of active requests.
             /// Will return true if request id is matched, and remove id from hash-set.
@@ -441,7 +456,7 @@
 
                 if (requestId != null && activeRequests.ContainsKey(requestId))
                 {
-                    if (!activeRequests.TryRemove(requestId, out byte value))
+                    if (!activeRequests.TryRemove(requestId, out var value))
                     {
                         WebEventSource.Log.FailedToRemoveRequestFromActiveRequests();
                     }

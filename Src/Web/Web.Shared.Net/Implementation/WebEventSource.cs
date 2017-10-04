@@ -4,6 +4,7 @@
 #if NET45
     using System.Diagnostics.Tracing;
 #endif
+    using System.Globalization;
 
     /// <summary>
     /// ETW EventSource tracing class.
@@ -382,6 +383,18 @@
         {
             this.WriteEvent(
                 39,
+                this.ApplicationName);
+        }
+
+        [Event(
+            40,
+            Message = "RequestTrackingTelemetryModule ChildRequestTrackingSuppressionModule exceeded max number of '{0}' active requests. Timeout set to '{1}'. Clearing '{2}' items from dictionary.",
+            Level = EventLevel.Informational)]
+        public void ChildRequestTrackingClearingActiveRequests(int numMaxActiveRequests, int timeoutSetting, int removedItems, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                40,
+                numMaxActiveRequests.ToString(CultureInfo.InvariantCulture), timeoutSetting.ToString(CultureInfo.InvariantCulture), removedItems.ToString(CultureInfo.InvariantCulture),
                 this.ApplicationName);
         }
 
