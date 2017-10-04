@@ -394,7 +394,9 @@
         {
             this.WriteEvent(
                 40,
-                numMaxActiveRequests.ToString(CultureInfo.InvariantCulture), timeoutSetting.ToString(CultureInfo.InvariantCulture), removedItems.ToString(CultureInfo.InvariantCulture),
+                numMaxActiveRequests.ToString(CultureInfo.InvariantCulture),
+                timeoutSetting.ToString(CultureInfo.InvariantCulture),
+                removedItems.ToString(CultureInfo.InvariantCulture),
                 this.ApplicationName);
         }
 
