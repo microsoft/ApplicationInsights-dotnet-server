@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data.SqlClient;
+    using System.Diagnostics;
     using System.Globalization;
     using System.IO;
     using System.Reflection;
@@ -24,14 +25,26 @@
             // Create Data Directory If It Doesn't Already Exist.
             if (!Directory.Exists(outputFolder))
             {
+                Trace.TraceInformation($"Sql Test Directory does not exist. Creating directory: {outputFolder}");
                 Directory.CreateDirectory(outputFolder);
+
+                if (!Directory.Exists(outputFolder))
+                {
+                    throw new Exception($"Failed to create Sql Test Directory: '{outputFolder}'");
+                }
             }
 
             else if (!CheckDatabaseExists(databaseName))
             {
+                Trace.TraceInformation($"Sql Database does not exist. Creating database: {databaseName}");
                 // If the database does not already exist, create it.
                 CreateDatabase(databaseName, databaseFileName);
                 ExecuteScript(databaseName, scriptName);
+
+                if (!CheckDatabaseExists(databaseName))
+                {
+                    throw new Exception($"Failed to create Sql Database: '{databaseName}'");
+                }
             }
         }
 

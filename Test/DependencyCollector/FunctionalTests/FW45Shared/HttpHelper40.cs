@@ -415,7 +415,7 @@ namespace FW40Shared
         /// Make azure call to write to Table
         /// </summary>        
         /// <param name="count">no of calls to be made</param>        
-        public static void MakeAzureCallToWriteTableWithSdk(int count)
+        public static CloudTable MakeAzureCallToWriteTableWithSdk(int count)
         {
             // Retrieve storage account from connection string.
             CloudStorageAccount storageAccount =
@@ -447,24 +447,29 @@ namespace FW40Shared
 
             // Execute the batch operation.
             table.ExecuteBatch(batchOperation);
+
+            return table;
         }
 
         /// <summary>
         /// Make azure call to read from Table
         /// </summary>        
         /// <param name="count">no of calls to be made</param>        
-        public static void MakeAzureCallToReadTableWithSdk(int count)
+        public static void MakeAzureCallToReadTableWithSdk(int count, CloudTable table = null)
         {
-            // Retrieve storage account from connection string.
-            CloudStorageAccount storageAccount =
-                CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+            if (table == null)
+            {
+                // Retrieve storage account from connection string.
+                CloudStorageAccount storageAccount =
+                    CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
 
-            // Create the table client.
-            CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+                // Create the table client.
+                CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
-            // Create the table if it doesn't exist.
-            CloudTable table = tableClient.GetTableReference("people");
-            table.CreateIfNotExists();
+                // Create the table if it doesn't exist.
+                table = tableClient.GetTableReference("people");
+                table.CreateIfNotExists();
+            }
 
             // Create the table query.
             TableQuery<CustomerEntity> rangeQuery = new TableQuery<CustomerEntity>().Where(
@@ -482,6 +487,30 @@ namespace FW40Shared
                 var x4 = entity.PhoneNumber;
                 var s = x1 + x2 + x3 + x4;
             }
+        }
+
+
+        /// <summary>
+        /// Make azure call to delete from Table
+        /// </summary>        
+        /// <param name="count">no of calls to be made</param>        
+        public static void MakeAzureCallToDeleteTableWithSdk(int count, CloudTable table = null)
+        {
+            if (table == null)
+            {
+                // Retrieve storage account from connection string.
+                CloudStorageAccount storageAccount =
+                    CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+
+                // Create the table client.
+                CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+
+                // Create the table if it doesn't exist.
+                table = tableClient.GetTableReference("people");
+                table.CreateIfNotExists();
+            }
+
+            table.Delete();
         }
 
         /// <summary>

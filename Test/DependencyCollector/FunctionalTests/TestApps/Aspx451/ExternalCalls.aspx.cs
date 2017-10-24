@@ -136,8 +136,9 @@ namespace Aspx451
                         HttpHelper40.MakeAzureCallToWriteQueueWithSdk(count);
                         break;
                     case "azuresdktable":
-                        HttpHelper40.MakeAzureCallToWriteTableWithSdk(count);
-                        HttpHelper40.MakeAzureCallToReadTableWithSdk(count);
+                        var table = HttpHelper40.MakeAzureCallToWriteTableWithSdk(count);
+                        HttpHelper40.MakeAzureCallToReadTableWithSdk(count, table);
+                        HttpHelper40.MakeAzureCallToDeleteTableWithSdk(count, table);
                         break;
                     case "ExecuteReaderAsync":
                         SqlCommandHelper.ExecuteReaderAsync(ConnectionString, sqlQueryTouse);
