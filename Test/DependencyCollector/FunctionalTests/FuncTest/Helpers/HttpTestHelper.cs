@@ -258,7 +258,7 @@ namespace FuncTest.Helpers
                         var successFlagActual = httpItem.data.baseData.success;
                         if (checkStatus)
                         {
-                            Assert.AreEqual(true, successFlagActual, "Success flag collected is wrong.It is expected to be true for all azure sdk calls.");
+                            Assert.AreEqual(true, successFlagActual, $"Success flag is expected to be true for all azure sdk calls. Failed: '{httpItem.data.baseData.name}'.");
                         }
                     }
 
