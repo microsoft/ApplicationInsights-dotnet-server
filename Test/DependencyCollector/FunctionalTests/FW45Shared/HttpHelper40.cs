@@ -9,6 +9,7 @@
 namespace FW40Shared
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
@@ -16,6 +17,8 @@ namespace FW40Shared
     using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     using Microsoft.WindowsAzure;
     using Microsoft.WindowsAzure.Storage;
@@ -411,11 +414,58 @@ namespace FW40Shared
             Directory.Delete(@"c:\fromblob", true);
         }
 
+        public static async Task MakeAzureTableCallsAsync(int count)
+        {
+            var table = await MakeAzureCallToWriteTableWithSdkAsync(count);
+            await MakeAzureCallToReadTableWithSdkAsync(count, table);
+            await MakeAzureCallToDeleteTableWithSdkAsync(count, table);
+        }
+
         /// <summary>
         /// Make azure call to write to Table
         /// </summary>        
         /// <param name="count">no of calls to be made</param>        
-        public static void MakeAzureCallToWriteTableWithSdk(int count)
+        public static async Task<CloudTable> MakeAzureCallToWriteTableWithSdkAsync(int count)
+        {
+            // Retrieve storage account from connection string.
+            CloudStorageAccount storageAccount =
+                CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+
+            // Create the table client.
+            CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+
+            // Create the table if it doesn't exist.
+            CloudTable table = tableClient.GetTableReference("people");
+            table.CreateIfNotExists();
+
+            // Create the batch operation.
+            TableBatchOperation batchOperation = new TableBatchOperation();
+
+            // Create a customer entity and add it to the table.
+            CustomerEntity customer1 = new CustomerEntity("Smith", "Jeff" + DateTime.UtcNow.Ticks);
+            customer1.Email = "Jeff@contoso.com";
+            customer1.PhoneNumber = "425-555-0104";
+
+            // Create another customer entity and add it to the table.
+            CustomerEntity customer2 = new CustomerEntity("Smith", "Ben" + DateTime.UtcNow.Ticks);
+            customer2.Email = "Ben@contoso.com";
+            customer2.PhoneNumber = "425-555-0102";
+
+            // Add both customer entities to the batch insert operation.
+            batchOperation.Insert(customer1);
+            batchOperation.Insert(customer2);
+
+            // Execute the batch operation.
+            await table.ExecuteBatchAsync(batchOperation);
+
+            return table;
+        }
+
+        /// <summary>
+        /// Make azure call to write to Table
+        /// </summary>        
+        /// <param name="count">no of calls to be made</param>        
+        public static CloudTable MakeAzureCallToWriteTableWithSdk(int count)
         {
             // Retrieve storage account from connection string.
             CloudStorageAccount storageAccount =
@@ -447,24 +497,29 @@ namespace FW40Shared
 
             // Execute the batch operation.
             table.ExecuteBatch(batchOperation);
+
+            return table;
         }
 
         /// <summary>
         /// Make azure call to read from Table
         /// </summary>        
         /// <param name="count">no of calls to be made</param>        
-        public static void MakeAzureCallToReadTableWithSdk(int count)
+        public static void MakeAzureCallToReadTableWithSdk(int count, CloudTable table = null)
         {
-            // Retrieve storage account from connection string.
-            CloudStorageAccount storageAccount =
-                CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+            if (table == null)
+            {
+                // Retrieve storage account from connection string.
+                CloudStorageAccount storageAccount =
+                    CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
 
-            // Create the table client.
-            CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
+                // Create the table client.
+                CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
-            // Create the table if it doesn't exist.
-            CloudTable table = tableClient.GetTableReference("people");
-            table.CreateIfNotExists();
+                // Create the table if it doesn't exist.
+                table = tableClient.GetTableReference("people");
+                table.CreateIfNotExists();
+            }
 
             // Create the table query.
             TableQuery<CustomerEntity> rangeQuery = new TableQuery<CustomerEntity>().Where(
@@ -482,6 +537,39 @@ namespace FW40Shared
                 var x4 = entity.PhoneNumber;
                 var s = x1 + x2 + x3 + x4;
             }
+        }
+
+        /// <summary>
+        /// Make azure call to read from Table
+        /// </summary>        
+        /// <param name="count">no of calls to be made</param>        
+        public static async Task MakeAzureCallToReadTableWithSdkAsync(int count, CloudTable table)
+        {
+            // Create the table query.
+            TableQuery<CustomerEntity> rangeQuery = new TableQuery<CustomerEntity>().Where(
+                TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "Smith"),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThan, "E")));
+
+            // Loop through the results, displaying information about the entity.
+            foreach (CustomerEntity entity in await table.ExecuteQueryAsync(rangeQuery))
+            {
+                var x1 = entity.PartitionKey;
+                var x2 = entity.RowKey;
+                var x3 = entity.Email;
+                var x4 = entity.PhoneNumber;
+                var s = x1 + x2 + x3 + x4;
+            }
+        }
+        
+        /// <summary>
+        /// Make azure call to delete from Table
+        /// </summary>        
+        /// <param name="count">no of calls to be made</param>        
+        public static async Task MakeAzureCallToDeleteTableWithSdkAsync(int count, CloudTable table)
+        {
+            await table.DeleteAsync();
         }
 
         /// <summary>
@@ -527,9 +615,7 @@ namespace FW40Shared
             }
         }
     }
-
-
-
+    
     [ComVisible(false)]
     public class CustomerEntity : TableEntity
     {
@@ -544,5 +630,25 @@ namespace FW40Shared
         public string Email { get; set; }
 
         public string PhoneNumber { get; set; }
+    }
+
+    public static class CloudTableExtensions
+    {
+        public static async Task<IList<T>> ExecuteQueryAsync<T>(this CloudTable table, TableQuery<T> query, CancellationToken ct = default(CancellationToken), Action<IList<T>> onProgress = null) where T : ITableEntity, new()
+        {
+            var items = new List<T>();
+            TableContinuationToken token = null;
+
+            do
+            {
+                TableQuerySegment<T> seg = await table.ExecuteQuerySegmentedAsync<T>(query, token);
+                token = seg.ContinuationToken;
+                items.AddRange(seg);
+                onProgress?.Invoke(items);
+
+            } while (token != null && !ct.IsCancellationRequested);
+
+            return items;
+        }
     }
 }
