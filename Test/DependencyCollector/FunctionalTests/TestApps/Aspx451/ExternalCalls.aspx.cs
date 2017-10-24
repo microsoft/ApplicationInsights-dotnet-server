@@ -14,6 +14,7 @@ namespace Aspx451
     using System.Runtime.InteropServices;
     using FW40Shared;
     using FW45Shared;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// ExternalCalls page to make remote dependency calls.
@@ -136,9 +137,8 @@ namespace Aspx451
                         HttpHelper40.MakeAzureCallToWriteQueueWithSdk(count);
                         break;
                     case "azuresdktable":
-                        var table = HttpHelper40.MakeAzureCallToWriteTableWithSdk(count);
-                        HttpHelper40.MakeAzureCallToReadTableWithSdk(count, table);
-                        HttpHelper40.MakeAzureCallToDeleteTableWithSdk(count, table);
+                        var task = Task.Run(() => HttpHelper40.MakeAzureTableCallsAsync(count));
+                        Task.WaitAll(task);
                         break;
                     case "ExecuteReaderAsync":
                         SqlCommandHelper.ExecuteReaderAsync(ConnectionString, sqlQueryTouse);
