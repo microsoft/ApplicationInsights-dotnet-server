@@ -405,7 +405,9 @@
             private const int MAXSIZE = 10000;
 
             private const int TIMEOUTSECONDS = -3;
-            
+
+            private const string RootRequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-RootRequest-Id";
+            private const string ParentRequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-ParentRequest-Id";
             private const string RequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
 
             /// <summary>
@@ -413,6 +415,31 @@
             /// </summary>
             private static ConcurrentDictionary<string, long> activeRequests = new ConcurrentDictionary<string, long>(System.Environment.ProcessorCount, MAXSIZE);
             
+            /// <summary>
+            /// Tag new requests.
+            /// Transfer Ids to parent requests.
+            /// </summary>
+            private string TagRequest(HttpContext context)
+            {
+                var newId = Guid.NewGuid().ToString();
+
+                var headers = context.Request.Headers;
+
+                if (headers[RootRequestIdHeader] == null)
+                {
+                    headers[RootRequestIdHeader] = newId;
+                }
+
+                if(headers[RequestIdHeader] != null)
+                {
+                    headers[ParentRequestIdHeader] = headers[RequestIdHeader];
+                }
+
+                headers[RequestIdHeader] = newId;
+
+                return newId;
+            }
+
             /// <summary>
             /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
             /// </summary>
@@ -437,12 +464,15 @@
                     WebEventSource.Log.ChildRequestTrackingClearingActiveRequests(MAXSIZE, TIMEOUTSECONDS, removeCount);
                 }
 
-                if (context.Request.Headers[RequestIdHeader] == null)
-                {
-                    string requestId = Guid.NewGuid().ToString();
-                    context.Request.Headers[RequestIdHeader] = requestId;
-                    activeRequests.TryAdd(requestId, DateTime.UtcNow.Ticks);
-                }
+
+                //if (context.Request.Headers[RequestIdHeader] == null)
+                //{
+                //    string requestId = Guid.NewGuid().ToString();
+                //    context.Request.Headers[RequestIdHeader] = requestId;
+                //    activeRequests.TryAdd(requestId, DateTime.UtcNow.Ticks);
+                //}
+
+                var requestId = TagRequest(context);
             }
             
             /// <summary>
