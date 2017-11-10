@@ -139,7 +139,7 @@
             }
             finally
             {
-                this.assertionSync = null;
+                Interlocked.Exchange(ref this.assertionSync, null)?.Dispose();
             }
         }
 
@@ -1967,6 +1967,7 @@
             try
             {
                 ((IDisposable)this.listener).Dispose();
+                Interlocked.Exchange(ref this.assertionSync, null)?.Dispose();
             }
             catch (Exception)
             {
@@ -2074,7 +2075,9 @@
             Task<bool>[] waitTasks = Enumerable.Range(0, requestCount).Select(_ => Task.Run(() => this.assertionSync.Wait(timeout))).ToArray();
             Task.WhenAll(waitTasks);
 
-            Assert.IsTrue(waitTasks.All(task => task.Result), $"Not all requests finished processing: expected {requestCount}, actual: {waitTasks.Count(task => task.Result)}");
+            Assert.IsTrue(
+                condition: waitTasks.All(task => task.Result), 
+                message: string.Format(CultureInfo.InvariantCulture, "Not all requests finished processing: expected {0}, actual: {1}", requestCount, waitTasks.Count(task => task.Result)));
         }
 
 #endregion
