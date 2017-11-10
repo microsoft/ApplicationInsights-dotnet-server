@@ -1989,7 +1989,6 @@
             {
                 try
                 {
-
                     HttpListenerContext context = listener.GetContextAsync().GetAwaiter().GetResult();
 
                     var request = context.Request;
