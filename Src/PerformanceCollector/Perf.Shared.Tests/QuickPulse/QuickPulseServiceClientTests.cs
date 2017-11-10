@@ -1967,8 +1967,11 @@
             try
             {
                 ((IDisposable)this.listener).Dispose();
-                this.assertionSync?.Dispose();
-                this.assertionSync = null;
+                if (this.assertionSync != null)
+                {
+                    this.assertionSync.Dispose();
+                    this.assertionSync = null;
+                }
             }
             catch (Exception)
             {
