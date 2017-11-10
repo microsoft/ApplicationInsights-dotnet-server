@@ -11,4 +11,4 @@ For significant contributions please make sure you have completed the following 
 
 - [ ] Changes in public surface reviewed
 - [ ] I ran [functional tests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/blob/develop/CONTRIBUTING.md#functional-tests) locally.
-- [ ] The PR will trigger build, unit test, and functional tests automatically. If you are non-Microsoft employee, please mention any committers to help trigger build.
+- [ ] The PR will trigger build, unit test, and functional tests automatically. If your PR submitted from fork - mention one of committers to initiate the build for you.
