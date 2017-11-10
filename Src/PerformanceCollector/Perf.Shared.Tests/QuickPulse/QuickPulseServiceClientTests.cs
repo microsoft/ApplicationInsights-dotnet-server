@@ -1967,7 +1967,8 @@
             try
             {
                 ((IDisposable)this.listener).Dispose();
-                Interlocked.Exchange(ref this.assertionSync, null)?.Dispose();
+                this.assertionSync?.Dispose();
+                this.assertionSync = null;
             }
             catch (Exception)
             {
