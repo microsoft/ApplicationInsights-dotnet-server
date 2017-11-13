@@ -95,7 +95,7 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
-            this.childRequestTrackingSuppressionModule?.EnsureActiveRequestIsTracked(context);
+            this.childRequestTrackingSuppressionModule?.OnBeginRequest_IdRequest(context);
             
             if (this.telemetryClient == null)
             {
@@ -244,7 +244,7 @@
                 requestTelemetry.Source = telemetrySource;
             }
 
-            if (this.childRequestTrackingSuppressionModule?.ShouldTrackRequest(context) ?? true)
+            if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
             {
                 this.telemetryClient.TrackRequest(requestTelemetry);
             }
@@ -402,19 +402,51 @@
             /// <summary>
             /// Max number of request ids to cache.
             /// </summary>
-            private const int MAXSIZE = 10000;
+            private const int MAXSIZE = 100000; // TODO: THIS VALUE NEEDS TO BE CONFIGURABLE
 
-            private const int TIMEOUTSECONDS = -3;
-
-            private const string RootRequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-RootRequest-Id";
-            private const string ParentRequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-ParentRequest-Id";
-            private const string RequestIdHeader = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
+            private const string HeaderRootRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-RootRequest-Id";
+            private const string HeaderParentRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-ParentRequest-Id";
+            private const string HeaderRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
 
             /// <summary>
-            /// Using this as a hash-set of current active requests. The second value is used when auditing the dictionary for cleanup.
+            /// Using this as a hash-set of current active requests. The second value is not used.
             /// </summary>
-            private static ConcurrentDictionary<string, long> activeRequests = new ConcurrentDictionary<string, long>(System.Environment.ProcessorCount, MAXSIZE);
-            
+            private static ConcurrentDictionary<string, bool> activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+            private static ConcurrentDictionary<string, bool> activeRequestsB = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+
+            /// <summary>
+            /// Request will be tagged with an id to identify if it should be logged later.
+            /// </summary>
+            internal void OnBeginRequest_IdRequest(HttpContext context)
+            {
+                this.TagRequest(context);
+            }
+
+            /// <summary>
+            /// OnEndRequest - Should this request be logged?
+            /// Will compare a request id against a hash-set of known requests.
+            /// If this request is not known, add it to hash-set and return true (safe to log).
+            /// If this request is known, return false (do not log twice).
+            /// Additional requests with the same id will return false.
+            /// </summary>
+            internal bool OnEndRequest_ShouldLog(HttpContext context)
+            {
+                var headers = context.Request.Headers;
+
+                var rootRequestId = headers[HeaderRootRequestId];
+                if (rootRequestId != null)
+                {
+                    if (!this.IsRequestKnown(rootRequestId))
+                    {
+                        // doesn't exist add to A and return true;
+                        this.AddRequestToDictionary(rootRequestId);
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             /// <summary>
             /// Tag new requests.
             /// Transfer Ids to parent requests.
@@ -425,76 +457,45 @@
 
                 var headers = context.Request.Headers;
 
-                if (headers[RootRequestIdHeader] == null)
+                if (headers[HeaderRootRequestId] == null)
                 {
-                    headers[RootRequestIdHeader] = newId;
+                    headers[HeaderRootRequestId] = newId;
                 }
 
-                if(headers[RequestIdHeader] != null)
+#if DEBUG
+                // additional ids help developer watch request hierarchy while debugging.
+                if (headers[HeaderRequestId] != null)
                 {
-                    headers[ParentRequestIdHeader] = headers[RequestIdHeader];
+                    headers[HeaderParentRequestId] = headers[HeaderRequestId];
                 }
 
-                headers[RequestIdHeader] = newId;
+                headers[HeaderRequestId] = newId;
+#endif
 
                 return newId;
             }
 
             /// <summary>
-            /// A request must be tracked as Active in order for telemetry to be recorded within OnEndRequest().
+            /// Has this request been tracked.
             /// </summary>
-            internal void EnsureActiveRequestIsTracked(HttpContext context)
+            private bool IsRequestKnown(string requestId)
             {
-                // Simplistic cleanup to prevent memory leaks.
-                if (activeRequests.Count >= MAXSIZE)
-                {
-                    int removeCount = 0;
-                    var timeout = DateTime.UtcNow.AddSeconds(TIMEOUTSECONDS).Ticks;
-                    foreach (var x in activeRequests)
-                    {
-                        if (x.Value < timeout)
-                        {
-                            if (activeRequests.TryRemove(x.Key, out var value))
-                            {
-                                removeCount++;
-                            }
-                        }
-                    }
-
-                    WebEventSource.Log.ChildRequestTrackingClearingActiveRequests(MAXSIZE, TIMEOUTSECONDS, removeCount);
-                }
-
-
-                //if (context.Request.Headers[RequestIdHeader] == null)
-                //{
-                //    string requestId = Guid.NewGuid().ToString();
-                //    context.Request.Headers[RequestIdHeader] = requestId;
-                //    activeRequests.TryAdd(requestId, DateTime.UtcNow.Ticks);
-                //}
-
-                var requestId = TagRequest(context);
+                return activeRequestsA.TryGetValue(requestId, out bool valueA) || activeRequestsB.TryGetValue(requestId, out bool valueB);
             }
-            
+
             /// <summary>
-            /// Will compare a request id against a hash-set of active requests.
-            /// Will return true if request id is matched, and remove id from hash-set.
-            /// Additional requests with the same id will return false.
+            /// Track this requestId.
             /// </summary>
-            internal bool ShouldTrackRequest(HttpContext context)
+            private void AddRequestToDictionary(string requestId)
             {
-                string requestId = context.Request.Headers[RequestIdHeader];
-
-                if (requestId != null && activeRequests.ContainsKey(requestId))
+                // TODO: LOCK
+                if (activeRequestsA.Count >= MAXSIZE)
                 {
-                    if (!activeRequests.TryRemove(requestId, out var value))
-                    {
-                        WebEventSource.Log.FailedToRemoveRequestFromActiveRequests();
-                    }
-
-                    return true;
+                    activeRequestsB = activeRequestsA;
+                    activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
                 }
 
-                return false;
+                activeRequestsA.TryAdd(requestId, false);
             }
         }
     }
