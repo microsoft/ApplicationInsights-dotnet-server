@@ -95,8 +95,6 @@
         /// </summary>
         public void OnBeginRequest(HttpContext context)
         {
-            this.childRequestTrackingSuppressionModule?.OnBeginRequest_IdRequest(context);
-            
             if (this.telemetryClient == null)
             {
                 if (!this.initializationErrorReported)
@@ -117,6 +115,8 @@
                 WebEventSource.Log.NoHttpContextWarning();
                 return;
             }
+
+            this.childRequestTrackingSuppressionModule?.OnBeginRequest_IdRequest(context);
 
             var telemetry = context.ReadOrCreateRequestTelemetryPrivate();
 
@@ -261,7 +261,7 @@
             }
 
             var requestTelemetry = context.GetRequestTelemetry();
-
+            
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
                 // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
@@ -405,8 +405,12 @@
             private const int MAXSIZE = 100000; // TODO: THIS VALUE NEEDS TO BE CONFIGURABLE
 
             private const string HeaderRootRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-RootRequest-Id";
+#if DEBUG
             private const string HeaderParentRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-ParentRequest-Id";
             private const string HeaderRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-Request-Id";
+#endif
+
+            private static object semaphore = new object();
 
             /// <summary>
             /// Using this as a hash-set of current active requests. The second value is not used.
@@ -438,7 +442,7 @@
                 {
                     if (!this.IsRequestKnown(rootRequestId))
                     {
-                        // doesn't exist add to A and return true;
+                        // doesn't exist add to dictionary and return true
                         this.AddRequestToDictionary(rootRequestId);
                         return true;
                     }
@@ -451,7 +455,7 @@
             /// Tag new requests.
             /// Transfer Ids to parent requests.
             /// </summary>
-            private string TagRequest(HttpContext context)
+            private void TagRequest(HttpContext context)
             {
                 var newId = Guid.NewGuid().ToString();
 
@@ -471,8 +475,6 @@
 
                 headers[HeaderRequestId] = newId;
 #endif
-
-                return newId;
             }
 
             /// <summary>
@@ -480,19 +482,32 @@
             /// </summary>
             private bool IsRequestKnown(string requestId)
             {
-                return activeRequestsA.TryGetValue(requestId, out bool valueA) || activeRequestsB.TryGetValue(requestId, out bool valueB);
+                return activeRequestsA.ContainsKey(requestId) || activeRequestsB.ContainsKey(requestId);
             }
 
             /// <summary>
             /// Track this requestId.
             /// </summary>
+            /// <remarks>
+            /// Dictionary A will be read/write.
+            /// When dictionary A is full, move to B and create new A.
+            /// Dictionary B will be read-only.
+            /// </remarks>
             private void AddRequestToDictionary(string requestId)
             {
-                // TODO: LOCK
                 if (activeRequestsA.Count >= MAXSIZE)
                 {
-                    activeRequestsB = activeRequestsA;
-                    activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+                    // only lock around the edge case to avoid locking EVERY request thread
+                    lock (semaphore)
+                    {
+                        // in the event that multiple threads step into the first if, 
+                        // check condition again to avoid repeat operations.
+                        if (activeRequestsA.Count >= MAXSIZE)
+                        {
+                            activeRequestsB = activeRequestsA;
+                            activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+                        }
+                    }
                 }
 
                 activeRequestsA.TryAdd(requestId, false);
