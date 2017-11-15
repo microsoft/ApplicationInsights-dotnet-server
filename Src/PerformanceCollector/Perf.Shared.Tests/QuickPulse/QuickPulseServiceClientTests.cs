@@ -23,7 +23,7 @@
     {
         private const string ServiceEndpointPropertyName = "ServiceEndpoint";
 
-        private static readonly TimeSpan RequestProcessingTimeout = TimeSpan.FromSeconds(5.0);
+        private static readonly TimeSpan RequestProcessingTimeout = TimeSpan.FromSeconds(30.0);
 
         /// <summary>
         /// Tuple of (Timestamp, CollectionConfigurationETag, MonitoringDataPoint).
