@@ -26,29 +26,26 @@
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RequestTrackingTelemetryModule" /> class.
-        /// </summary>
-        public RequestTrackingTelemetryModule() : this(enableChildRequestsSuppression: true)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RequestTrackingTelemetryModule" /> class.
+        /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
+        /// True by default.
+        /// This value is evaluated in Initialize().
         /// </summary>
         /// <remarks>
-        /// Unit tests should disable the <see cref="ChildRequestTrackingSuppressionModule" />.
+        /// See also <see cref="ChildRequestTrackingSuppressionModule" />.
+        /// Child requests caused by <see cref="System.Web.Handlers.TransferRequestHandler" />.
+        /// Unit tests should disable this.
         /// </remarks>
-        /// <param name="enableChildRequestsSuppression">Boolean flag to enable/disable child request suppression caused by <see cref="System.Web.Handlers.TransferRequestHandler" /></param>
-        internal RequestTrackingTelemetryModule(bool enableChildRequestsSuppression)
-        {
-            // Headers will be read-only in a classic iis pipeline
-            // Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.
-            if (HttpRuntime.UsingIntegratedPipeline && enableChildRequestsSuppression)
-            {
-                this.childRequestTrackingSuppressionModule = new ChildRequestTrackingSuppressionModule();
-            }
-        }
+        public bool EnableChildRequestTrackingSuppression { get; set; } = true;
 
+        /// <summary>
+        /// Gets or sets a value indicating the size of internal tracking dictionary.
+        /// Must be a positive integer.
+        /// </summary>
+        /// <remarks>
+        /// See also <see cref="ChildRequestTrackingSuppressionModule" />.
+        /// </remarks>
+        public int ChildRequestTrackingInternalDictionarySize { get; set; } = -1;
+        
         /// <summary>
         /// Gets the list of handler types for which requests telemetry will not be collected
         /// if request was successful.
@@ -304,6 +301,13 @@
             {
                 this.telemetryChannelEnpoint = configuration.TelemetryChannel.EndpointAddress;
             }
+
+            // Headers will be read-only in a classic iis pipeline
+            // Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.
+            if (HttpRuntime.UsingIntegratedPipeline && this.EnableChildRequestTrackingSuppression)
+            {
+                this.childRequestTrackingSuppressionModule = new ChildRequestTrackingSuppressionModule(maxRequestsTracked: this.ChildRequestTrackingInternalDictionarySize);
+            }
         }
 
         /// <summary>
@@ -399,10 +403,7 @@
         /// </remarks>
         private class ChildRequestTrackingSuppressionModule
         {
-            /// <summary>
-            /// Max number of request ids to cache.
-            /// </summary>
-            private const int MAXSIZE = 100000; // TODO: THIS VALUE NEEDS TO BE CONFIGURABLE
+            private const int DEFAULTMAXVALUE = 100000;
 
             private const string HeaderRootRequestId = "ApplicationInsights-RequestTrackingTelemetryModule-RootRequest-Id";
 #if DEBUG
@@ -415,8 +416,24 @@
             /// <summary>
             /// Using this as a hash-set of current active requests. The second value is not used.
             /// </summary>
-            private static ConcurrentDictionary<string, bool> activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
-            private static ConcurrentDictionary<string, bool> activeRequestsB = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+            private static ConcurrentDictionary<string, bool> activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, DEFAULTMAXVALUE);
+            private static ConcurrentDictionary<string, bool> activeRequestsB = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, DEFAULTMAXVALUE);
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ChildRequestTrackingSuppressionModule" /> class.
+            /// </summary>
+            /// <param name="maxRequestsTracked">The maximum number of active requests to be tracked before resetting the dictionary.</param>
+            internal ChildRequestTrackingSuppressionModule(int maxRequestsTracked = DEFAULTMAXVALUE)
+            {
+                this.MAXSIZE = maxRequestsTracked > 0 ? maxRequestsTracked : DEFAULTMAXVALUE;
+
+                System.Diagnostics.Debug.WriteLine($"{nameof(RequestTrackingTelemetryModule)}.{nameof(ChildRequestTrackingSuppressionModule)} Initialized. {nameof(this.MAXSIZE)}:{this.MAXSIZE}");
+            }
+
+            /// <summary>
+            /// Gets the Max number of request ids to cache.
+            /// </summary>
+            internal int MAXSIZE { get; private set; }
 
             /// <summary>
             /// Request will be tagged with an id to identify if it should be logged later.
@@ -495,17 +512,17 @@
             /// </remarks>
             private void AddRequestToDictionary(string requestId)
             {
-                if (activeRequestsA.Count >= MAXSIZE)
+                if (activeRequestsA.Count >= this.MAXSIZE)
                 {
                     // only lock around the edge case to avoid locking EVERY request thread
                     lock (semaphore)
                     {
                         // in the event that multiple threads step into the first if, 
                         // check condition again to avoid repeat operations.
-                        if (activeRequestsA.Count >= MAXSIZE)
+                        if (activeRequestsA.Count >= this.MAXSIZE)
                         {
                             activeRequestsB = activeRequestsA;
-                            activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, MAXSIZE);
+                            activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, this.MAXSIZE);
                         }
                     }
                 }
