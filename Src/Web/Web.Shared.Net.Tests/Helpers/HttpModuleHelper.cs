@@ -71,7 +71,7 @@
             HttpContext.Current = context;
             return context;
         }
-        
+
         public static HttpContextBase GetFakeHttpContextBase(IDictionary<string, string> headers = null)
         {
             return new HttpContextWrapper(GetFakeHttpContext(headers));

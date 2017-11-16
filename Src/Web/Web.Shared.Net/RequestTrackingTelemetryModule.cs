@@ -258,7 +258,7 @@
             }
 
             var requestTelemetry = context.GetRequestTelemetry();
-            
+
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
                 // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
