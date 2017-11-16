@@ -426,8 +426,6 @@
             internal ChildRequestTrackingSuppressionModule(int maxRequestsTracked = DEFAULTMAXVALUE)
             {
                 this.MAXSIZE = maxRequestsTracked > 0 ? maxRequestsTracked : DEFAULTMAXVALUE;
-
-                System.Diagnostics.Debug.WriteLine($"{nameof(RequestTrackingTelemetryModule)}.{nameof(ChildRequestTrackingSuppressionModule)} Initialized. {nameof(this.MAXSIZE)}:{this.MAXSIZE}");
             }
 
             /// <summary>
