@@ -4,7 +4,6 @@
 #if NET45
     using System.Diagnostics.Tracing;
 #endif
-    using System.Globalization;
 
     /// <summary>
     /// ETW EventSource tracing class.
@@ -374,7 +373,7 @@
                 38,
                 this.ApplicationName);
         }
-        
+
         [NonEvent]
         private string GetApplicationName()
         {
