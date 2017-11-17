@@ -44,7 +44,7 @@
         /// <remarks>
         /// See also <see cref="ChildRequestTrackingSuppressionModule" />.
         /// </remarks>
-        public int ChildRequestTrackingInternalDictionarySize { get; set; } = -1;
+        public int ChildRequestTrackingInternalDictionarySize { get; set; }
         
         /// <summary>
         /// Gets the list of handler types for which requests telemetry will not be collected
@@ -245,6 +245,10 @@
             {
                 this.telemetryClient.TrackRequest(requestTelemetry);
             }
+            else
+            {
+                WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Informational();
+            }
         }
 
         /// <summary>
@@ -414,7 +418,7 @@
             private static object semaphore = new object();
 
             /// <summary>
-            /// Using this as a hash-set of current active requests. The second value is not used.
+            /// Using this as a hash-set of current active requests. The value of the Dictionary is not used.
             /// </summary>
             private static ConcurrentDictionary<string, bool> activeRequestsA = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, DEFAULTMAXVALUE);
             private static ConcurrentDictionary<string, bool> activeRequestsB = new ConcurrentDictionary<string, bool>(System.Environment.ProcessorCount, DEFAULTMAXVALUE);
@@ -423,7 +427,7 @@
             /// Initializes a new instance of the <see cref="ChildRequestTrackingSuppressionModule" /> class.
             /// </summary>
             /// <param name="maxRequestsTracked">The maximum number of active requests to be tracked before resetting the dictionary.</param>
-            internal ChildRequestTrackingSuppressionModule(int maxRequestsTracked = DEFAULTMAXVALUE)
+            internal ChildRequestTrackingSuppressionModule(int maxRequestsTracked)
             {
                 this.MAXSIZE = maxRequestsTracked > 0 ? maxRequestsTracked : DEFAULTMAXVALUE;
             }
@@ -438,7 +442,19 @@
             /// </summary>
             internal void OnBeginRequest_IdRequest(HttpContext context)
             {
-                this.TagRequest(context);
+                if(context?.Request?.Headers == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    this.TagRequest(context);
+                }
+                catch (Exception ex)
+                {
+                    WebEventSource.Log.ChildRequestUnknownException(nameof(OnBeginRequest_IdRequest), ex);
+                }
             }
 
             /// <summary>
@@ -450,17 +466,37 @@
             /// </summary>
             internal bool OnEndRequest_ShouldLog(HttpContext context)
             {
-                var headers = context.Request.Headers;
-
-                var rootRequestId = headers[HeaderRootRequestId];
-                if (rootRequestId != null)
+                var headers = context?.Request?.Headers;
+                if(headers == null)
                 {
-                    if (!this.IsRequestKnown(rootRequestId))
+                    return false;
+                }
+
+                try
+                {
+                    var rootRequestId = headers[HeaderRootRequestId];
+                    if (rootRequestId != null)
                     {
-                        // doesn't exist add to dictionary and return true
-                        this.AddRequestToDictionary(rootRequestId);
-                        return true;
+                        if (!this.IsRequestKnown(rootRequestId))
+                        {
+                            // doesn't exist add to dictionary and return true
+                            this.AddRequestToDictionary(rootRequestId);
+                            return true;
+                        }
+                        else
+                        {
+                            WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(rootRequestId, "Request is already known");
+                        }
                     }
+                    else
+                    {
+                        WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(rootRequestId, "Request id is null");
+                    }
+                    
+                }
+                catch(Exception ex)
+                {
+                    WebEventSource.Log.ChildRequestUnknownException(nameof(OnEndRequest_ShouldLog), ex);
                 }
 
                 return false;
@@ -472,13 +508,11 @@
             /// </summary>
             private void TagRequest(HttpContext context)
             {
-                var newId = Guid.NewGuid().ToString();
-
                 var headers = context.Request.Headers;
 
                 if (headers[HeaderRootRequestId] == null)
                 {
-                    headers[HeaderRootRequestId] = newId;
+                    headers[HeaderRootRequestId] = Guid.NewGuid().ToString();
                 }
 
 #if DEBUG
@@ -486,9 +520,12 @@
                 if (headers[HeaderRequestId] != null)
                 {
                     headers[HeaderParentRequestId] = headers[HeaderRequestId];
+                    headers[HeaderRequestId] = Guid.NewGuid().ToString();
                 }
-
-                headers[HeaderRequestId] = newId;
+                else
+                {
+                    headers[HeaderRequestId] = headers[HeaderRootRequestId];
+                }
 #endif
             }
 

@@ -4,6 +4,7 @@
 #if NET45
     using System.Diagnostics.Tracing;
 #endif
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     /// <summary>
     /// ETW EventSource tracing class.
@@ -371,6 +372,43 @@
         {
             this.WriteEvent(
                 38,
+                this.ApplicationName);
+        }
+
+        [Event(
+            39,
+            Message = "RequestTrackingTelemetryModule ChildRequestTrackingSuppressionModule Method: '{0}' Unknown Exception: {1}",
+            Level = EventLevel.Error)]
+        public void ChildRequestUnknownException(string methodName, Exception ex, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                39,
+                methodName,
+                ex.ToInvariantString(),
+                this.ApplicationName);
+        }
+
+        [Event(
+            40,
+            Message = "RequestTrackingTelemetryModule: Request was not logged. Set EventLevel Verbose for more details.",
+            Level = EventLevel.Informational)]
+        public void RequestTrackingTelemetryModule_RequestWasNotLogged_Informational(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                40,
+                this.ApplicationName);
+        }
+
+        [Event(
+            41,
+            Message = "RequestTrackingTelemetryModule: Request was not logged. Request Id: '{0}' Reason: {1}",
+            Level = EventLevel.Verbose)]
+        public void RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(string requestId, string reason, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                41,
+                requestId,
+                reason,
                 this.ApplicationName);
         }
 
