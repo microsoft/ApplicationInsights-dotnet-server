@@ -442,7 +442,7 @@
             /// </summary>
             internal void OnBeginRequest_IdRequest(HttpContext context)
             {
-                if(context?.Request?.Headers == null)
+                if (context?.Request?.Headers == null)
                 {
                     return;
                 }
@@ -453,7 +453,7 @@
                 }
                 catch (Exception ex)
                 {
-                    WebEventSource.Log.ChildRequestUnknownException(nameof(OnBeginRequest_IdRequest), ex);
+                    WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnBeginRequest_IdRequest), ex);
                 }
             }
 
@@ -467,7 +467,7 @@
             internal bool OnEndRequest_ShouldLog(HttpContext context)
             {
                 var headers = context?.Request?.Headers;
-                if(headers == null)
+                if (headers == null)
                 {
                     return false;
                 }
@@ -492,11 +492,10 @@
                     {
                         WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(rootRequestId, "Request id is null");
                     }
-                    
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    WebEventSource.Log.ChildRequestUnknownException(nameof(OnEndRequest_ShouldLog), ex);
+                    WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnEndRequest_ShouldLog), ex);
                 }
 
                 return false;
