@@ -247,7 +247,7 @@
             }
             else
             {
-                WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Informational();
+                WebEventSource.Log.RequestTrackingTelemetryModuleRequestWasNotLoggedInformational();
             }
         }
 
@@ -453,7 +453,7 @@
                 }
                 catch (Exception ex)
                 {
-                    WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnBeginRequest_IdRequest), ex);
+                   WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnBeginRequest_IdRequest), ex.ToInvariantString());
                 }
             }
 
@@ -485,17 +485,17 @@
                         }
                         else
                         {
-                            WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(rootRequestId, "Request is already known");
+                            WebEventSource.Log.RequestTrackingTelemetryModuleRequestWasNotLoggedVerbose(rootRequestId, "Request is already known");
                         }
                     }
                     else
                     {
-                        WebEventSource.Log.RequestTrackingTelemetryModule_RequestWasNotLogged_Verbose(rootRequestId, "Request id is null");
+                        WebEventSource.Log.RequestTrackingTelemetryModuleRequestWasNotLoggedVerbose(rootRequestId, "Request id is null");
                     }
                 }
                 catch (Exception ex)
                 {
-                    WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnEndRequest_ShouldLog), ex);
+                    WebEventSource.Log.ChildRequestUnknownException(nameof(this.OnEndRequest_ShouldLog), ex.ToInvariantString());
                 }
 
                 return false;
