@@ -29,8 +29,8 @@
     {
         private const string IKey = "F8474271-D231-45B6-8DD4-D344C309AE69";
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
-        private const string LocalhostUrl1 = "http://localhost:8088/";
-        private const string LocalhostUrl2 = "http://localhost:8089/";
+        private const string LocalhostUrlDiagSource = "http://localhost:8088/";
+        private const string LocalhostUrlEventSource = "http://localhost:8089/";
 
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
@@ -82,14 +82,14 @@
         [Timeout(5000)]
         public void TestBasicDependencyCollectionDiagnosticSource()
         {
-            this.TestCollectionSuccessfulResponse(true, LocalhostUrl1, 200);
+            this.TestCollectionSuccessfulResponse(true, LocalhostUrlDiagSource, 200);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public async Task TestZeroContentResponseDiagnosticSource()
         {
-            await this.TestCollectionHttpClientSucessfulResponse(LocalhostUrl1, 200, 0);
+            await this.TestCollectionHttpClientSucessfulResponse(LocalhostUrlDiagSource, 200, 0);
         }
 
         [TestMethod]
@@ -97,7 +97,7 @@
         public void TestDependencyCollectionDiagnosticSourceWithParentActivity()
         {
             var parent = new Activity("parent").AddBaggage("k", "v").SetParentId("|guid.").Start();
-            this.TestCollectionSuccessfulResponse(true, LocalhostUrl1, 200);
+            this.TestCollectionSuccessfulResponse(true, LocalhostUrlDiagSource, 200);
             parent.Stop();
         }
 
@@ -106,7 +106,7 @@
         public void TestDependencyCollectionEventSourceWithParentActivity()
         {
             var parent = new Activity("parent").AddBaggage("k", "v").SetParentId("|guid.").Start();
-            this.TestCollectionSuccessfulResponse(false, LocalhostUrl1, 200);
+            this.TestCollectionSuccessfulResponse(false, LocalhostUrlEventSource, 200);
             parent.Stop();
         }
 
@@ -114,21 +114,21 @@
         [Timeout(5000)]
         public void TestBasicDependencyCollectionEventSource()
         {
-            this.TestCollectionSuccessfulResponse(false, LocalhostUrl2, 200);
+            this.TestCollectionSuccessfulResponse(false, LocalhostUrlEventSource, 200);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestDependencyCollectionEventSourceNonSuccessStatusCode()
         {
-            this.TestCollectionSuccessfulResponse(false, LocalhostUrl2, 404);
+            this.TestCollectionSuccessfulResponse(false, LocalhostUrlEventSource, 404);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestDependencyCollectionDiagnosticSourceNonSuccessStatusCode()
         {
-            this.TestCollectionSuccessfulResponse(true, LocalhostUrl1, 404);
+            this.TestCollectionSuccessfulResponse(true, LocalhostUrlDiagSource, 404);
         }
 
         [TestMethod]
@@ -137,9 +137,9 @@
         {
             using (this.CreateDependencyTrackingModule(true))
             {
-                HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrl1);
+                HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);
 
-                using (new LocalServer(LocalhostUrl1))
+                using (new LocalServer(LocalhostUrlDiagSource))
                 {
                     request.GetResponse();
                 }
@@ -161,8 +161,9 @@
         public void TestNoDependencyCollectionDiagnosticSourceInitializedAfterEndpointCached()
         {
             // first time call endpoint before Dependency Collector initialization
-            HttpWebRequest request1 = WebRequest.CreateHttp(LocalhostUrl2);
-            using (new LocalServer(LocalhostUrl2))
+            // Use event source Url to make sure endpoint was not hooked by prev tests
+            HttpWebRequest request1 = WebRequest.CreateHttp(LocalhostUrlEventSource);
+            using (new LocalServer(LocalhostUrlEventSource))
             {
                 request1.GetResponse().Dispose();
             }
@@ -170,9 +171,9 @@
             // initialize dependency collector
             using (this.CreateDependencyTrackingModule(true))
             {
-                HttpWebRequest request2 = WebRequest.CreateHttp(LocalhostUrl2);
+                HttpWebRequest request2 = WebRequest.CreateHttp(LocalhostUrlEventSource);
 
-                using (new LocalServer(LocalhostUrl2))
+                using (new LocalServer(LocalhostUrlEventSource))
                 {
                     request2.GetResponse().Dispose();
                 }
@@ -201,14 +202,14 @@
         [Timeout(5000)]
         public async Task TestDependencyCollectionCanceledRequestDiagnosticSource()
         {
-            await this.TestCollectionCanceledRequest(true, LocalhostUrl1);
+            await this.TestCollectionCanceledRequest(true, LocalhostUrlDiagSource);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public async Task TestDependencyCollectionCanceledRequestEventSource()
         {
-            await this.TestCollectionCanceledRequest(false, LocalhostUrl2);
+            await this.TestCollectionCanceledRequest(false, LocalhostUrlEventSource);
         }
 
         [TestMethod]
@@ -240,42 +241,42 @@
         [Timeout(5000)]
         public void TestDependencyCollectorPostRequestsAreCollectedDiagnosticSource()
         {
-            this.TestCollectionPostRequests(true, LocalhostUrl1);
+            this.TestCollectionPostRequests(true, LocalhostUrlDiagSource);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestDependencyCollectorPostRequestsAreCollectedEventSource()
         {
-            this.TestCollectionPostRequests(false, LocalhostUrl2);
+            this.TestCollectionPostRequests(false, LocalhostUrlEventSource);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestHttpRequestsWithQueryStringAreCollectedDiagnosticSource()
         {
-            this.TestCollectionSuccessfulResponse(true, LocalhostUrl1 + "123?q=123", 200);
+            this.TestCollectionSuccessfulResponse(true, LocalhostUrlDiagSource + "123?q=123", 200);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestHttpRequestsWithQueryStringAreCollectedEventSource()
         {
-            this.TestCollectionSuccessfulResponse(false, LocalhostUrl2 + "123?q=123", 200);
+            this.TestCollectionSuccessfulResponse(false, LocalhostUrlEventSource + "123?q=123", 200);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestDependencyCollectionDiagnosticSourceRedirect()
         {
-            this.TestCollectionResponseWithRedirects(true, LocalhostUrl1);
+            this.TestCollectionResponseWithRedirects(true, LocalhostUrlDiagSource);
         }
 
         [TestMethod]
         [Timeout(5000)]
         public void TestDependencyCollectionEventSourceRedirect()
         {
-            this.TestCollectionResponseWithRedirects(false, LocalhostUrl2);
+            this.TestCollectionResponseWithRedirects(false, LocalhostUrlEventSource);
         }
 
         private void TestCollectionPostRequests(bool enableDiagnosticSource, string url)
