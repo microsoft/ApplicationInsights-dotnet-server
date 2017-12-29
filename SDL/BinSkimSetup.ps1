@@ -23,12 +23,16 @@ Get-ChildItem -Path $buildDirectory -Recurse *.dll |
  Where-Object {$_.DirectoryName -notMatch "Test"} |
  %{
     # copy files, maintaining subdirectories
+    Write-Host " "
 
-    #Write-Host $_.FullName
+    Write-Host "fullName:" $_.FullName
     $sourceDir = $_.DirectoryName
     $destDir =  $sourceDir.Replace($buildDirectory, $binSkimDirectory)
-    #Write-Host $sourceDir
-    #Write-Host $destDir
+    $destFile = $_.FullName.Replace($buildDirectory, $binSkimDirectory)
+    Write-Host "sourceDir:" $sourceDir
+    Write-Host "destDir:" $destDir
+
     if (!(Test-Path $destDir)) { md $destDir }
-    Copy-Item -Path $_.FullName -Destination $destDir
+    if (!(Test-Path $destFile)) { Copy-Item -Path $_.FullName -Destination $destDir }
+    #Copy-Item -Path $_.FullName -Destination $destDir
 } 
