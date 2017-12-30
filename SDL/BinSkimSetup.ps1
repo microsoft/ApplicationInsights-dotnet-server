@@ -10,6 +10,10 @@ Param(
 #$buildDirectory = "C:\Repos\SDK\bin\Release\Src\"
 #$binSkimDirectory = "C:\Repos\SDK\binSkim\"
 
+Write-Host "buildDir:" $buildDirectory;
+Write-Host "binSkimDir:" $binSkimDirectory;
+
+
 Function CreateTargetDirectory ($folder) {
     # don't need to clean folder on build server, but is needed for local dev
     if (Test-Path $folder) { Remove-Item $folder -Recurse; }
