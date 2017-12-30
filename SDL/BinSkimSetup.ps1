@@ -36,3 +36,9 @@ Get-ChildItem -Path $buildDirectory -Recurse *.dll |
     if (!(Test-Path $destFile)) { Copy-Item -Path $_.FullName -Destination $destDir }
     #Copy-Item -Path $_.FullName -Destination $destDir
 } 
+
+
+# summary for log output
+$count = Get-ChildItem -Path $binSkimDirectory -Recurse -File | Measure-Object | %{$_.Count}
+Write-Host " "
+Write-Host "Total Files:" $count
