@@ -23,24 +23,13 @@ Function CreateTargetDirectory ($folder) {
 
 CreateTargetDirectory $binSkimDirectory
 
-Get-ChildItem -Path $buildDirectory -Recurse *.dll |
- Where-Object {$_.DirectoryName -notMatch "Test"} |
- ForEach-Object {
-    # copy files, maintaining subdirectories
-    Write-Host " "
+# copy all
+Copy-Item -Path $buildDirectory -Filter "*.dll" -Destination $binSkimDirectory -Recurse
 
-    Write-Host "fullName:" $_.FullName
-    $sourceDir = $_.DirectoryName
-    $destDir =  $sourceDir.Replace($buildDirectory, $binSkimDirectory)
-    $destFile = $_.FullName.Replace($buildDirectory, $binSkimDirectory)
-    Write-Host "sourceDir:" $sourceDir
-    Write-Host "destDir:" $destDir
-
-    if (!(Test-Path $destDir)) { mkdir $destDir }
-    if (!(Test-Path $destFile)) { Copy-Item -Path $_.FullName -Destination $destDir }
-    #Copy-Item -Path $_.FullName -Destination $destDir
-} 
-
+# delete test directories
+Get-ChildItem -Path $binSkimDirectory -Recurse -Directory | 
+ Where-Object {$_ -match "Test"} |
+ Remove-Item -Recurse
 
 # summary for log output
 $count = Get-ChildItem -Path $binSkimDirectory -Recurse -File | Measure-Object | ForEach-Object {$_.Count}
