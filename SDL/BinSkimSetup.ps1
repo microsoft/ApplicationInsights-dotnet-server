@@ -10,9 +10,9 @@ Param(
 #$buildDirectory = "C:\Repos\SDK\bin\Release\Src\"
 #$binSkimDirectory = "C:\Repos\SDK\binSkim\"
 
-Write-Host "`PARAMETERS:";
-Write-Host "buildDirectory:" $buildDirectory;
-Write-Host "binSkimDirectory:" $binSkimDirectory;
+Write-Host "`nPARAMETERS:";
+Write-Host "`tbuildDirectory:" $buildDirectory;
+Write-Host "`tbinSkimDirectory:" $binSkimDirectory;
 
 # don't need to clean folder on build server, but is needed for local dev
 if (Test-Path $binSkimDirectory) { Remove-Item $binSkimDirectory -Recurse; }
@@ -31,7 +31,7 @@ Write-Host "`nCOPIED FILES:";
 $count = 0;
 Get-ChildItem -Path $binSkimDirectory -Recurse -File | 
     ForEach-Object { 
-        Write-Host $_.FullName; 
+        Write-Host "`t"$_.FullName; 
         $count++;
     } 
 
