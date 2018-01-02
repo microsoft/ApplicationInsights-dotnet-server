@@ -2,7 +2,7 @@
 Param(
     [Parameter(Mandatory=$True)]
     [string]$buildDirectory,
-	
+    
     [Parameter(Mandatory=$True)]
     [string]$binSkimDirectory
 )
@@ -10,28 +10,29 @@ Param(
 #$buildDirectory = "C:\Repos\SDK\bin\Release\Src\"
 #$binSkimDirectory = "C:\Repos\SDK\binSkim\"
 
-Write-Host "buildDir:" $buildDirectory;
-Write-Host "binSkimDir:" $binSkimDirectory;
+Write-Host "`PARAMETERS:";
+Write-Host "buildDirectory:" $buildDirectory;
+Write-Host "binSkimDirectory:" $binSkimDirectory;
 
-
-Function CreateTargetDirectory ($folder) {
-    # don't need to clean folder on build server, but is needed for local dev
-    if (Test-Path $folder) { Remove-Item $folder -Recurse; }
-    mkdir $folder
-}
-
-
-CreateTargetDirectory $binSkimDirectory
+# don't need to clean folder on build server, but is needed for local dev
+if (Test-Path $binSkimDirectory) { Remove-Item $binSkimDirectory -Recurse; }
 
 # copy all
-Copy-Item -Path $buildDirectory -Filter "*.dll" -Destination $binSkimDirectory -Recurse
+Copy-Item -Path $buildDirectory -Filter "*.dll" -Destination $binSkimDirectory -Recurse;
 
 # delete test directories
 Get-ChildItem -Path $binSkimDirectory -Recurse -Directory | 
  Where-Object {$_ -match "Test"} |
- Remove-Item -Recurse
+ Remove-Item -Recurse;
 
-# summary for log output
-$count = Get-ChildItem -Path $binSkimDirectory -Recurse -File | Measure-Object | ForEach-Object {$_.Count}
-Write-Host " "
-Write-Host "Total Files:" $count
+# summary for log output (file list and count)
+Write-Host "`nCOPIED FILES:";
+
+$count = 0;
+Get-ChildItem -Path $binSkimDirectory -Recurse -File | 
+    ForEach-Object { 
+        Write-Host $_.FullName; 
+        $count++;
+    } 
+
+Write-Host "`nTOTAL FILES:" $count;
