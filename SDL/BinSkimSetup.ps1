@@ -1,39 +1,36 @@
 ﻿[CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$True)]
-    [string]$buildDirectory,
+    # C:\Repos\bin\Debug\Src
+    [string]$buildDirectory = (Join-Path -Path (Split-Path -parent (Split-Path -parent (Split-Path -parent $PSCommandPath))) -ChildPath "bin\Debug\Src") ,
     
-    [Parameter(Mandatory=$True)]
-    [string]$binSkimDirectory
+    # C:\Repos\binSkim
+    [string]$binSkimDirectory = (Join-Path -Path (Split-Path -parent (Split-Path -parent (Split-Path -parent $PSCommandPath))) -ChildPath "binSkim")
 )
-
-#$buildDirectory = "C:\Repos\SDK\bin\Release\Src\"
-#$binSkimDirectory = "C:\Repos\SDK\binSkim\"
 
 # these are dlls that end up in the bin, but do not belong to us and don't need to be scanned.
 $excludedFiles = @("Microsoft.Web.Infrastructure.dll")
 
-Write-Host "`nPARAMETERS:"  -ForegroundColor DarkCyan;
+Write-Host "`nPARAMETERS:";
 Write-Host "`tbuildDirectory:" $buildDirectory;
 Write-Host "`tbinSkimDirectory:" $binSkimDirectory;
 
 # don't need to clean folder on build server, but is needed for local dev
-Write-Host "`nCreate BinSkim Directory..." -ForegroundColor DarkCyan;
+Write-Host "`nCreate BinSkim Directory...";
 if (Test-Path $binSkimDirectory) { Remove-Item $binSkimDirectory -Recurse; }
 
 # copy all
-Write-Host "`nCopy all files..." -ForegroundColor DarkCyan;
+Write-Host "`nCopy all files...";
 Copy-Item -Path $buildDirectory -Filter "*.dll" -Destination $binSkimDirectory -Recurse;
 
 # delete test directories
-Write-Host "`nDelete any 'Test' directories..." -ForegroundColor DarkCyan;
+Write-Host "`nDelete any 'Test' directories...";
 Get-ChildItem -Path $binSkimDirectory -Recurse -Directory | 
     Where-Object {$_ -match "Test"} |
     Remove-Item -Recurse;
 
 # delete excluded files
 if ($excludedFiles.Count -gt 0) {
-    Write-Host "`nDelete excluded files..." -ForegroundColor DarkCyan;
+    Write-Host "`nDelete excluded files...";
     Get-ChildItem -Path $binSkimDirectory -Recurse -File | 
         ForEach-Object { 
             if ($excludedFiles.Contains($_.Name)) {
@@ -44,7 +41,7 @@ if ($excludedFiles.Count -gt 0) {
 }
 
 # summary for log output (file list and count)
-Write-Host "`nCopied Files:" -ForegroundColor DarkCyan;
+Write-Host "`nCopied Files:";
 
 $count = 0;
 Get-ChildItem -Path $binSkimDirectory -Recurse -File | 
@@ -53,4 +50,4 @@ Get-ChildItem -Path $binSkimDirectory -Recurse -File |
         $count++;
     } 
 
-Write-Host "`nTOTAL FILES:" $count -ForegroundColor DarkCyan;
+Write-Host "`nTOTAL FILES:" $count;
