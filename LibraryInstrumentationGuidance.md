@@ -1,6 +1,6 @@
-# Guidence for instrumenting libraries with Diagnostic Source 
+# Guidance for instrumenting libraries with Diagnostic Source 
 
-This document provides guidence for adding Diagnostic Source instrumentation to external libraries, which will allow Application Insights and other monitoring solutions to collect meaningful and rich telemetry.
+This document provides guidance for adding Diagnostic Source instrumentation to external libraries, which will allow Application Insights and other monitoring solutions to collect meaningful and rich telemetry.
 
 ## Diagnostic Source and Activities
 
@@ -8,32 +8,36 @@ This document provides guidence for adding Diagnostic Source instrumentation to 
 
 [Activity][ActivityGuide] is a class that allows storing and accessing diagnostics context and consuming it with logging system.
 
-Both Diagnostic Source and Activity have been used to instrument [System.Net.Http][SystemNetHttp] and [Microsoft.AspNetCore.Hosting][MicrosoftAspNetCoreHosting], although that instrumentation is not fully complaiant with this guidance.
+Both Diagnostic Source and Activity have been used to instrument [System.Net.Http][SystemNetHttp] and [Microsoft.AspNetCore.Hosting][MicrosoftAspNetCoreHosting].
 
-More recently two new libraries were instrumented and that work was the basis for this guidance. These libraries are client SDKs for [Azure Event Hubs][MicrosoftEventHubs] and [Azure Service Bus][MicrosoftServiceBus], both of which support very high throuput scenarios.
+More recently two new libraries were instrumented and that work was the basis for this guidance. These libraries are client SDKs for [Azure Event Hubs][MicrosoftEventHubs] and [Azure Service Bus][MicrosoftServiceBus], both of which support very high throughput scenarios.
 
 [This document][DiagnosticSourceActivityHowto] goes into more details on how to efficiently use Diagnostic Source.
 
 ## What should be instrumented
 
-The goal of instrumentation is to give users the visibility to how particular operations are being performed inside the library. This information can be later used to diagnose performance or issues. It is up to the library authors to identify operations that the library performs and are worthy of monitoring. Some good examples are external dependency calls, cache utilization (hit/miss/refresh) or awaiting for system events. 
+The goal of instrumentation is to give users the visibility to how particular operations are being performed inside the library. This information can be later used to diagnose performance or issues. It is up to the library authors to identify operations that the library performs and are worthy of monitoring. This doesn't have to be limited to instrumenting the exposed API methods but can also cover more specific internal logic (like outgoing service calls, retries, locking, cache utilization, awaiting system events, etc.) that is invoked during processing. This will allow the users to get a good understanding of what's going on under the hood when they need it. 
 
 ## Instrumentation 
 
 In the simplest case the operation that is being monitored needs to be wrapped by an activity. However in order to minimize performance impact the activity should be only created if there is any listener waiting for it
 
-```C#
+```csharp
     static DiagnosticListener source = new DiagnosticListener("Example.MyLibrary");
 
     Activity activity = null;
     // create activity only when requested
-    if (source.IsEnabled("Example.MyLibrary.MyOperation"))
-        activity = source.StartActivity("Example.MyLibrary.MyOperation", new { Input = input });
+    if (source.IsEnabled() && source.IsEnabled("Example.MyLibrary.MyOperation"))
+    {
+        activity = new Activity("Example.MyLibrary.MyOperation");
+        source.StartActivity(activity, new { Input = input });
+    }
 
+    object outout = null;
     try
     {
         // perform the actual operation
-        var output = RunOperation(input);  
+        output = RunOperation(input);  
     }
     finally
     {
@@ -67,13 +71,15 @@ Here are some recommendations for typical payload property names:
 
 In order to avoid unnecessary overhead it is highly recommended to check if there is any listener for given activity. This can be done by calling 
 
-```C#
-    source.IsEnabled("Example.MyLibrary.MyOperation")
+```csharp
+    source.IsEnabled() && source.IsEnabled("Example.MyLibrary.MyOperation")
 ```
+
+Note that the parameterless ```source.IsEnabled()``` check should be put before any other as it is very efficient and can virtually prevent any overhead in absence of any listener for given diagnostic source.
 
 It is also possible to specify additional context payload when making that call to allow the listener to make a more informed decision (e.g. listeners may only be interested in activities for certain endpoint or partition). However, since this call is performed for every operation, it is NOT recommended to build a dynamic payload object as described above. Instead the raw input objects should be specified directly in the call - the Diagnostic Source API allows to specify up to 2 payload objects:
 
-```C#
+```csharp
     source.IsEnabled("Example.MyLibrary.MyOperation", input1, input2)
 ```
 
@@ -81,11 +87,13 @@ For more detailed performance considerations please refer to [Diagnostic Source]
 
 ### Tags
 
-Activities can have additional tracing information in tags. Tags are meant to be easily consumable and are expected to be logged with the activity without any processing. 
+Activities can have additional tracing information in tags. Tags are meant to be easily, efficiently consumable and are expected to be logged with the activity without any processing. As such they should only contain essential information that should be made available to users to determine if the activity is of intrest to them. All of the rich details should be made available in the payload.
 
-Tags can be added to activity at any time of it's existence until it is stopped. This way the activity can be enriched with information from operation input, output and/or exceptions. Tags are not propagated to child activities.
+Tags can be added to activity at any time of it's existence until it is stopped. This way the activity can be enriched with information from operation input, output and/or exceptions. Note however that they should be specified as early as possible so that the listeners can have the most context - in particular, all available tags should be set before starting the activity. 
 
-```C#
+Tags are not propagated to child activities.
+
+```csharp
     activity.AddTag("size", "small");
     activity.AddTag("color", "blue");
 ```
