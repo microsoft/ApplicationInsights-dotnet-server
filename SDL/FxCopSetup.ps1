@@ -14,7 +14,7 @@ Write-Host "`nPARAMETERS:";
 Write-Host "`tbuildDirectory:" $buildDirectory;
 Write-Host "`tfxCopDirectory:" $fxCopDirectory;
 
-$frameworks = @("net45", "net46", "netstandard1.3");
+$frameworks = @("net45", "net46", "netstandard1.6");
 
 # don't need to clean folder on build server, but is needed for local dev
 Write-Host "`nCreate FxCop Directory...";
