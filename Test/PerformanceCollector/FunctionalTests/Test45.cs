@@ -17,7 +17,7 @@
 
         private const int TimeoutInMs = 15000;
 
-        private const string TestWebApplicationSourcePath = @"TestApps\TestApp45\App";
+        private const string TestWebApplicationSourcePath = @"TestApps\TestApp45\App\PackageTmp";
         private const string TestWebApplicationDestPath = @"TestsPerformanceCollector45";
 
         [TestInitialize]

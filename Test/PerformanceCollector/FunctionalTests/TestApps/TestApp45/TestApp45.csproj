@@ -143,8 +143,8 @@
   </PropertyGroup>
   <PropertyGroup>
     <DeployOnBuild>true</DeployOnBuild>
-    <DeployTarget>PipelinePreDeployCopyAllFilesToOneFolder</DeployTarget>
-    <_PackageTempDir>$(OutputPath)\App</_PackageTempDir>
+    <DeployTarget>PipelinePreDeployCopyAllFilesToOneFolder</DeployTarget>    
+	<PackageTempRootDir>$(OutputPath)\App</PackageTempRootDir>
     <AutoParameterizationWebConfigConnectionStrings>false</AutoParameterizationWebConfigConnectionStrings>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
