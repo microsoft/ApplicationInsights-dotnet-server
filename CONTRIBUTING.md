@@ -42,16 +42,21 @@ Functional tests contain test apps which refers to the product dlls from the loc
 Tests apps are modified to send telemetry to a fake ingestion endpoint controlled by tests. Tests then validate the telemetry received by this endpoint.
 
 Pre-requisites
+
 To execute the functional tests, you need to install some additional prerequisites:
 
 For Web and PerformanceCollector tests IIS Express should be installed.
 		
 For Dependency Collector, you need to install Docker for windows as these tests need several additional dependencies to be deployed like SQL Server, Azure Emulator etc, and these are deployed as Docker containers. 
+
 		Docker for Windows (https://docs.docker.com/docker-for-windows/install/). 		
+		
 		After installation switch Docker engine to Windows Containers.(https://blogs.msdn.microsoft.com/webdev/2017/09/07/getting-started-with-windows-containers/)
+		
 		And finally, make sure you can run ```docker run hello-world``` successfully to confirm that your machine is Docker ready.
 
 Running functional tests
+
 Before running the functional tests, the product code should be built following 'Build' instructions above.
 
 After building, open the respective solutions from locations given below, build the solution. Tests will appear in Visual Studio Test Explorer and can be run from there.
@@ -59,15 +64,17 @@ After building, open the respective solutions from locations given below, build 
 The following solutions contains the functional tests for various features.
 
 "\Test\Web\FunctionalTests.sln" -- Functional tests using apps onboarded with the nuget Microsoft.ApplicationInsights.Web
-Helper script to build product and run all tests in this solution - ```runFunctionalTestsWeb```
 
+Helper script to build product and run all tests in this solution - ```runFunctionalTestsWeb```
 "..\bin\Debug\Test\Web\FunctionalTests" -- Binary location for Test and Test apps.
 
 "\Test\PerformanceCollector\FunctionalTests.sln" -- Functional tests using apps onboarded with the nuget Microsoft.ApplicationInsights.PerfCounterCollector
+
 Helper script to build product and run all tests in this solution - ```runFunctionalTestsPerfCollectorAndQuickPulse```
 "..\bin\Debug\Test\PerformanceCollector\FunctionalTests" -- Binary location for Test and Test apps.
 
 "\Test\E2ETests\DependencyCollectionTests.sln" -- Functional tests using apps onboarded with the nuget Microsoft.ApplicationInsights.DependencyCollector
+
 Helper script to build product and run all tests in this solution - ```runFunctionalTestsDependencyCollector```
 "..bin\Debug\Test\E2ETests" -- Binary location for Test and Test apps.
 
