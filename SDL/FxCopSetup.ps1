@@ -25,7 +25,7 @@ function IsFileDependency {
 # these are dlls that end up in the bin, but do not belong to us and don't need to be scanned.
 $excludedFiles = @();
 $dependencyFiles = @(
-    "Microsoft.AI.Agent.Intercept",
+    "Microsoft.AI.Agent.Intercept.dll",
     "Microsoft.ApplicationInsights.dll", 
     "Microsoft.AspNet.TelemetryCorrelation.dll", 
     "Microsoft.Web.Infrastructure.dll", 
