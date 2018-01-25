@@ -248,7 +248,7 @@
 
         [Event(
             23,
-            Message = "Current Activity is null",
+            Message = "Current Activity is null for event = '{0}'",
             Level = EventLevel.Error)]
         public void CurrentActivityIsNull(string diagnosticsSourceEventName, string appDomainName = "Incorrect")
         {
