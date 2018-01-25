@@ -250,9 +250,9 @@
             23,
             Message = "Current Activity is null",
             Level = EventLevel.Error)]
-        public void CurrentActivityIsNull(string appDomainName = "Incorrect")
+        public void CurrentActivityIsNull(string diagnosticsSourceEventName, string appDomainName = "Incorrect")
         {
-            this.WriteEvent(23, this.ApplicationName);
+            this.WriteEvent(23, diagnosticsSourceEventName, this.ApplicationName);
         }
 
         [Event(
