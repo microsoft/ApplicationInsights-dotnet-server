@@ -15,10 +15,12 @@
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <DoNotSign>true</DoNotSign>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Shared.Tests\HttpDependenciesParsingTelemetryInitializerTest.cs" Link="HttpDependenciesParsingTelemetryInitializerTest.cs" />
     <Compile Include="..\Shared.Tests\Implementation\DependencyCollectorDiagnosticListenerTests.Netstandard16.cs" Link="DependencyCollectorDiagnosticListenerTests.Netstandard16.cs" />
     <Compile Include="..\Shared.Tests\Implementation\DependencyCollectorDiagnosticListenerTests.Netstandard20.cs" Link="DependencyCollectorDiagnosticListenerTests.Netstandard20.cs" />
     <Compile Include="..\Shared.Tests\Implementation\TelemetryDiagnosticSourceListenerTests.cs" Link="TelemetryDiagnosticSourceListenerTests.cs" />
@@ -34,10 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Shared.Tests\HttpDependenciesParsingTelemetryInitializerTest.cs" Link="HttpDependenciesParsingTelemetryInitializerTest.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.2" />
@@ -50,5 +48,7 @@
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
+
+  <Import Project="..\..\TestFramework\Shared\TestFramework.Shared.projitems" Label="Shared" />
 
 </Project>
