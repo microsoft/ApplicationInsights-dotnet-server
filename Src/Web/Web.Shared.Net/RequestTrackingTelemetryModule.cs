@@ -184,7 +184,6 @@
 
             if (string.IsNullOrEmpty(requestTelemetry.Source) && context.Request.Headers != null)
             {
-                string telemetrySource = string.Empty;
                 string sourceAppId = null;
 
                 try
@@ -212,33 +211,8 @@
                     && foundMyAppId
                     && sourceAppId != currentComponentAppId)
                 {
-                    telemetrySource = sourceAppId;
+                    requestTelemetry.Source = sourceAppId;
                 }
-
-                string sourceRoleName = null;
-
-                try
-                {
-                    sourceRoleName = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextSourceRoleNameKey);
-                }
-                catch (Exception ex)
-                {
-                    AppMapCorrelationEventSource.Log.GetComponentRoleNameHeaderFailed(ex.ToInvariantString());
-                }
-
-                if (!string.IsNullOrEmpty(sourceRoleName))
-                {
-                    if (string.IsNullOrEmpty(telemetrySource))
-                    {
-                        telemetrySource = "roleName:" + sourceRoleName;
-                    }
-                    else
-                    {
-                        telemetrySource += " | roleName:" + sourceRoleName;
-                    }
-                }
-
-                requestTelemetry.Source = telemetrySource;
             }
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
@@ -283,6 +257,10 @@
                     if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out correlationId))
                     {
                         context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
+
+                        // set additional header that allows to read this Request-Context from Javascript SDK
+                        // append this header with additional value to the potential ones defined by customer and they will be concatenated on cliend-side
+                        context.Response.AppendHeader(RequestResponseHeaders.AccessControlExposeHeadersHeader, RequestResponseHeaders.RequestContextHeader);
                     }
                 }
             }
