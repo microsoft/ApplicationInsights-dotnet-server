@@ -73,7 +73,6 @@
     <Compile Include="QuickPulse\PerfLib\CounterDefinitionSampleTests.cs" />
     <Compile Include="QuickPulse\PerfLib\PerformanceMonitorTests.cs" />
     <Compile Include="QuickPulse\QuickPulseTelemetryModuleNetFullTests.cs" />
-    <Compile Include="QuickPulse\QuickPulseTestHelper.cs" />
     <Compile Include="QuickPulse\QuickPulseTopCpuCollectorTests.cs" />
     <Compile Include="WebAppPerformanceCollectorTests.cs" />
     <Compile Include="PerformanceCounterUtilityTests.cs" />
