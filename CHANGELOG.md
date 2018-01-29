@@ -1,5 +1,7 @@
 # Changelog
 
+## Version 2.6.0-beta1
+- Expose Request-Context in Access-Control-Expose-Headers header, and that allows cross-component correlation between AJAX dependencies and server-side requests(https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/802)
 
 ## Version 2.5.0
 - [Fix: System.InvalidCastException for SQL Dependency](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/782)
