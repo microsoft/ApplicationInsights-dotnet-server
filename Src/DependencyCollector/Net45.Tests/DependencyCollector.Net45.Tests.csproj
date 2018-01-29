@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DependencyTrackingTelemetryModuleHttpTest.cs" />
-    <Compile Include="HttpWebRequestUtils.cs" />
     <Compile Include="DependencyTrackingTelemetryModuleTest.cs" />
   </ItemGroup>
   <Import Project="..\Shared.Tests\DependencyCollector.Shared.Tests.projitems" Label="Shared" />
