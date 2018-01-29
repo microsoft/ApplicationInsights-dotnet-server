@@ -4,13 +4,13 @@
     using System.Collections.Generic;
 #if NETCORE
     using System.Reflection;
-#else
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
-
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
+#if !NETCORE
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
     /// <summary>
     /// Part of the <see cref="QuickPulseTestHelper"/> class for all .NET Frameworks.
