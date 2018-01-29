@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#pragma warning disable CS0436
+
 [assembly: InternalsVisibleTo("Microsoft.ApplicationInsights.Web.Net45.Tests, PublicKey=" + AssemblyInfo.PublicKey)]
 
 [assembly: InternalsVisibleTo("Microsoft.ApplicationInsights.DependencyCollector.Net45.Tests, PublicKey=" + AssemblyInfo.PublicKey)]
