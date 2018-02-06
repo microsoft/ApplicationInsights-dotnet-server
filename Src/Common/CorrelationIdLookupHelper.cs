@@ -193,7 +193,7 @@
         /// <remarks>To protect against injection attacks, AppId will be truncated to a maximum length.</remarks>
         private void GenerateCorrelationIdAndAddToDictionary(string ikey, string appId)
         {
-            // Arbitrary maximum length to guard against injections. //TODO: TEST!
+            // Arbitrary maximum length to guard against injections.
             appId = StringUtilities.EnforceMaxLength(appId, InjectionGuardConstants.AppIdMaxLengeth);
             
             if (string.IsNullOrWhiteSpace(appId))
