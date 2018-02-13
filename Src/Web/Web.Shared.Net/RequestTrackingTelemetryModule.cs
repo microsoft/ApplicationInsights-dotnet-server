@@ -38,6 +38,12 @@
         public bool EnableChildRequestTrackingSuppression { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether Request-Id header is added to Access-Control-Expose-Headers or not. 
+        /// True by default.
+        /// </summary>
+        public bool EnableAccessControlExposeHeader { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets a value indicating the size of internal tracking dictionary.
         /// Must be a positive integer.
         /// </summary>
@@ -258,9 +264,12 @@
                     {
                         context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
 
-                        // set additional header that allows to read this Request-Context from Javascript SDK
-                        // append this header with additional value to the potential ones defined by customer and they will be concatenated on cliend-side
-                        context.Response.AppendHeader(RequestResponseHeaders.AccessControlExposeHeadersHeader, RequestResponseHeaders.RequestContextHeader);
+                        if (this.EnableAccessControlExposeHeader)
+                        {
+                            // set additional header that allows to read this Request-Context from Javascript SDK
+                            // append this header with additional value to the potential ones defined by customer and they will be concatenated on cliend-side
+                            context.Response.AppendHeader(RequestResponseHeaders.AccessControlExposeHeadersHeader, RequestResponseHeaders.RequestContextHeader);
+                        }
                     }
                 }
             }
