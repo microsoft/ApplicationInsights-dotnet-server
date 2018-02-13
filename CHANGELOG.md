@@ -1,6 +1,7 @@
 # Changelog
 
 ## Version 2.6.0-beta1
+- [Fix: Dependency Telemetry is not collected with DiagnosticSource when response does not have content.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/739)
 - Expose Request-Context in Access-Control-Expose-Headers header, and that allows cross-component correlation between AJAX dependencies and server-side requests(https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/802)
 
 ## Version 2.5.0
