@@ -7,7 +7,6 @@
 **Project**
 - A significant number of upgrades to our testing infrastructure.
 
-
 ## Version 2.5.0
 - [Fix: System.InvalidCastException for SQL Dependency](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/782)
 
