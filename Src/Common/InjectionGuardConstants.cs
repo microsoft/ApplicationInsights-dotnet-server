@@ -15,6 +15,6 @@
         /// <summary>
         /// Max length of incoming Request Header value allowed.
         /// </summary>
-        public const int RequestHeaderMaxLength = 100;
+        public const int RequestHeaderMaxLength = 1024;
     }
 }
