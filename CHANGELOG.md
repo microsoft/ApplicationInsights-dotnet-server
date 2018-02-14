@@ -2,7 +2,7 @@
 
 ## Version 2.6.0-beta2
 - [Added a max length restriction to values passed in through requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/810)
-
+ 
 
 
 ## Version 2.6.0-beta1
