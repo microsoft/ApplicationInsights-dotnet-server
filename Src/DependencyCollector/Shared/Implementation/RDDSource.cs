@@ -4,6 +4,8 @@
     {
         internal static string Profiler = "p";
         internal static string Framework = "f";
-        internal static string FrameworkAndDiagnostic = "fd";
+        internal static string DiagnosticSourceDesktop = "dsd";
+        internal static string DiagnosticSourceCore = "dsc";
+        internal static string DiagnosticSourceListener = "dsl";
     }
 }

@@ -318,7 +318,7 @@
             module.OnEndRequest(context);
 
             Assert.Equal(expectedVersion, context.GetRequestTelemetry().Context.GetInternalContext().SdkVersion);
-        }
+        }       
 
         [TestMethod]
         public void OnEndDoesNotAddSourceFieldForRequestForSameComponent()
@@ -547,7 +547,10 @@
 
         private RequestTrackingTelemetryModule RequestTrackingTelemetryModuleFactory(TelemetryConfiguration config = null, CorrelationIdLookupHelper correlationHelper = null)
         {
-            var module = new RequestTrackingTelemetryModule();
+            var module = new RequestTrackingTelemetryModule()
+            {
+                EnableChildRequestTrackingSuppression = false
+            };
             module.OverrideCorrelationIdLookupHelper(correlationHelper ?? this.correlationIdLookupHelper);
             module.Initialize(config ?? this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext()));
             return module;

@@ -1,11 +1,87 @@
 # Changelog
 
+## Version 2.6.0-beta2
+- [Added a max length restriction to values passed in through requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/810)
+
+
+## Version 2.6.0-beta1
+- [Fix: Dependency Telemetry is not collected with DiagnosticSource when response does not have content.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/739)
+- [Improve DependencyCollectorEventSource.Log.CurrentActivityIsNull](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/799)
+
+**Project**
+- A significant number of upgrades to our testing infrastructure.
+
+
+## Version 2.5.0
+- [Fix: System.InvalidCastException for SQL Dependency](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/782)
+
+
+## Version 2.5.0-beta2
+- [Fix: When debugging netcoreapp2.0 in VS, http dependencies are tracked twice](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/723)
+- [Fix: DependencyCollector check if exits before add](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/724)
+- [Track requests and dependencies from ServiceBus .NET Client (Microsoft.Azure.ServiceBus 3.0.0](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/740)
+- [Fix: REST API Request filter bug](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/175)
+- [Fix: SyntheticUserAgentTelemetryInitializer null check](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/750)
+- [Track dependencies from EventHubs .NET Client (Microsoft.Azure.EventHubs 1.1.0)](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/753)
+
+**Project**
+- [Moved common files to Shared projects](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/730)
+- [Stabilizing QuickPulse tests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/736)
+- [Make local debug of DependencyCollector functional tests easier](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/738)
+- [More DependencyCollector tests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/741)
+- [Increase max timeout for QuickPulse tests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/744)
+- [Increase tests codecoverage](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/745)
+- [More DependencyCollector functional tests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/746)
+
+
+## Version 2.5.0-beta1
+- Removed `net40` targets from all packages. Use the version 2.4 of SDK if your application is still compiled with the framework 4.0.
+- Adds ADO SQL dependency collection for SqlClient (System.Data.SqlClient) on .NET Core versions 1.0 and 2.0.
+- /ping calls to Live Metrics Stream (aka QuickPulse) now contain the invariant version of the agent.
+- [Fix App Id Lookup bug](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/683)
+- [Fix DiagnosticsListener should have safe OnNext](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/649)
+- [Fix PerfCounterCollector module may go into endless loop (ASP.NET Core on Full Framework)](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/678)
+- [Fix Start Timestamp is not set for Http dependency telemetry in dotnet core 2.0](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/658)
+- [Support collecting non-HTTP dependency calls from 3rd party libraries](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/665)
+- Bugfix for CorrelationIdLookup NullRef Ex
+- [Added Test App for testing DependencyCollector on .NET Core 2.0](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/572)
+
+**Project**
+- install.ps1 is now signed
+- increase max allowed runtime of functional tests
+- fix for "project system has encountered an error"
+
+
+## Version 2.4.1
+- [Hotfix to address the issue where DependencyCollection breaks Azure Storage Emulator calls](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/640)
+
+## Version 2.4.0
+- Updated version of DiagnosticSource to 4.4.0
+
+## Version 2.4.0-beta5
+- Updated version of DiagnosticSource referenced.
+
+## Version 2.4.0-beta4
+- Bug fixes.
+
+## Version 2.4.0-beta3
+- Exceptions statistics feature is not enabled by default
+- [Parse AppId from HTTP response headers when dependency collection is facilitated with Http Desktop DiagnosticSource](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/509)
+- [Fix double correlation header injection with latest DiagnosticSource](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/530)
+- `DisableDiagnosticSourceInstrumentation` configuration flag was added to `DependencyTrackingTelemetryModule`.
+  * By default `DisableDiagnosticSourceInstrumentation` is set to false, this enables correlation of telemetry items and [application map](http://aka.ms/AiAppMapPreview) in multi-tier applications.
+  * When `DisableDiagnosticSourceInstrumentation` is set to true (so that the instrumentation is off)
+    * correlation between requests, dependencies, and other telemetry items is limited,
+    * telemetry correlation between multiple services involved in the operation processing is not possible,
+    * and the cross-component correlation feature and application map experience is limited.
+  * **Note**: this configuration option has no effect for applications that run in an Azure Web Application with the [ApplicationInsights site extension](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-azure-web-apps) or have [runtime instrumentation](https://github.com/Microsoft/ApplicationInsights-Home/tree/master/Samples/AzureEmailService/WorkerRoleA#report-dependencies).
+- [Fix memory leak in Dependency collector](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/554)
+
 ## Version 2.4.0-beta2
 - [Handle breaking changes from DiagnosticSource](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/480)
 - [Exceptions statistics metrics uses `.Context.Operation.Name` instead of custom property `operationName`](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/394)
 - [Separate event source names for Web and Dependency Modules to fix the bug](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/508)
 - [Fix DependencyCollector memory leak on netcoreapp1.1 and prior](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/514)
-
 
 ## Version 2.4.0-beta1
 - Report status code for the dependencies failed with non-protocol issue like DNS resolution or SSL shakeup problems.

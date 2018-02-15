@@ -1,5 +1,4 @@
-﻿#if !NET40
-namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -12,14 +11,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.ApplicationInsights.Web.TestFramework;
-#if NET40
-    using Microsoft.Diagnostics.Tracing;
-#endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -33,10 +31,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private int sleepTimeMsecBetweenBeginAndEnd = 100;       
         private TelemetryConfiguration configuration;
         private List<ITelemetry> sendItems;
-        private FrameworkHttpProcessing httpProcessingFramework;        
-#endregion //Fields
+        private FrameworkHttpProcessing httpProcessingFramework;
+        private CacheBasedOperationHolder cache = new CacheBasedOperationHolder("testCache", 100 * 1000);
+        #endregion //Fields
 
-#region TestInitialize
+        #region TestInitialize
 
         [TestInitialize]
         public void TestInitialize()
@@ -45,13 +44,15 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.sendItems = new List<ITelemetry>(); 
             this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
             this.configuration.InstrumentationKey = Guid.NewGuid().ToString();
-            this.httpProcessingFramework = new FrameworkHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>(), RandomAppIdEndpoint);
+            this.httpProcessingFramework = new FrameworkHttpProcessing(this.configuration, this.cache, /*setCorrelationHeaders*/ true, new List<string>(), RandomAppIdEndpoint);
             this.httpProcessingFramework.OverrideCorrelationIdLookupHelper(new CorrelationIdLookupHelper(new Dictionary<string, string> { { this.configuration.InstrumentationKey, "cid-v1:" + this.configuration.InstrumentationKey } }));
+            DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
         }
 
         [TestCleanup]
         public void Cleanup()
         {
+            DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
         }
 #endregion //TestInitiliaze
 
@@ -164,7 +165,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
             var id1 = ClientServerDependencyTracker.GetIdForRequestObject(request);
             var id2 = 200;
-            this.httpProcessingFramework.OnRequestSend(request);  
+            this.httpProcessingFramework.OnBeginHttpCallback(id1, this.testUrl.ToString());  
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
 
@@ -180,7 +181,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
             var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            this.httpProcessingFramework.OnRequestSend(request);  
+            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.ToString());  
             this.httpProcessingFramework.OnEndHttpCallback(id, null, false, statusCode);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
@@ -196,13 +197,26 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
             var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            this.httpProcessingFramework.OnRequestSend(request);  
+            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.ToString());  
             this.httpProcessingFramework.OnEndHttpCallback(id, null, false, statusCode);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             var actual = this.sendItems[0] as DependencyTelemetry;
 
             Assert.IsTrue(actual.Success.Value);
+        }
+
+        [TestMethod]
+        public void FrameworkHttpProcessingIsDisabledWhenHttpDesktopDiagSourceIsEnabled()
+        {
+            DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = true;
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
+            var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
+            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.ToString());
+            this.httpProcessingFramework.OnEndHttpCallback(id, null, false, 200);
+
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be sent");
         }
 
         [TestMethod]
@@ -220,113 +234,19 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         }
 
         [TestMethod]
-        public void HttpProcessorSetsTargetForNonStandardPort()
+        public void OnEndHttpCallbackWithoutStatusCodeRemovesTelemetryFromCache()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrlNonStandardPort);
-            var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnEndHttpCallback(id, null, false, 500);
+            this.httpProcessingFramework.OnBeginHttpCallback(100, this.testUrl.OriginalString);
+            Assert.IsNotNull(this.cache.Get(100));
 
-            Assert.AreEqual(1, this.sendItems.Count, "Exactly one telemetry item should be sent");
-            DependencyTelemetry receivedItem = (DependencyTelemetry)this.sendItems[0];
-            string expectedTarget = this.testUrlNonStandardPort.Host + ":" + this.testUrlNonStandardPort.Port;
-            Assert.AreEqual(expectedTarget, receivedItem.Target, "HttpProcessingFramework returned incorrect target for non standard port.");
+            this.httpProcessingFramework.OnEndHttpCallback(100, null, false, null);
+
+            Assert.AreEqual(0, this.sendItems.Count, "Telemetry item should not be sent");
+            Assert.IsNull(DependencyTableStore.Instance.WebRequestCacheHolder.Get(100));
         }
 
-        /// <summary>
-        /// Validates that even if OnBeginHttpCallback is called after OnRequestSend, the
-        /// packet should match what's written during OnRequestSend.
-        /// </summary>
         [TestMethod]
-        public void RddTestHttpProcessingFrameworkUpdateTelemetryName()
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
-            var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.OriginalString);
-            Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
-            this.httpProcessingFramework.OnEndHttpCallback(id, true, false, 200);
-            stopwatch.Stop();
-
-            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacketForOnRequestSend(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, true, stopwatch.Elapsed.TotalMilliseconds, "200");
-        }
-
-        /// <summary>
-        /// Validates that even if multiple events have fired, as long as there is only
-        /// one HttpWebRequest, only one event should be written, during the first call
-        /// to OnEndHttpCallback.
-        /// </summary>
-        [TestMethod]
-        public void RddTestHttpProcessingFrameworkNoDuplication()
-        {
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
-            var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            var returnObject = TestUtils.GenerateHttpWebResponse(HttpStatusCode.BadRequest);
-
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.OriginalString);
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnRequestSend(request);  
-            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.OriginalString);
-            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrl.OriginalString);
-            this.httpProcessingFramework.OnRequestSend(request);  
-            Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
-            this.httpProcessingFramework.OnResponseReceive(request, returnObject);
-            this.httpProcessingFramework.OnEndHttpCallback(id, false, false, 409);
-            this.httpProcessingFramework.OnEndHttpCallback(id, true, false, 304);
-            this.httpProcessingFramework.OnResponseReceive(request, returnObject);
-            this.httpProcessingFramework.OnEndHttpCallback(id, true, false, 200);
-            this.httpProcessingFramework.OnResponseReceive(request, returnObject);
-            this.httpProcessingFramework.OnEndHttpCallback(id, false, false, 400);
-            stopwatch.Stop();
-
-            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacketForOnRequestSend(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, "409");
-        }
-
-        /// <summary>
-        /// Validates if DependencyTelemetry sent contains the cross component correlation ID.
-        /// </summary>
-        [TestMethod]
-        [Description("Validates if DependencyTelemetry sent contains the cross component correlation ID.")]
-        public void RddTestHttpProcessingFrameworkOnEndAddsAppIdToTargetField()
-        {
-            // Here is a sample App ID, since the test initialize method adds a random ikey and our mock getAppId method pretends that the appId for a given ikey is the same as the ikey.
-            // This will not match the current component's App ID. Hence represents an external component.
-            string appId = "0935FC42-FE1A-4C67-975C-0C9D5CBDEE8E";
-
-            this.SimulateWebRequestResponseWithAppId(appId);
-
-            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            Assert.AreEqual(this.testUrl.Host + " | " + this.GetCorrelationIdValue(appId), ((DependencyTelemetry)this.sendItems[0]).Target);
-        }
-
-        /// <summary>
-        /// Ensures that the source request header is added when request is sent.
-        /// </summary>
-        [TestMethod]
-        [Description("Ensures that the source request header is added when request is sent.")]
-        public void RddTestHttpProcessingFrameworkOnBeginAddsSourceHeader()
-        {
-            var request = WebRequest.Create(this.testUrl);
-
-            Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
-
-            this.httpProcessingFramework.OnRequestSend(request);
-            Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey));
-        }
-
-        /// <summary>
-        /// Ensures that the parent id header is added when request is sent.
-        /// </summary>
-        [TestMethod]
-        public void RddTestHttpProcessingFrameworkOnBeginAddsParentIdHeader()
+        public void OnEndHttpCallbackWithoutStatusCodeDoesNotRemoveTelemetryFromCacheWhenDiagnosticSourceIsActivated()
         {
             var request = WebRequest.Create(this.testUrl);
 
@@ -462,35 +382,29 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             request.Headers.Add(RequestResponseHeaders.RequestContextHeader, sampleHeaderValueWithoutAppId);
 
-            this.httpProcessingFramework.OnRequestSend(request);
-            actualHeaderValue = request.Headers[RequestResponseHeaders.RequestContextHeader];
+            this.httpProcessingFramework.OnBeginHttpCallback(100, this.testUrl.OriginalString);
+            Assert.IsNotNull(this.cache.Get(100));
 
-            Assert.IsNotNull(actualHeaderValue);
-            Assert.AreNotEqual(sampleHeaderValueWithAppId, actualHeaderValue);
+
+            DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = true;
+            this.httpProcessingFramework.OnEndHttpCallback(100, null, false, null);
+
+            Assert.AreEqual(0, this.sendItems.Count, "Telemetry item should not be sent");
+            Assert.IsNotNull(this.cache.Get(100));
         }
 
-        /// <summary>
-        /// Validates HttpProcessingFramework sends correct telemetry on calling OnResponseReceive + OnEndHttpCallback.
-        /// </summary>
         [TestMethod]
-        [Description("Validates HttpProcessingFramework sends correct telemetry on calling OnResponseReceive + OnEndHttpCallback.")]
-        [Owner("cithomas")]
-        [TestCategory("CVT")]
-        public void RddTestHttpProcessingFrameworkOnEndHttpCallback()
+        public void HttpProcessorSetsTargetForNonStandardPort()
         {
-            var request = WebRequest.Create(this.testUrl);
-            var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK);
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            this.httpProcessingFramework.OnRequestSend(request);
-            Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
-            this.httpProcessingFramework.OnResponseReceive(request, returnObjectPassed);
-            this.httpProcessingFramework.OnEndHttpCallback(ClientServerDependencyTracker.GetIdForRequestObject(request), true, true, 200);
-            stopwatch.Stop();
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrlNonStandardPort);
+            var id = ClientServerDependencyTracker.GetIdForRequestObject(request);
+            this.httpProcessingFramework.OnBeginHttpCallback(id, this.testUrlNonStandardPort.ToString());  
+            this.httpProcessingFramework.OnEndHttpCallback(id, null, false, 500);
 
-            Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacketForOnRequestSend(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, true, stopwatch.Elapsed.TotalMilliseconds, "200");
+            Assert.AreEqual(1, this.sendItems.Count, "Exactly one telemetry item should be sent");
+            DependencyTelemetry receivedItem = (DependencyTelemetry)this.sendItems[0];
+            string expectedTarget = this.testUrlNonStandardPort.Host + ":" + this.testUrlNonStandardPort.Port;
+            Assert.AreEqual(expectedTarget, receivedItem.Target, "HttpProcessingFramework returned incorrect target for non standard port.");
         }
 
 #endregion //BeginEndCallBacks
@@ -512,16 +426,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             Stopwatch stopwatch = Stopwatch.StartNew();
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(this.testUrl);
             var id1 = ClientServerDependencyTracker.GetIdForRequestObject(request);
-            this.httpProcessingFramework.OnRequestSend(request);  
+            this.httpProcessingFramework.OnBeginHttpCallback(id1, this.testUrl.ToString());  
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            this.httpProcessingFramework.OnRequestSend(request);  
+            this.httpProcessingFramework.OnBeginHttpCallback(id1, this.testUrl.ToString());
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             this.httpProcessingFramework.OnEndHttpCallback(id1, true, false, 200);
             stopwatch.Stop();
 
             Assert.AreEqual(1, this.sendItems.Count, "Exactly one telemetry item should be sent");
-            ValidateTelemetryPacketForOnRequestSend(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, true, stopwatch.Elapsed.TotalMilliseconds, "200");
+            ValidateTelemetryPacketForOnBeginHttpCallback(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, true, stopwatch.Elapsed.TotalMilliseconds, "200");
         }        
 
 #endregion AsyncScenarios
@@ -540,14 +454,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             Assert.AreEqual(url.AbsolutePath, remoteDependencyTelemetryActual.Name, true, "Resource name in the sent telemetry is wrong");
             string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rddf:");
-            ValidateTelemetryPacket(remoteDependencyTelemetryActual, url, kind, success, valueMin, statusCode, expectedVersion);
-        }
-
-        private static void ValidateTelemetryPacketForOnRequestSend(
-            DependencyTelemetry remoteDependencyTelemetryActual, Uri url, string kind, bool? success, double valueMin, string statusCode)
-        {
-            Assert.AreEqual("GET " + url.AbsolutePath, remoteDependencyTelemetryActual.Name, true, "Resource name in the sent telemetry is wrong");
-            string expectedVersion = SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rddfd:");
             ValidateTelemetryPacket(remoteDependencyTelemetryActual, url, kind, success, valueMin, statusCode, expectedVersion);
         }
 
@@ -573,36 +479,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             Assert.AreEqual(expectedVersion, remoteDependencyTelemetryActual.Context.GetInternalContext().SdkVersion);
         }
 
-        private void SimulateWebRequestResponseWithAppId(string appId)
-        {
-            var request = WebRequest.Create(this.testUrl);
-
-            Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(appId));
-
-            var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK, headers);
-
-            this.httpProcessingFramework.OnBeginHttpCallback(ClientServerDependencyTracker.GetIdForRequestObject(request), this.testUrl.OriginalString);
-            this.httpProcessingFramework.OnRequestSend(request);
-            this.httpProcessingFramework.OnResponseReceive(request, returnObjectPassed);
-            this.httpProcessingFramework.OnEndHttpCallback(
-                ClientServerDependencyTracker.GetIdForRequestObject(request),
-                true,
-                true,
-                (int)HttpStatusCode.OK);
-        }
-
-        private string GetCorrelationIdValue(string appId)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "cid-v1:{0}", appId);
-        }
-
-        private string GetCorrelationIdHeaderValue(string appId)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}=cid-v1:{1}", RequestResponseHeaders.RequestContextCorrelationTargetKey, appId);
-        }
-
 #endregion Helpers
     }
 }
-#endif

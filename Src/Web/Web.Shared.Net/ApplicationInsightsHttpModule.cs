@@ -19,6 +19,13 @@
         private readonly RequestTrackingTelemetryModule requestModule;
         private readonly ExceptionTrackingTelemetryModule exceptionModule;
 
+        // Delegate preferred over Invoke to gain performance, only in NET45 or above as ISubscriptionToken is not available in Net40
+        private Func<HttpResponse, Action<HttpContext>, ISubscriptionToken> openDelegateForInvokingAddOnSendingHeadersMethod;
+        private MethodInfo addOnSendingHeadersMethod;                
+        private bool addOnSendingHeadersMethodExists;
+        private Action<HttpContext> addOnSendingHeadersMethodParam;
+        private object[] addOnSendingHeadersMethodParams;
+
         /// <summary>
         /// Indicates if module initialized successfully.
         /// </summary>
@@ -47,6 +54,31 @@
                         }
                     }
                 }
+                
+                // We use reflection here because 'AddOnSendingHeaders' is only available post .net framework 4.5.2. Hence we call it if we can find it.
+                // Not using reflection would result in MissingMethodException when 4.5 or 4.5.1 is present. 
+                this.addOnSendingHeadersMethod = typeof(HttpResponse).GetMethod("AddOnSendingHeaders");
+                this.addOnSendingHeadersMethodExists = this.addOnSendingHeadersMethod != null;
+
+                if (this.addOnSendingHeadersMethodExists)
+                {
+                    this.addOnSendingHeadersMethodParam = new Action<HttpContext>((httpContext) =>
+                            {
+                                try
+                                {
+                                    if (this.requestModule != null)
+                                    {
+                                        this.requestModule.AddTargetHashForResponseHeader(httpContext);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    WebEventSource.Log.AddTargetHeaderFailedWarning(ex.ToInvariantString());
+                                }
+                            });
+                    this.addOnSendingHeadersMethodParams = new object[] { this.addOnSendingHeadersMethodParam };
+                    this.openDelegateForInvokingAddOnSendingHeadersMethod = this.CreateOpenDelegate(this.addOnSendingHeadersMethod);
+                }
             }
             catch (Exception exc)
             {
@@ -67,10 +99,6 @@
                 try
                 {
                     context.BeginRequest += this.OnBeginRequest;
-                    context.EndRequest += this.OnEndRequest;
-#if NET40
-                    context.PreRequestHandlerExecute += this.OnPreRequestHandlerExecute;
-#endif
                 }
                 catch (Exception exc)
                 {
@@ -101,10 +129,6 @@
                     {
                         this.AddCorreleationHeaderOnSendRequestHeaders(httpApplication);
                     }
-
-#if NET40
-                    this.requestModule.OnBeginRequest(httpApplication.Context);
-#endif
                 }
             }
         }
@@ -118,32 +142,11 @@
             try
             {
                 if (httpApplication != null && httpApplication.Response != null)
-                {
-                    // We use reflection here because 'AddOnSendingHeaders' is only available post .net framework 4.5.2. Hence we call it if we can find it.
-                    // Not using reflection would result in MissingMethodException when 4.5 or 4.5.1 is present. 
-                    MethodInfo addOnSendingHeadersMethod = httpApplication.Response.GetType().GetMethod("AddOnSendingHeaders");
-
-                    if (addOnSendingHeadersMethod != null)
-                    {
-                        var parameters = new object[]
-                        {
-                            new Action<HttpContext>((httpContext) =>
-                            {
-                                try
-                                {
-                                    if (this.requestModule != null)
-                                    {
-                                        this.requestModule.AddTargetHashForResponseHeader(httpApplication.Context);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    WebEventSource.Log.AddTargetHeaderFailedWarning(ex.ToInvariantString());
-                                }
-                            })
-                        };
-
-                        addOnSendingHeadersMethod.Invoke(httpApplication.Response, parameters);
+                {                                     
+                    if (this.addOnSendingHeadersMethodExists)
+                    {                        
+                        // Faster delegate based invocation.
+                        this.openDelegateForInvokingAddOnSendingHeadersMethod.Invoke(httpApplication.Response, this.addOnSendingHeadersMethodParam);
                     }
                 }
             }
@@ -153,68 +156,19 @@
             }
         }
 
-#if NET40
-        private void OnPreRequestHandlerExecute(object sender, EventArgs eventArgs)
+        /// <summary>
+        /// Creates open delegate for faster invocation than regular Invoke.        
+        /// </summary>
+        /// <param name="mi">MethodInfo for which open delegate is to be created.</param>
+        private Func<HttpResponse, Action<HttpContext>, ISubscriptionToken> CreateOpenDelegate(MethodInfo mi)
         {
-            if (this.isEnabled)
-            {
-                HttpApplication httpApplication = (HttpApplication)sender;
+            var openDelegate = Delegate.CreateDelegate(
+                typeof(Func<HttpResponse, Action<HttpContext>, ISubscriptionToken>),
+                null,
+                mi,
+                true);
 
-                this.TraceCallback("OnPreRequestHandlerExecute", httpApplication);
-
-                this.requestModule?.OnPreRequestHandlerExecute(httpApplication.Context);
-            }
-        }
-#endif
-
-        private void OnEndRequest(object sender, EventArgs eventArgs)
-        {
-            if (this.isEnabled)
-            {
-                var httpApplication = (HttpApplication)sender;
-                this.TraceCallback("OnEndRequest", httpApplication);
-
-                if (this.IsFirstRequest(httpApplication))
-                {
-#if NET40
-                    if (this.exceptionModule != null)
-                    {
-                        this.exceptionModule.OnError(httpApplication.Context);
-                    }
-
-                    if (this.requestModule != null)
-                    {
-                        this.requestModule.OnEndRequest(httpApplication.Context);
-                    }
-#endif
-                }
-                else
-                {
-                    WebEventSource.Log.RequestFiltered();
-                }
-            }
-        }
-
-        private bool IsFirstRequest(HttpApplication application)
-        {
-            var firstRequest = true;
-            try
-            {
-                if (application.Context != null)
-                {
-                    firstRequest = application.Context.Items[RequestTrackingConstants.EndRequestCallFlag] == null;
-                    if (firstRequest)
-                    {
-                        application.Context.Items.Add(RequestTrackingConstants.EndRequestCallFlag, true);
-                    }
-                }
-            }
-            catch (Exception exc)
-            {
-                WebEventSource.Log.FlagCheckFailure(exc.ToInvariantString());
-            }
-
-            return firstRequest;
+            return (Func<HttpResponse, Action<HttpContext>, ISubscriptionToken>)openDelegate;
         }
 
         private void TraceCallback(string callback, HttpApplication application)

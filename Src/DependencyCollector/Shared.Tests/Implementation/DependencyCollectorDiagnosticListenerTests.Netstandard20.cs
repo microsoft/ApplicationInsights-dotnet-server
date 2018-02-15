@@ -1,4 +1,4 @@
-namespace Microsoft.ApplicationInsights.DependencyCollector
+namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
     using System.Diagnostics;
@@ -7,10 +7,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using System.Net.Http;
     using System.Threading.Tasks;
 
-    using Implementation;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -66,12 +69,17 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual("200", telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
 
+            Assert.AreEqual(activity.StartTimeUtc, telemetry.Timestamp);
             Assert.AreEqual(1, telemetry.Duration.TotalSeconds);
 
             Assert.AreEqual(activity.RootId, telemetry.Context.Operation.Id);
             Assert.AreEqual(activity.ParentId, telemetry.Context.Operation.ParentId);
             Assert.AreEqual(activity.Id, telemetry.Id);
             Assert.AreEqual("v", telemetry.Context.Properties["k"]);
+
+            string expectedVersion =
+                SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
+            Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
         }
 
         /// <summary>
@@ -127,7 +135,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             this.listener.OnActivityStart(request);
 
             var exception = new HttpRequestException("message", new Exception("The server name or address could not be resolved"));
-            this.listener.OnException(exception);
+            this.listener.OnException(exception, request);
             this.listener.OnActivityStop(null, request, TaskStatus.Faulted);
 
             var dependencyTelemetry = this.sentTelemetry.Single(t => t is DependencyTelemetry) as DependencyTelemetry;
@@ -138,6 +146,30 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(exceptionTelemetry.Context.Operation.Id, dependencyTelemetry.Context.Operation.Id);
             Assert.AreEqual(exceptionTelemetry.Context.Operation.ParentId, dependencyTelemetry.Id);
             Assert.AreEqual("The server name or address could not be resolved", dependencyTelemetry.Context.Properties["Error"]);
+        }
+
+        /// <summary>
+        /// Tests HTTP dependencies and exceptions are NOT tracked for ApplicationInsights URL.
+        /// </summary>
+        [TestMethod]
+        public void ApplicationInsightsUrlAreNotTracked()
+        {
+            var activity = new Activity("System.Net.Http.HttpRequestOut");
+            activity.Start();
+
+            var appInsightsUrl = TelemetryConfiguration.Active.TelemetryChannel.EndpointAddress;
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, appInsightsUrl);
+            this.listener.OnActivityStart(request);
+            Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, RequestResponseHeaders.RequestIdHeader));
+            Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, RequestResponseHeaders.StandardParentIdHeader));
+            Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, RequestResponseHeaders.StandardRootIdHeader));
+
+            var exception = new HttpRequestException("message", new Exception("The server name or address could not be resolved"));
+            this.listener.OnException(exception, request);
+            this.listener.OnActivityStop(null, request, TaskStatus.Faulted);
+
+            Assert.IsFalse(this.sentTelemetry.Any());
         }
 
         /// <summary>

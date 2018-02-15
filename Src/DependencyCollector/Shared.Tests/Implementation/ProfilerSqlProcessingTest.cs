@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -15,14 +15,13 @@
     
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.ApplicationInsights.Web.TestFramework;
-#if NET40
-    using Microsoft.Diagnostics.Tracing;
-#endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Justification = "Disposing TelemetryConfiguration after each test.")]
@@ -138,8 +137,36 @@
                 this.sendItems[0] as DependencyTelemetry,
                 expectedName: GetResourceNameForStoredProcedure(command),
                 expectedSuccess: true,
-                expectedResultCode: "0",
+                expectedResultCode: string.Empty,
                 timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);            
+        }
+
+        [TestMethod]
+        public void OnEndStopActivityOnlyDoesNotSendTelemetry_1ArgumentOverride()
+        {
+            var command = GetSqlCommandTestForStoredProc();
+            var returnObjectPassed = new object();
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var context = this.sqlCommandProcessingProfiler.OnBeginForOneParameter(command);
+
+            DependencyTelemetry operationCreated = this.sqlCommandProcessingProfiler.TelemetryTable.Get(command).Item1;
+            Assert.AreEqual(TimeSpan.Zero, operationCreated.Duration, "Duration is zero as operation has not been stopped.");            
+
+            var objectReturned = this.sqlCommandProcessingProfiler.OnEndStopActivityOnlyForOneParameter(context, returnObjectPassed, command);
+            stopwatch.Stop();            
+
+            Assert.AreSame(returnObjectPassed, objectReturned, "Object returned is not the same as expected return object");
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be sent");
+
+            // validates that duration more then zero as operation was stopped
+            ValidateTelemetryPacket(
+                operationCreated,
+                expectedName: GetResourceNameForStoredProcedure(command),
+                expectedSuccess: true,
+                expectedResultCode: string.Empty,
+                timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);
         }
 
         [TestMethod]
@@ -161,7 +188,7 @@
                 this.sendItems[0] as DependencyTelemetry,
                 expectedName: GetResourceNameForStoredProcedure(command),
                 expectedSuccess: true,
-                expectedResultCode: "0",
+                expectedResultCode: string.Empty,
                 timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);
         }
 
@@ -184,7 +211,7 @@
                 this.sendItems[0] as DependencyTelemetry,
                 expectedName: GetResourceNameForStoredProcedure(command),
                 expectedSuccess: true,
-                expectedResultCode: "0",
+                expectedResultCode: string.Empty,
                 timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);
         }
         
@@ -406,7 +433,7 @@
                 this.sendItems[0] as DependencyTelemetry,
                 expectedName: GetResourceNameForStoredProcedure(command),
                 expectedSuccess: true,
-                expectedResultCode: "0",
+                expectedResultCode: string.Empty,
                 timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds,
                 async: true);
         }
@@ -436,7 +463,7 @@
                 this.sendItems[0] as DependencyTelemetry,
                 expectedName: GetResourceNameForStoredProcedure(command),
                 expectedSuccess: true,
-                expectedResultCode: "0",
+                expectedResultCode: string.Empty,
                 timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds,
                 async: true);
         }
@@ -533,6 +560,10 @@
             var returnTaskPassed = Task.Factory.StartNew(() => { });
 
             var context = this.sqlCommandProcessingProfiler.OnBeginForOneParameter(command);
+
+            DependencyTelemetry operationCreated = this.sqlCommandProcessingProfiler.TelemetryTable.Get(command).Item1;
+            Assert.AreEqual(TimeSpan.Zero, operationCreated.Duration, "Duration is zero as operation has not been stopped.");
+
             var objectReturned = this.sqlCommandProcessingProfiler.OnEndExceptionAsyncForOneParameter(context, returnTaskPassed, command);
 
             stopwatch.Stop();
@@ -542,6 +573,14 @@
 
             Assert.AreSame(returnTaskPassed, objectReturned, "Object returned is not the same as expected return object");
             Assert.AreEqual(0, this.sendItems.Count, "No telemetry items should be sent");
+
+            // validates that duration more then zero as operation was stopped
+            ValidateTelemetryPacket(
+                operationCreated,
+                expectedName: GetResourceNameForStoredProcedure(command),
+                expectedSuccess: true,
+                expectedResultCode: string.Empty,
+                timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);
         }
 
         [TestMethod]
@@ -555,6 +594,10 @@
             var returnTaskPassed = Task.Factory.StartNew(() => { });
 
             var context = this.sqlCommandProcessingProfiler.OnBeginForTwoParameters(command, null);
+
+            DependencyTelemetry operationCreated = this.sqlCommandProcessingProfiler.TelemetryTable.Get(command).Item1;
+            Assert.AreEqual(TimeSpan.Zero, operationCreated.Duration, "Duration is zero as operation has not been stopped.");
+
             var objectReturned = this.sqlCommandProcessingProfiler.OnEndExceptionAsyncForTwoParameters(context, returnTaskPassed, command, null);
 
             stopwatch.Stop();
@@ -564,6 +607,14 @@
 
             Assert.AreSame(returnTaskPassed, objectReturned, "Object returned is not the same as expected return object");
             Assert.AreEqual(0, this.sendItems.Count, "No telemetry items should be sent");
+
+            // validates that duration more then zero as operation was stopped
+            ValidateTelemetryPacket(
+                operationCreated,
+                expectedName: GetResourceNameForStoredProcedure(command),
+                expectedSuccess: true,
+                expectedResultCode: string.Empty,
+                timeBetweenBeginEndInMs: stopwatch.Elapsed.TotalMilliseconds);
         }
 
         [TestMethod]

@@ -2,23 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.Linq;
     using System.Net;
-#if !NET40
-    using System.Web;
-#endif
-    using Extensibility.Implementation.Tracing;
-    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-#if NET40
-    using Microsoft.ApplicationInsights.Net40;
-#endif
-    using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the callbacks
@@ -51,7 +39,7 @@
         /// <returns>The context for end callback.</returns>
         public object OnBeginForGetResponse(object thisObj)
         {
-            return this.OnBegin(thisObj, true);
+            return this.OnBegin(thisObj);
         }
 
         /// <summary>
@@ -63,7 +51,7 @@
         /// <returns>The resulting return value.</returns>
         public object OnEndForGetResponse(object context, object returnValue, object thisObj)
         {
-            this.OnEnd(null, thisObj, returnValue, true);
+            this.OnEndResponse(thisObj, returnValue);
             return returnValue;
         }
 
@@ -75,7 +63,7 @@
         /// <param name="thisObj">This object.</param>        
         public void OnExceptionForGetResponse(object context, object exception, object thisObj)
         {
-            this.OnEnd(exception, thisObj, null, true);
+            this.OnEndException(exception, thisObj);
         }
         
         /// <summary>
@@ -86,7 +74,7 @@
         /// <returns>The context for end callback.</returns>
         public object OnBeginForGetRequestStream(object thisObj, object transportContext)
         {
-            return this.OnBegin(thisObj, true);
+            return this.OnBegin(thisObj);
         }       
 
         /// <summary>
@@ -99,7 +87,7 @@
         /// <param name="transportContext">The transport context parameter.</param>
         public void OnExceptionForGetRequestStream(object context, object exception, object thisObj, object transportContext)
         {
-            this.OnEnd(exception, thisObj, null, true);
+            this.OnEndException(exception, thisObj);
         }
 
         /// <summary>
@@ -111,7 +99,7 @@
         /// <returns>The context for end callback.</returns>
         public object OnBeginForBeginGetResponse(object thisObj, object callback, object state)
         {
-            return this.OnBegin(thisObj, true);
+            return this.OnBegin(thisObj);
         }
 
         /// <summary>
@@ -124,7 +112,7 @@
         /// <returns>The return value passed.</returns>
         public object OnEndForEndGetResponse(object context, object returnValue, object thisObj, object asyncResult)
         {
-            this.OnEnd(null, thisObj, returnValue, true);
+            this.OnEndResponse(thisObj, returnValue);
             return returnValue;
         }
 
@@ -137,7 +125,7 @@
         /// <param name="asyncResult">The asyncResult parameter.</param>
         public void OnExceptionForEndGetResponse(object context, object exception, object thisObj, object asyncResult)
         {
-            this.OnEnd(exception, thisObj, null, true);
+            this.OnEndException(exception, thisObj);
         }
 
         /// <summary>
@@ -149,7 +137,7 @@
         /// <returns>The context for end callback.</returns>
         public object OnBeginForBeginGetRequestStream(object thisObj, object callback, object state)
         {
-            return this.OnBegin(thisObj, true);
+            return this.OnBegin(thisObj);
         }
 
         /// <summary>
@@ -163,7 +151,7 @@
         /// <param name="transportContext">The transportContext parameter.</param>
         public void OnExceptionForEndGetRequestStream(object context, object exception, object thisObj, object asyncResult, object transportContext)
         {
-            this.OnEnd(exception, thisObj, null, true);
+            this.OnEndException(exception, thisObj);
         }
 
         #endregion // Http callbacks

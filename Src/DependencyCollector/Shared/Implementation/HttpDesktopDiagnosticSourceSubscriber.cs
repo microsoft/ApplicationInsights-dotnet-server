@@ -1,8 +1,9 @@
-#if !NET40
 namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Diagnostics;
+    using System.Net;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     /// <summary>
     /// A helper subscriber class helping the parent object, which is a HttpDiagnosticSourceListener, to subscribe
@@ -13,13 +14,24 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     {
         private readonly HttpDesktopDiagnosticSourceListener parent;
         private readonly IDisposable allListenersSubscription;
+        private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
         private IDisposable sourceSubscription;
         private bool disposed = false;
 
-        internal HttpDesktopDiagnosticSourceSubscriber(HttpDesktopDiagnosticSourceListener parent)
+        internal HttpDesktopDiagnosticSourceSubscriber(
+            HttpDesktopDiagnosticSourceListener parent,
+            ApplicationInsightsUrlFilter applicationInsightsUrlFilter)
         {
             this.parent = parent;
-            this.allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(this);
+            this.applicationInsightsUrlFilter = applicationInsightsUrlFilter;
+            try
+            {
+                this.allListenersSubscription = DiagnosticListener.AllListeners.Subscribe(this);
+            }
+            catch (Exception ex)
+            {
+                DependencyCollectorEventSource.Log.HttpDesktopDiagnosticSubscriberFailedToSubscribe(ex.ToInvariantString());
+            }
         }
 
         /// <summary>
@@ -47,7 +59,22 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             {
                 if (value.Name == "System.Net.Http.Desktop")
                 {
-                    this.sourceSubscription = value.Subscribe(this.parent, (Predicate<string>)null);
+                    this.sourceSubscription = value.Subscribe(
+                        this.parent, 
+                        (evnt, r, _) =>
+                        {
+                            if (r != null && evnt == "System.Net.Http.Desktop.HttpRequestOut")
+                            {
+                                // request is never null
+                                var request = (HttpWebRequest)r;
+                                return !this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri);
+                            }
+
+                            return true;
+                        });
+
+                    DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = true;
+                    DependencyCollectorEventSource.Log.HttpDesktopDiagnosticSourceListenerIsActivated();
                 }
             }
         }
@@ -90,9 +117,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     }
                 }
 
+                DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
+                DependencyCollectorEventSource.Log.HttpDesktopDiagnosticSourceListenerIsDeactivated();
+
                 this.disposed = true;
             }
         }
     }
 }
-#endif

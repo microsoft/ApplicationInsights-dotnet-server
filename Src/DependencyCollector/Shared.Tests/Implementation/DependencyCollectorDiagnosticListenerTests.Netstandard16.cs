@@ -1,4 +1,4 @@
-namespace Microsoft.ApplicationInsights.DependencyCollector
+namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -7,14 +7,15 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
     using System.Net;
     using System.Net.Http;
 
-    using Implementation;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
-#if !NETCORE
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.ApplicationInsights.Web.TestFramework;
-#endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -101,6 +102,76 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         }
 
         /// <summary>
+        /// Very second request does not throw an exception.
+        /// </summary>
+        [TestMethod]
+        public void VerifyOnRequestWithSameDoesNotThrowException()
+        {
+            Guid loggingRequestId = Guid.NewGuid();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, RequestUrlWithScheme);
+
+            this.listener.OnRequest(request, loggingRequestId);
+            this.listener.OnRequest(request, loggingRequestId);
+        }
+
+        /// <summary>
+        /// Scenario: Assume a retry request after first request fails.
+        /// Very second request does not throw an exception.
+        /// Verify that telemetry is collected for both requests.
+        /// </summary>
+        /// <remarks>
+        /// IGNORE
+        /// THE FOLLOWING ASSERTS ARE EXPECTED TO PASS, BUT CURRENTLY FAIL DUE TO A KNOWN ISSUE: #724 
+        /// Because two identical requests were sent, whichever completes first will remove the request from pending telemetry.
+        /// </remarks>
+        [Ignore]
+        [TestMethod]
+        public void VerifyOnRequestWithDuplicateRequestCreatesValidTelemetry()
+        {
+            Guid loggingRequestId = Guid.NewGuid();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, RequestUrlWithScheme);
+
+            // first request, expected to fail
+            this.listener.OnRequest(request, loggingRequestId);
+
+            // second request (BEFORE HANDLING FIRST RESPONSE), expected to pass 
+            this.listener.OnRequest(request, loggingRequestId);
+
+            IOperationHolder<DependencyTelemetry> dependency;
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
+            Assert.AreEqual(0, this.sentTelemetry.Count);
+
+            // first request fails
+            HttpResponseMessage response1 = new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                RequestMessage = request
+            };
+
+            this.listener.OnResponse(response1, loggingRequestId);
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
+            Assert.AreEqual(1, this.sentTelemetry.Count);
+            Assert.AreEqual(false, ((DependencyTelemetry)this.sentTelemetry.Last()).Success); // first request fails
+
+            Assert.Inconclusive();
+
+            // THE FOLLOWING ASSERTS ARE EXPECTED TO PASS, BUT CURRENTLY FAIL DUE TO A KNOWN ISSUE: #724 
+            // Because two identical requests were sent, whichever completes first will remove the request from pending telemetry.
+
+            // second request is success
+            HttpResponseMessage response2 = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request
+            };
+
+            this.listener.OnResponse(response2, loggingRequestId);
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
+            Assert.AreEqual(2, this.sentTelemetry.Count);
+            Assert.AreEqual(true, ((DependencyTelemetry)this.sentTelemetry.Last()).Success); // second request is success
+        }
+
+        /// <summary>
         /// Call OnRequest() with uri that is in the excluded domain list.
         /// </summary>
         [TestMethod]
@@ -158,9 +229,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
         [TestMethod]
         public void OnResponseWithResponseEventButNoMatchingRequest()
         {
-            this.listener.OnResponse(new HttpResponseMessage(), Guid.NewGuid());
-            Assert.AreEqual(0, this.sentTelemetry.Count);
-
             var response = new HttpResponseMessage
             {
                 RequestMessage = new HttpRequestMessage(HttpMethod.Get, RequestUrlWithScheme)
@@ -203,6 +271,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
+
+            string expectedVersion =
+                SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
+            Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
         }
 
         /// <summary>

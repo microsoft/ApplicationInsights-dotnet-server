@@ -1,29 +1,35 @@
-#if !NET40
+#if NET45
 namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     /// <summary>
     /// Diagnostic listener implementation that listens for Http DiagnosticSource to see all outgoing HTTP dependency requests.
     /// </summary>
     internal class HttpDesktopDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
-        private readonly FrameworkHttpProcessing httpProcessingFramework;
+        private readonly DesktopDiagnosticSourceHttpProcessing httpDesktopProcessing;
         private readonly HttpDesktopDiagnosticSourceSubscriber subscribeHelper;
         private readonly PropertyFetcher requestFetcherRequestEvent;
         private readonly PropertyFetcher requestFetcherResponseEvent;
         private readonly PropertyFetcher responseFetcher;
+        private readonly PropertyFetcher responseStatusFetcher;
+        private readonly PropertyFetcher responseHeadersFetcher;
+
         private bool disposed = false;
 
-        internal HttpDesktopDiagnosticSourceListener(FrameworkHttpProcessing httpProcessing)
+        internal HttpDesktopDiagnosticSourceListener(DesktopDiagnosticSourceHttpProcessing httpProcessing, ApplicationInsightsUrlFilter applicationInsightsUrlFilter)
         {
-            this.httpProcessingFramework = httpProcessing;
-            this.subscribeHelper = new HttpDesktopDiagnosticSourceSubscriber(this);
+            this.httpDesktopProcessing = httpProcessing;
+            this.subscribeHelper = new HttpDesktopDiagnosticSourceSubscriber(this, applicationInsightsUrlFilter);
             this.requestFetcherRequestEvent = new PropertyFetcher("Request");
             this.requestFetcherResponseEvent = new PropertyFetcher("Request");
             this.responseFetcher = new PropertyFetcher("Response");
+            this.responseStatusFetcher = new PropertyFetcher("StatusCode");
+            this.responseHeadersFetcher = new PropertyFetcher("Headers");
         }
 
         /// <summary>
@@ -47,25 +53,49 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 switch (value.Key)
                 {
                     case "System.Net.Http.Desktop.HttpRequestOut.Start":
-
-                    // remove "System.Net.Http.Request" in 2.5.0 (but keep the same code for "System.Net.Http.Desktop.HttpRequestOut.Start")
-                    // event was temporarily introduced in DiagnosticSource and removed before stable release
-                    case "System.Net.Http.Request": 
                     {
                         var request = (HttpWebRequest)this.requestFetcherRequestEvent.Fetch(value.Value);
-                        this.httpProcessingFramework.OnRequestSend(request);
+                        DependencyCollectorEventSource.Log.HttpDesktopBeginCallbackCalled(ClientServerDependencyTracker.GetIdForRequestObject(request), request.RequestUri.ToString());
+
+                        // With this event, DiagnosticSource injects headers himself (after the event)
+                        // ApplicationInsights must not do this
+                        this.httpDesktopProcessing.OnBegin(request, false);
                         break;
                     }
 
                     case "System.Net.Http.Desktop.HttpRequestOut.Stop":
-
-                    // remove "System.Net.Http.Response" in 2.5.0 (but keep the same code for "System.Net.Http.Desktop.HttpRequestOut.Stop")
-                    // event was temporarily introduced in DiagnosticSource and removed before stable release
-                    case "System.Net.Http.Response": 
                     {
-                        var request = (HttpWebRequest)this.requestFetcherResponseEvent.Fetch(value.Value);
-                        var response = (HttpWebResponse)this.responseFetcher.Fetch(value.Value);
-                        this.httpProcessingFramework.OnResponseReceive(request, response);
+                        // request is never null
+                        var request = this.requestFetcherResponseEvent.Fetch(value.Value);
+                        DependencyCollectorEventSource.Log.HttpDesktopEndCallbackCalled(ClientServerDependencyTracker.GetIdForRequestObject(request));
+                        var response = this.responseFetcher.Fetch(value.Value);
+                        this.httpDesktopProcessing.OnEndResponse(request, response);
+                        break;
+                    }
+
+                    case "System.Net.Http.Desktop.HttpRequestOut.Ex.Stop":
+                    {
+                        // request is never null
+                        var request = this.requestFetcherResponseEvent.Fetch(value.Value);
+                        DependencyCollectorEventSource.Log.HttpDesktopEndCallbackCalled(ClientServerDependencyTracker.GetIdForRequestObject(request));
+                        object statusCode = this.responseStatusFetcher.Fetch(value.Value);
+                        object headers = this.responseHeadersFetcher.Fetch(value.Value);
+                        this.httpDesktopProcessing.OnEndResponse(request, statusCode, headers);
+                        break;
+                    }
+
+                    case "System.Net.Http.InitializationFailed":
+                    {
+                        DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
+
+                        Exception ex = (Exception)value.Value.GetType().GetProperty("Exception")?.GetValue(value.Value);
+                        DependencyCollectorEventSource.Log.HttpHandlerDiagnosticListenerFailedToInitialize(ex?.ToInvariantString());
+                        break;
+                    }
+
+                    default:
+                    {
+                        DependencyCollectorEventSource.Log.NotExpectedCallback(value.GetHashCode(), value.Key, "unknown key");
                         break;
                     }
                 }

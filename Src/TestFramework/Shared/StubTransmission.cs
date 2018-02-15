@@ -6,9 +6,7 @@
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
 
-#if NET45
     using TaskEx = System.Threading.Tasks.Task;
-#endif
 
     internal class StubTransmission : Transmission
     {
@@ -26,8 +24,6 @@
         {
         }
 
-        #if !NET40
-
         public Task SaveAsync(Stream stream)
         {
             return TaskEx.Run(() => this.OnSave(stream));
@@ -37,7 +33,5 @@
         {
             return TaskEx.Run(this.OnSend);
         }
-
-        #endif
     }
 }

@@ -12,8 +12,8 @@
     [TestClass]
     public class TestsRequestTelemetryHttpModuleConfig : RequestTelemetryTestBase
     {
-        private const string TestWebApplicaionSourcePath = @"..\TestApps\Wa40Aspx\App";
-        private const string TestWebApplicaionDestPath = "TestApps_RejectingHttpModule_App";
+        private const string TestWebApplicaionSourcePath = @"..\TestApps\Wa45Aspx\App";
+        private const string TestWebApplicaionDestPath = @"..\TestApps\Wa45Aspx\App";
 
         private const int TestRequestTimeoutInMs = 150000;
         private const int TestListenerTimeoutInMs = 5000;
@@ -24,7 +24,7 @@
             var applicationDirectory = Path.Combine(
                 Directory.GetCurrentDirectory(),
                 TestWebApplicaionDestPath);
-
+            applicationDirectory = Path.GetFullPath(applicationDirectory);
             Trace.WriteLine("Application directory:" + applicationDirectory);
 
             File.Copy(
@@ -52,9 +52,7 @@
         {
             this.StopWebAppHost();
         }
-
-        [Owner("abaranch")]
-        [DeploymentItem(TestWebApplicaionSourcePath, TestWebApplicaionDestPath)]
+        
         [TestMethod]
         public void TestRequestPropertiesIfOnlyEndRequestWasCalled()
         {
@@ -85,6 +83,8 @@
                     "Request to page failed with unexpected status code");
             }
 
+            var testFinish = DateTimeOffset.UtcNow;
+
             var request = Listener.ReceiveItemsOfType<TelemetryItem<RequestData>>(1, TestListenerTimeoutInMs)[0];
             
             // Duration will be 0 till we make it optional
@@ -95,9 +95,7 @@
                 true, // 401 is considred success Bug #439318 
                 request, 
                 testStart,
-                testStart);
-
-            Assert.AreEqual(0, TimeSpan.Parse(request.data.baseData.duration).TotalMilliseconds, "Duration will be 0 till we make it optional");
+                testFinish);
         }
     }
 }

@@ -6,7 +6,6 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.Web.Implementation;
 
     internal sealed class FrameworkSqlProcessing
     {
@@ -103,8 +102,8 @@
                 this.TelemetryTable.Remove(id);
                 var telemetry = telemetryTuple.Item1 as DependencyTelemetry;
                 telemetry.Success = success;
-                telemetry.ResultCode = sqlExceptionNumber.ToString(CultureInfo.InvariantCulture);
-
+                telemetry.ResultCode = sqlExceptionNumber != 0 ? sqlExceptionNumber.ToString(CultureInfo.InvariantCulture) : string.Empty;
+                DependencyCollectorEventSource.Log.AutoTrackingDependencyItem(telemetry.Name);
                 ClientServerDependencyTracker.EndTracking(this.telemetryClient, telemetry);
             }
         }

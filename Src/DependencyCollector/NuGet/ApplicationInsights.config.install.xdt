@@ -6,8 +6,7 @@
     <Add xdt:Transform="InsertIfMissing" xdt:Locator="Match(Type)" Type="Microsoft.ApplicationInsights.DependencyCollector.DependencyTrackingTelemetryModule, Microsoft.AI.DependencyCollector">
       <ExcludeComponentCorrelationHttpHeadersOnDomains>
         <!-- 
-        Requests to the following hostnames will not be modified by adding correlation headers. 
-        This is only applicable if Profiler is installed via either StatusMonitor or Azure Extension.
+        Requests to the following hostnames will not be modified by adding correlation headers.         
         Add entries here to exclude additional hostnames.
         NOTE: this configuration will be lost upon NuGet upgrade.
         -->
@@ -15,7 +14,13 @@
         <Add>core.chinacloudapi.cn</Add>
         <Add>core.cloudapi.de</Add>
         <Add>core.usgovcloudapi.net</Add>
+        <Add>localhost</Add>
+        <Add>127.0.0.1</Add>
       </ExcludeComponentCorrelationHttpHeadersOnDomains>
+      <IncludeDiagnosticSourceActivities>
+        <Add>Microsoft.Azure.EventHubs</Add>
+        <Add>Microsoft.Azure.ServiceBus</Add>
+      </IncludeDiagnosticSourceActivities>
     </Add>
   </TelemetryModules>
 </ApplicationInsights>

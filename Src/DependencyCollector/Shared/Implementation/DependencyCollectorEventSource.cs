@@ -1,17 +1,12 @@
 ﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
-#if NETCORE || NET45
     using System.Diagnostics.Tracing;
-#endif
     using System.Globalization;
 #if NETCORE
     using System.Reflection;
 #endif
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-#if NET40
-    using Microsoft.Diagnostics.Tracing;
-#endif
 
     /// <summary>
     /// ETW EventSource tracing class.
@@ -253,11 +248,228 @@
 
         [Event(
             23,
-            Message = "Current Activity is null",
+            Message = "Current Activity is null for event = '{0}'",
             Level = EventLevel.Error)]
-        public void CurrentActivityIsNull(string appDomainName = "Incorrect")
+        public void CurrentActivityIsNull(string diagnosticsSourceEventName, string appDomainName = "Incorrect")
         {
-            this.WriteEvent(23, this.ApplicationName);
+            this.WriteEvent(23, diagnosticsSourceEventName, this.ApplicationName);
+        }
+
+        [Event(
+            24,
+            Message = "HttpDesktopDiagnosticSourceListener is activated.",
+            Level = EventLevel.Verbose)]
+        public void HttpDesktopDiagnosticSourceListenerIsActivated(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(24, this.ApplicationName);
+        }
+
+        [Event(
+            25,
+            Message = "HttpDesktopDiagnosticSourceListener is deactivated.",
+            Level = EventLevel.Verbose)]
+        public void HttpDesktopDiagnosticSourceListenerIsDeactivated(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(25, this.ApplicationName);
+        }
+
+        [Event(
+            26,
+            Message = "Telemetry for id = '{0}' is tracked with HttpDesktopDiagnosticSourceListener.",
+            Level = EventLevel.Verbose)]
+        public void SkipTrackingTelemetryItemWithEventSource(long id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(26, id, this.ApplicationName);
+        }
+
+        [Event(
+            27,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpDesktopDiagnosticSourceListener: Begin callback called for id = '{0}', name= '{1}'",
+            Level = EventLevel.Verbose)]
+        public void HttpDesktopBeginCallbackCalled(long id, string name, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(27, id, name ?? string.Empty, this.ApplicationName);
+        }
+
+        [Event(
+            28,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpDesktopDiagnosticSourceListener: End callback called for id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpDesktopEndCallbackCalled(long id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(28, id, this.ApplicationName);
+        }
+
+        [Event(
+            29,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "System.Net.Http.HttpRequestOut.Start id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpCoreDiagnosticSourceListenerStart(string id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(29, id, this.ApplicationName);
+        }
+
+        [Event(
+            30,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "System.Net.Http.HttpRequestOut.Stop id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpCoreDiagnosticSourceListenerStop(string id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(30, id, this.ApplicationName);
+        }
+
+        [Event(
+            31,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "System.Net.Http.Request id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpCoreDiagnosticSourceListenerRequest(Guid id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(31, id, this.ApplicationName);
+        }
+
+        [Event(
+            32,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "System.Net.Http.Response id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpCoreDiagnosticSourceListenerResponse(Guid id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(32, id, this.ApplicationName);
+        }
+
+        [Event(
+            33,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "System.Net.Http.Exception id = '{0}'",
+            Level = EventLevel.Verbose)]
+        public void HttpCoreDiagnosticSourceListenerException(string id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(33, id, this.ApplicationName);
+        }
+
+        [Event(
+            34,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpCoreDiagnosticSubscriber failed to subscribe. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void HttpCoreDiagnosticSubscriberFailedToSubscribe(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(34, error, this.ApplicationName);
+        }
+
+        [Event(
+            35,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpDesktopDiagnosticSubscriber failed to subscribe. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void HttpDesktopDiagnosticSubscriberFailedToSubscribe(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(35, error, this.ApplicationName);
+        }
+
+        [Event(
+            36,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpHandlerDiagnosticListener failed to initialize. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void HttpHandlerDiagnosticListenerFailedToInitialize(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(36, error ?? string.Empty, this.ApplicationName);
+        }
+        
+        [Event(
+            37,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "HttpCoreDiagnosticSourceListener OnNext failed to call event handler. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void HttpCoreDiagnosticSourceListenerOnNextFailed(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(37, error, this.ApplicationName);
+        }
+
+        [Event(
+            38,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "SqlClientDiagnosticSubscriber failed to subscribe. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void SqlClientDiagnosticSubscriberFailedToSubscribe(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(38, error, this.ApplicationName);
+        }
+
+        [Event(
+            39,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "SqlClientDiagnosticSubscriber: Callback called for id = '{0}', name= '{1}'",
+            Level = EventLevel.Verbose)]
+        public void SqlClientDiagnosticSubscriberCallbackCalled(Guid id, string name, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(39, id, name ?? string.Empty, this.ApplicationName);
+        }
+
+        [Event(
+            40,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "SqlClientDiagnosticSourceListener OnNext failed to call event handler. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void SqlClientDiagnosticSourceListenerOnNextFailed(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(40, error, this.ApplicationName);
+        }
+
+        [Event(
+            41,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "{0} failed to subscribe. Error details '{1}'",
+            Level = EventLevel.Error)]
+        public void DiagnosticSourceListenerFailedToSubscribe(string listenerName, string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(41, listenerName, error, this.ApplicationName);
+        }
+
+        [Event(
+            42,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "{0} id = '{1}'",
+            Level = EventLevel.Verbose)]
+        public void TelemetryDiagnosticSourceListenerEvent(string eventName, string id, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(42, eventName, id, this.ApplicationName);
+        }
+
+        [Event(
+            43,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "Failed to handle {0} event, id = '{1}', error = '{2}' ",
+            Level = EventLevel.Error)]
+        public void TelemetryDiagnosticSourceCallbackException(string eventName, string id, string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(43, eventName, id, error, this.ApplicationName);
+        }
+
+        [Event(
+            44,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "AutoTrackingDependencyTelemetry name {0}",
+            Level = EventLevel.Verbose)]
+        public void AutoTrackingDependencyItem(string depName, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(44, depName, this.ApplicationName);
+        }
+
+        [Event(
+            45,
+            Keywords = Keywords.RddEventKeywords,
+            Message = "Ending operation for dependency name {0}, not tracking this item.",
+            Level = EventLevel.Verbose)]
+        public void EndOperationNoTracking(string depName, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(45, depName, this.ApplicationName);
         }
 
         [NonEvent]

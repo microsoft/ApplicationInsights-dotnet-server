@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\..\..\..\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Product.props'))\Product.props" />
@@ -23,18 +23,17 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
-    <Reference Include="Microsoft.AI.Agent.Intercept, Version=2.0.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.Agent.Intercept.2.0.7\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
+    <Reference Include="Microsoft.AI.Agent.Intercept">
+      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.Agent.Intercept.2.4.0\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.4.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.6.0-beta1, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.6.0-beta1\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\packages\System.Diagnostics.DiagnosticSource.4.4.0-preview1-25214-03\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
+      <HintPath>..\..\..\..\packages\System.Diagnostics.DiagnosticSource.4.4.0\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
@@ -50,26 +49,6 @@
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
-    <Compile Include="..\Shared\Implementation\HttpCoreDiagnosticSourceListener.cs">
-      <Link>HttpCoreDiagnosticSourceListener.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Implementation\HttpHeadersUtilities.cs">
-      <Link>HttpHeadersUtilities.cs</Link>
-    </Compile>
-    <Compile Include="..\Shared\Implementation\PropertyFetcher.cs">
-      <Link>PropertyFetcher.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\TestFramework\Net45\TestFramework.Net45.csproj">
-      <Project>{1be54ee7-6627-4206-86dd-3d2c709a1500}</Project>
-      <Name>TestFramework.Net45</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\..\Web\Web.Net45\Implementation\SdkVersionUtils.cs">
-      <Link>SdkVersionUtils.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Analyzer Include="..\..\..\..\packages\Desktop.Analyzers.1.1.0\analyzers\dotnet\cs\Desktop.Analyzers.dll" />

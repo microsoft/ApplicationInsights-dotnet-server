@@ -22,9 +22,6 @@
                 throw new ArgumentException("platformContext");
             }
 
-#if NET40
-            var result = ActivityHelpers.ParseRequest(platformContext);
-#else
             var result = new RequestTelemetry();
             var currentActivity = Activity.Current;
             var requestContext = result.Context.Operation;
@@ -33,7 +30,7 @@
             {
                 // if there was no BeginRequest, ASP.NET HttpModule did not have a chance to set current activity (and will never do it).
                 currentActivity = new Activity(ActivityHelpers.RequestActivityItemName);
-                if (currentActivity.TryParse(platformContext.Request.Headers))
+                if (currentActivity.Extract(platformContext.Request.Headers))
                 {
                     requestContext.ParentId = currentActivity.ParentId;
                 }
@@ -94,7 +91,6 @@
             // save current activity in case it will be lost - we will use it in Web.OperationCorrelationTelemetryIntitalizer
             platformContext.Items[ActivityHelpers.RequestActivityItemName] = currentActivity;
 
-#endif
             platformContext.Items.Add(RequestTrackingConstants.RequestTelemetryItemName, result);
             WebEventSource.Log.WebTelemetryModuleRequestTelemetryCreated();
 

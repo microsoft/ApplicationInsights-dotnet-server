@@ -1,9 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.Web
 {
     using System;
-#if NET45
     using System.Diagnostics.Tracing;
-#endif
     using System.Globalization;
     using System.Linq;
     using System.Web;
@@ -11,9 +9,6 @@
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.ApplicationInsights.Web.Implementation;
     using Microsoft.ApplicationInsights.Web.TestFramework;
-#if NET40
-    using Microsoft.Diagnostics.Tracing;
-#endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -36,16 +31,6 @@
         {
             ((IHttpModule)this.module.Target).Dispose();
             ((IHttpModule)this.module2.Target).Dispose();
-        }
-
-        [TestMethod]
-        public void OnEndAddsFladInHttpContext()
-        {
-            var httpApplication = HttpModuleHelper.GetFakeHttpApplication();
-
-            this.module.Invoke("OnEndRequest", new[] { typeof(object), typeof(EventArgs) }, new object[] { httpApplication, null }, CultureInfo.InvariantCulture);
-
-            Assert.IsNotNull(httpApplication.Context.Items[RequestTrackingConstants.EndRequestCallFlag]);
         }
     }
 }
