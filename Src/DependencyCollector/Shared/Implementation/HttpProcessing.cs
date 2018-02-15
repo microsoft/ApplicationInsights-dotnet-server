@@ -378,8 +378,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 DependencyCollectorEventSource.Log.CallbackError(request == null ? 0 : request.GetHashCode(), "OnEndException", ex);
             }
         }
-
-
+        
         /// <summary>
         /// Common helper for all End Callbacks.
         /// </summary>        

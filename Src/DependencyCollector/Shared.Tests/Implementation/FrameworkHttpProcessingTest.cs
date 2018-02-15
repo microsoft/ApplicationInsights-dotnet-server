@@ -316,6 +316,7 @@
         }
 
         [TestMethod]
+        [Timeout(5000)]
         [Description("Ensures that an empty header is added for the first request, but once the appId is retrieved, that's not the case anymore.")]
         public void RddTestHttpProcessingFrameworkOnBeginAddsEmptyCorrelationHeaderForFirstCall()
         {
@@ -412,7 +413,7 @@
 #region AsyncScenarios
 
         /// <summary>
-        /// Validates HttpProcessingFramework calculates startTime from the start of very first OnRequestSend if any
+        /// Validates HttpProcessingFramework calculates startTime from the start of very first hahaOnRequestSend if any
         /// 1.create request
         /// 2.request.OnRequestSend
         /// 3.request.OnRequestSend
