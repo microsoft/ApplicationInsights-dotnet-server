@@ -344,6 +344,28 @@
         }
 
         [TestMethod]
+        public void OnEndDoesNotAddSourceFieldForRequestWithEmptyCorrelationId()
+        {
+            // ARRANGE
+            string requestContextContainingCorrelationId = this.GetCorrelationIdHeaderValue(/*appId*/ string.Empty);
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add(RequestResponseHeaders.RequestContextHeader, requestContextContainingCorrelationId);
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+
+            var config = this.CreateDefaultConfig(context);
+            var module = this.RequestTrackingTelemetryModuleFactory(config);
+
+            // ACT
+            module.OnBeginRequest(context);
+            module.OnEndRequest(context);
+
+            // VALIDATE
+            Assert.True(string.IsNullOrEmpty(context.GetRequestTelemetry().Source), "RequestTrackingTelemetryModule should not set source for same ikey as itself.");
+        }
+
+        [TestMethod]
         public void OnEndAddsSourceFieldForRequestWithCorrelationId()
         {
             // ARRANGE  

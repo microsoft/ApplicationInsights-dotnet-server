@@ -23,8 +23,10 @@
         /// </summary>
         private const int MAXSIZE = 100;
 
-        private const string CorrelationIdFormat = "cid-v1:{0}";
+        private const string EmptyCorId = "cid-v1:";
 
+        private const string CorrelationIdFormat = EmptyCorId + "{0}";
+        
         private const string AppIdQueryApiRelativeUriFormat = "api/profiles/{0}/appId";
 
         // We have arbitrarily chosen 5 second delay between trying to get app Id once we get a failure while trying to get it. 
@@ -92,6 +94,17 @@
             this.endpointAddress = new Uri(endpointUri.AbsoluteUri.Substring(0, endpointUri.AbsoluteUri.Length - endpointUri.LocalPath.Length));
 
             this.provideAppId = this.FetchAppIdFromService;
+        }
+
+        /// <summary>
+        /// Gets the empty correlation id based on the correlation id format. This is sent as a header to indicate that we are dealing with a tracked component, but we could not fetch the appId just yet.
+        /// </summary>
+        public string EmptyCorrelationId
+        {
+            get
+            {
+                return EmptyCorId;
+            }
         }
 
         /// <summary>

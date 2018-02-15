@@ -210,7 +210,8 @@
                 // then populate the source field.
                 if (!string.IsNullOrEmpty(sourceAppId)
                     && foundMyAppId
-                    && sourceAppId != currentComponentAppId)
+                    && sourceAppId != currentComponentAppId
+                    && sourceAppId != this.correlationIdLookupHelper.EmptyCorrelationId)
                 {
                     telemetrySource = sourceAppId;
                 }
@@ -283,6 +284,10 @@
                     if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out correlationId))
                     {
                         context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
+                    }
+                    else
+                    {
+                        context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, this.correlationIdLookupHelper.EmptyCorrelationId);
                     }
                 }
             }

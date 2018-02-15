@@ -171,10 +171,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
                             && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null)
                         {
-                            string appId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out appId))
+                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out string appId))
                             {
                                 webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, appId);
+                            }
+                            else
+                            {
+                                webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, this.correlationIdLookupHelper.EmptyCorrelationId);
                             }
                         }
                     }
@@ -311,6 +314,62 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         telemetry.Success = false;
                     }
 
+                    if (responseObj != null)
+                    {
+                        try
+                        {
+                            if (responseObj.Headers != null)
+                            {
+                                string targetAppId = null;
+
+                                try
+                                {
+                                    targetAppId = responseObj.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey);
+                                }
+                                catch (Exception ex)
+                                {
+                                    AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                                }
+
+                                string currentComponentAppId;
+                                if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out currentComponentAppId))
+                                {
+                                    // We only add the cross component correlation key if the key does not remain the current component.
+                                    if (!string.IsNullOrEmpty(targetAppId) && targetAppId != currentComponentAppId)
+                                    {
+                                        telemetry.Type = RemoteDependencyConstants.AI;
+
+                                        if (targetAppId != this.correlationIdLookupHelper.EmptyCorrelationId)
+                                        {
+                                            telemetry.Target += " | " + targetAppId;
+                                        }
+                                    }
+                                }
+
+                                string targetRoleName = null;
+                                try
+                                {
+                                    targetRoleName = responseObj.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextTargetRoleNameKey);
+                                }
+                                catch (Exception ex)
+                                {
+                                    AppMapCorrelationEventSource.Log.GetComponentRoleNameHeaderFailed(ex.ToInvariantString());
+                                }
+
+                                if (!string.IsNullOrEmpty(targetRoleName))
+                                {
+                                    telemetry.Type = RemoteDependencyConstants.AI;
+                                    telemetry.Target += " | roleName:" + targetRoleName;
+                                }
+                            }
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // ObjectDisposedException is expected here in the following sequence: httpWebRequest.GetResponse().Dispose() -> httpWebRequest.GetResponse()
+                            // on the second call to GetResponse() we cannot determine the statusCode.
+                        }
+                    }
+
                     ClientServerDependencyTracker.EndTracking(this.telemetryClient, telemetry);
                 }
             }
@@ -319,7 +378,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 DependencyCollectorEventSource.Log.CallbackError(request == null ? 0 : request.GetHashCode(), "OnEndException", ex);
             }
         }
-
+        
         /// <summary>
         /// Common helper for all End Callbacks.
         /// </summary>        
