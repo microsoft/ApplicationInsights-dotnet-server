@@ -43,8 +43,6 @@
 
         private Action<HttpListenerResponse> submitResponse;
 
-        private HttpListener listener;
-
         private int pingCount;
 
         private int submitCount;
@@ -59,9 +57,19 @@
 
         private bool emulateTimeout;
 
-        private Random rand = new Random();
+        private static Random rand = new Random();
 
-        private SemaphoreSlim assertionSync;
+        private SemaphoreSlim assertionSync
+        {
+            get { return this.TestContext.Properties[nameof(assertionSync)] as SemaphoreSlim; }
+            set { this.TestContext.Properties[nameof(assertionSync)] = value; }
+        }
+
+        private HttpListener listener
+        {
+            get { return this.TestContext.Properties[nameof(listener)] as HttpListener; }
+            set { this.TestContext.Properties[nameof(listener)] = value; }
+        }
 
         public QuickPulseServiceClientTests()
         {
@@ -110,7 +118,11 @@
                 };
 
             // dynamic port range is [49152, 65535]
-            int port = this.rand.Next(49152, 65536);
+            int port;
+            lock (rand)
+            {
+                port = rand.Next(49152, 65536);
+            }
 
             Uri serviceEndpoint = new Uri(string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}", port));
             this.TestContext.Properties[ServiceEndpointPropertyName] = serviceEndpoint;
@@ -126,7 +138,12 @@
             this.listener.Start();
 
             this.assertionSync = new SemaphoreSlim(0);
-            Task.Factory.StartNew(() => this.ProcessRequest(this.listener));
+
+            var eventListenerReady = new AutoResetEvent(false);
+            new Thread(() => this.ProcessRequest(this.listener, eventListenerReady)).Start();
+
+            eventListenerReady.WaitOne(QuickPulseServiceClientTests.RequestProcessingTimeout);
+            Thread.Sleep(TimeSpan.FromMilliseconds(100));
         }
 
         [TestCleanup]
@@ -141,11 +158,12 @@
             }
             finally
             {
-                Interlocked.Exchange(ref this.assertionSync, null)?.Dispose();
+                this.assertionSync.Dispose();
+                this.assertionSync = null;
             }
         }
 
-        [TestMethod]
+    [TestMethod]
         public void QuickPulseServiceClientPingsTheService()
         {
             // ARRANGE
@@ -1980,17 +1998,18 @@
             }
         }
 
-#region Helpers
+        #region Helpers
 
-        private void ProcessRequest(HttpListener listener)
+        private void ProcessRequest(HttpListener listener, AutoResetEvent ev)
         {
             var serializerDataPoint = new DataContractJsonSerializer(typeof(MonitoringDataPoint));
             var serializerDataPointArray = new DataContractJsonSerializer(typeof(MonitoringDataPoint[]));
 
-            while (listener.IsListening)
+            while (listener?.IsListening ?? false)
             {
                 try
                 {
+                    ev.Set();
                     HttpListenerContext context = listener.GetContextAsync().GetAwaiter().GetResult();
 
                     var request = context.Request;
@@ -2020,7 +2039,7 @@
                             var streamId = context.Request.Headers[QuickPulseConstants.XMsQpsStreamIdHeaderName];
                             var collectionConfigurationETag = context.Request.Headers[QuickPulseConstants.XMsQpsConfigurationETagHeaderName];
 
-                            this.pings.Add(
+                                this.pings.Add(
                                 Tuple.Create(
                                     new PingHeaders()
                                     {
@@ -2078,10 +2097,9 @@
             TimeSpan timeout = QuickPulseServiceClientTests.RequestProcessingTimeout;
 
             Task<bool>[] waitTasks = Enumerable.Range(0, requestCount).Select(_ => Task.Run(() => this.assertionSync.Wait(timeout))).ToArray();
-            Task.WhenAll(waitTasks);
 
             Assert.IsTrue(
-                condition: waitTasks.All(task => task.Result), 
+                condition: waitTasks.All(task => task.Result),
                 message: string.Format(CultureInfo.InvariantCulture, "Not all requests finished processing: expected {0}, actual: {1}", requestCount, waitTasks.Count(task => task.Result)));
         }
 
