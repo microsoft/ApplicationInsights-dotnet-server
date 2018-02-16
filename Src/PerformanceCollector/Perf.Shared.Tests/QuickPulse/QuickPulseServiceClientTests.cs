@@ -25,6 +25,8 @@
 
         private static readonly TimeSpan RequestProcessingTimeout = TimeSpan.FromSeconds(30.0);
 
+        private static Random rand = new Random();
+
         /// <summary>
         /// Tuple of (Timestamp, CollectionConfigurationETag, MonitoringDataPoint).
         /// </summary>
@@ -57,20 +59,6 @@
 
         private bool emulateTimeout;
 
-        private static Random rand = new Random();
-
-        private SemaphoreSlim assertionSync
-        {
-            get { return this.TestContext.Properties[nameof(assertionSync)] as SemaphoreSlim; }
-            set { this.TestContext.Properties[nameof(assertionSync)] = value; }
-        }
-
-        private HttpListener listener
-        {
-            get { return this.TestContext.Properties[nameof(listener)] as HttpListener; }
-            set { this.TestContext.Properties[nameof(listener)] = value; }
-        }
-
         public QuickPulseServiceClientTests()
         {
             CollectionConfigurationError[] errors;
@@ -82,6 +70,18 @@
         }
 
         public TestContext TestContext { get; set; }
+
+        private SemaphoreSlim AssertionSync
+        {
+            get { return this.TestContext.Properties[nameof(this.AssertionSync)] as SemaphoreSlim; }
+            set { this.TestContext.Properties[nameof(this.AssertionSync)] = value; }
+        }
+
+        private HttpListener Listener
+        {
+            get { return this.TestContext.Properties[nameof(this.Listener)] as HttpListener; }
+            set { this.TestContext.Properties[nameof(this.Listener)] = value; }
+        }
 
         [TestInitialize]
         public void TestInitialize()
@@ -128,19 +128,19 @@
             this.TestContext.Properties[ServiceEndpointPropertyName] = serviceEndpoint;
         
 #if NETCORE
-            this.listener = new HttpListener(IPAddress.Loopback, port);
+            this.Listener = new HttpListener(IPAddress.Loopback, port);
 #else
-            this.listener = new HttpListener();
+            this.Listener = new HttpListener();
             string uriPrefix = string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}/", port);
-            this.listener.Prefixes.Add(uriPrefix);
+            this.Listener.Prefixes.Add(uriPrefix);
 #endif
 
-            this.listener.Start();
+            this.Listener.Start();
 
-            this.assertionSync = new SemaphoreSlim(0);
+            this.AssertionSync = new SemaphoreSlim(0);
 
             var eventListenerReady = new AutoResetEvent(false);
-            new Thread(() => this.ProcessRequest(this.listener, eventListenerReady)).Start();
+            new Thread(() => this.ProcessRequest(this.Listener, eventListenerReady)).Start();
 
             eventListenerReady.WaitOne(QuickPulseServiceClientTests.RequestProcessingTimeout);
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
@@ -151,15 +151,15 @@
         {
             try
             {
-                this.listener.Close();
+                this.Listener.Close();
             }
             catch
             {
             }
             finally
             {
-                this.assertionSync.Dispose();
-                this.assertionSync = null;
+                this.AssertionSync.Dispose();
+                this.AssertionSync = null;
             }
         }
 
@@ -1986,11 +1986,11 @@
         {
             try
             {
-                ((IDisposable)this.listener).Dispose();
-                if (this.assertionSync != null)
+                ((IDisposable)this.Listener).Dispose();
+                if (this.AssertionSync != null)
                 {
-                    this.assertionSync.Dispose();
-                    this.assertionSync = null;
+                    this.AssertionSync.Dispose();
+                    this.AssertionSync = null;
                 }
             }
             catch (Exception)
@@ -2087,7 +2087,7 @@
                 }
                 finally
                 {
-                    this.assertionSync.Release();
+                    this.AssertionSync.Release();
                 }
             }
         }
@@ -2096,7 +2096,7 @@
         {
             TimeSpan timeout = QuickPulseServiceClientTests.RequestProcessingTimeout;
 
-            Task<bool>[] waitTasks = Enumerable.Range(0, requestCount).Select(_ => Task.Run(() => this.assertionSync.Wait(timeout))).ToArray();
+            Task<bool>[] waitTasks = Enumerable.Range(0, requestCount).Select(_ => Task.Run(() => this.AssertionSync.Wait(timeout))).ToArray();
 
             Assert.IsTrue(
                 condition: waitTasks.All(task => task.Result),
