@@ -69,7 +69,7 @@ namespace E2ETests
 
             // Windows Server Machines dont have docker-compose installed.
             Trace.WriteLine("Getting docker-compose.exe if required.");
-            GetDockerCompose();
+            //GetDockerCompose();
             Trace.WriteLine("Getting docker-compose.exe completed.");
 
             //DockerUtils.RemoveDockerImage(Apps[AppNameBeingTested].imageName, true);
