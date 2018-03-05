@@ -167,3 +167,6 @@ $RECYCLE.BIN/
 
 .PreReleaseVersion
 .nugetVersion
+
+# Nuget Init
+.tools/
