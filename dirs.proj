@@ -12,8 +12,6 @@
   </ItemGroup>
   
   <Target Name="Build">
-    <Exec Command='IF EXIST "%(Solution.FullPath)" nuget.exe restore "%(Solution.FullPath)" -NonInteractive' 
-          ContinueOnError="ErrorAndStop"/>          
     <MSBuild Projects="@(Solution)" ContinueOnError="ErrorAndStop" Properties="PreReleaseVersion=$(PreReleaseVersion)"/>     
   </Target>
   
