@@ -12,6 +12,7 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Azure\Emulation\Microsoft.WindowsAzure.ServiceRuntime.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataEndToEndTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureWebAppRoleEnvironmentTelemetryInitializerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureRoleEnvironmentTelemetryInitializerTest.cs" />
