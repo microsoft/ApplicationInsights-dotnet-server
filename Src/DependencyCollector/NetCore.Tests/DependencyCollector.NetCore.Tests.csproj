@@ -15,33 +15,27 @@
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <DoNotSign>true</DoNotSign>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="..\Shared.Tests\Implementation\DependencyCollectorDiagnosticListenerTests.Netstandard16.cs" Link="DependencyCollectorDiagnosticListenerTests.Netstandard16.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\DependencyCollectorDiagnosticListenerTests.Netstandard20.cs" Link="DependencyCollectorDiagnosticListenerTests.Netstandard20.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\TelemetryDiagnosticSourceListenerTests.cs" Link="TelemetryDiagnosticSourceListenerTests.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\SqlClientDiagnosticSourceListenerTests.cs" Link="SqlClientDiagnosticSourceListenerTests.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\ServiceBusDiagnosticListenerTests.cs" Link="ServiceBusDiagnosticListenerTests.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\EnumerableAssert.cs" Link="EnumerableAssert.cs" />
-    <Compile Include="..\Shared.Tests\Implementation\MockCorrelationIdLookupHelper.cs" Link="MockCorrelationIdLookupHelper.cs" />
-    <Compile Include="..\..\TestFramework\Shared\SdkVersionHelper.cs" Link="SdkVersionHelper.cs" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;1705;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>1701;1702;1705;1591</NoWarn>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NetCore\DependencyCollector.NetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Shared.Tests\HttpDependenciesParsingTelemetryInitializerTest.cs" Link="HttpDependenciesParsingTelemetryInitializerTest.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.2" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0-preview-20170106-08" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="1.1.8-rc" />
     <PackageReference Include="MSTest.TestFramework" Version="1.0.8-rc" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
@@ -50,5 +44,8 @@
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
+
+  <Import Project="..\Shared.Tests\DependencyCollector.Shared.Tests.projitems" Label="Shared" />
+  <Import Project="..\..\TestFramework\Shared\TestFramework.Shared.projitems" Label="Shared" />
 
 </Project>

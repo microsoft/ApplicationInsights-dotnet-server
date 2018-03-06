@@ -1,9 +1,23 @@
 # Changelog
 
+
+## Version 2.6.0-beta2
+- [Added a max length restriction to values passed in through requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/810)
+- [Fix: Dependency Telemetry is not collected with DiagnosticSource when response does not have content.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/739)
+- [Expose Request-Context in Access-Control-Expose-Headers header, and that allows cross-component correlation between AJAX dependencies and server-side requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/802)
+- [Improve DependencyCollectorEventSource.Log.CurrentActivityIsNull](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/799)
+- A significant number of upgrades to our testing infrastructure.
+- Add Azure Instance Metadata information to heartbeat properties in WindowsServer package (full framework only). [Completes issue #666 from -dotnet repo](https://github.com/Microsoft/ApplicationInsights-dotnet/issues/666)
+
+
+## Version 2.5.0
+- [Fix: System.InvalidCastException for SQL Dependency](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/782)
+
+
 ## Version 2.5.0-beta2
 - [Fix: When debugging netcoreapp2.0 in VS, http dependencies are tracked twice](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/723)
 - [Fix: DependencyCollector check if exits before add](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/724)
-- [Track requests and dependencies from ServiceBus .NET Client (Microsoft.Azure.ServiceBus 2.1.0](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/740)
+- [Track requests and dependencies from ServiceBus .NET Client (Microsoft.Azure.ServiceBus 3.0.0](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/740)
 - [Fix: REST API Request filter bug](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/175)
 - [Fix: SyntheticUserAgentTelemetryInitializer null check](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/750)
 - [Track dependencies from EventHubs .NET Client (Microsoft.Azure.EventHubs 1.1.0)](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/753)
