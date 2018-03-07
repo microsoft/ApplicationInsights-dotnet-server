@@ -18,7 +18,7 @@
         public static string UnvalidatedGetHeader(this HttpRequest httpRequest, string headerName)
         {
             string value = httpRequest.Unvalidated.Headers[headerName];
-            return StringUtilities.EnforceMaxLength(value, InjectionGuardConstants.RequestHeaderMaxLength);
+            return value == null ? null : StringUtilities.EnforceMaxLength(value, InjectionGuardConstants.RequestHeaderMaxLength);
         }
 
         public static Uri UnvalidatedGetUrl(this HttpRequest httpRequest)
