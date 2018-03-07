@@ -132,7 +132,7 @@
             Assert.AreEqual(1, requests.Length);
 
             var allExceptions = telemetry.OfType<TelemetryItem<ExceptionData>>();
-            // select only test exception, and filter those that are collected by first chance module - it is not enabled by default
+            // select only test exception, and filter out those that are collected by first chance module - the module is not enabled by default
             var controllerException = allExceptions.Where(i => i.data.baseData.exceptions.FirstOrDefault()?.message == "Test exception to get 500" && i.tags[new ContextTagKeys().InternalSdkVersion].StartsWith("web"));
             Assert.AreEqual(1, controllerException.Count());
 
