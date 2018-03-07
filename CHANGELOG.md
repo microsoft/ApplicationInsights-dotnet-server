@@ -2,6 +2,7 @@
 
 
 ## Version 2.6.0-beta2
+- [Implement unhandled exception auto-tracking (500 requests) for MVC 5 and WebAPI 2 applications] (https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/847)
 - [Added a max length restriction to values passed in through requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/810)
 - [Fix: Dependency Telemetry is not collected with DiagnosticSource when response does not have content.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/739)
 - [Expose Request-Context in Access-Control-Expose-Headers header, and that allows cross-component correlation between AJAX dependencies and server-side requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/802)
