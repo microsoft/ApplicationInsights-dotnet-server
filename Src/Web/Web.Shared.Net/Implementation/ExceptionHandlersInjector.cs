@@ -9,7 +9,7 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
-    internal sealed class ExceptionHandlersInjector
+    internal static class ExceptionHandlersInjector
     {
         // we only support ASP.NET 5 for now 
         // and may extend list of supported versions if there will be a business need 

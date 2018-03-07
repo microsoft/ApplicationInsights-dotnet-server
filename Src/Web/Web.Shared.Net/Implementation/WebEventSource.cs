@@ -432,7 +432,7 @@
         [Event(44,
             Keywords = Keywords.Diagnostics,
             Message = "Version '{0}' of component '{1}' is not supported",
-            Level = EventLevel.Error)]
+            Level = EventLevel.Verbose)]
         public void InjectionVersionNotSupported(string version, string component, string appDomainName = "Incorrect")
         {
             this.WriteEvent(44, version ?? string.Empty, component ?? string.Empty, this.ApplicationName);

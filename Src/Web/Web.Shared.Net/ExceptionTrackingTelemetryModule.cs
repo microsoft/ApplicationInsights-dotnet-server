@@ -86,6 +86,7 @@
                             this.telemetryClient = new TelemetryClient(configuration);
                             this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
                             ExceptionHandlersInjector.Inject(this.telemetryClient);
+                            this.isInitialized = true;
                         }
                     }
                 }
