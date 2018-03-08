@@ -423,7 +423,7 @@
         [Event(43,
             Keywords = Keywords.Diagnostics,
             Message = "{0} Injection failed. Error message: {1}",
-            Level = EventLevel.Verbose)]
+            Level = EventLevel.Informational)]
         public void InjectionFailed(string component, string error, string appDomainName = "Incorrect")
         {
             this.WriteEvent(43, component ?? string.Empty, error ?? string.Empty, this.ApplicationName);

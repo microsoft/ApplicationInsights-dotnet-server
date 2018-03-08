@@ -63,7 +63,7 @@
             return (HttpApplication)httpApplicationWrapper.Target;
         }
 
-        public static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null, bool isCustomErrorEnabled = false)
+        public static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null)
         {
             Thread.GetDomain().SetData(".appPath", string.Empty);
             Thread.GetDomain().SetData(".appVPath", string.Empty);
