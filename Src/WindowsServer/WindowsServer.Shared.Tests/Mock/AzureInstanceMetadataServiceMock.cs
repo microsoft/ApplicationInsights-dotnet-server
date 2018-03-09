@@ -5,7 +5,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
-    class AzureInstanceMetadataServiceMock : IDisposable
+    internal class AzureInstanceMetadataServiceMock : IDisposable
     {
         private readonly HttpListener listener;
         private readonly CancellationTokenSource cts;

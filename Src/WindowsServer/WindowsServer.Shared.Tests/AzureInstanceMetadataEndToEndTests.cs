@@ -2,21 +2,20 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 {
     using System;
     using System.IO;
+    using System.Net;
     using System.Runtime.Serialization.Json;
     using System.Text;
-    using System.Net;
     using System.Threading;
     using Microsoft.ApplicationInsights.WindowsServer.Implementation;
     using Microsoft.ApplicationInsights.WindowsServer.Implementation.DataContracts;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Microsoft.ApplicationInsights.WindowsServer.Mock;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Assert = Xunit.Assert;
 
     [TestClass]
     public class AzureInstanceMetadataEndToEndTests
     {
-        private AzureInstanceComputeMetadata TestComputeMetadata { get; set; }
-        private MemoryStream JsonStream;
+        private MemoryStream jsonStream;
 
         public AzureInstanceMetadataEndToEndTests()
         {
@@ -40,9 +39,11 @@ namespace Microsoft.ApplicationInsights.WindowsServer
             };
 
             DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(AzureInstanceComputeMetadata));
-            this.JsonStream = new MemoryStream();
-            serializer.WriteObject(this.JsonStream, this.TestComputeMetadata);
+            this.jsonStream = new MemoryStream();
+            serializer.WriteObject(this.jsonStream, this.TestComputeMetadata);
         }
+
+        private AzureInstanceComputeMetadata TestComputeMetadata { get; set; }
 
         [TestMethod]
         public void SpoofedResponseFromAzureIMSDoesntCrash()
@@ -51,31 +52,34 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 
             string mockUri = "http://localhost:9922/";
 
-            using (new AzureInstanceMetadataServiceMock(mockUri, (HttpListenerContext context) =>
+            using (new AzureInstanceMetadataServiceMock(
+                mockUri, 
+                (HttpListenerContext context) =>
             {
                 HttpListenerResponse response = context.Response;
 
                 // Construct a response.
                 response.ContentEncoding = Encoding.UTF8;
+
                 // Get a response stream and write the response to it.
-                this.JsonStream.Position = 0;
-                response.ContentLength64 = (int)this.JsonStream.Length;
-                this.JsonStream.Position = 0;
+                this.jsonStream.Position = 0;
+                response.ContentLength64 = (int)this.jsonStream.Length;
+                this.jsonStream.Position = 0;
                 context.Response.ContentType = "application/json";
-                this.JsonStream.WriteTo(context.Response.OutputStream);
+                this.jsonStream.WriteTo(context.Response.OutputStream);
                 context.Response.StatusCode = 200;
             }))
             {
-                var azIms = new AzureMetadataRequestor
+                var azureIms = new AzureMetadataRequestor
                 {
                     BaseAimsUri = mockUri
                 };
 
-                var azImsProps = new AzureComputeMetadataHeartbeatPropertyProvider();
-                var azureIMSData = azIms.GetAzureComputeMetadataAsync();
+                var azureImsProps = new AzureComputeMetadataHeartbeatPropertyProvider();
+                var azureIMSData = azureIms.GetAzureComputeMetadataAsync();
                 azureIMSData.Wait();
 
-                foreach (string fieldName in azImsProps.ExpectedAzureImsFields)
+                foreach (string fieldName in azureImsProps.ExpectedAzureImsFields)
                 {
                     string fieldValue = azureIMSData.Result.GetValueForField(fieldName);
                     Assert.NotNull(fieldValue);
@@ -91,7 +95,9 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 
             string mockUri = "http://localhost:9922/";
 
-            using (new AzureInstanceMetadataServiceMock(mockUri, (HttpListenerContext context) =>
+            using (new AzureInstanceMetadataServiceMock(
+                mockUri, 
+                (HttpListenerContext context) =>
             {
                 HttpListenerResponse response = context.Response;
 
@@ -99,27 +105,26 @@ namespace Microsoft.ApplicationInsights.WindowsServer
                 response.ContentEncoding = Encoding.UTF8;
 
                 // Get a response stream and write the response to it.
-                this.JsonStream.Position = 0;
-                response.ContentLength64 = 3 * (int)this.JsonStream.Length;
-                this.JsonStream.Position = 0;
+                this.jsonStream.Position = 0;
+                response.ContentLength64 = 3 * (int)this.jsonStream.Length;
+                this.jsonStream.Position = 0;
                 context.Response.ContentType = "application/json";
 
-                this.JsonStream.WriteTo(context.Response.OutputStream);
-                this.JsonStream.Position = 0;
-                this.JsonStream.WriteTo(context.Response.OutputStream);
-                this.JsonStream.Position = 0;
-                this.JsonStream.WriteTo(context.Response.OutputStream);
+                this.jsonStream.WriteTo(context.Response.OutputStream);
+                this.jsonStream.Position = 0;
+                this.jsonStream.WriteTo(context.Response.OutputStream);
+                this.jsonStream.Position = 0;
+                this.jsonStream.WriteTo(context.Response.OutputStream);
 
                 context.Response.StatusCode = 200;
             }))
             {
-                var azIms = new AzureMetadataRequestor
+                var azureIms = new AzureMetadataRequestor
                 {
                     BaseAimsUri = mockUri
                 };
 
-                var azImsProps = new AzureComputeMetadataHeartbeatPropertyProvider();
-                var azureIMSData = azIms.GetAzureComputeMetadataAsync();
+                var azureIMSData = azureIms.GetAzureComputeMetadataAsync();
                 azureIMSData.Wait();
 
                 Assert.Null(azureIMSData.Result);
@@ -133,7 +138,9 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 
             string mockUri = "http://localhost:9922/";
 
-            using (new AzureInstanceMetadataServiceMock(mockUri, (HttpListenerContext context) =>
+            using (new AzureInstanceMetadataServiceMock(
+                mockUri, 
+                (HttpListenerContext context) =>
             {
                 HttpListenerResponse response = context.Response;
 
@@ -155,14 +162,14 @@ namespace Microsoft.ApplicationInsights.WindowsServer
                 context.Response.StatusCode = 200;
             }))
             {
-                var azIms = new AzureMetadataRequestor
+                var azureIms = new AzureMetadataRequestor
                 {
                     BaseAimsUri = mockUri
                 };
 
-                var azImsProps = new AzureComputeMetadataHeartbeatPropertyProvider(azIms);
+                var azureImsProps = new AzureComputeMetadataHeartbeatPropertyProvider(azureIms);
                 var hbeatProvider = new HeartbeatProviderMock();
-                var azureIMSData = azImsProps.SetDefaultPayloadAsync(hbeatProvider);
+                var azureIMSData = azureImsProps.SetDefaultPayloadAsync(hbeatProvider);
                 azureIMSData.Wait();
 
                 Assert.Empty(hbeatProvider.HbeatProps["azInst_name"]);
@@ -178,7 +185,9 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 
             string mockUri = "http://localhost:9922/";
 
-            using (new AzureInstanceMetadataServiceMock(mockUri, (HttpListenerContext context) =>
+            using (new AzureInstanceMetadataServiceMock(
+                mockUri, 
+                (HttpListenerContext context) =>
             {
                 // wait for longer than the request timeout
                 System.Threading.Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -189,21 +198,21 @@ namespace Microsoft.ApplicationInsights.WindowsServer
                 response.ContentEncoding = Encoding.UTF8;
 
                 // Get a response stream and write the response to it.
-                this.JsonStream.Position = 0;
-                response.ContentLength64 = (int)this.JsonStream.Length;
+                this.jsonStream.Position = 0;
+                response.ContentLength64 = (int)this.jsonStream.Length;
                 context.Response.ContentType = "application/json";
-                this.JsonStream.WriteTo(context.Response.OutputStream);
+                this.jsonStream.WriteTo(context.Response.OutputStream);
 
                 context.Response.StatusCode = 200;
             }))
             {
-                var azIms = new AzureMetadataRequestor
+                var azureIms = new AzureMetadataRequestor
                 {
                     BaseAimsUri = mockUri,
                     AzureImsRequestTimeout = TimeSpan.FromSeconds(1)
                 };
 
-                var azureIMSData = azIms.GetAzureComputeMetadataAsync();
+                var azureIMSData = azureIms.GetAzureComputeMetadataAsync();
                 azureIMSData.Wait();
 
                 Assert.Null(azureIMSData.Result);
@@ -217,17 +226,19 @@ namespace Microsoft.ApplicationInsights.WindowsServer
 
             string mockUri = "http://localhost:9922/";
 
-            using (new AzureInstanceMetadataServiceMock(mockUri, (HttpListenerContext context) =>
+            using (new AzureInstanceMetadataServiceMock(
+                mockUri, 
+                (HttpListenerContext context) =>
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             }))
             {
-                var azIms = new AzureMetadataRequestor
+                var azureIms = new AzureMetadataRequestor
                 {
                     BaseAimsUri = mockUri
                 };
 
-                var azureIMSData = azIms.GetAzureComputeMetadataAsync();
+                var azureIMSData = azureIms.GetAzureComputeMetadataAsync();
                 azureIMSData.Wait();
 
                 Assert.Null(azureIMSData.Result);
