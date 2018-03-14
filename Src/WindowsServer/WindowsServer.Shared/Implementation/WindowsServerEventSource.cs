@@ -332,7 +332,11 @@
             string name;
             try
             {
+#if NETCORE
+                name = System.Reflection.Assembly.GetEntryAssembly().GetName().Name;
+#else
                 name = AppDomain.CurrentDomain.FriendlyName;
+#endif
             }
             catch (Exception exp)
             {
