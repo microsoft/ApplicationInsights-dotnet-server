@@ -17,14 +17,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <DoNotSign>true</DoNotSign>
     <RootNamespace>Microsoft.ApplicationInsights.Tests</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <NoWarn>1701;1702;1705;1591</NoWarn>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>1701;1702;1705;1591</NoWarn>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,9 +43,5 @@
   <Import Project="..\..\TestFramework\Shared\TestFramework.Shared.projitems" Label="Shared" />
 
   <Import Project="..\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems" Label="Shared" />
-
-  <!--<Import Project="..\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems" Label="Shared" />
-
-  <Import Project="..\..\TestFramework\Shared\TestFramework.Shared.projitems" Label="Shared" />-->
 
 </Project>
