@@ -1,7 +1,7 @@
 @echo off
 @setlocal enabledelayedexpansion enableextensions
 
-CALL buildDebug.cmd
+@REM CALL buildDebug.cmd
 
 set BuildRoot=%~dp0..\bin\debug\
 
