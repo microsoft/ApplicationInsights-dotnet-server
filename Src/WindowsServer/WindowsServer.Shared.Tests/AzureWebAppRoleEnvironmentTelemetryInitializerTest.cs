@@ -4,7 +4,6 @@
     using System.Globalization;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-
 #if !NETCORE
     using Microsoft.ApplicationInsights.WindowsServer.Azure;
     using Microsoft.ApplicationInsights.WindowsServer.Azure.Emulation;

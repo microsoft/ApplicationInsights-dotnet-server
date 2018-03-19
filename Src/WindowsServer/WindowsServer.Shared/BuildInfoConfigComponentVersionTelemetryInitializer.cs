@@ -53,7 +53,7 @@
             {
                 string path = string.Empty;
 
-#if !NETCORE
+#if !NETSTANDARD1_6
                 path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, BuildInfoConfigComponentVersionTelemetryInitializer.BuildInfoConfigFilename);
 #else
                 path = Path.Combine(AppContext.BaseDirectory, BuildInfoConfigComponentVersionTelemetryInitializer.BuildInfoConfigFilename);

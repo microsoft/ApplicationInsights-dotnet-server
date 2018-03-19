@@ -332,7 +332,7 @@
             string name;
             try
             {
-#if NETCORE
+#if NETSTANDARD1_6
                 name = System.Reflection.Assembly.GetEntryAssembly().GetName().Name;
 #else
                 name = AppDomain.CurrentDomain.FriendlyName;
