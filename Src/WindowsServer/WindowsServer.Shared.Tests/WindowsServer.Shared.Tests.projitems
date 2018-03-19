@@ -9,9 +9,6 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.WindowsServer</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Azure\Emulation\Microsoft.WindowsAzure.ServiceRuntime.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataEndToEndTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureWebAppRoleEnvironmentTelemetryInitializerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataTests.cs" />
