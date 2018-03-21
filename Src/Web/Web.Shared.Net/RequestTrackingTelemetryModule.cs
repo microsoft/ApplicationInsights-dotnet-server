@@ -8,6 +8,7 @@
 
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -22,7 +23,6 @@
         private bool initializationErrorReported;
         private bool correlationHeadersEnabled = true;
         private string telemetryChannelEnpoint;
-        private CorrelationIdLookupHelper correlationIdLookupHelper;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
         /// <summary>
@@ -80,19 +80,6 @@
             }
         }
 
-        /// <summary>
-        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
-        /// </summary>
-        public string ProfileQueryEndpoint { get; set; }
-
-        internal string EffectiveProfileQueryEndpoint
-        {
-            get
-            {
-                return string.IsNullOrEmpty(this.ProfileQueryEndpoint) ? this.telemetryChannelEnpoint : this.ProfileQueryEndpoint;
-            }
-        }
-        
         /// <summary>
         /// Implements on begin callback of http module.
         /// </summary>
@@ -201,13 +188,11 @@
                     AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
                 }
                 
-                bool correlationIdLookupHelperInitialized = this.TryInitializeCorrelationHelperIfNotInitialized();
-
                 string currentComponentAppId = string.Empty;
                 bool foundMyAppId = false;
-                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey) && correlationIdLookupHelperInitialized)
+                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
                 {
-                    foundMyAppId = this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId);
+                    foundMyAppId = CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId);
                 }
 
                 // If the source header is present on the incoming request,
@@ -250,17 +235,14 @@
                 this.telemetryClient.Initialize(requestTelemetry);
             }
 
-            bool correlationIdHelperInitialized = this.TryInitializeCorrelationHelperIfNotInitialized();
-
             try
             {
                 if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                    && context.Response.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null
-                    && correlationIdHelperInitialized)
+                    && context.Response.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null)
                 {
                     string correlationId;
 
-                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out correlationId))
+                    if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out correlationId))
                     {
                         context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
 
@@ -326,15 +308,6 @@
         }
 
         /// <summary>
-        /// Simple test hook, that allows for using a stub rather than the implementation that calls the original service.
-        /// </summary>
-        /// <param name="correlationIdLookupHelper">Lookup header to use.</param>
-        internal void OverrideCorrelationIdLookupHelper(CorrelationIdLookupHelper correlationIdLookupHelper)
-        {
-            this.correlationIdLookupHelper = correlationIdLookupHelper;
-        }
-
-        /// <summary>
         /// Checks whether or not handler is a transfer handler.
         /// </summary>
         /// <param name="handler">An instance of handler to validate.</param>
@@ -356,24 +329,7 @@
 
             return false;
         }
-
-        private bool TryInitializeCorrelationHelperIfNotInitialized()
-        {
-            try
-            {
-                if (this.correlationIdLookupHelper == null)
-                {
-                    this.correlationIdLookupHelper = new CorrelationIdLookupHelper(this.EffectiveProfileQueryEndpoint);
-                }
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
+        
         /// <summary>
         /// <see cref="System.Web.Handlers.TransferRequestHandler"/> can create a Child request to route extension-less requests to a controller.
         /// (ex: site/home -> site/HomeController.cs)

@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Common
+﻿namespace Microsoft.ApplicationInsights.Common.CorrelationLookup
 {
     /// <summary>
     /// An interface for getting a correlation id from a provided instrumentation key.

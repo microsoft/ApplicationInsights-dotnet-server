@@ -12,6 +12,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -30,7 +31,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly IEnumerable<string> correlationDomainExclusionList;
         private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
         private readonly bool setComponentCorrelationHttpHeaders;
-        private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
         private readonly TelemetryClient client;
         private readonly TelemetryConfiguration configuration;
         private readonly HttpCoreDiagnosticSourceSubscriber subscriber;
@@ -57,12 +57,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         private bool isNetCore20HttpClient;
 
-        public HttpCoreDiagnosticSourceListener(
-            TelemetryConfiguration configuration,
-            string effectiveProfileQueryEndpoint,
-            bool setComponentCorrelationHttpHeaders,
-            IEnumerable<string> correlationDomainExclusionList,
-            ICorrelationIdLookupHelper correlationIdLookupHelper)
+        public HttpCoreDiagnosticSourceListener(TelemetryConfiguration configuration, bool setComponentCorrelationHttpHeaders, IEnumerable<string> correlationDomainExclusionList)
         {
             this.client = new TelemetryClient(configuration);
             this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceCore + ":");
@@ -73,7 +68,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.configuration = configuration;
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
-            this.correlationIdLookupHelper = correlationIdLookupHelper ?? new CorrelationIdLookupHelper(effectiveProfileQueryEndpoint);
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
 
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(this, this.applicationInsightsUrlFilter, this.isNetCore20HttpClient);
@@ -442,7 +436,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         if (!string.IsNullOrEmpty(instrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey))
                         {
                             string sourceApplicationId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(instrumentationKey, out sourceApplicationId))
+                            if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(instrumentationKey, out sourceApplicationId))
                             {
                                 HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
                             }
@@ -508,7 +502,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 {
                     // We only add the cross component correlation key if the key does not represent the current component.
                     string sourceApplicationId;
-                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
+                    if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
                         targetApplicationId != sourceApplicationId)
                     {
                         telemetry.Type = RemoteDependencyConstants.AI;

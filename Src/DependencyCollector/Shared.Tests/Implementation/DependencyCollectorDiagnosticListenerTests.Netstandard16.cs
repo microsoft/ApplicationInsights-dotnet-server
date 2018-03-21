@@ -9,6 +9,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -34,8 +35,8 @@ namespace Microsoft.ApplicationInsights.Tests
         private readonly List<ITelemetry> sentTelemetry = new List<ITelemetry>();
 
         private string instrumentationKey;
+        private string correlationId;
         private StubTelemetryChannel telemetryChannel;
-        private MockCorrelationIdLookupHelper mockCorrelationIdLookupHelper;
         private HttpCoreDiagnosticSourceListener listener;
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace Microsoft.ApplicationInsights.Tests
         public void Initialize()
         {
             this.instrumentationKey = Guid.NewGuid().ToString();
+            this.correlationId = MockCorrelationIdLookupHelper.GetCorrelationIdValue(this.instrumentationKey);
 
             this.telemetryChannel = new StubTelemetryChannel()
             {
@@ -52,10 +54,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 OnSend = this.sentTelemetry.Add
             };
 
-            this.mockCorrelationIdLookupHelper = new MockCorrelationIdLookupHelper(new Dictionary<string, string>()
-            {
-                [this.instrumentationKey] = MockAppId
-            });
+            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
 
             var configuration = new TelemetryConfiguration
             {
@@ -66,10 +65,8 @@ namespace Microsoft.ApplicationInsights.Tests
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
             this.listener = new HttpCoreDiagnosticSourceListener(
                 configuration,
-                this.telemetryChannel.EndpointAddress,
                 setComponentCorrelationHttpHeaders: true,
-                correlationDomainExclusionList: new string[] { "excluded.host.com" },
-                correlationIdLookupHelper: this.mockCorrelationIdLookupHelper);
+                correlationDomainExclusionList: new string[] { "excluded.host.com" });
         }
 
         /// <summary>
@@ -212,7 +209,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(string.Empty, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
 
-            Assert.AreEqual(MockAppId, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            Assert.AreEqual(this.correlationId, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
             Assert.AreEqual(null, GetRequestContextKeyValue(request, RequestResponseHeaders.StandardRootIdHeader));
 
             var legacyParentIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();

@@ -10,6 +10,7 @@
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -44,9 +45,10 @@
             this.sendItems = new List<ITelemetry>(); 
             this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
             this.configuration.InstrumentationKey = Guid.NewGuid().ToString();
-            this.httpProcessingFramework = new FrameworkHttpProcessing(this.configuration, this.cache, /*setCorrelationHeaders*/ true, new List<string>(), RandomAppIdEndpoint);
-            this.httpProcessingFramework.OverrideCorrelationIdLookupHelper(new CorrelationIdLookupHelper(new Dictionary<string, string> { { this.configuration.InstrumentationKey, "cid-v1:" + this.configuration.InstrumentationKey } }));
+            this.httpProcessingFramework = new FrameworkHttpProcessing(this.configuration, this.cache, /*setCorrelationHeaders*/ true, new List<string>());
             DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
+
+            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
         }
 
         [TestCleanup]

@@ -6,6 +6,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>

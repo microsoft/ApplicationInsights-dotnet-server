@@ -10,6 +10,7 @@ namespace Microsoft.ApplicationInsights.Tests
     using System.Threading;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -24,7 +25,6 @@ namespace Microsoft.ApplicationInsights.Tests
     public class DesktopDiagnosticSourceHttpProcessingTests
     {
         #region Fields
-        private const string RandomAppIdEndpoint = "http://app.id.endpoint"; // appIdEndpoint - this really won't be used for tests because of the app id provider override.
         private const int TimeAccuracyMilliseconds = 50;
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private int sleepTimeMsecBetweenBeginAndEnd = 100;
@@ -42,9 +42,10 @@ namespace Microsoft.ApplicationInsights.Tests
             this.sendItems = new List<ITelemetry>();
             this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
             this.configuration.InstrumentationKey = Guid.NewGuid().ToString();
-            this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>(), RandomAppIdEndpoint);
-            this.httpDesktopProcessingFramework.OverrideCorrelationIdLookupHelper(new CorrelationIdLookupHelper(new Dictionary<string, string> { { this.configuration.InstrumentationKey, "cid-v1:" + this.configuration.InstrumentationKey } }));
+            this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>());
             DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
+
+            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
         }
 
         [TestCleanup]
@@ -224,8 +225,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration, 
                 new CacheBasedOperationHolder("testCache", 100 * 1000),  
                 false, 
-                new List<string>(),
-                RandomAppIdEndpoint);
+                new List<string>());
 
             localHttpProcessingFramework.OnBegin(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
@@ -236,8 +236,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 new CacheBasedOperationHolder("testCache", 100 * 1000), 
                 true, 
-                exclusionList,
-                RandomAppIdEndpoint);
+                exclusionList);
+
             localHttpProcessingFramework.OnBegin(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Count(x => x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase)));

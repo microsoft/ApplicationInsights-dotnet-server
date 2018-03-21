@@ -15,6 +15,7 @@
 
     using Common;
     using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -32,7 +33,6 @@
     {
         #region Fields
         private const int TimeAccuracyMilliseconds = 150; // this may be big number when under debugger
-        private const string RandomAppIdEndpoint = "http://app.id.endpoint"; // appIdEndpoint - this really won't be used for tests because of the app id provider override.
         private TelemetryConfiguration configuration;
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private Uri testUrlNonStandardPort = new Uri("http://www.microsoft.com:911/");
@@ -47,7 +47,23 @@
         [TestInitialize]
         public void TestInitialize()
         {
-            this.Initialize(Guid.NewGuid().ToString());
+            var instrumentationKey = Guid.NewGuid().ToString();
+
+            this.configuration = new TelemetryConfiguration();
+            this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
+            this.sendItems = new List<ITelemetry>();
+            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
+            this.configuration.InstrumentationKey = instrumentationKey;
+            this.httpProcessingProfiler = new ProfilerHttpProcessing(
+                this.configuration,
+                null,
+                new ObjectInstanceBasedOperationHolder(),
+                true /*setCorrelationHeaders*/,
+                new List<string>());
+
+            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
+
+            this.ex = new Exception();
         }
 
         [TestCleanup]
@@ -112,19 +128,7 @@
             // This will not match the current component's App ID. Hence represents an external component.
             string ikey = "0935FC42-FE1A-4C67-975C-0C9D5CBDEE8E";
             string appId = ikey + "-appId";
-
-            this.httpProcessingProfiler.OverrideCorrelationIdLookupHelper(new CorrelationIdLookupHelper(new Dictionary<string, string>
-            {
-                {
-                    ikey,
-                    "cid-v1:" + appId
-                },
-                {
-                    this.configuration.InstrumentationKey,
-                    "cid-v1:" + this.configuration.InstrumentationKey + "-appId"
-                }
-            }));
-
+            
             this.SimulateWebRequestResponseWithAppId(appId);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
@@ -257,13 +261,13 @@
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
 
-            var httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ false, new List<string>(), RandomAppIdEndpoint);
+            var httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ false, new List<string>());
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
 
             ICollection<string> exclusionList = new SanitizedHostList() { "randomstringtoexclude", hostnamepart };
-            httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, exclusionList, RandomAppIdEndpoint);
+            httpProcessingProfiler = new ProfilerHttpProcessing(this.configuration, null, new ObjectInstanceBasedOperationHolder(), /*setCorrelationHeaders*/ true, exclusionList);
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
@@ -889,33 +893,6 @@
         private string GetCorrelationIdHeaderValue(string appId)
         {
             return string.Format(CultureInfo.InvariantCulture, "{0}=cid-v1:{1}", RequestResponseHeaders.RequestContextCorrelationTargetKey, appId);
-        }
-
-        private void Initialize(string instrumentationKey)
-        {
-            this.configuration = new TelemetryConfiguration();
-            this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
-            this.sendItems = new List<ITelemetry>();
-            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
-            this.configuration.InstrumentationKey = instrumentationKey;
-            this.httpProcessingProfiler = new ProfilerHttpProcessing(
-                this.configuration,
-                null,
-                new ObjectInstanceBasedOperationHolder(),
-                true /*setCorrelationHeaders*/,
-                new List<string>(),
-                RandomAppIdEndpoint);
-
-            var correlationIdLookupHelper = new CorrelationIdLookupHelper(new Dictionary<string, string>
-            {
-                {
-                    instrumentationKey,
-                    "cid-v1:" + instrumentationKey + "-appId"
-                }
-            });
-
-            this.httpProcessingProfiler.OverrideCorrelationIdLookupHelper(correlationIdLookupHelper);
-            this.ex = new Exception();
         }
         #endregion Helpers
     }

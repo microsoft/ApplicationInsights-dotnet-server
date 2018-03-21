@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Common
+﻿namespace Microsoft.ApplicationInsights.Common.CorrelationLookup
 {
     using System;
     using System.Collections.Concurrent;
@@ -26,12 +26,11 @@
         private const string CorrelationIdFormat = "cid-v1:{0}";
 
         private const string AppIdQueryApiRelativeUriFormat = "api/profiles/{0}/appId";
+        private const string AppIdQueryApiFullUriFormat = "https://dc.services.visualstudio.com/api/profiles/{0}/appId";
 
         // We have arbitrarily chosen 5 second delay between trying to get app Id once we get a failure while trying to get it. 
         // This is to throttle tries between failures to safeguard against performance hits. The impact would be that telemetry generated during this interval would not have x-component correlation id.
         private readonly TimeSpan intervalBetweenFailedRetries = TimeSpan.FromSeconds(30);
-
-        private Uri endpointAddress;
 
         private ConcurrentDictionary<string, string> knownCorrelationIds = new ConcurrentDictionary<string, string>();
 
@@ -43,57 +42,22 @@
         private Func<string, Task<string>> provideAppId;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationIdLookupHelper" /> class mostly to be used by the test classes to provide an override for fetching appId logic.
-        /// </summary>
-        /// <param name="appIdProviderMethod">The delegate to be called to fetch the appId.</param>
-        public CorrelationIdLookupHelper(Func<string, Task<string>> appIdProviderMethod)
-        {
-            if (appIdProviderMethod == null)
-            {
-                throw new ArgumentNullException(nameof(appIdProviderMethod));
-            }
-
-            this.provideAppId = appIdProviderMethod;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CorrelationIdLookupHelper" /> class mostly to be used by the test classes to seed the instrumentation key -> app Id relationship.
-        /// </summary>
-        /// <param name="mapSeed">A dictionary that contains known instrumentation key - app id relationship.</param>
-        public CorrelationIdLookupHelper(Dictionary<string, string> mapSeed)
-        {
-            if (mapSeed == null)
-            {
-                throw new ArgumentNullException(nameof(mapSeed));
-            }
-
-            this.provideAppId = this.FetchAppIdFromService;
-
-            foreach (var entry in mapSeed)
-            {
-                this.knownCorrelationIds[entry.Key] = entry.Value;
-            }
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="CorrelationIdLookupHelper" /> class.
         /// </summary>
-        /// <param name="endpointAddress">Endpoint that is to be used to fetch appId.</param>
-        public CorrelationIdLookupHelper(string endpointAddress)
+        public CorrelationIdLookupHelper()
         {
-            if (string.IsNullOrEmpty(endpointAddress))
-            {
-                throw new ArgumentNullException(nameof(endpointAddress));
-            }
-
-            Uri endpointUri = new Uri(endpointAddress);
-
-            // Get the base URI, so that we can append the known relative segments to it.
-            this.endpointAddress = new Uri(endpointUri.AbsoluteUri.Substring(0, endpointUri.AbsoluteUri.Length - endpointUri.LocalPath.Length));
-
             this.provideAppId = this.FetchAppIdFromService;
         }
 
+        /// <summary>
+        /// Unit Test Only! Initializes a new instance of the <see cref="CorrelationIdLookupHelper" /> class with an override for fetching appId logic.
+        /// </summary>
+        /// <param name="appIdProviderMethod">The delegate to be called to fetch the appId.</param>
+        internal CorrelationIdLookupHelper(Func<string, Task<string>> appIdProviderMethod)
+        {
+            this.provideAppId = appIdProviderMethod ?? throw new ArgumentNullException(nameof(appIdProviderMethod));
+        }
+        
         /// <summary>
         /// Retrieves the correlation id corresponding to a given instrumentation key.
         /// </summary>
@@ -274,7 +238,17 @@
         /// <returns>Computed Uri.</returns>
         private Uri GetAppIdEndPointUri(string instrumentationKey)
         {
-            return new Uri(this.endpointAddress, string.Format(CultureInfo.InvariantCulture, AppIdQueryApiRelativeUriFormat, instrumentationKey));
+            Uri endpointProxyBaseUri = null;
+            //// TODO: endpointProxyBaseUri = TelemetryConfiguration.Active.GetEndpointProxyBaseUri(); // MUST WAIT FOR CHANGES IN BASE SDK!!!
+
+            if (endpointProxyBaseUri != null)
+            {
+                return new Uri(endpointProxyBaseUri, string.Format(CultureInfo.InvariantCulture, AppIdQueryApiRelativeUriFormat, instrumentationKey));
+            }
+            else
+            {
+                return new Uri(string.Format(CultureInfo.InvariantCulture, AppIdQueryApiFullUriFormat, instrumentationKey));
+            }
         }
 
         /// <summary>

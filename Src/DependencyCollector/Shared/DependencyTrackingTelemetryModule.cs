@@ -96,19 +96,6 @@
         }
 
         /// <summary>
-        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
-        /// </summary>
-        public string ProfileQueryEndpoint { get; set; }
-
-        internal string EffectiveProfileQueryEndpoint
-        {
-            get
-            {
-                return string.IsNullOrEmpty(this.ProfileQueryEndpoint) ? this.telemetryConfiguration.TelemetryChannel.EndpointAddress : this.ProfileQueryEndpoint;
-            }
-        }
-
-        /// <summary>
         /// IDisposable implementation.
         /// </summary>
         public void Dispose()
@@ -145,10 +132,8 @@
                             // NET45 referencing .net core System.Net.Http supports diagnostic listener
                             this.httpCoreDiagnosticSourceListener = new HttpCoreDiagnosticSourceListener(
                                 configuration,
-                                this.EffectiveProfileQueryEndpoint,
                                 this.SetComponentCorrelationHttpHeaders,
-                                this.ExcludeComponentCorrelationHttpHeadersOnDomains, 
-                                null);
+                                this.ExcludeComponentCorrelationHttpHeadersOnDomains);
 
                             if (this.IncludeDiagnosticSourceActivities != null && this.IncludeDiagnosticSourceActivities.Count > 0)
                             {
@@ -195,7 +180,7 @@
             var agentVersion = Decorator.GetAgentVersion();
             DependencyCollectorEventSource.Log.RemoteDependencyModuleInformation("AgentVersion is " + agentVersion);
 
-            this.httpProcessing = new ProfilerHttpProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.WebRequestConditionalHolder, this.SetComponentCorrelationHttpHeaders, this.ExcludeComponentCorrelationHttpHeadersOnDomains, this.EffectiveProfileQueryEndpoint);
+            this.httpProcessing = new ProfilerHttpProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.WebRequestConditionalHolder, this.SetComponentCorrelationHttpHeaders, this.ExcludeComponentCorrelationHttpHeadersOnDomains);
             this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
             this.sqlConnectionProcessing = new ProfilerSqlConnectionProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
 
@@ -270,8 +255,7 @@
                     this.telemetryConfiguration,
                     DependencyTableStore.Instance.WebRequestCacheHolder,
                     this.SetComponentCorrelationHttpHeaders,
-                    this.ExcludeComponentCorrelationHttpHeadersOnDomains,
-                    this.EffectiveProfileQueryEndpoint);
+                    this.ExcludeComponentCorrelationHttpHeadersOnDomains);
                 this.httpDesktopDiagnosticSourceListener = new HttpDesktopDiagnosticSourceListener(desktopHttpProcessing, new ApplicationInsightsUrlFilter(this.telemetryConfiguration));
             }
 
@@ -279,8 +263,7 @@
                 this.telemetryConfiguration,
                 DependencyTableStore.Instance.WebRequestCacheHolder, 
                 this.SetComponentCorrelationHttpHeaders, 
-                this.ExcludeComponentCorrelationHttpHeadersOnDomains, 
-                this.EffectiveProfileQueryEndpoint);
+                this.ExcludeComponentCorrelationHttpHeadersOnDomains);
 
             // In 4.5 EventListener has a race condition issue in constructor so we retry to create listeners
             this.httpEventListener = RetryPolicy.Retry<InvalidOperationException, TelemetryConfiguration, FrameworkHttpEventListener>(
