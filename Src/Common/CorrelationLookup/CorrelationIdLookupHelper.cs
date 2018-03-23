@@ -25,8 +25,8 @@
 
         private const string CorrelationIdFormat = "cid-v1:{0}";
 
-        private const string AppIdQueryApiRelativeUriFormat = "api/profiles/{0}/appId";
-        private const string AppIdQueryApiFullUriFormat = "https://dc.services.visualstudio.com/api/profiles/{0}/appId";
+        private const string AppIdServiceRelativeEndpoint = "api/profiles/{0}/appId";
+        private const string AppIdServiceEndpoint = "https://dc.services.visualstudio.com/api/profiles/{0}/appId";
 
         // We have arbitrarily chosen 5 second delay between trying to get app Id once we get a failure while trying to get it. 
         // This is to throttle tries between failures to safeguard against performance hits. The impact would be that telemetry generated during this interval would not have x-component correlation id.
@@ -239,15 +239,15 @@
         private Uri GetAppIdEndPointUri(string instrumentationKey)
         {
             Uri endpointProxyBaseUri = null;
-            //// TODO: endpointProxyBaseUri = TelemetryConfiguration.Active.GetEndpointProxyBaseUri(); // MUST WAIT FOR CHANGES IN BASE SDK!!!
+            //// TODO: endpointProxyBaseUri = TelemetryConfiguration.Active.GetApplicationInsightsEndpointBaseUri(); // MUST WAIT FOR CHANGES IN BASE SDK!!!
 
             if (endpointProxyBaseUri != null)
             {
-                return new Uri(endpointProxyBaseUri, string.Format(CultureInfo.InvariantCulture, AppIdQueryApiRelativeUriFormat, instrumentationKey));
+                return new Uri(endpointProxyBaseUri, string.Format(CultureInfo.InvariantCulture, AppIdServiceRelativeEndpoint, instrumentationKey));
             }
             else
             {
-                return new Uri(string.Format(CultureInfo.InvariantCulture, AppIdQueryApiFullUriFormat, instrumentationKey));
+                return new Uri(string.Format(CultureInfo.InvariantCulture, AppIdServiceEndpoint, instrumentationKey));
             }
         }
 
