@@ -17,6 +17,7 @@
   </TelemetryInitializers>
 
   <TelemetryModules xdt:Transform="InsertIfMissing">
+    <Add xdt:Transform="InsertIfMissing" xdt:Locator="Match(Type)" Type="Microsoft.ApplicationInsights.Web.AppServicesHeartbeatTelemetryModule, Microsoft.AI.Web" />
     <Add xdt:Transform="InsertIfMissing" xdt:Locator="Match(Type)" Type="Microsoft.ApplicationInsights.Web.RequestTrackingTelemetryModule, Microsoft.AI.Web">
       <Handlers>
         <!-- 

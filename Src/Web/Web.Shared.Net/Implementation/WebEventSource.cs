@@ -467,6 +467,31 @@
             this.WriteEvent(47, this.ApplicationName);
         }
 
+        [Event(48,
+            Keywords = Keywords.Diagnostics,
+            Message = "Failed to obtain Azure App Services environment variable '{0}'. Exception raised: {1}",
+            Level = EventLevel.Verbose)]
+        public void HeartbeatPropertyAquisitionFailed(string envVarName, string exceptionStr, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                48,
+                envVarName ?? "unknown",
+                exceptionStr ?? "unknown-exception",
+                this.ApplicationName);
+        }
+        
+        [Event(49,
+            Keywords = Keywords.Diagnostics,
+            Message = "Could not gain access to the Heartbeat Manager instance during initialization. Exception raised: {0}",
+            Level = EventLevel.Verbose)]
+        public void HeartbeatManagerAccessFailure(string exceptionStr, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                49,
+                exceptionStr ?? "unknown-exception",
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {

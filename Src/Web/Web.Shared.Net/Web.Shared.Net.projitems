@@ -14,6 +14,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AccountIdTelemetryInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApplicationInsightsHttpModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AppServicesHeartbeatTelemetryModule.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AuthenticatedUserIdTelemetryInitializer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpContextBaseExtension.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HttpContextExtension.cs" />
