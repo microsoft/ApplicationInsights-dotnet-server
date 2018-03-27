@@ -2,12 +2,11 @@
 {
     using System;
     using System.Threading;
-
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.WindowsServer.Implementation;
-   
+
     /// <summary>
     /// A telemetry initializer that will gather Azure Web App Role Environment context information.
     /// </summary>
@@ -21,6 +20,7 @@
 
         private string nodeName;
         private string roleName;
+        private string lastNodeValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureWebAppRoleEnvironmentTelemetryInitializer" /> class.
@@ -31,21 +31,35 @@
         }
 
         /// <summary>
-        /// Initializes <see cref="ITelemetry" /> device context.
+        /// Initializes <see cref="ITelemetry" /> device context and helps keep any heartbeat values in sync as well.
         /// </summary>
         /// <param name="telemetry">The telemetry to initialize.</param>
         public void Initialize(ITelemetry telemetry)
         {
+            string nodeName = string.Empty;
+
             if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
             {
-                string name = LazyInitializer.EnsureInitialized(ref this.roleName, this.GetRoleName);
+                var name = LazyInitializer.EnsureInitialized(ref this.roleName, this.GetRoleName);
                 telemetry.Context.Cloud.RoleName = name;
             }
 
             if (string.IsNullOrEmpty(telemetry.Context.GetInternalContext().NodeName))
             {
-                string name = LazyInitializer.EnsureInitialized(ref this.nodeName, this.GetNodeName);                
-                telemetry.Context.GetInternalContext().NodeName = name;
+                nodeName = LazyInitializer.EnsureInitialized(ref this.nodeName, this.GetNodeName);
+                telemetry.Context.GetInternalContext().NodeName = nodeName;
+            }
+
+            // ensure heartbeat values are up to date...
+            if (string.IsNullOrEmpty(this.lastNodeValue))
+            {
+                this.lastNodeValue = nodeName;
+            }
+            else if (!nodeName.Equals(this.lastNodeValue, StringComparison.Ordinal))
+            {
+                // if the AppServices heartbeat telemetry module exists, signal it to update the values in heartbeat
+                AppServicesHeartbeatTelemetryModule.Instance?.UpdateHeartbeatWithAppServiceEnvVarValues();
+                this.lastNodeValue = nodeName;
             }
         }
 
