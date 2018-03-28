@@ -27,25 +27,25 @@
             new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME")
         };
 
+        private static AppServicesHeartbeatTelemetryModule instance;
+        private object lockObject = new object();
+        private bool isInitialized = false;
+
         /// <summary>
-        /// Gets or sets a value to provide internal access to the only instance of this class that *should* be available.
+        /// Initializes a new instance of the<see cref="AppServicesHeartbeatTelemetryModule" /> class.
+        /// </summary>
+        internal AppServicesHeartbeatTelemetryModule()
+        {
+            AppServicesHeartbeatTelemetryModule.Instance = this;
+        }
+
+        /// <summary>
+        /// Gets a value to provide internal access to the only instance of this class that *should* be available.
         /// </summary>
         internal static AppServicesHeartbeatTelemetryModule Instance
         {
             get => AppServicesHeartbeatTelemetryModule.instance;
             private set => AppServicesHeartbeatTelemetryModule.instance = value;
-        }
-
-        private object lockObject = new object();
-        private bool isInitialized = false;
-        private static AppServicesHeartbeatTelemetryModule instance;
-
-        /// <summary>
-        /// Constructor, set up the internal Instance pointer
-        /// </summary>
-        internal AppServicesHeartbeatTelemetryModule()
-        {
-            AppServicesHeartbeatTelemetryModule.Instance = this;
         }
 
         /// <summary>
@@ -72,7 +72,7 @@
         }
 
         /// <summary>
-        /// Ensure we've cleaned up our static Instance
+        /// Ensure we've cleaned up our static Instance.
         /// </summary>
         public void Dispose()
         {
@@ -88,7 +88,7 @@
         {
             if (this.isInitialized)
             {
-                AddAppServiceEnvironmentVariablesToHeartbeat(this.GetHeartbeatPropertyManager(), true);
+                this.AddAppServiceEnvironmentVariablesToHeartbeat(this.GetHeartbeatPropertyManager(), isUpdateOperation: true);
             }
         }
 
