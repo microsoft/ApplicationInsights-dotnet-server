@@ -267,7 +267,7 @@
         [Event(
             28,
             Message = "Azure IMS returned field '{0}' with an invalid/unexpected value. Not adding this value to heartbeat properties.",
-            Level = EventLevel.Informational)]
+            Level = EventLevel.Warning)]
         public void AzureInstanceMetadataValueForFieldInvalid(string fieldWithInvalidValue, string applicationName = "Incorrect")
         {
             this.WriteEvent(
@@ -327,9 +327,9 @@
         }
 
         [Event(33,
-            Message = "Failed to obtain Azure App Services environment variable '{0}'. Exception raised: {1}",
-            Level = EventLevel.Verbose)]
-        public void HeartbeatPropertyAquisitionFailed(string envVarName, string exceptionStr, string appDomainName = "Incorrect")
+            Message = "App Services Heartbeat Provider: Failed to obtain Azure App Services environment variable '{0}'. Exception raised: {1}",
+            Level = EventLevel.Informational)]
+        public void AppServiceHeartbeatPropertyAquisitionFailed(string envVarName, string exceptionStr, string appDomainName = "Incorrect")
         {
             this.WriteEvent(
                 33,
@@ -339,9 +339,9 @@
         }
 
         [Event(34,
-            Message = "Could not gain access to the Heartbeat Manager instance during initialization. Exception raised: {0}",
-            Level = EventLevel.Verbose)]
-        public void HeartbeatManagerAccessFailure(string exceptionStr, string appDomainName = "Incorrect")
+            Message = "App Services Heartbeat Provider: Could not obtain the Heartbeat Manager instance during initialization. Exception raised: {0}",
+            Level = EventLevel.Warning)]
+        public void AppServiceHeartbeatManagerAccessFailure(string exceptionStr, string appDomainName = "Incorrect")
         {
             this.WriteEvent(
                 34,
@@ -349,6 +349,37 @@
                 this.ApplicationName);
         }
         
+        [Event(35,
+            Message = "App Services Heartbeat Provider: Accessing the Hearbeat Manager failed as it is not in the list of available modules.",
+            Level = EventLevel.Informational)]
+        public void AppServiceHeartbeatManagerNotAvailable(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                35,
+                this.ApplicationName);
+        }
+
+        [Event(36,
+            Message = "App Services Heartbeat Provider: Failed to set Azure App Services heartbeat values. Exception encountered: {0}",
+            Level = EventLevel.Warning)]
+        public void AppServiceHeartbeatPropertySettingFails(string exceptionStr, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                36,
+                exceptionStr ?? "unknown-exception",
+                this.ApplicationName);
+        }
+
+        [Event(37,
+            Message = "App Services Heartbeat Provider: Request to set heartbeat properties when the heartbeat property manager is null.",
+            Level = EventLevel.Warning)]
+        public void AppServiceHeartbeatSetCalledWithNullManager(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                37,
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
