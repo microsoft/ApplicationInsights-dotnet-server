@@ -112,6 +112,7 @@
             {
                 WindowsServerEventSource.Log.AppServiceHeartbeatManagerNotAvailable();
             }
+
             return hbeatManager;
         }
 
