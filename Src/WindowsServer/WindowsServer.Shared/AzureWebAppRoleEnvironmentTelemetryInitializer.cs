@@ -44,8 +44,7 @@
 
             if (string.IsNullOrEmpty(telemetry.Context.GetInternalContext().NodeName))
             {
-                string name = LazyInitializer.EnsureInitialized(ref this.nodeName, this.GetNodeName);                
-                telemetry.Context.GetInternalContext().NodeName = name;
+                telemetry.Context.GetInternalContext().NodeName = this.GetNodeName();
             }
         }
 
@@ -62,7 +61,8 @@
 
         private string GetNodeName()
         {
-            return Environment.GetEnvironmentVariable(WebAppHostNameEnvironmentVariable) ?? string.Empty;
+            AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(WebAppHostNameEnvironmentVariable, ref this.nodeName);
+            return this.nodeName;
         }
     }
 }
