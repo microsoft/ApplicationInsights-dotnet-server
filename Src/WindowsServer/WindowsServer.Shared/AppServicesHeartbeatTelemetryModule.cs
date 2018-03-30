@@ -13,10 +13,6 @@
     /// </summary>
     public sealed class AppServicesHeartbeatTelemetryModule : ITelemetryModule, IDisposable
     {
-        internal const int SiteNameMaxLength = 256;
-        internal const int StampNameMaxLength = 256;
-        internal const int HostNameMaxLength = 256;
-
         /// <summary>
         /// Environment variables and the Application Insights heartbeat field names that accompany them.
         /// </summary>
@@ -27,15 +23,28 @@
             new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME")
         };
 
-        private static AppServicesHeartbeatTelemetryModule instance;
-        private object lockObject = new object();
-        private bool isInitialized = false;
+        // for testing only: override the heartbeat manager
+        internal IHeartbeatPropertyManager HeartbeatManager;
 
+        // to provide a 'singleton' accessor for updating the env vars should they change during runtime
+        private static AppServicesHeartbeatTelemetryModule instance;
+        private bool isInitialized = false;
+        
         /// <summary>
         /// Initializes a new instance of the<see cref="AppServicesHeartbeatTelemetryModule" /> class.
         /// </summary>
-        public AppServicesHeartbeatTelemetryModule()
+        public AppServicesHeartbeatTelemetryModule() : this(null)
+        {            
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AppServicesHeartbeatTelemetryModule" /> class. This is
+        /// internal, and allows for overriding the Heartbeat Property Manager to test this module with.
+        /// </summary>
+        /// <param name="hbeatPropManager">The heartbeat property manager to use when setting/updating env var values.</param>
+        internal AppServicesHeartbeatTelemetryModule(IHeartbeatPropertyManager hbeatPropManager)
         {
+            this.HeartbeatManager = hbeatPropManager;
             AppServicesHeartbeatTelemetryModule.Instance = this;
         }
 
@@ -56,7 +65,7 @@
         /// <param name="configuration">Unused parameter.</param>
         public void Initialize(TelemetryConfiguration configuration)
         {
-            this.UpdateHeartbeatWithAppServiceEnvVarValues();
+            this.isInitialized = this.UpdateHeartbeatWithAppServiceEnvVarValues();
         }
 
         /// <summary>
@@ -72,24 +81,77 @@
         /// Signal the AppServicesHeartbeatTelemetryModule to update the values of the 
         /// Environment variables we use in our heartbeat payload.
         /// </summary>
-        public void UpdateHeartbeatWithAppServiceEnvVarValues()
+        /// <returns>A value indicating whether or not an update to the environment variables occurred.</returns>
+        public bool UpdateHeartbeatWithAppServiceEnvVarValues()
         {
+            bool hasBeenUpdated = false;
+
             try
             {
                 var hbeatManager = this.GetHeartbeatPropertyManager();
                 if (hbeatManager != null)
                 {
-                    this.AddAppServiceEnvironmentVariablesToHeartbeat(hbeatManager, isUpdateOperation: this.isInitialized);
+                    hasBeenUpdated = this.AddAppServiceEnvironmentVariablesToHeartbeat(hbeatManager, isUpdateOperation: this.isInitialized);
                 }
             }
             catch (Exception appSrvEnvVarHbeatFailure)
             {
                 WindowsServerEventSource.Log.AppServiceHeartbeatPropertySettingFails(appSrvEnvVarHbeatFailure.ToInvariantString());
             }
+
+            return hasBeenUpdated;
+        }
+
+        internal bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)
+        {
+            bool hasBeenUpdated = false;
+
+            if (hbeatManager == null)
+            {
+                WindowsServerEventSource.Log.AppServiceHeartbeatSetCalledWithNullManager();
+            }
+            else
+            {
+                foreach (var kvp in WebHeartbeatPropertyNameEnvVarMap)
+                {
+                    try
+                    {
+                        // get the variable, then expand it (otherwise we get the name we queried for in the value)
+                        string hbeatValue = Environment.GetEnvironmentVariable(kvp.Value);
+                        if (!string.IsNullOrEmpty(hbeatValue))
+                        {
+                            hbeatValue = Environment.ExpandEnvironmentVariables(hbeatValue);
+                            string hbeatKey = kvp.Key.ToString();
+                            if (isUpdateOperation)
+                            {
+                                hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);
+                            }
+                            else
+                            {
+                                hbeatManager.AddHeartbeatProperty(hbeatKey, hbeatValue, true);
+                            }
+                        }
+
+                        hasBeenUpdated = true;
+                    }
+                    catch (Exception heartbeatValueException)
+                    {
+                        WindowsServerEventSource.Log.AppServiceHeartbeatPropertyAquisitionFailed(kvp.Value, heartbeatValueException.ToInvariantString());
+                    }
+                }
+            }
+
+            return hasBeenUpdated;
         }
 
         private IHeartbeatPropertyManager GetHeartbeatPropertyManager()
         {
+            if (this.HeartbeatManager != null)
+            {
+                // early exit - this is the internal test scenario
+                return this.HeartbeatManager;
+            }
+
             IHeartbeatPropertyManager hbeatManager = null;
             var telemetryModules = TelemetryModules.Instance;
 
@@ -114,41 +176,6 @@
             }
 
             return hbeatManager;
-        }
-
-        private void AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)
-        {
-            if (hbeatManager == null)
-            {
-                WindowsServerEventSource.Log.AppServiceHeartbeatSetCalledWithNullManager();
-                return;
-            }
-
-            foreach (var kvp in WebHeartbeatPropertyNameEnvVarMap)
-            {
-                try
-                {
-                    // get the variable, then expand it (otherwise we get the name we queried for in the value)
-                    string hbeatValue = Environment.GetEnvironmentVariable(kvp.Value);
-                    if (!string.IsNullOrEmpty(hbeatValue))
-                    {
-                        hbeatValue = Environment.ExpandEnvironmentVariables(hbeatValue);
-                        string hbeatKey = kvp.Key.ToString();
-                        if (isUpdateOperation)
-                        {
-                            hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);
-                        }
-                        else
-                        {
-                            hbeatManager.AddHeartbeatProperty(hbeatKey, hbeatValue, true);
-                        }
-                    }
-                }
-                catch (Exception heartbeatValueException)
-                {
-                    WindowsServerEventSource.Log.AppServiceHeartbeatPropertyAquisitionFailed(kvp.Value, heartbeatValueException.ToInvariantString());
-                }
-            }
         }
     }
 }
