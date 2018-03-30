@@ -11,7 +11,7 @@
     internal static class AppServiceEnvVarMonitor
     {
         // Environment variables tracked by this monitor. (internal to allow tests to modify them)
-        internal static Dictionary<string, string> CheckedValues = new Dictionary<string, string>()
+        internal static readonly Dictionary<string, string> CheckedValues = new Dictionary<string, string>()
         {
             { "WEBSITE_SITE_NAME", string.Empty },
             { "WEBSITE_HOME_STAMPNAME", string.Empty },
