@@ -1,8 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.WindowsServer
 {
     using System;
-    using System.Threading;
-
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -18,9 +16,6 @@
 
         /// <summary>Predefined suffix for Azure Web App Hostname.</summary>
         private const string WebAppSuffix = ".azurewebsites.net";
-
-        private string nodeName;
-        private string roleName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureWebAppRoleEnvironmentTelemetryInitializer" /> class.
@@ -38,14 +33,12 @@
         {
             if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
             {
-                string name = LazyInitializer.EnsureInitialized(ref this.roleName, this.GetRoleName);
-                telemetry.Context.Cloud.RoleName = name;
+                telemetry.Context.Cloud.RoleName = this.GetRoleName();
             }
 
             if (string.IsNullOrEmpty(telemetry.Context.GetInternalContext().NodeName))
             {
-                string name = LazyInitializer.EnsureInitialized(ref this.nodeName, this.GetNodeName);                
-                telemetry.Context.GetInternalContext().NodeName = name;
+                telemetry.Context.GetInternalContext().NodeName = this.GetNodeName();
             }
         }
 
@@ -62,7 +55,9 @@
 
         private string GetNodeName()
         {
-            return Environment.GetEnvironmentVariable(WebAppHostNameEnvironmentVariable) ?? string.Empty;
+            string nodeName = string.Empty;
+            AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(WebAppHostNameEnvironmentVariable, ref nodeName);
+            return nodeName;
         }
     }
 }
