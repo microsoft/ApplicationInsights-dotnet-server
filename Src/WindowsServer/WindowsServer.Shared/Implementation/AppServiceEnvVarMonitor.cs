@@ -10,18 +10,19 @@
     /// </summary>
     internal static class AppServiceEnvVarMonitor
     {
-        internal static TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
-        internal static DateTime LastCheckTime = DateTime.MinValue;
-
-        /// <summary>
-        /// Environment variables tracked by this monitor.
-        /// </summary>
+        // Environment variables tracked by this monitor. (internal to allow tests to modify them)
         internal static Dictionary<string, string> CheckedValues = new Dictionary<string, string>()
         {
             { "WEBSITE_SITE_NAME", string.Empty },
             { "WEBSITE_HOME_STAMPNAME", string.Empty },
-            {  "WEBSITE_HOSTNAME", string.Empty }
+            { "WEBSITE_HOSTNAME", string.Empty }
         };
+
+        // When is the next time we will allow a check to occur? (internal to allow tests to modify this to avoid waits)
+        internal static DateTime NextCheckTime = DateTime.MinValue;
+
+        // how often we allow the code to re-check the environment
+        private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
 
         /// <summary>
         /// Get the latest value assigned to an environment variable.
@@ -43,13 +44,15 @@
         /// </summary>
         private static void CheckVariablesIntermittent()
         {
-            DateTime checkTime = DateTime.Now;
-            if (checkTime - LastCheckTime > CheckInterval)
+            DateTime rightNow = DateTime.UtcNow;
+            if (rightNow > NextCheckTime)
             {
-                LastCheckTime = checkTime;
-                foreach (var kvp in CheckedValues)
+                NextCheckTime = rightNow + CheckInterval;
+
+                List<string> keys = new List<string>(CheckedValues.Keys);
+                foreach (var key in keys)
                 {
-                    CheckedValues[kvp.Key] = Environment.GetEnvironmentVariable(kvp.Key);
+                    CheckedValues[key] = Environment.GetEnvironmentVariable(key);
                 }
             }
         }
