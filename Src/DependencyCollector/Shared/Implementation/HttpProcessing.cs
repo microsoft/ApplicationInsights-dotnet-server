@@ -9,7 +9,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Web;
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
@@ -25,25 +24,18 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
         private ICollection<string> correlationDomainExclusionList;
         private bool setCorrelationHeaders;
+        private readonly TelemetryConfiguration configuration;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpProcessing"/> class.
         /// </summary>
         public HttpProcessing(TelemetryConfiguration configuration, string sdkVersion, string agentVersion, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException("configuration");
-            }
-
-            if (correlationDomainExclusionList == null)
-            {
-                throw new ArgumentNullException("correlationDomainExclusionList");
-            }
-
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
             this.telemetryClient = new TelemetryClient(configuration);
-            this.correlationDomainExclusionList = correlationDomainExclusionList;
+
+            this.correlationDomainExclusionList = correlationDomainExclusionList ?? throw new ArgumentNullException(nameof(correlationDomainExclusionList));
             this.setCorrelationHeaders = setCorrelationHeaders;
 
             this.telemetryClient.Context.GetInternalContext().SdkVersion = sdkVersion;
@@ -153,19 +145,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 telemetry.Data = url.OriginalString;
 
                 // Add the source instrumentation key header if collection is enabled, the request host is not in the excluded list and the same header doesn't already exist
-                if (this.setCorrelationHeaders
-                    && !this.correlationDomainExclusionList.Contains(url.Host))
+                if (this.setCorrelationHeaders && !this.correlationDomainExclusionList.Contains(url.Host))
                 {
                     try
                     {
+                        string applicationId = null;
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
-                            && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null)
+                            && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
+                            && (configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out applicationId) ?? false))
                         {
-                            string appId;
-                            if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out appId))
-                            {
-                                webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, appId);
-                            }
+                            webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, applicationId);
                         }
                     }
                     catch (Exception ex)
@@ -228,11 +217,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             try
             {
-                DependencyTelemetry telemetry;
-                if (this.TryGetPendingTelemetry(request, out telemetry))
+                if (this.TryGetPendingTelemetry(request, out DependencyTelemetry telemetry))
                 {
-                    var responseObj = response as HttpWebResponse;
-                    if (responseObj != null)
+                    if (response is HttpWebResponse responseObj)
                     {
                         int statusCode = -1;
 
@@ -268,13 +255,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             try
             {
-                DependencyTelemetry telemetry;
-                if (this.TryGetPendingTelemetry(request, out telemetry))
+                if (this.TryGetPendingTelemetry(request, out DependencyTelemetry telemetry))
                 {
                     var webException = exception as WebException;
-                    HttpWebResponse responseObj = webException?.Response as HttpWebResponse;
 
-                    if (responseObj != null)
+                    if (webException?.Response is HttpWebResponse responseObj)
                     {
                         int statusCode = -1;
 
@@ -320,8 +305,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             try
             {
-                DependencyTelemetry telemetry;
-                if (this.TryGetPendingTelemetry(request, out telemetry))
+                if (this.TryGetPendingTelemetry(request, out DependencyTelemetry telemetry))
                 {
                     if (statusCode != null)
                     {
@@ -420,8 +404,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
                 }
 
-                string currentComponentAppId;
-                if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out currentComponentAppId))
+                string currentComponentAppId = null;
+                if (configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false)
                 {
                     // We only add the cross component correlation key if the key does not remain the current component.
                     if (!string.IsNullOrEmpty(targetAppId) && targetAppId != currentComponentAppId)

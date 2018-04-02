@@ -15,7 +15,6 @@
 
     using Common;
     using Microsoft.ApplicationInsights.Channel;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -36,10 +35,12 @@
         private TelemetryConfiguration configuration;
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private Uri testUrlNonStandardPort = new Uri("http://www.microsoft.com:911/");
-        private List<ITelemetry> sendItems;
+        private List<ITelemetry> sendItems = new List<ITelemetry>();
         private int sleepTimeMsecBetweenBeginAndEnd = 100;
-        private Exception ex;
+        private Exception ex = new Exception();
         private ProfilerHttpProcessing httpProcessingProfiler;
+        private const string testInstrumentationKey = nameof(testInstrumentationKey);
+        private const string testApplicationId = nameof(testApplicationId);
         #endregion //Fields
 
         #region TestInitialize
@@ -47,23 +48,20 @@
         [TestInitialize]
         public void TestInitialize()
         {
-            var instrumentationKey = Guid.NewGuid().ToString();
+            this.configuration = new TelemetryConfiguration()
+            {
+                TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) },
+                InstrumentationKey = testInstrumentationKey,
+                ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey, testApplicationId)
+            };
 
-            this.configuration = new TelemetryConfiguration();
             this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
-            this.sendItems = new List<ITelemetry>();
-            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
-            this.configuration.InstrumentationKey = instrumentationKey;
             this.httpProcessingProfiler = new ProfilerHttpProcessing(
                 this.configuration,
                 null,
                 new ObjectInstanceBasedOperationHolder(),
                 true /*setCorrelationHeaders*/,
                 new List<string>());
-
-            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
-
-            this.ex = new Exception();
         }
 
         [TestCleanup]
@@ -132,7 +130,7 @@
             this.SimulateWebRequestResponseWithAppId(appId);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            Assert.AreEqual(this.testUrl.Host + " | " + this.GetCorrelationIdValue(appId), ((DependencyTelemetry)this.sendItems[0]).Target);
+            Assert.AreEqual(this.testUrl.Host + " | " + appId, ((DependencyTelemetry)this.sendItems[0]).Target);
         }
 
         /// <summary>
@@ -142,9 +140,7 @@
         [Description("Validates DependencyTelemetry does not send correlation ID if the IKey is from the same component")]
         public void RddTestHttpProcessingProfilerOnEndDoesNotAddAppIdToTargetFieldForInternalComponents()
         {
-            string appId = this.configuration.InstrumentationKey + "-appId";
-
-            this.SimulateWebRequestResponseWithAppId(appId);
+            this.SimulateWebRequestResponseWithAppId(testApplicationId);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
 
@@ -884,15 +880,10 @@
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
             var objectReturned = this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, request);
         }
-
-        private string GetCorrelationIdValue(string appId)
-        {
-            return string.Format(CultureInfo.InvariantCulture, "cid-v1:{0}", appId);
-        }
-
+        
         private string GetCorrelationIdHeaderValue(string appId)
         {
-            return string.Format(CultureInfo.InvariantCulture, "{0}=cid-v1:{1}", RequestResponseHeaders.RequestContextCorrelationTargetKey, appId);
+            return string.Format(CultureInfo.InvariantCulture, "{0}={1}", RequestResponseHeaders.RequestContextCorrelationTargetKey, appId);
         }
         #endregion Helpers
     }

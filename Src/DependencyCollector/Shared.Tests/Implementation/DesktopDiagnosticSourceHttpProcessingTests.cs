@@ -10,7 +10,6 @@ namespace Microsoft.ApplicationInsights.Tests
     using System.Threading;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -29,8 +28,10 @@ namespace Microsoft.ApplicationInsights.Tests
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private int sleepTimeMsecBetweenBeginAndEnd = 100;
         private TelemetryConfiguration configuration;
-        private List<ITelemetry> sendItems;
+        private List<ITelemetry> sendItems = new List<ITelemetry>();
         private DesktopDiagnosticSourceHttpProcessing httpDesktopProcessingFramework;
+        private const string testInstrumentationKey = nameof(testInstrumentationKey);
+        private const string testApplicationId = nameof(testApplicationId);
         #endregion //Fields
 
         #region TestInitialize
@@ -38,14 +39,15 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestInitialize]
         public void TestInitialize()
         {
-            this.configuration = new TelemetryConfiguration();
-            this.sendItems = new List<ITelemetry>();
-            this.configuration.TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) };
-            this.configuration.InstrumentationKey = Guid.NewGuid().ToString();
+            this.configuration = new TelemetryConfiguration()
+            {
+                TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) },
+                InstrumentationKey = testInstrumentationKey,
+                ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey, testApplicationId)
+            };
+
             this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>());
             DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
-
-            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
         }
 
         [TestCleanup]

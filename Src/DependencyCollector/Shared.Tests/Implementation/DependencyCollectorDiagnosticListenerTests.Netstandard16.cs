@@ -9,7 +9,6 @@ namespace Microsoft.ApplicationInsights.Tests
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
@@ -29,13 +28,15 @@ namespace Microsoft.ApplicationInsights.Tests
         private const string RequestUrlWithScheme = "https://" + RequestUrl;
         private const string HttpOkResultCode = "200";
         private const string NotFoundResultCode = "404";
-        private const string MockAppId = "MOCK_APP_ID";
-        private const string MockAppId2 = "MOCK_APP_ID_2";
+        //private const string MockAppId = "MOCK_APP_ID";
+        //private const string MockAppId2 = "MOCK_APP_ID_2";
 
         private readonly List<ITelemetry> sentTelemetry = new List<ITelemetry>();
 
-        private string instrumentationKey;
-        private string correlationId;
+        private string testInstrumentationKey1 = nameof(testInstrumentationKey1);
+        private string testInstrumentationKey2 = nameof(testInstrumentationKey2);
+        private string testApplicationId1 = nameof(testApplicationId1);
+        private string testApplicationId2 = nameof(testApplicationId2);
         private StubTelemetryChannel telemetryChannel;
         private HttpCoreDiagnosticSourceListener listener;
 
@@ -45,21 +46,19 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestInitialize]
         public void Initialize()
         {
-            this.instrumentationKey = Guid.NewGuid().ToString();
-            this.correlationId = MockCorrelationIdLookupHelper.GetCorrelationIdValue(this.instrumentationKey);
-
             this.telemetryChannel = new StubTelemetryChannel()
             {
                 EndpointAddress = "https://endpointaddress",
                 OnSend = this.sentTelemetry.Add
             };
 
-            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
+            this.testInstrumentationKey1 = Guid.NewGuid().ToString();
 
             var configuration = new TelemetryConfiguration
             {
                 TelemetryChannel = this.telemetryChannel,
-                InstrumentationKey = this.instrumentationKey,
+                InstrumentationKey = this.testInstrumentationKey1,
+                ApplicationIdProvider = new MockApplicationIdProvider(this.testInstrumentationKey1, this.testApplicationId1)
             };
 
             configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
@@ -209,7 +208,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(string.Empty, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
 
-            Assert.AreEqual(this.correlationId, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
             Assert.AreEqual(null, GetRequestContextKeyValue(request, RequestResponseHeaders.StandardRootIdHeader));
 
             var legacyParentIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();
@@ -325,14 +324,14 @@ namespace Microsoft.ApplicationInsights.Tests
 
             DependencyTelemetry telemetry = dependency.Telemetry;
             Assert.AreEqual(string.Empty, telemetry.ResultCode);
-            Assert.AreEqual(true, telemetry.Success);
+            Assert.AreEqual(true, telemetry.Success, "request was not successful");
 
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 RequestMessage = request
             };
 
-            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, MockAppId);
+            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, testApplicationId1);
 
             this.listener.OnResponse(response, loggingRequestId);
             Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
@@ -342,7 +341,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
-            Assert.AreEqual(true, telemetry.Success);
+            Assert.AreEqual(true, telemetry.Success, "response was not successful");
         }
 
         /// <summary>
@@ -367,7 +366,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, MockAppId);
+            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, testApplicationId1);
 
             this.listener.OnResponse(response, loggingRequestId);
             Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
@@ -402,7 +401,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            string targetApplicationId = MockAppId2;
+            string targetApplicationId = testApplicationId2;
             HttpHeadersUtilities.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(response, loggingRequestId);
@@ -438,7 +437,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            string targetApplicationId = MockAppId2;
+            string targetApplicationId = testApplicationId2;
             HttpHeadersUtilities.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(response, loggingRequestId);

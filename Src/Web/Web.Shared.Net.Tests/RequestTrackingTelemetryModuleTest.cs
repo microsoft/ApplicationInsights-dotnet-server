@@ -9,7 +9,6 @@
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
@@ -26,10 +25,15 @@
     [TestClass]
     public partial class RequestTrackingTelemetryModuleTest
     {
+        private const string testInstrumentationKey1 = nameof(testInstrumentationKey1);
+        private const string testInstrumentationKey2 = nameof(testInstrumentationKey2);
+        private const string testApplicationId1 = nameof(testApplicationId1);
+        private const string testApplicationId2 = nameof(testApplicationId2);
+
         [TestInitialize]
         public void TestInitialize()
         {
-            CorrelationIdLookupSingleton.Instance = new MockCorrelationIdLookupHelper();
+            //this.configuration.ApplicationIdProvider = new MockApplicationIdProvider();
         }
 
         [TestCleanup]
@@ -323,15 +327,13 @@
         public void OnEndDoesNotAddSourceFieldForRequestForSameComponent()
         {
             // ARRANGE
-            string ikey = "b3eb14d6-bb32-4542-9b93-473cd94aaedf";
-            string requestContextContainingCorrelationId = this.GetCorrelationIdHeaderValue(ikey); // since per our mock appId = ikey
-
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, requestContextContainingCorrelationId);
+            headers.Add(RequestResponseHeaders.RequestContextHeader, testApplicationId2);
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
-            var config = this.CreateDefaultConfig(context, instrumentationKey: ikey);
+            var config = this.CreateDefaultConfig(context, instrumentationKey: testInstrumentationKey1);
+            config.ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey1, testApplicationId1);
             var module = this.RequestTrackingTelemetryModuleFactory(config);
 
             // ACT
@@ -346,17 +348,15 @@
         public void OnEndAddsSourceFieldForRequestWithCorrelationId()
         {
             // ARRANGE  
-            string instrumentationKey = "b3eb14d6-bb32-4542-9b93-473cd94aaedf";
-            string correlationId = MockCorrelationIdLookupHelper.GetCorrelationIdValue(instrumentationKey);
-
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(instrumentationKey));
+            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(testApplicationId2));
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
             // My instrumentation key and hence app id is random / newly generated. The appId header is different - hence a different component.
             var config = TelemetryConfiguration.CreateDefault();
-            config.InstrumentationKey = Guid.NewGuid().ToString();
+            config.InstrumentationKey = testInstrumentationKey1;
+            config.ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey1, testApplicationId1);
             
             var module = this.RequestTrackingTelemetryModuleFactory(null /*use default*/);
             
@@ -366,7 +366,7 @@
             module.OnEndRequest(context);
 
             // VALIDATE
-            Assert.Equal(correlationId, context.GetRequestTelemetry().Source);
+            Assert.Equal(testApplicationId2, context.GetRequestTelemetry().Source);
         }
 
         [TestMethod]
@@ -395,26 +395,20 @@
         public void OnEndDoesNotOverrideSourceField()
         {
             // ARRANGE       
-            string instrumentationKey = "b3eb14d6-bb32-4542-9b93-473cd94aaedf";
-
-            string appIdInHeader = this.GetCorrelationIdHeaderValue(instrumentationKey);
-            string someFieldHeader = "SomeField=SomeNameHere";
-            string appIdInSourceField = "9AB8EDCB-21D2-44BB-A64A-C33BB4515F20";
-
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, appIdInHeader + "," + someFieldHeader);
+            headers.Add(RequestResponseHeaders.RequestContextHeader, testApplicationId1);
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             module.OnBeginRequest(context);
-            context.GetRequestTelemetry().Source = appIdInSourceField;
+            context.GetRequestTelemetry().Source = testApplicationId2;
 
             // ACT
             module.OnEndRequest(context);
 
             // VALIDATE
-            Assert.Equal(appIdInSourceField, context.GetRequestTelemetry().Source);
+            Assert.Equal(testApplicationId2, context.GetRequestTelemetry().Source);
         }
 
         private TelemetryConfiguration CreateDefaultConfig(HttpContext fakeContext, string rootIdHeaderName = null, string parentIdHeaderName = null, string instrumentationKey = null)
@@ -452,11 +446,10 @@
             module.Initialize(config ?? this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext()));
             return module;
         }
-        
-        private string GetCorrelationIdHeaderValue(string ikey)
+
+        private string GetCorrelationIdHeaderValue(string applicationId)
         {
-            var correlationId = MockCorrelationIdLookupHelper.GetCorrelationIdValue(ikey);
-            return string.Format(CultureInfo.InvariantCulture, "{0}={1}", RequestResponseHeaders.RequestContextCorrelationSourceKey, correlationId);
+            return string.Format(CultureInfo.InvariantCulture, "{0}={1}", RequestResponseHeaders.RequestContextCorrelationSourceKey, applicationId);
         }
 
         internal class FakeHttpHandler : IHttpHandler

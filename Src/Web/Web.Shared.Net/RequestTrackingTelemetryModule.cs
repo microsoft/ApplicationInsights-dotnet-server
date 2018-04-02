@@ -8,7 +8,6 @@
 
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.Common.CorrelationLookup;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -20,9 +19,9 @@
     {
         private readonly IList<string> handlersToFilter = new List<string>();
         private TelemetryClient telemetryClient;
+        private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private bool correlationHeadersEnabled = true;
-        private string telemetryChannelEnpoint;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
         /// <summary>
@@ -187,22 +186,18 @@
                 {
                     AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
                 }
-                
-                string currentComponentAppId = string.Empty;
-                bool foundMyAppId = false;
-                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
-                {
-                    foundMyAppId = CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId);
-                }
 
-                // If the source header is present on the incoming request,
-                // and it is an external component (not the same ikey as the one used by the current component),
-                // then populate the source field.
-                if (!string.IsNullOrEmpty(sourceAppId)
-                    && foundMyAppId
-                    && sourceAppId != currentComponentAppId)
+                string currentComponentAppId = null;
+                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
+                    && (telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
                 {
-                    requestTelemetry.Source = sourceAppId;
+                    // If the source header is present on the incoming request,
+                    // and it is an external component (not the same ikey as the one used by the current component),
+                    // then populate the source field.
+                    if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
+                    {
+                        requestTelemetry.Source = sourceAppId;
+                    }
                 }
             }
 
@@ -240,16 +235,15 @@
                 if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
                     && context.Response.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null)
                 {
-                    string correlationId;
-
-                    if (CorrelationIdLookupSingleton.Instance.TryGetXComponentCorrelationId(requestTelemetry.Context.InstrumentationKey, out correlationId))
+                    string applicationId = null;
+                    if (telemetryConfiguration.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out applicationId) ?? false)
                     {
-                        context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
+                        context.Response.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey, applicationId);
 
                         if (this.EnableAccessControlExposeHeader)
                         {
                             // set additional header that allows to read this Request-Context from Javascript SDK
-                            // append this header with additional value to the potential ones defined by customer and they will be concatenated on cliend-side
+                            // append this header with additional value to the potential ones defined by customer and they will be concatenated on client-side
                             context.Response.AppendHeader(RequestResponseHeaders.AccessControlExposeHeadersHeader, RequestResponseHeaders.RequestContextHeader);
                         }
                     }
@@ -267,13 +261,9 @@
         /// <param name="configuration">Telemetry configuration to use for initialization.</param>
         public void Initialize(TelemetryConfiguration configuration)
         {
+            this.telemetryConfiguration = configuration;
             this.telemetryClient = new TelemetryClient(configuration);
             this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
-
-            if (configuration != null && configuration.TelemetryChannel != null)
-            {
-                this.telemetryChannelEnpoint = configuration.TelemetryChannel.EndpointAddress;
-            }
 
             // Headers will be read-only in a classic iis pipeline
             // Exception System.PlatformNotSupportedException: This operation requires IIS integrated pipeline mode.
