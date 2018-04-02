@@ -18,6 +18,7 @@
         private const string WebAppSuffix = ".azurewebsites.net";
 
         private string lastNodeValue;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureWebAppRoleEnvironmentTelemetryInitializer" /> class.
         /// </summary>
@@ -46,7 +47,6 @@
             }
             
             // ensure heartbeat values are up to date...
-
             if (string.IsNullOrEmpty(this.lastNodeValue))
             {
                 this.lastNodeValue = nodeName;

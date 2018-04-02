@@ -17,16 +17,16 @@
     public class AppServiceEnvVarMonitorTests
     {
         // used to clean up the environment variables after we've run this test
-        static private Dictionary<string, string> environmentInitialState;
+        private static Dictionary<string, string> environmentInitialState;
 
         [ClassInitialize]
-        static public void InitializeTests(TestContext context)
+        public static void InitializeTests(TestContext context)
         {
             environmentInitialState = GetCurrentAppServiceEnvironmentVariableValues(false);
         }
 
         [ClassCleanup]
-        static public void CleanupTests()
+        public static void CleanupTests()
         {
             foreach (var kvp in environmentInitialState)
             {
@@ -45,6 +45,7 @@
             {
                 string val = string.Empty;
                 AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
+
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
             }
@@ -74,6 +75,7 @@
             {
                 string val = string.Empty;
                 AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
+                
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
             }
@@ -94,7 +96,7 @@
             }
         }
 
-        static private Dictionary<string,string> GetCurrentAppServiceEnvironmentVariableValues(bool supplyValue = true)
+        private static Dictionary<string, string> GetCurrentAppServiceEnvironmentVariableValues(bool supplyValue = true)
         {
             int testValueCount = 0;
             Dictionary<string, string> envVars = new Dictionary<string, string>();
@@ -108,6 +110,7 @@
                     testValueCount++;
                     Environment.SetEnvironmentVariable(kvp.Key, envVar);
                 }
+
                 envVars.Add(kvp.Key, envVar);
             }
 

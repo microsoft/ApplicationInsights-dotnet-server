@@ -24,30 +24,34 @@
             {
                 Assert.NotNull(AppServicesHeartbeatTelemetryModule.Instance);
             }
+
             Assert.Null(AppServicesHeartbeatTelemetryModule.Instance);
         }
 
         [TestMethod]
         public void InitializeIsWorking()
         {
-            var envVars = GetEnvVarsAssociatedToModule();
             var hbeatProviderMock = new HeartbeatProviderMock();
-            var appSrvHbeatModule = new AppServicesHeartbeatTelemetryModule(hbeatProviderMock);
+            var appSrvHbeatModule = this.GetAppServiceHeartbeatModuleWithUniqueTestEnvVars(hbeatProviderMock);
+            var envVars = this.GetEnvVarsAssociatedToModule(appSrvHbeatModule);
+
             appSrvHbeatModule.Initialize(null);
 
-            foreach (var kvp in AppServicesHeartbeatTelemetryModule.WebHeartbeatPropertyNameEnvVarMap)
+            foreach (var kvp in appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap)
             {
                 Assert.True(hbeatProviderMock.HbeatProps.ContainsKey(kvp.Key));
                 Assert.Equal(hbeatProviderMock.HbeatProps[kvp.Key], envVars[kvp.Value]);
             }
+
+            this.RemoveTestEnvVarsAssociatedToModule(appSrvHbeatModule);
         }
 
         [TestMethod]
         public void UpdateEnvVarsWorksWhenEnvironmentValuesChange()
-        {
-            var envVars = GetEnvVarsAssociatedToModule();
+        {            
             var hbeatProviderMock = new HeartbeatProviderMock();
-            var appSrvHbeatModule = new AppServicesHeartbeatTelemetryModule(hbeatProviderMock);
+            var appSrvHbeatModule = this.GetAppServiceHeartbeatModuleWithUniqueTestEnvVars(hbeatProviderMock);
+            var envVars = this.GetEnvVarsAssociatedToModule(appSrvHbeatModule);
             appSrvHbeatModule.Initialize(null);
 
             // update each environment variable to have a different value
@@ -57,21 +61,24 @@
                 Environment.SetEnvironmentVariable(envVarKvp.Key, newVal);
             }
 
-            envVars = GetEnvVarsAssociatedToModule();
+            envVars = this.GetEnvVarsAssociatedToModule(appSrvHbeatModule);
 
             Assert.True(appSrvHbeatModule.UpdateHeartbeatWithAppServiceEnvVarValues());
-            foreach (var kvp in AppServicesHeartbeatTelemetryModule.WebHeartbeatPropertyNameEnvVarMap)
+            foreach (var kvp in appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap)
             {
                 Assert.True(hbeatProviderMock.HbeatProps.ContainsKey(kvp.Key));
                 Assert.Equal(hbeatProviderMock.HbeatProps[kvp.Key], envVars[kvp.Value]);
             }
+
+            this.RemoveTestEnvVarsAssociatedToModule(appSrvHbeatModule);
         }
 
         [TestMethod]
         public void NoHeartbeatManagerAvailableDoesntThrow()
         {
-            var envVars = GetEnvVarsAssociatedToModule();
             var appSrvHbeatModule = new AppServicesHeartbeatTelemetryModule();
+            var envVars = this.GetEnvVarsAssociatedToModule(appSrvHbeatModule);
+
             try
             {
                 appSrvHbeatModule.Initialize(null);
@@ -80,23 +87,27 @@
             {
                 Assert.False(any == null);
             }
+
+            this.RemoveTestEnvVarsAssociatedToModule(appSrvHbeatModule);
         }
 
         [TestMethod]
         public void NoAppServicesEnvVarsWorksWithoutFailure()
         {
-            var envVars = GetEnvVarsAssociatedToModule();
+            var hbeatProviderMock = new HeartbeatProviderMock();
+            var appSrvHbeatModule = this.GetAppServiceHeartbeatModuleWithUniqueTestEnvVars(hbeatProviderMock);
+            var envVars = this.GetEnvVarsAssociatedToModule(appSrvHbeatModule);
+
             // ensure all environment variables are set to nothing (remove them from the environment)
             foreach (var kvp in envVars)
             {
                 Environment.SetEnvironmentVariable(kvp.Key, string.Empty);
             }
-            var hbeatProviderMock = new HeartbeatProviderMock();
-            var appSrvHbeatModule = new AppServicesHeartbeatTelemetryModule(hbeatProviderMock);
+
             Assert.True(appSrvHbeatModule.UpdateHeartbeatWithAppServiceEnvVarValues());
-            foreach (var kvp in AppServicesHeartbeatTelemetryModule.WebHeartbeatPropertyNameEnvVarMap)
+            foreach (var kvp in appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap)
             {
-                Assert.False(hbeatProviderMock.HbeatProps.ContainsKey(kvp.Key));
+                Assert.Null(hbeatProviderMock.HbeatProps[kvp.Key]);
             }
         }
 
@@ -105,10 +116,11 @@
         /// the environment does not contain a value for them, set the environment to have them.
         /// </summary>
         /// <returns>Dictionary with expected environment variable names as the key, current environment variable content as the value.</returns>
-        private Dictionary<string,string> GetEnvVarsAssociatedToModule()
+        private Dictionary<string, string> GetEnvVarsAssociatedToModule(AppServicesHeartbeatTelemetryModule module = null)
         {
             Dictionary<string, string> envVars = new Dictionary<string, string>();
-            foreach (var kvp in AppServicesHeartbeatTelemetryModule.WebHeartbeatPropertyNameEnvVarMap)
+            var appSrvModule = module ?? new AppServicesHeartbeatTelemetryModule();
+            foreach (var kvp in appSrvModule.WebHeartbeatPropertyNameEnvVarMap)
             {
                 envVars.Add(kvp.Value, Environment.GetEnvironmentVariable(kvp.Value));
                 if (string.IsNullOrEmpty(envVars[kvp.Value]))
@@ -119,6 +131,27 @@
             }
 
             return envVars;
+        }
+
+        private AppServicesHeartbeatTelemetryModule GetAppServiceHeartbeatModuleWithUniqueTestEnvVars(HeartbeatProviderMock hbeatProviderMock = null)
+        {
+            var appSrvHbeatModule = new AppServicesHeartbeatTelemetryModule(hbeatProviderMock);
+            string testSuffix = Guid.NewGuid().ToString();
+            for (int i = 0; i < appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap.Length; ++i)
+            {
+                var kvp = appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap[i];
+                appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap[i] = new KeyValuePair<string, string>(kvp.Key, string.Concat(kvp.Value, "_", testSuffix));
+            }
+
+            return appSrvHbeatModule;
+        }
+
+        private void RemoveTestEnvVarsAssociatedToModule(AppServicesHeartbeatTelemetryModule appSrvHbeatModule)
+        {
+            foreach (var kvp in appSrvHbeatModule.WebHeartbeatPropertyNameEnvVarMap)
+            {
+                Environment.SetEnvironmentVariable(kvp.Value, string.Empty);
+            }
         }
     }
 }

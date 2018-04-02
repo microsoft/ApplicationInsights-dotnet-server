@@ -16,11 +16,12 @@
         /// <summary>
         /// Environment variables and the Application Insights heartbeat field names that accompany them.
         /// </summary>
-        internal static readonly KeyValuePair<string, string>[] WebHeartbeatPropertyNameEnvVarMap = new KeyValuePair<string, string>[]
+        internal readonly KeyValuePair<string, string>[] WebHeartbeatPropertyNameEnvVarMap = new KeyValuePair<string, string>[]
         {
             new KeyValuePair<string, string>("appSrv_SiteName", "WEBSITE_SITE_NAME"),
             new KeyValuePair<string, string>("appSrv_wsStamp", "WEBSITE_HOME_STAMPNAME"),
-            new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME")
+            new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME"),
+            new KeyValuePair<string, string>("appSrv_wsOwner", "WEBSITE_OWNER_NAME")
         };
 
         // for testing only: override the heartbeat manager
@@ -112,24 +113,19 @@
             }
             else
             {
-                foreach (var kvp in WebHeartbeatPropertyNameEnvVarMap)
+                foreach (var kvp in this.WebHeartbeatPropertyNameEnvVarMap)
                 {
                     try
                     {
-                        // get the variable, then expand it (otherwise we get the name we queried for in the value)
                         string hbeatValue = Environment.GetEnvironmentVariable(kvp.Value);
-                        if (!string.IsNullOrEmpty(hbeatValue))
+                        string hbeatKey = kvp.Key.ToString();
+                        if (isUpdateOperation)
                         {
-                            hbeatValue = Environment.ExpandEnvironmentVariables(hbeatValue);
-                            string hbeatKey = kvp.Key.ToString();
-                            if (isUpdateOperation)
-                            {
-                                hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);
-                            }
-                            else
-                            {
-                                hbeatManager.AddHeartbeatProperty(hbeatKey, hbeatValue, true);
-                            }
+                            hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);
+                        }
+                        else
+                        {
+                            hbeatManager.AddHeartbeatProperty(hbeatKey, hbeatValue, true);
                         }
 
                         hasBeenUpdated = true;
