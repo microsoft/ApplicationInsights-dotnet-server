@@ -28,8 +28,6 @@ namespace Microsoft.ApplicationInsights.Tests
         private const string RequestUrlWithScheme = "https://" + RequestUrl;
         private const string HttpOkResultCode = "200";
         private const string NotFoundResultCode = "404";
-        //private const string MockAppId = "MOCK_APP_ID";
-        //private const string MockAppId2 = "MOCK_APP_ID_2";
 
         private readonly List<ITelemetry> sentTelemetry = new List<ITelemetry>();
 

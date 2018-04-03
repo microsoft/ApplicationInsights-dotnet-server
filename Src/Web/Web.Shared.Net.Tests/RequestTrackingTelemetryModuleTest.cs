@@ -29,13 +29,7 @@
         private const string testInstrumentationKey2 = nameof(testInstrumentationKey2);
         private const string testApplicationId1 = nameof(testApplicationId1);
         private const string testApplicationId2 = nameof(testApplicationId2);
-
-        [TestInitialize]
-        public void TestInitialize()
-        {
-            //this.configuration.ApplicationIdProvider = new MockApplicationIdProvider();
-        }
-
+        
         [TestCleanup]
         public void Cleanup()
         {
