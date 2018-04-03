@@ -16,26 +16,6 @@
     [TestClass]
     public class AppServiceEnvVarMonitorTests
     {
-        // used to clean up the environment variables after we've run this test
-        //private static Dictionary<string, string> environmentInitialState;
-
-        //[ClassInitialize]
-        //public static void InitializeTests(TestContext context)
-        //{
-        //    environmentInitialState = GetCurrentAppServiceEnvironmentVariableValues(false);
-        //}
-
-        //[ClassCleanup]
-        //public static void CleanupTests()
-        //{
-        //    foreach (var kvp in environmentInitialState)
-        //    {
-        //        Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
-        //    }
-
-        //    environmentInitialState = null;
-        //}
-
         [TestMethod]
         public void ConfirmIntervalCheckEnforced()
         {
