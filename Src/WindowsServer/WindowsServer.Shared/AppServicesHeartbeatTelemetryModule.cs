@@ -19,6 +19,7 @@
         internal readonly KeyValuePair<string, string>[] WebHeartbeatPropertyNameEnvVarMap = new KeyValuePair<string, string>[]
         {
             new KeyValuePair<string, string>("appSrv_SiteName", "WEBSITE_SITE_NAME"),
+            new KeyValuePair<string, string>("appSrv_SiteName", "WEBSITE_SLOT_NAME"),
             new KeyValuePair<string, string>("appSrv_wsStamp", "WEBSITE_HOME_STAMPNAME"),
             new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME"),
             new KeyValuePair<string, string>("appSrv_wsOwner", "WEBSITE_OWNER_NAME")
@@ -27,8 +28,6 @@
         // for testing only: override the heartbeat manager
         internal IHeartbeatPropertyManager HeartbeatManager;
 
-        // to provide a 'singleton' accessor for updating the env vars should they change during runtime
-        private static AppServicesHeartbeatTelemetryModule instance;
         private bool isInitialized = false;
         
         /// <summary>
@@ -46,16 +45,6 @@
         internal AppServicesHeartbeatTelemetryModule(IHeartbeatPropertyManager hbeatPropManager)
         {
             this.HeartbeatManager = hbeatPropManager;
-            AppServicesHeartbeatTelemetryModule.Instance = this;
-        }
-
-        /// <summary>
-        /// Gets a value to provide internal access to the only instance of this class that *should* be available.
-        /// </summary>
-        public static AppServicesHeartbeatTelemetryModule Instance
-        {
-            get => AppServicesHeartbeatTelemetryModule.instance;
-            private set => AppServicesHeartbeatTelemetryModule.instance = value;
         }
 
         /// <summary>
@@ -66,16 +55,8 @@
         /// <param name="configuration">Unused parameter.</param>
         public void Initialize(TelemetryConfiguration configuration)
         {
-            this.isInitialized = this.UpdateHeartbeatWithAppServiceEnvVarValues();
-        }
-
-        /// <summary>
-        /// Ensure we've cleaned up our static Instance.
-        /// </summary>
-        public void Dispose()
-        {
-            // ensure our Instance variable is not kept around.
-            AppServicesHeartbeatTelemetryModule.instance = null;
+            this.UpdateHeartbeatWithAppServiceEnvVarValues();
+            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent += this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         /// <summary>
@@ -83,24 +64,29 @@
         /// Environment variables we use in our heartbeat payload.
         /// </summary>
         /// <returns>A value indicating whether or not an update to the environment variables occurred.</returns>
-        public bool UpdateHeartbeatWithAppServiceEnvVarValues()
+        public void UpdateHeartbeatWithAppServiceEnvVarValues()
         {
-            bool hasBeenUpdated = false;
-
             try
             {
                 var hbeatManager = this.GetHeartbeatPropertyManager();
                 if (hbeatManager != null)
                 {
-                    hasBeenUpdated = this.AddAppServiceEnvironmentVariablesToHeartbeat(hbeatManager, isUpdateOperation: this.isInitialized);
+                    this.isInitialized = this.AddAppServiceEnvironmentVariablesToHeartbeat(hbeatManager, isUpdateOperation: this.isInitialized);
                 }
             }
             catch (Exception appSrvEnvVarHbeatFailure)
             {
                 WindowsServerEventSource.Log.AppServiceHeartbeatPropertySettingFails(appSrvEnvVarHbeatFailure.ToInvariantString());
             }
+        }
 
-            return hasBeenUpdated;
+        /// <summary>
+        /// Remove our event handler from the environment variable monitor.
+        /// </summary>
+        public void Dispose()
+        {
+            
+            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         internal bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)

@@ -9,7 +9,7 @@
     /// <summary>
     /// A telemetry initializer that will gather Azure Web App Role Environment context information.
     /// </summary>
-    public class AzureWebAppRoleEnvironmentTelemetryInitializer : ITelemetryInitializer
+    public class AzureWebAppRoleEnvironmentTelemetryInitializer : ITelemetryInitializer, IDisposable
     {
         /// <summary>
         /// Azure Web App Hostname. This will include the deployment slot, but will be 
@@ -24,10 +24,10 @@
         /// Value used for keeping track of when the hostname changes (slot swaps occur). We use this
         /// to notify the other class that makes use of these environment variables.
         /// </summary>
-        private string lastNodeValue;
+        private string nodeName;
+        private string roleName;
 
-        /// <summary>Monitor for detecting when environment variables change.</summary>
-        private AppServiceEnvVarMonitor envVarMonitor;
+        private volatile bool updateEnvVars = true;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureWebAppRoleEnvironmentTelemetryInitializer" /> class.
@@ -35,7 +35,7 @@
         public AzureWebAppRoleEnvironmentTelemetryInitializer()
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
-            this.envVarMonitor = new AppServiceEnvVarMonitor();
+            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent += this.UpdateEnvironmentValues;
         }
 
         /// <summary>
@@ -44,30 +44,30 @@
         /// <param name="telemetry">The telemetry to initialize.</param>
         public void Initialize(ITelemetry telemetry)
         {
-            string nodeName = string.Empty;
+            if (this.updateEnvVars)
+            {
+                this.roleName = this.GetRoleName();
+                this.nodeName = this.GetNodeName();
+                this.updateEnvVars = false;
+            }
 
             if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
             {
-                telemetry.Context.Cloud.RoleName = this.GetRoleName();
+                telemetry.Context.Cloud.RoleName = this.roleName;
             }
 
-            nodeName = this.GetNodeName();
             if (string.IsNullOrEmpty(telemetry.Context.GetInternalContext().NodeName))
             {
-                telemetry.Context.GetInternalContext().NodeName = nodeName;
+                telemetry.Context.GetInternalContext().NodeName = this.nodeName;
             }
-            
-            // ensure heartbeat values are up to date...
-            if (string.IsNullOrEmpty(this.lastNodeValue))
-            {
-                this.lastNodeValue = nodeName;
-            }
-            else if (!nodeName.Equals(this.lastNodeValue, StringComparison.Ordinal))
-            {
-                // if the AppServices heartbeat telemetry module exists, signal it to update the values in heartbeat
-                AppServicesHeartbeatTelemetryModule.Instance?.UpdateHeartbeatWithAppServiceEnvVarValues();
-                this.lastNodeValue = nodeName;
-            }
+        }
+
+        /// <summary>
+        /// Remove our event handler from the environment variable monitor.
+        /// </summary>
+        public void Dispose()
+        {
+            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent -= this.UpdateEnvironmentValues;
         }
 
         private string GetRoleName()
@@ -84,8 +84,14 @@
         private string GetNodeName()
         {
             string nodeName = string.Empty;
-            this.envVarMonitor.GetUpdatedEnvironmentVariable(WebAppHostNameEnvironmentVariable, ref nodeName);
+            AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(WebAppHostNameEnvironmentVariable, ref nodeName);
             return nodeName ?? string.Empty;
         }
+
+        private void UpdateEnvironmentValues()
+        {
+            this.updateEnvVars = true;
+        }
+
     }
 }

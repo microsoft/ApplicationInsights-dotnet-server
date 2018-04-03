@@ -11,18 +11,23 @@
     public class AppServiceEnvVarMonitorTests
     {
         [TestMethod]
+        public void EnsureInstanceWorksAsIntended()
+        {
+            Assert.Null(AppServiceEnvVarMonitor.Instance);
+        }
+
+        [TestMethod]
         public void ConfirmIntervalCheckEnforced()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
-            var envMonitor = new AppServiceEnvVarMonitor(envVars.Keys.ToList());
+            var envMonitor = AppServiceEnvVarMonitor.Instance;
 
             // set the next-check time to a value that won't get hit
-            envMonitor.NextCheckTime = DateTime.MaxValue;
-
+            // envMonitor.NextCheckTime = DateTime.MaxValue;
             foreach (var kvp in envVars)
             {
                 string val = string.Empty;
-                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref val);
 
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
@@ -32,7 +37,7 @@
             foreach (var kvp in envVars)
             {
                 string cachedVal = string.Empty;
-                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedVal);
                 Assert.Equal(kvp.Value, cachedVal, StringComparer.Ordinal);
                 Assert.NotEqual(cachedVal, Environment.GetEnvironmentVariable(kvp.Key), StringComparer.Ordinal);
             }
@@ -42,25 +47,24 @@
         public void ConfirmUpdatedEnvironmentIsCaptured()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
-            var envMonitor = new AppServiceEnvVarMonitor(envVars.Keys.ToList());
+            var envMonitor = AppServiceEnvVarMonitor.Instance;
 
             foreach (var kvp in envVars)
             {
                 string val = string.Empty;
-                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
-                
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref val);
+
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
             }
 
             // set the next-check time to a value that will re-read the values immediately
-            envMonitor.NextCheckTime = DateTime.MinValue;
-
+            // envMonitor.NextCheckTime = DateTime.MinValue;
             // ensure the values are re-read
             foreach (var kvp in envVars)
             {
                 string cachedVal = string.Empty;
-                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedVal);
                 Assert.Equal(Environment.GetEnvironmentVariable(kvp.Key), cachedVal, StringComparer.Ordinal);
                 Assert.NotEqual(cachedVal, kvp.Value, StringComparer.Ordinal);
             }
@@ -79,7 +83,7 @@
             Dictionary<string, string> envVars = new Dictionary<string, string>();
 
             string testVarSuffix = Guid.NewGuid().ToString();
-            foreach (string envVarName in AppServiceEnvVarMonitor.DefaultEnvVars)
+            foreach (string envVarName in AppServiceEnvVarMonitor.PreloadedMonitoredEnvironmentVariables)
             {
                 string testVarName = string.Concat(envVarName, "_", testVarSuffix);
                 string testVarValue = $"{testValueCount}_Stand-inValue_{testVarSuffix}_{testValueCount}";
