@@ -3,13 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net.Http;
-    using System.Runtime.Serialization.Json;
-    using System.Text;
-    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.WindowsServer.Implementation;
-    using Microsoft.ApplicationInsights.WindowsServer.Implementation.DataContracts;
-    using Microsoft.ApplicationInsights.WindowsServer.Mock;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Assert = Xunit.Assert;
 

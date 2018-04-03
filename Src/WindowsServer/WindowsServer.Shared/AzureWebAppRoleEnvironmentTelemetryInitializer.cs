@@ -11,13 +11,22 @@
     /// </summary>
     public class AzureWebAppRoleEnvironmentTelemetryInitializer : ITelemetryInitializer
     {
-        /// <summary>Azure Web App Hostname. This will include the deployment slot, but will be same across instances of same slot.</summary>
+        /// <summary>
+        /// Azure Web App Hostname. This will include the deployment slot, but will be 
+        /// same across instances of same slot.
+        /// </summary>
         private const string WebAppHostNameEnvironmentVariable = "WEBSITE_HOSTNAME";
 
         /// <summary>Predefined suffix for Azure Web App Hostname.</summary>
         private const string WebAppSuffix = ".azurewebsites.net";
 
+        /// <summary>
+        /// Value used for keeping track of when the hostname changes (slot swaps occur). We use this
+        /// to notify the other class that makes use of these environment variables.
+        /// </summary>
         private string lastNodeValue;
+
+        /// <summary>Monitor for detecting when environment variables change.</summary>
         private AppServiceEnvVarMonitor envVarMonitor;
 
         /// <summary>
