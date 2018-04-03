@@ -56,14 +56,13 @@
         public void Initialize(TelemetryConfiguration configuration)
         {
             this.UpdateHeartbeatWithAppServiceEnvVarValues();
-            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent += this.UpdateHeartbeatWithAppServiceEnvVarValues;
+            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         /// <summary>
         /// Signal the AppServicesHeartbeatTelemetryModule to update the values of the 
         /// Environment variables we use in our heartbeat payload.
         /// </summary>
-        /// <returns>A value indicating whether or not an update to the environment variables occurred.</returns>
         public void UpdateHeartbeatWithAppServiceEnvVarValues()
         {
             try
@@ -85,8 +84,7 @@
         /// </summary>
         public void Dispose()
         {
-            
-            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
+            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         internal bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)

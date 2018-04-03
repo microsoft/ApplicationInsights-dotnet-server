@@ -9,7 +9,7 @@
     /// <summary>
     /// A telemetry initializer that will gather Azure Web App Role Environment context information.
     /// </summary>
-    public class AzureWebAppRoleEnvironmentTelemetryInitializer : ITelemetryInitializer, IDisposable
+    public sealed class AzureWebAppRoleEnvironmentTelemetryInitializer : ITelemetryInitializer, IDisposable
     {
         /// <summary>
         /// Azure Web App Hostname. This will include the deployment slot, but will be 
@@ -35,7 +35,7 @@
         public AzureWebAppRoleEnvironmentTelemetryInitializer()
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
-            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent += this.UpdateEnvironmentValues;
+            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateEnvironmentValues;
         }
 
         /// <summary>
@@ -67,7 +67,7 @@
         /// </summary>
         public void Dispose()
         {
-            AppServiceEnvVarMonitor.Instance.MonitoredEnvironmentVariableUpdatedEvent -= this.UpdateEnvironmentValues;
+            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateEnvironmentValues;
         }
 
         private string GetRoleName()
@@ -92,6 +92,5 @@
         {
             this.updateEnvVars = true;
         }
-
     }
 }

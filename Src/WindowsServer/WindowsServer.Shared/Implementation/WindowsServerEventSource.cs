@@ -380,6 +380,17 @@
                 this.ApplicationName);
         }
 
+        [Event(38,
+            Message = "Error occured when disposing update interval timer within EnvironmentVariableMonitor. Exception: {0}",
+            Level = EventLevel.Warning)]
+        public void EnvironmentVarMonitorFailedDispose(string exceptionMsg, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                38,
+                exceptionMsg ?? "unknown-exception",
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
