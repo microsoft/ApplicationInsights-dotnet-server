@@ -8,65 +8,71 @@
     using Assert = Xunit.Assert;
 
     [TestClass]
-    public class AppServiceEnvVarMonitorTests
+    public class EnvironmentVariableMonitorTests
     {
         [TestMethod]
         public void EnsureInstanceWorksAsIntended()
         {
-            Assert.Null(AppServiceEnvVarMonitor.Instance);
+            Assert.NotNull(AppServiceEnvVarMonitor.Instance);
         }
 
         [TestMethod]
-        public void ConfirmIntervalCheckEnforced()
+        public void EnsureEnvironmentVariablesAreCapturedImmediately()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
-            var envMonitor = AppServiceEnvVarMonitor.Instance;
-
-            // set the next-check time to a value that won't get hit
-            // envMonitor.NextCheckTime = DateTime.MaxValue;
-            foreach (var kvp in envVars)
-            {
-                string val = string.Empty;
-                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref val);
-
-                // set the value to something new
-                Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
-            }
-
-            // ensure the values are cached and aren't getting re-read at this time
+            var envMonitor = new Mock.MockEnvironmentVariableMonitor(envVars.Keys);
             foreach (var kvp in envVars)
             {
                 string cachedVal = string.Empty;
                 envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedVal);
                 Assert.Equal(kvp.Value, cachedVal, StringComparer.Ordinal);
-                Assert.NotEqual(cachedVal, Environment.GetEnvironmentVariable(kvp.Key), StringComparer.Ordinal);
             }
         }
 
         [TestMethod]
-        public void ConfirmUpdatedEnvironmentIsCaptured()
+        public void ConfirmUpdatedEnvironmentIsNotDetectedPriorToUpdate()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
-            var envMonitor = AppServiceEnvVarMonitor.Instance;
+            var envMonitor = new Mock.MockEnvironmentVariableMonitor(envVars.Keys);
+            foreach (var kvp in envVars)
+            {
+                string updatedValue = Guid.NewGuid().ToString();
+                Assert.NotEqual(kvp.Value, updatedValue, StringComparer.Ordinal);
+
+                Environment.SetEnvironmentVariable(kvp.Key, updatedValue);
+
+                string cachedValue = string.Empty;
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedValue);
+                Assert.Equal(kvp.Value, cachedValue, StringComparer.Ordinal);
+            }
+        }
+
+        [TestMethod]
+        public void ConfirmUpdatedEnvironmentIsDetectedPostUpdate()
+        {
+            var envVars = GetCurrentAppServiceEnvironmentVariableValues();
+            var envMonitor = new Mock.MockEnvironmentVariableMonitor(envVars.Keys);
+            var updatedVars = new Dictionary<string, string>();
 
             foreach (var kvp in envVars)
             {
-                string val = string.Empty;
-                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref val);
+                string updatedValue = Guid.NewGuid().ToString();
+                Assert.NotEqual(kvp.Value, updatedValue, StringComparer.Ordinal);
 
-                // set the value to something new
-                Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
+                Environment.SetEnvironmentVariable(kvp.Key, updatedValue);
+                updatedVars.Add(kvp.Key, updatedValue);
             }
 
-            // set the next-check time to a value that will re-read the values immediately
-            // envMonitor.NextCheckTime = DateTime.MinValue;
-            // ensure the values are re-read
+            envMonitor.PerformCheckForUpdatedVariables();
+            Assert.True(envMonitor.DetectedUpdatedVarValue);
+
             foreach (var kvp in envVars)
             {
-                string cachedVal = string.Empty;
-                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedVal);
-                Assert.Equal(Environment.GetEnvironmentVariable(kvp.Key), cachedVal, StringComparer.Ordinal);
-                Assert.NotEqual(cachedVal, kvp.Value, StringComparer.Ordinal);
+                string cachedValue = string.Empty;
+                envMonitor.GetCurrentEnvironmentVariableValue(kvp.Key, ref cachedValue);
+
+                Assert.Equal(updatedVars[kvp.Key], cachedValue, StringComparer.Ordinal);
+                Assert.NotEqual(kvp.Value, cachedValue, StringComparer.Ordinal);
             }
         }
 

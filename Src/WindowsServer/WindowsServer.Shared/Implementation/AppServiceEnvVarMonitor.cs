@@ -18,7 +18,7 @@
         public MonitoredAppServiceEnvVarUpdated MonitoredAppServiceEnvVarUpdatedEvent;
 
         // Default interval between environment variable checks
-        internal static TimeSpan MonitorInterval = TimeSpan.FromSeconds(30);
+        internal static readonly TimeSpan DefaultMonitorInterval = TimeSpan.FromSeconds(60);
 
         // Default list of environment variables tracked by this monitor.
         internal static IReadOnlyCollection<string> PreloadedMonitoredEnvironmentVariables = new string[]
@@ -39,11 +39,17 @@
         private AppServiceEnvVarMonitor() : 
             base(
                 AppServiceEnvVarMonitor.PreloadedMonitoredEnvironmentVariables, 
-                AppServiceEnvVarMonitor.MonitorInterval)
+                AppServiceEnvVarMonitor.DefaultMonitorInterval)
         {
         }
 
         public static AppServiceEnvVarMonitor Instance => AppServiceEnvVarMonitor.SingletonInstance;
+
+        internal TimeSpan MonitorInterval
+        {
+            get => AppServiceEnvVarMonitor.Instance.checkInterval;
+            set => AppServiceEnvVarMonitor.Instance.checkInterval = value;
+        }
 
         protected override void OnEnvironmentVariableUpdated()
         {

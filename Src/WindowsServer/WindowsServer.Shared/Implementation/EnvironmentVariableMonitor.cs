@@ -20,7 +20,7 @@
         protected volatile bool isEnabled = true;
 
         // how often we allow the code to re-check the environment
-        private readonly TimeSpan checkInterval;
+        protected TimeSpan checkInterval;
 
         // timer object that will periodically update the environment variables
         private readonly Timer environmentCheckTimer;
@@ -79,7 +79,7 @@
         /// in the configured interval once complete.
         /// </summary>
         /// <param name="state">Variable left unused in this implementation of TimerCallback.</param>
-        private void CheckVariablesIntermittent(object state)
+        protected void CheckVariablesIntermittent(object state)
         {
             bool shouldTriggerOnUpdate = false;
 
@@ -89,7 +89,8 @@
                 var kvp = iter.Current;
 
                 string envValue = Environment.GetEnvironmentVariable(kvp.Key);
-                if (!envValue.Equals(kvp.Value, StringComparison.Ordinal) 
+                if (envValue != null
+                    && !envValue.Equals(kvp.Value, StringComparison.Ordinal) 
                     && this.CheckedValues.TryUpdate(kvp.Key, envValue, kvp.Value))
                 {
                     shouldTriggerOnUpdate = true;
