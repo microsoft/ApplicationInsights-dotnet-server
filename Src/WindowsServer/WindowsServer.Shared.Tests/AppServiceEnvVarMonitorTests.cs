@@ -17,52 +17,50 @@
     public class AppServiceEnvVarMonitorTests
     {
         // used to clean up the environment variables after we've run this test
-        private static Dictionary<string, string> environmentInitialState;
+        //private static Dictionary<string, string> environmentInitialState;
 
-        [ClassInitialize]
-        public static void InitializeTests(TestContext context)
-        {
-            environmentInitialState = GetCurrentAppServiceEnvironmentVariableValues(false);
-        }
+        //[ClassInitialize]
+        //public static void InitializeTests(TestContext context)
+        //{
+        //    environmentInitialState = GetCurrentAppServiceEnvironmentVariableValues(false);
+        //}
 
-        [ClassCleanup]
-        public static void CleanupTests()
-        {
-            foreach (var kvp in environmentInitialState)
-            {
-                Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
-            }
+        //[ClassCleanup]
+        //public static void CleanupTests()
+        //{
+        //    foreach (var kvp in environmentInitialState)
+        //    {
+        //        Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
+        //    }
 
-            environmentInitialState = null;
-        }
+        //    environmentInitialState = null;
+        //}
 
         [TestMethod]
         public void ConfirmIntervalCheckEnforced()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
+            var envMonitor = new AppServiceEnvVarMonitor(envVars.Keys.ToList());
+
+            // set the next-check time to a value that won't get hit
+            envMonitor.NextCheckTime = DateTime.MaxValue;
 
             foreach (var kvp in envVars)
             {
                 string val = string.Empty;
-                AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
+                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
 
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
             }
 
-            // set the next-check time to a value that won't get hit
-            AppServiceEnvVarMonitor.NextCheckTime = DateTime.MaxValue;
-
-            // ensure the current values are indeed different
-            var currentEnvVars = GetCurrentAppServiceEnvironmentVariableValues();
-
             // ensure the values are cached and aren't getting re-read at this time
             foreach (var kvp in envVars)
             {
                 string cachedVal = string.Empty;
-                AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
+                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
                 Assert.Equal(kvp.Value, cachedVal, StringComparer.Ordinal);
-                Assert.NotEqual(cachedVal, currentEnvVars[kvp.Key], StringComparer.Ordinal);
+                Assert.NotEqual(cachedVal, Environment.GetEnvironmentVariable(kvp.Key), StringComparer.Ordinal);
             }
         }
 
@@ -70,48 +68,51 @@
         public void ConfirmUpdatedEnvironmentIsCaptured()
         {
             var envVars = GetCurrentAppServiceEnvironmentVariableValues();
+            var envMonitor = new AppServiceEnvVarMonitor(envVars.Keys.ToList());
 
             foreach (var kvp in envVars)
             {
                 string val = string.Empty;
-                AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
+                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref val);
                 
                 // set the value to something new
                 Environment.SetEnvironmentVariable(kvp.Key, string.Concat("UPDATED-", val, "-UPDATED"));
             }
 
             // set the next-check time to a value that will re-read the values immediately
-            AppServiceEnvVarMonitor.NextCheckTime = DateTime.MinValue;
-
-            // ensure the current values are indeed different
-            var currentEnvVars = GetCurrentAppServiceEnvironmentVariableValues();
+            envMonitor.NextCheckTime = DateTime.MinValue;
 
             // ensure the values are re-read
             foreach (var kvp in envVars)
             {
                 string cachedVal = string.Empty;
-                AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
-                Assert.Equal(currentEnvVars[kvp.Key], cachedVal, StringComparer.Ordinal);
+                envMonitor.GetUpdatedEnvironmentVariable(kvp.Key, ref cachedVal);
+                Assert.Equal(Environment.GetEnvironmentVariable(kvp.Key), cachedVal, StringComparer.Ordinal);
                 Assert.NotEqual(cachedVal, kvp.Value, StringComparer.Ordinal);
             }
         }
 
-        private static Dictionary<string, string> GetCurrentAppServiceEnvironmentVariableValues(bool supplyValue = true)
+        /// <summary>
+        /// Create a set of environment variables that mimics the default values used by
+        /// the AppServiceEnvVarMonitor, and a set of values for them. Each time this method
+        /// is called the names and values of the environment variables will be unique as a Guid
+        /// is used.
+        /// </summary>
+        /// <returns>Dictionary containing the environment variable names and their current values.</returns>
+        private static Dictionary<string, string> GetCurrentAppServiceEnvironmentVariableValues()
         {
             int testValueCount = 0;
             Dictionary<string, string> envVars = new Dictionary<string, string>();
 
-            foreach (var kvp in AppServiceEnvVarMonitor.CheckedValues)
+            string testVarSuffix = Guid.NewGuid().ToString();
+            foreach (string envVarName in AppServiceEnvVarMonitor.DefaultEnvVars)
             {
-                string envVar = Environment.GetEnvironmentVariable(kvp.Key);
-                if (supplyValue && string.IsNullOrEmpty(envVar))
-                {
-                    envVar = $"{testValueCount}_Stand-inValue_{testValueCount}";
-                    testValueCount++;
-                    Environment.SetEnvironmentVariable(kvp.Key, envVar);
-                }
+                string testVarName = string.Concat(envVarName, "_", testVarSuffix);
+                string testVarValue = $"{testValueCount}_Stand-inValue_{testVarSuffix}_{testValueCount}";
+                testValueCount++;
+                Environment.SetEnvironmentVariable(testVarName, testVarValue);
 
-                envVars.Add(kvp.Key, envVar);
+                envVars.Add(testVarName, testVarValue);
             }
 
             return envVars;

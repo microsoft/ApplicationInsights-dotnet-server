@@ -18,6 +18,7 @@
         private const string WebAppSuffix = ".azurewebsites.net";
 
         private string lastNodeValue;
+        private AppServiceEnvVarMonitor envVarMonitor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureWebAppRoleEnvironmentTelemetryInitializer" /> class.
@@ -25,6 +26,7 @@
         public AzureWebAppRoleEnvironmentTelemetryInitializer()
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
+            this.envVarMonitor = new AppServiceEnvVarMonitor();
         }
 
         /// <summary>
@@ -73,8 +75,8 @@
         private string GetNodeName()
         {
             string nodeName = string.Empty;
-            AppServiceEnvVarMonitor.GetUpdatedEnvironmentVariable(WebAppHostNameEnvironmentVariable, ref nodeName);
-            return nodeName;
+            this.envVarMonitor.GetUpdatedEnvironmentVariable(WebAppHostNameEnvironmentVariable, ref nodeName);
+            return nodeName ?? string.Empty;
         }
     }
 }
