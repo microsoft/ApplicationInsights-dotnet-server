@@ -28,7 +28,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="EnvironmentVariableMonitor" /> class.
         /// </summary>
-        public EnvironmentVariableMonitor(IEnumerable<string> envVars, TimeSpan checkInterval)
+        protected EnvironmentVariableMonitor(IEnumerable<string> envVars, TimeSpan checkInterval)
         {
             this.CheckedValues = new ConcurrentDictionary<string, string>();
             this.checkInterval = checkInterval;
