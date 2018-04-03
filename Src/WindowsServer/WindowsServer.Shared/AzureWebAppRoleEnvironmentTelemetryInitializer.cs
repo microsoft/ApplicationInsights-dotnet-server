@@ -13,9 +13,9 @@
     {
         /// <summary>
         /// Azure Web App Hostname. This will include the deployment slot, but will be 
-        /// same across instances of same slot.
+        /// same across instances of same slot. Marked as internal to support testing.
         /// </summary>
-        private const string WebAppHostNameEnvironmentVariable = "WEBSITE_HOSTNAME";
+        internal string WebAppHostNameEnvironmentVariable = "WEBSITE_HOSTNAME";
 
         /// <summary>Predefined suffix for Azure Web App Hostname.</summary>
         private const string WebAppSuffix = ".azurewebsites.net";
@@ -84,7 +84,7 @@
         private string GetNodeName()
         {
             string nodeName = string.Empty;
-            AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(WebAppHostNameEnvironmentVariable, ref nodeName);
+            AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(this.WebAppHostNameEnvironmentVariable, ref nodeName);
             return nodeName ?? string.Empty;
         }
 
