@@ -15,7 +15,7 @@
     using Assert = Xunit.Assert;
 
     [TestClass]
-    public class AppServicesHeartbeatTests
+    public class AppServicesHeartbeatTelemetryModuleTests
     {
         [TestMethod]
         public void EnsureInstanceWorksAsIntended()

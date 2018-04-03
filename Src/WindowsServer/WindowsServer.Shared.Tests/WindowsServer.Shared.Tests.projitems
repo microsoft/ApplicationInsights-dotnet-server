@@ -9,7 +9,7 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.WindowsServer</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)AppServicesHeartbeatTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AppServicesHeartbeatTelemetryModuleTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AppServiceEnvVarMonitorTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataEndToEndTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureWebAppRoleEnvironmentTelemetryInitializerTest.cs" />
