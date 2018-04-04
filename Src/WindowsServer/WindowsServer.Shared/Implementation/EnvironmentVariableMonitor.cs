@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Security;
     using System.Threading;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
@@ -85,30 +86,48 @@
         /// <param name="state">Variable left unused in this implementation of TimerCallback.</param>
         protected void CheckVariablesIntermittent(object state)
         {
-            bool shouldTriggerOnUpdate = false;
-
-            var iter = this.CheckedValues.GetEnumerator();
-            while (iter.MoveNext())
+            try
             {
-                var kvp = iter.Current;
+                bool shouldTriggerOnUpdate = false;
 
-                string envValue = Environment.GetEnvironmentVariable(kvp.Key);
-                if (envValue != null
-                    && !envValue.Equals(kvp.Value, StringComparison.Ordinal) 
-                    && this.CheckedValues.TryUpdate(kvp.Key, envValue, kvp.Value))
+                var iter = this.CheckedValues.GetEnumerator();
+                while (iter.MoveNext())
                 {
-                    shouldTriggerOnUpdate = true;
+                    var kvp = iter.Current;
+                    string envValue = string.Empty;
+
+                    try
+                    {
+                        envValue = Environment.GetEnvironmentVariable(kvp.Key);
+                    }
+                    catch (SecurityException e)
+                    {
+                        WindowsServerEventSource.Log.SecurityExceptionThrownAccessingEnvironmentVariable(kvp.Key, e.ToInvariantString());
+                        this.isEnabled = false;
+                        break;
+                    }
+
+                    if (envValue != null
+                        && !envValue.Equals(kvp.Value, StringComparison.Ordinal)
+                        && this.CheckedValues.TryUpdate(kvp.Key, envValue, kvp.Value))
+                    {
+                        shouldTriggerOnUpdate = true;
+                    }
+                }
+
+                if (shouldTriggerOnUpdate)
+                {
+                    this.OnEnvironmentVariableUpdated();
+                }
+
+                if (this.isEnabled)
+                {
+                    this.environmentCheckTimer.Change(this.checkInterval, TimeSpan.FromMilliseconds(-1));
                 }
             }
-
-            if (shouldTriggerOnUpdate)
+            catch (Exception e)
             {
-                this.OnEnvironmentVariableUpdated();
-            }
-
-            if (this.isEnabled)
-            {
-                this.environmentCheckTimer.Change(this.checkInterval, TimeSpan.FromMilliseconds(-1));
+                WindowsServerEventSource.Log.GeneralFailureOccursDuringCheckForEnvironmentVariables(e.ToInvariantString());
             }
         }
     }

@@ -391,6 +391,29 @@
                 this.ApplicationName);
         }
 
+        [Event(39,
+            Message = "Security exception was thrown trying to read environment variable '{0}'. Disabling environment variable monitor to avoid future security exceptions. Exception: {1}",
+            Level = EventLevel.Warning)]
+        public void SecurityExceptionThrownAccessingEnvironmentVariable(string environmentVariableName, string exceptionMsg, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                39,
+                environmentVariableName,
+                exceptionMsg ?? "unknown-exception",
+                this.ApplicationName);
+        }
+
+        [Event(40,
+            Message = "Error occurred when trying to update environment variables. Exception: {0}",
+            Level = EventLevel.Warning)]
+        public void GeneralFailureOccursDuringCheckForEnvironmentVariables(string exceptionMsg, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(
+                40,
+                exceptionMsg ?? "unknown-exception",
+                this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
