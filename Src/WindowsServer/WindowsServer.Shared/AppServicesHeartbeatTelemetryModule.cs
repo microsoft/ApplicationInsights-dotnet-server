@@ -25,9 +25,10 @@
             new KeyValuePair<string, string>("appSrv_wsOwner", "WEBSITE_OWNER_NAME")
         };
 
-        // for testing only: override the heartbeat manager
+        // Cache the heartbeat property manager across updates. Note that tests can also override the heartbeat manager.
         internal IHeartbeatPropertyManager HeartbeatManager;
 
+        // Used to determine if we call Add or Set heartbeat properties in the case of updates.
         private bool isInitialized = false;
         
         /// <summary>
@@ -87,7 +88,7 @@
             AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
-        internal bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)
+        private bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)
         {
             bool hasBeenUpdated = false;
 
@@ -126,36 +127,32 @@
 
         private IHeartbeatPropertyManager GetHeartbeatPropertyManager()
         {
-            if (this.HeartbeatManager != null)
+            if (this.HeartbeatManager == null)
             {
-                // early exit - this is the internal test scenario
-                return this.HeartbeatManager;
-            }
+                var telemetryModules = TelemetryModules.Instance;
 
-            IHeartbeatPropertyManager hbeatManager = null;
-            var telemetryModules = TelemetryModules.Instance;
-
-            try
-            {
-                foreach (var module in telemetryModules.Modules)
+                try
                 {
-                    if (module is IHeartbeatPropertyManager hman)
+                    foreach (var module in telemetryModules.Modules)
                     {
-                        hbeatManager = hman;
+                        if (module is IHeartbeatPropertyManager hman)
+                        {
+                            this.HeartbeatManager = hman;
+                        }
                     }
                 }
-            }
-            catch (Exception hearbeatManagerAccessException)
-            {
-                WindowsServerEventSource.Log.AppServiceHeartbeatManagerAccessFailure(hearbeatManagerAccessException.ToInvariantString());
+                catch (Exception hearbeatManagerAccessException)
+                {
+                    WindowsServerEventSource.Log.AppServiceHeartbeatManagerAccessFailure(hearbeatManagerAccessException.ToInvariantString());
+                }
+
+                if (this.HeartbeatManager == null)
+                {
+                    WindowsServerEventSource.Log.AppServiceHeartbeatManagerNotAvailable();
+                }
             }
 
-            if (hbeatManager == null)
-            {
-                WindowsServerEventSource.Log.AppServiceHeartbeatManagerNotAvailable();
-            }
-
-            return hbeatManager;
+            return this.HeartbeatManager;
         }
     }
 }
