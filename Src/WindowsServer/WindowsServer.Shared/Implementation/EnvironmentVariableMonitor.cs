@@ -41,7 +41,8 @@
                 this.CheckedValues.TryAdd(varName, Environment.GetEnvironmentVariable(varName));
             }
 
-            this.environmentCheckTimer = new Timer(this.CheckVariablesIntermittent, null, this.checkInterval, TimeSpan.FromMilliseconds(-1));
+            this.environmentCheckTimer = new Timer(this.CheckVariablesIntermittent, null, Timeout.Infinite, Timeout.Infinite);
+            this.environmentCheckTimer.Change(checkInterval, TimeSpan.FromMilliseconds(-1));
         }
 
         /// <summary>

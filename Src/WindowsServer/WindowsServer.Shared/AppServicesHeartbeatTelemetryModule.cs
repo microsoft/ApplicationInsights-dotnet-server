@@ -19,7 +19,7 @@
         internal readonly KeyValuePair<string, string>[] WebHeartbeatPropertyNameEnvVarMap = new KeyValuePair<string, string>[]
         {
             new KeyValuePair<string, string>("appSrv_SiteName", "WEBSITE_SITE_NAME"),
-            new KeyValuePair<string, string>("appSrv_SiteName", "WEBSITE_SLOT_NAME"),
+            new KeyValuePair<string, string>("appSrv_SlotName", "WEBSITE_SLOT_NAME"),
             new KeyValuePair<string, string>("appSrv_wsStamp", "WEBSITE_HOME_STAMPNAME"),
             new KeyValuePair<string, string>("appSrv_wsHost", "WEBSITE_HOSTNAME"),
             new KeyValuePair<string, string>("appSrv_wsOwner", "WEBSITE_OWNER_NAME")
@@ -102,8 +102,9 @@
                 {
                     try
                     {
-                        string hbeatValue = Environment.GetEnvironmentVariable(kvp.Value);
                         string hbeatKey = kvp.Key.ToString();
+                        string hbeatValue = string.Empty;
+                        AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(kvp.Value, ref hbeatValue);
                         if (isUpdateOperation)
                         {
                             hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);

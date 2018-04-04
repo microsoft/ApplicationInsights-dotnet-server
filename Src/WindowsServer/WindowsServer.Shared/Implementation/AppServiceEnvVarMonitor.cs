@@ -41,6 +41,24 @@
                 AppServiceEnvVarMonitor.PreloadedMonitoredEnvironmentVariables, 
                 AppServiceEnvVarMonitor.DefaultMonitorInterval)
         {
+            // check to ensure there is at least one known Azure App Service environment variable present
+            bool validateAppServiceEnvironment = false;
+            foreach (var environmentVariableName in AppServiceEnvVarMonitor.PreloadedMonitoredEnvironmentVariables)
+            {
+                string environmentVariableValue = string.Empty;
+                this.GetCurrentEnvironmentVariableValue(environmentVariableName, ref environmentVariableValue);
+                if (!string.IsNullOrEmpty(environmentVariableValue))
+                {
+                    validateAppServiceEnvironment = true;
+                    break;
+                }
+            }
+
+            // if not, disable this monitor
+            if (!validateAppServiceEnvironment)
+            {
+                this.isEnabled = false;
+            }
         }
 
         public static AppServiceEnvVarMonitor Instance => AppServiceEnvVarMonitor.SingletonInstance;
