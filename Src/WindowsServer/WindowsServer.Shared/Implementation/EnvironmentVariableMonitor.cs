@@ -16,14 +16,14 @@
         // Environment variables tracked by this monitor.
         protected readonly ConcurrentDictionary<string, string> CheckedValues;
 
+        // help ensure no Timer problems by enforcing a minimum check interval
+        protected readonly TimeSpan MinimumCheckInterval = TimeSpan.FromSeconds(5);
+
         // enabled flag primarily used during dispose
         protected volatile bool isEnabled = true;
 
         // how often we allow the code to re-check the environment
         protected TimeSpan checkInterval;
-
-        // help ensure no Timer problems by enforcing a minimum check interval
-        protected readonly TimeSpan minimumCheckInterval = TimeSpan.FromSeconds(5);
 
         // timer object that will periodically update the environment variables
         private readonly Timer environmentCheckTimer;
@@ -34,7 +34,7 @@
         protected EnvironmentVariableMonitor(IEnumerable<string> envVars, TimeSpan checkInterval)
         {
             this.CheckedValues = new ConcurrentDictionary<string, string>();
-            this.checkInterval = checkInterval > this.minimumCheckInterval ? checkInterval : this.minimumCheckInterval;
+            this.checkInterval = checkInterval > this.MinimumCheckInterval ? checkInterval : this.MinimumCheckInterval;
 
             foreach (string varName in envVars)
             {
