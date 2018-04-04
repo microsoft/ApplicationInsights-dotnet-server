@@ -57,7 +57,7 @@
         public void Initialize(TelemetryConfiguration configuration)
         {
             this.UpdateHeartbeatWithAppServiceEnvVarValues();
-            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateHeartbeatWithAppServiceEnvVarValues;
+            AppServiceEnvironmentVariableMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         /// <summary>
@@ -85,7 +85,7 @@
         /// </summary>
         public void Dispose()
         {
-            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
+            AppServiceEnvironmentVariableMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateHeartbeatWithAppServiceEnvVarValues;
         }
 
         private bool AddAppServiceEnvironmentVariablesToHeartbeat(IHeartbeatPropertyManager hbeatManager, bool isUpdateOperation = false)
@@ -104,7 +104,7 @@
                     {
                         string hbeatKey = kvp.Key.ToString();
                         string hbeatValue = string.Empty;
-                        AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(kvp.Value, ref hbeatValue);
+                        AppServiceEnvironmentVariableMonitor.Instance.GetCurrentEnvironmentVariableValue(kvp.Value, ref hbeatValue);
                         if (isUpdateOperation)
                         {
                             hbeatManager.SetHeartbeatProperty(hbeatKey, hbeatValue);

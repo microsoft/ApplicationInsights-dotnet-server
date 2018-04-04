@@ -13,7 +13,7 @@
         [TestMethod]
         public void EnsureInstanceWorksAsIntended()
         {
-            Assert.NotNull(AppServiceEnvVarMonitor.Instance);
+            Assert.NotNull(AppServiceEnvironmentVariableMonitor.Instance);
         }
 
         [TestMethod]
@@ -89,7 +89,7 @@
             Dictionary<string, string> envVars = new Dictionary<string, string>();
 
             string testVarSuffix = Guid.NewGuid().ToString();
-            foreach (string envVarName in AppServiceEnvVarMonitor.PreloadedMonitoredEnvironmentVariables)
+            foreach (string envVarName in AppServiceEnvironmentVariableMonitor.PreloadedMonitoredEnvironmentVariables)
             {
                 string testVarName = string.Concat(envVarName, "_", testVarSuffix);
                 string testVarValue = $"{testValueCount}_Stand-inValue_{testVarSuffix}_{testValueCount}";

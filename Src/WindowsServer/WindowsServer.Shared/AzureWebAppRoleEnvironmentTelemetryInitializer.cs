@@ -35,7 +35,7 @@
         public AzureWebAppRoleEnvironmentTelemetryInitializer()
         {
             WindowsServerEventSource.Log.TelemetryInitializerLoaded(this.GetType().FullName);
-            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateEnvironmentValues;
+            AppServiceEnvironmentVariableMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent += this.UpdateEnvironmentValues;
         }
 
         /// <summary>
@@ -67,7 +67,7 @@
         /// </summary>
         public void Dispose()
         {
-            AppServiceEnvVarMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateEnvironmentValues;
+            AppServiceEnvironmentVariableMonitor.Instance.MonitoredAppServiceEnvVarUpdatedEvent -= this.UpdateEnvironmentValues;
         }
 
         private string GetRoleName()
@@ -84,7 +84,7 @@
         private string GetNodeName()
         {
             string nodeName = string.Empty;
-            AppServiceEnvVarMonitor.Instance.GetCurrentEnvironmentVariableValue(this.WebAppHostNameEnvironmentVariable, ref nodeName);
+            AppServiceEnvironmentVariableMonitor.Instance.GetCurrentEnvironmentVariableValue(this.WebAppHostNameEnvironmentVariable, ref nodeName);
             return nodeName ?? string.Empty;
         }
 
