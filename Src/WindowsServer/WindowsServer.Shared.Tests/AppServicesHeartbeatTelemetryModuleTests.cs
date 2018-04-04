@@ -6,6 +6,7 @@
     using System.Net.Http;
     using System.Runtime.Serialization.Json;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.WindowsServer.Implementation;
@@ -48,6 +49,8 @@
         }
 
         [TestMethod]
+        [Description("This test causes a delay and must be updated to be more deterministic.")]
+        [Owner("dekeeler")]
         public void UpdateEnvVarsWorksWhenEnvironmentValuesChange()
         {            
             this.testAppServiceHbeatModule.Initialize(null);
@@ -59,9 +62,12 @@
                 Environment.SetEnvironmentVariable(envVarKvp.Key, newVal);
             }
 
-            var updatedEnvVars = this.GetEnvVarsAssociatedToModule(this.testAppServiceHbeatModule);
+            // wait for the delay set into the monitor, plus one second to ensure we got updated
+            Task.Delay(
+                AppServiceEnvironmentVariableMonitor.Instance.MonitorInterval + TimeSpan.FromSeconds(1))
+                .ConfigureAwait(false).GetAwaiter().GetResult();
 
-            this.testAppServiceHbeatModule.UpdateHeartbeatWithAppServiceEnvVarValues();
+            var updatedEnvVars = this.GetEnvVarsAssociatedToModule(this.testAppServiceHbeatModule);
 
             foreach (var kvp in this.testAppServiceHbeatModule.WebHeartbeatPropertyNameEnvVarMap)
             {
