@@ -351,7 +351,7 @@
         
         [Event(35,
             Message = "App Services Heartbeat Provider: Accessing the Hearbeat Manager failed as it is not in the list of available modules.",
-            Level = EventLevel.Informational)]
+            Level = EventLevel.Warning)]
         public void AppServiceHeartbeatManagerNotAvailable(string appDomainName = "Incorrect")
         {
             this.WriteEvent(

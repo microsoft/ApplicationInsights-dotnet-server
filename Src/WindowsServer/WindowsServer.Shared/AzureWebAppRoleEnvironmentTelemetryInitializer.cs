@@ -20,10 +20,6 @@
         /// <summary>Predefined suffix for Azure Web App Hostname.</summary>
         private const string WebAppSuffix = ".azurewebsites.net";
 
-        /// <summary>
-        /// Value used for keeping track of when the hostname changes (slot swaps occur). We use this
-        /// to notify the other class that makes use of these environment variables.
-        /// </summary>
         private string nodeName;
         private string roleName;
 
@@ -39,7 +35,7 @@
         }
 
         /// <summary>
-        /// Initializes <see cref="ITelemetry" /> device context and helps keep any heartbeat values in sync as well.
+        /// Initializes <see cref="ITelemetry" /> role and node context information.
         /// </summary>
         /// <param name="telemetry">The telemetry to initialize.</param>
         public void Initialize(ITelemetry telemetry)

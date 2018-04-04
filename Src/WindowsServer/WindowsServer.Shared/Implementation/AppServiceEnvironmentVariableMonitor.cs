@@ -9,7 +9,7 @@
     /// <summary>
     /// Utility to monitor the value of environment variables which may change 
     /// during the run of an application. Checks the environment variables 
-    /// intermittently.
+    /// at regular set intervals.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal sealed class AppServiceEnvironmentVariableMonitor : EnvironmentVariableMonitor
