@@ -328,7 +328,7 @@
 
         [Event(33,
             Message = "App Services Heartbeat Provider: Failed to obtain Azure App Services environment variable '{0}'. Exception raised: {1}",
-            Level = EventLevel.Informational)]
+            Level = EventLevel.Warning)]
         public void AppServiceHeartbeatPropertyAquisitionFailed(string envVarName, string exceptionStr, string appDomainName = "Incorrect")
         {
             this.WriteEvent(
