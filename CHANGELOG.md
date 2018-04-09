@@ -1,7 +1,9 @@
 # Changelog
 
-## Version 2.6.0-beta3
+## Version 2.6.0-beta4
 - [Fix: Failed HTTP outgoing requests are not tracked on .NET Core](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/780)
+
+## Version 2.6.0-beta3
 - [Ignore Deprecated events if running under netcore20](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/848)
 - [Implement unhandled exception auto-tracking (500 requests) for MVC 5 and WebAPI 2 applications.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/847)
 - [Enable .NET Core platform in WindowsServer SDK. This enables the following modules in .NET Standard applications:](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/854)
