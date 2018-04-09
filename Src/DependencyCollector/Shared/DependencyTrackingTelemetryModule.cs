@@ -10,7 +10,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 #if NETSTANDARD1_6
-    using Microsoft.Extensions.PlatformAbstractions;
     using System.Reflection;
     using System.Runtime.Versioning;
 #else
