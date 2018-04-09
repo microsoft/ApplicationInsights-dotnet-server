@@ -25,10 +25,10 @@
     [TestClass]
     public partial class RequestTrackingTelemetryModuleTest
     {
-        private const string testInstrumentationKey1 = nameof(testInstrumentationKey1);
-        private const string testInstrumentationKey2 = nameof(testInstrumentationKey2);
-        private const string testApplicationId1 = nameof(testApplicationId1);
-        private const string testApplicationId2 = nameof(testApplicationId2);
+        private const string TestInstrumentationKey1 = nameof(TestInstrumentationKey1);
+        private const string TestInstrumentationKey2 = nameof(TestInstrumentationKey2);
+        private const string TestApplicationId1 = nameof(TestApplicationId1);
+        private const string TestApplicationId2 = nameof(TestApplicationId2);
         
         [TestCleanup]
         public void Cleanup()
@@ -322,12 +322,12 @@
         {
             // ARRANGE
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, testApplicationId2);
+            headers.Add(RequestResponseHeaders.RequestContextHeader, TestApplicationId2);
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
-            var config = this.CreateDefaultConfig(context, instrumentationKey: testInstrumentationKey1);
-            config.ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey1, testApplicationId1);
+            var config = this.CreateDefaultConfig(context, instrumentationKey: TestInstrumentationKey1);
+            config.ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1);
             var module = this.RequestTrackingTelemetryModuleFactory(config);
 
             // ACT
@@ -343,14 +343,14 @@
         {
             // ARRANGE  
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(testApplicationId2));
+            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(TestApplicationId2));
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
             // My instrumentation key and hence app id is random / newly generated. The appId header is different - hence a different component.
             var config = TelemetryConfiguration.CreateDefault();
-            config.InstrumentationKey = testInstrumentationKey1;
-            config.ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey1, testApplicationId1);
+            config.InstrumentationKey = TestInstrumentationKey1;
+            config.ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1);
             
             var module = this.RequestTrackingTelemetryModuleFactory(null /*use default*/);
             
@@ -360,7 +360,7 @@
             module.OnEndRequest(context);
 
             // VALIDATE
-            Assert.Equal(testApplicationId2, context.GetRequestTelemetry().Source);
+            Assert.Equal(TestApplicationId2, context.GetRequestTelemetry().Source);
         }
 
         [TestMethod]
@@ -390,19 +390,19 @@
         {
             // ARRANGE       
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            headers.Add(RequestResponseHeaders.RequestContextHeader, testApplicationId1);
+            headers.Add(RequestResponseHeaders.RequestContextHeader, TestApplicationId1);
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
 
             var module = this.RequestTrackingTelemetryModuleFactory();
             module.OnBeginRequest(context);
-            context.GetRequestTelemetry().Source = testApplicationId2;
+            context.GetRequestTelemetry().Source = TestApplicationId2;
 
             // ACT
             module.OnEndRequest(context);
 
             // VALIDATE
-            Assert.Equal(testApplicationId2, context.GetRequestTelemetry().Source);
+            Assert.Equal(TestApplicationId2, context.GetRequestTelemetry().Source);
         }
 
         private TelemetryConfiguration CreateDefaultConfig(HttpContext fakeContext, string rootIdHeaderName = null, string parentIdHeaderName = null, string instrumentationKey = null)

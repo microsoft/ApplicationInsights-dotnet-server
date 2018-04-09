@@ -329,7 +329,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, testApplicationId1);
+            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, this.testApplicationId1);
 
             this.listener.OnResponse(response, loggingRequestId);
             Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
@@ -364,7 +364,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, testApplicationId1);
+            response.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, this.testApplicationId1);
 
             this.listener.OnResponse(response, loggingRequestId);
             Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(request, out dependency));
@@ -399,7 +399,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            string targetApplicationId = testApplicationId2;
+            string targetApplicationId = this.testApplicationId2;
             HttpHeadersUtilities.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(response, loggingRequestId);
@@ -435,7 +435,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 RequestMessage = request
             };
 
-            string targetApplicationId = testApplicationId2;
+            string targetApplicationId = this.testApplicationId2;
             HttpHeadersUtilities.SetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(response, loggingRequestId);

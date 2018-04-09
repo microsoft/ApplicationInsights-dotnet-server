@@ -25,13 +25,13 @@ namespace Microsoft.ApplicationInsights.Tests
     {
         #region Fields
         private const int TimeAccuracyMilliseconds = 50;
+        private const string TestInstrumentationKey = nameof(TestInstrumentationKey);
+        private const string TestApplicationId = nameof(TestApplicationId);
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private int sleepTimeMsecBetweenBeginAndEnd = 100;
         private TelemetryConfiguration configuration;
         private List<ITelemetry> sendItems = new List<ITelemetry>();
         private DesktopDiagnosticSourceHttpProcessing httpDesktopProcessingFramework;
-        private const string testInstrumentationKey = nameof(testInstrumentationKey);
-        private const string testApplicationId = nameof(testApplicationId);
         #endregion //Fields
 
         #region TestInitialize
@@ -42,8 +42,8 @@ namespace Microsoft.ApplicationInsights.Tests
             this.configuration = new TelemetryConfiguration()
             {
                 TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) },
-                InstrumentationKey = testInstrumentationKey,
-                ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey, testApplicationId)
+                InstrumentationKey = TestInstrumentationKey,
+                ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey, TestApplicationId)
             };
 
             this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>());

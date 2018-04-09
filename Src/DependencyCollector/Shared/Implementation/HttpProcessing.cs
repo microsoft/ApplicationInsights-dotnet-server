@@ -22,9 +22,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     {
         protected TelemetryClient telemetryClient;
         private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
+        private readonly TelemetryConfiguration configuration;
         private ICollection<string> correlationDomainExclusionList;
         private bool setCorrelationHeaders;
-        private readonly TelemetryConfiguration configuration;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpProcessing"/> class.
@@ -152,7 +152,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         string applicationId = null;
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
                             && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
-                            && (configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out applicationId) ?? false))
+                            && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out applicationId) ?? false))
                         {
                             webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, applicationId);
                         }
@@ -405,7 +405,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 }
 
                 string currentComponentAppId = null;
-                if (configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false)
+                if (this.configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false)
                 {
                     // We only add the cross component correlation key if the key does not remain the current component.
                     if (!string.IsNullOrEmpty(targetAppId) && targetAppId != currentComponentAppId)

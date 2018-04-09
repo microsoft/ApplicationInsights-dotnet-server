@@ -32,6 +32,8 @@
     {
         #region Fields
         private const int TimeAccuracyMilliseconds = 150; // this may be big number when under debugger
+        private const string TestInstrumentationKey = nameof(TestInstrumentationKey);
+        private const string TestApplicationId = nameof(TestApplicationId);
         private TelemetryConfiguration configuration;
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private Uri testUrlNonStandardPort = new Uri("http://www.microsoft.com:911/");
@@ -39,8 +41,6 @@
         private int sleepTimeMsecBetweenBeginAndEnd = 100;
         private Exception ex = new Exception();
         private ProfilerHttpProcessing httpProcessingProfiler;
-        private const string testInstrumentationKey = nameof(testInstrumentationKey);
-        private const string testApplicationId = nameof(testApplicationId);
         #endregion //Fields
 
         #region TestInitialize
@@ -51,8 +51,8 @@
             this.configuration = new TelemetryConfiguration()
             {
                 TelemetryChannel = new StubTelemetryChannel { OnSend = item => this.sendItems.Add(item) },
-                InstrumentationKey = testInstrumentationKey,
-                ApplicationIdProvider = new MockApplicationIdProvider(testInstrumentationKey, testApplicationId)
+                InstrumentationKey = TestInstrumentationKey,
+                ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey, TestApplicationId)
             };
 
             this.configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
@@ -140,7 +140,7 @@
         [Description("Validates DependencyTelemetry does not send correlation ID if the IKey is from the same component")]
         public void RddTestHttpProcessingProfilerOnEndDoesNotAddAppIdToTargetFieldForInternalComponents()
         {
-            this.SimulateWebRequestResponseWithAppId(testApplicationId);
+            this.SimulateWebRequestResponseWithAppId(TestApplicationId);
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
 
