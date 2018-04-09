@@ -6,11 +6,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Globalization;
     using System.Linq;
     using System.Net;
-    using System.Web;
     using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
 

@@ -4,12 +4,9 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;        
-    using System.Linq;
     using System.Net;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Channel;
-    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
