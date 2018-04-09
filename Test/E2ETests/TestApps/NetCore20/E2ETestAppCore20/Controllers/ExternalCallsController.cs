@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Text;
 using HttpSQLHelpers;
 using Microsoft.ApplicationInsights.Extensibility;
-using System.Threading;
 using Microsoft.Extensions.Options;
 
 namespace E2ETestAppCore20.Controllers
@@ -20,7 +18,6 @@ namespace E2ETestAppCore20.Controllers
         public const string UrlWhichReturns500Format = "http://{0}:80/api/values/999";
         public static string UrlTestWebApiGetCall;
         public static string UrlWhichReturns500;
-        public static string UrlWhichThrow;
 
         /// <summary>
         /// Connection string format.
@@ -67,7 +64,6 @@ namespace E2ETestAppCore20.Controllers
             var webApiHostName = options.Value.Webapihostname;
             UrlTestWebApiGetCall = string.Format(UrlTestWebApiGetCallTemplate, webApiHostName);
             UrlWhichReturns500 = string.Format(UrlWhichReturns500Format, webApiHostName);
-            UrlWhichThrow = string.Format(UrlWhichReturns500Format, Guid.NewGuid().ToString());
         }
 
         // GET external/calls
@@ -139,7 +135,7 @@ namespace E2ETestAppCore20.Controllers
                     break;
                 case "httpexception":
                     title = "Made Sync GET HTTP call without response (DNS issue)";
-                    MakeHttpCallSyncException(count, UrlWhichThrow);
+                    MakeHttpCallSyncException(count, UrlWithNonexistentHostName);
                     response = title;
                     break;
                 case "ExecuteReaderAsync":
