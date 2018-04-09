@@ -17,9 +17,10 @@ namespace E2ETestAppCore20.Controllers
 
         private const string UrlWithNonexistentHostName = "http://abcdefzzzzeeeeadadad.com";
         private const string UrlTestWebApiGetCallTemplate = "http://{0}:80/api/values";
-        public const string UrlWhichThrowExceptionFormat = "http://{0}:80/api/values/999";
+        public const string UrlWhichReturns500Format = "http://{0}:80/api/values/999";
         public static string UrlTestWebApiGetCall;
-        public static string UrlWhichThrowException;
+        public static string UrlWhichReturns500;
+        public static string UrlWhichThrow;
 
         /// <summary>
         /// Connection string format.
@@ -65,8 +66,8 @@ namespace E2ETestAppCore20.Controllers
 
             var webApiHostName = options.Value.Webapihostname;
             UrlTestWebApiGetCall = string.Format(UrlTestWebApiGetCallTemplate, webApiHostName);
-            UrlWhichThrowException = string.Format(UrlWhichThrowExceptionFormat, webApiHostName);
-
+            UrlWhichReturns500 = string.Format(UrlWhichReturns500Format, webApiHostName);
+            UrlWhichThrow = string.Format(UrlWhichReturns500Format, Guid.NewGuid().ToString());
         }
 
         // GET external/calls
@@ -131,9 +132,14 @@ namespace E2ETestAppCore20.Controllers
                     MakeHttpPostCallSync(count, UrlTestWebApiGetCall);
                     response = title;
                     break;
-                case "failedhttp":
-                    title = "Made failing Sync GET HTTP call to bing";
-                    MakeHttpCallSyncFailed(count, UrlWhichThrowException);
+                case "http500":
+                    title = "Made failing (500) Sync GET HTTP call";
+                    MakeHttpCallSync500(count, UrlWhichReturns500);
+                    response = title;
+                    break;
+                case "httpexception":
+                    title = "Made Sync GET HTTP call without response (DNS issue)";
+                    MakeHttpCallSyncException(count, UrlWhichThrow);
                     response = title;
                     break;
                 case "ExecuteReaderAsync":
@@ -212,10 +218,31 @@ namespace E2ETestAppCore20.Controllers
         }
 
         /// <summary>
-        /// Make sync http calls which fails
+        /// Make sync http calls which return 500
         /// </summary>        
         /// <param name="count">no of calls to be made</param>                
-        private static string MakeHttpCallSyncFailed(int count, string target)
+        private static string MakeHttpCallSync500(int count, string target)
+        {
+            string result = "";
+
+            Uri ourUri = new Uri(target);
+            HttpClient client = new HttpClient();
+            for (int i = 0; i < count; ++i)
+            {
+                result += $"Request {i + 1}:<BR/>";
+                var response = client.GetAsync(ourUri).Result;
+
+                result += response.Content.ReadAsStringAsync();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Make sync http calls which do not have response and throw an Exception.
+        /// </summary>        
+        /// <param name="count">no of calls to be made</param>                
+        private static string MakeHttpCallSyncException(int count, string target)
         {
             string result = "";
 
@@ -226,7 +253,7 @@ namespace E2ETestAppCore20.Controllers
                 result += $"Request {i + 1}:<BR/>";
                 try
                 {
-                    result += client.GetStringAsync(ourUri).Result;
+                    result += client.GetAsync(ourUri).Result;
                 }
                 catch (Exception e)
                 {

@@ -72,11 +72,17 @@ namespace E2ETests.netcore20
 
         [TestMethod]
         [TestCategory("Core20")]
-        public void TestCore20OnNetCore20_FailedHttpDependency()
+        public void TestCore20OnNetCore20_500HttpDependency()
         {
-            base.TestHttpDependency(VersionPrefix, AppNameBeingTested, "/external/calls?type=failedhttp", "500", false);
+            base.TestHttpDependency(VersionPrefix, AppNameBeingTested, "/external/calls?type=http500", "500", false);
         }
 
+        [TestMethod]
+        [TestCategory("Core20")]
+        public void TestCore20OnNetCore20_ExceptionHttpDependency()
+        {
+            base.TestHttpDependency(VersionPrefix, AppNameBeingTested, "/external/calls?type=httpexception", null, false);
+        }
 
         [TestMethod]
         [TestCategory("Core20")]
