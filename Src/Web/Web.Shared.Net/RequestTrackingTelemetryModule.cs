@@ -79,9 +79,9 @@
             }
         }
 
-        /// <summary>	
-        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).	
-        /// </summary>	
+        /// <summary>
+        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
+        /// </summary>
         [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.Active.ApplicationIdProvider = new ApplicationInsightsApplicationIdProvider() and customize ApplicationInsightsApplicationIdProvider.ProfileQueryEndpoint.")]
         public string ProfileQueryEndpoint { get; set; }
 
@@ -195,7 +195,7 @@
 
                 string currentComponentAppId = null;
                 if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                    && (telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                    && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
                 {
                     // If the source header is present on the incoming request,
                     // and it is an external component (not the same ikey as the one used by the current component),

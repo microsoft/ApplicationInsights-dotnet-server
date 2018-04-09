@@ -430,7 +430,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         string sourceApplicationId = null;
                         if (!string.IsNullOrEmpty(instrumentationKey)
                             && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey)
-                            && (configuration.ApplicationIdProvider?.TryGetApplicationId(instrumentationKey, out sourceApplicationId) ?? false))
+                            && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(instrumentationKey, out sourceApplicationId) ?? false))
                         {
                             HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
                         }
@@ -495,7 +495,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 {
                     // We only add the cross component correlation key if the key does not represent the current component.
                     string sourceApplicationId = null;
-                    if (configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) ?? false)
+                    if (this.configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) ?? false)
                     {
                         if (targetApplicationId != sourceApplicationId)
                         {

@@ -18,7 +18,7 @@
 
         public bool TryGetApplicationId(string instrumentationKey, out string applicationId)
         {
-            if(this.expectedInstrumentationKey == instrumentationKey)
+            if (this.expectedInstrumentationKey == instrumentationKey)
             {
                 applicationId = this.applicationId;
                 return true;

@@ -95,9 +95,9 @@
             }
         }
 
-        /// <summary>	
-        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).	
-        /// </summary>	
+        /// <summary>
+        /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
+        /// </summary>
         [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.Active.ApplicationIdProvider = new ApplicationInsightsApplicationIdProvider() and customize ApplicationInsightsApplicationIdProvider.ProfileQueryEndpoint.")]
         public string ProfileQueryEndpoint { get; set; }
 
