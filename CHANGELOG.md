@@ -1,8 +1,7 @@
 # Changelog
 
 ## Version 2.6.0-beta4
-- [Remove CorrelationIdLookupHelper. Use TelemetryConfiguration.ApplicationIdProvider instead.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/880)
-  This change also fixes [ProfileQueryEndpoint is not overridable](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/853)
+- [Remove CorrelationIdLookupHelper. Use TelemetryConfiguration.ApplicationIdProvider instead.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/880) With this change you can update URL to query application ID from which enables environments with reverse proxy configuration to access Application Insights ednpoints.
 
 
 ## Version 2.6.0-beta3
