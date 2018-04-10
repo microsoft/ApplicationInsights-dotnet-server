@@ -2,6 +2,7 @@
 
 ## Version 2.6.0-beta4
 - [Remove CorrelationIdLookupHelper. Use TelemetryConfiguration.ApplicationIdProvider instead.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/880) With this change you can update URL to query application ID from which enables environments with reverse proxy configuration to access Application Insights ednpoints.
+- [Fix: Failed HTTP outgoing requests are not tracked on .NET Core](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/780)
 
 
 ## Version 2.6.0-beta3
