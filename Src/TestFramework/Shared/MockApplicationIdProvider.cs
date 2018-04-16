@@ -2,9 +2,6 @@
 {
     using Microsoft.ApplicationInsights.Extensibility;
 
-    /// <summary>
-    /// Use this to have TryGet return the instrumentation key as the correlation id.
-    /// </summary>
     internal class MockApplicationIdProvider : IApplicationIdProvider
     {
         private readonly string expectedInstrumentationKey;
