@@ -9,12 +9,11 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlClientDiagnostics;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-#if !NETCORE
-    using Microsoft.Diagnostics.Instrumentation.Extensions.Intercept;
-#else
-    using Microsoft.Extensions.PlatformAbstractions;
+#if NETSTANDARD1_6
     using System.Reflection;
     using System.Runtime.Versioning;
+#else
+    using Microsoft.Diagnostics.Instrumentation.Extensions.Intercept;
 #endif
 
     /// <summary>
@@ -35,7 +34,7 @@
         private TelemetryDiagnosticSourceListener telemetryDiagnosticSourceListener;
         private SqlClientDiagnosticSourceListener sqlClientDiagnosticSourceListener;
 
-#if !NETCORE
+#if !NETSTANDARD1_6
         private ProfilerSqlCommandProcessing sqlCommandProcessing;
         private ProfilerSqlConnectionProcessing sqlConnectionProcessing;
         private ProfilerHttpProcessing httpProcessing;
@@ -98,15 +97,8 @@
         /// <summary>
         /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
         /// </summary>
+        [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.Active.ApplicationIdProvider = new ApplicationInsightsApplicationIdProvider() and customize ApplicationInsightsApplicationIdProvider.ProfileQueryEndpoint.")]
         public string ProfileQueryEndpoint { get; set; }
-
-        internal string EffectiveProfileQueryEndpoint
-        {
-            get
-            {
-                return string.IsNullOrEmpty(this.ProfileQueryEndpoint) ? this.telemetryConfiguration.TelemetryChannel.EndpointAddress : this.ProfileQueryEndpoint;
-            }
-        }
 
         /// <summary>
         /// IDisposable implementation.
@@ -134,9 +126,9 @@
                     {
                         try
                         {                            
-                            this.telemetryConfiguration = configuration;                            
+                            this.telemetryConfiguration = configuration;
 
-#if !NETCORE
+#if !NETSTANDARD1_6
                             // Net40 only supports runtime instrumentation
                             // Net45 supports either but not both to avoid duplication
                             this.InitializeForRuntimeInstrumentationOrFramework();
@@ -145,10 +137,8 @@
                             // NET45 referencing .net core System.Net.Http supports diagnostic listener
                             this.httpCoreDiagnosticSourceListener = new HttpCoreDiagnosticSourceListener(
                                 configuration,
-                                this.EffectiveProfileQueryEndpoint,
                                 this.SetComponentCorrelationHttpHeaders,
-                                this.ExcludeComponentCorrelationHttpHeadersOnDomains, 
-                                null);
+                                this.ExcludeComponentCorrelationHttpHeadersOnDomains);
 
                             if (this.IncludeDiagnosticSourceActivities != null && this.IncludeDiagnosticSourceActivities.Count > 0)
                             {
@@ -164,7 +154,7 @@
                         catch (Exception exc)
                         {
                             string clrVersion;
-#if NETCORE                            
+#if NETSTANDARD1_6                            
                             clrVersion = System.Reflection.Assembly.GetEntryAssembly().GetCustomAttribute<TargetFrameworkAttribute>().FrameworkName;
 #else
                             clrVersion = Environment.Version.ToString();
@@ -180,7 +170,7 @@
             }
         }
 
-#if !NETCORE
+#if !NETSTANDARD1_6
         internal virtual void InitializeForRuntimeProfiler()
         {
             // initialize instrumentation extension
@@ -195,7 +185,7 @@
             var agentVersion = Decorator.GetAgentVersion();
             DependencyCollectorEventSource.Log.RemoteDependencyModuleInformation("AgentVersion is " + agentVersion);
 
-            this.httpProcessing = new ProfilerHttpProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.WebRequestConditionalHolder, this.SetComponentCorrelationHttpHeaders, this.ExcludeComponentCorrelationHttpHeadersOnDomains, this.EffectiveProfileQueryEndpoint);
+            this.httpProcessing = new ProfilerHttpProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.WebRequestConditionalHolder, this.SetComponentCorrelationHttpHeaders, this.ExcludeComponentCorrelationHttpHeadersOnDomains);
             this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
             this.sqlConnectionProcessing = new ProfilerSqlConnectionProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
 
@@ -258,7 +248,7 @@
             }
         }
 
-#if !NETCORE
+#if !NETSTANDARD1_6
         /// <summary>
         /// Initialize for framework event source (not supported for Net40).
         /// </summary>
@@ -270,8 +260,7 @@
                     this.telemetryConfiguration,
                     DependencyTableStore.Instance.WebRequestCacheHolder,
                     this.SetComponentCorrelationHttpHeaders,
-                    this.ExcludeComponentCorrelationHttpHeadersOnDomains,
-                    this.EffectiveProfileQueryEndpoint);
+                    this.ExcludeComponentCorrelationHttpHeadersOnDomains);
                 this.httpDesktopDiagnosticSourceListener = new HttpDesktopDiagnosticSourceListener(desktopHttpProcessing, new ApplicationInsightsUrlFilter(this.telemetryConfiguration));
             }
 
@@ -279,8 +268,7 @@
                 this.telemetryConfiguration,
                 DependencyTableStore.Instance.WebRequestCacheHolder, 
                 this.SetComponentCorrelationHttpHeaders, 
-                this.ExcludeComponentCorrelationHttpHeadersOnDomains, 
-                this.EffectiveProfileQueryEndpoint);
+                this.ExcludeComponentCorrelationHttpHeadersOnDomains);
 
             // In 4.5 EventListener has a race condition issue in constructor so we retry to create listeners
             this.httpEventListener = RetryPolicy.Retry<InvalidOperationException, TelemetryConfiguration, FrameworkHttpEventListener>(

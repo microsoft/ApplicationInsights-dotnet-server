@@ -4,6 +4,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
@@ -15,8 +16,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     {
         private readonly CacheBasedOperationHolder telemetryTable;
 
-        internal DesktopDiagnosticSourceHttpProcessing(TelemetryConfiguration configuration, CacheBasedOperationHolder telemetryTupleHolder, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, string appIdEndpoint)
-            : base(configuration, SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceDesktop + ":"), null, setCorrelationHeaders, correlationDomainExclusionList, appIdEndpoint)
+        internal DesktopDiagnosticSourceHttpProcessing(TelemetryConfiguration configuration, CacheBasedOperationHolder telemetryTupleHolder, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList)
+            : base(configuration, SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceDesktop + ":"), null, setCorrelationHeaders, correlationDomainExclusionList)
         {
             if (telemetryTupleHolder == null)
             {
