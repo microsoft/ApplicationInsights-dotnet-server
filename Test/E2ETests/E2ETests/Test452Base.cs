@@ -12,6 +12,8 @@ using Microsoft.ApplicationInsights.DataContracts;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
+using System.Text;
+using System.Linq;
 
 namespace E2ETests
 {
@@ -260,6 +262,69 @@ namespace E2ETests
                 TestConstants.WebAppTargetNameToWebApi,
                 "200",
                 true);
+        }
+
+        public async Task TestHttpDependencyCorrelationInPostRequest()
+        {
+            var operationId = Guid.NewGuid().ToString();
+            bool supportsOnRequestExecute = false;
+            string restoredActivityId = null;
+            using (var httpClient = new HttpClient())
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, string.Format($"http://{Apps[TestConstants.WebApiName].ipAddress}/api/values"));
+                request.Headers.Add("Request-Id", $"|{operationId}.");
+
+                request.Content = new StringContent($"\"{new string('1', 1024*1024)}\"", Encoding.UTF8, "application/json");
+
+                var response = await httpClient.SendAsync(request);
+
+                Trace.WriteLine("Response Headers: ");
+                foreach (var header in response.Headers)
+                {
+                    Trace.WriteLine($"\t{header.Key} = {header.Value.First()}");
+                }
+
+                supportsOnRequestExecute = bool.TrueString == response.Headers.GetValues("OnExecuteRequestStep").First();
+                if (response.Headers.TryGetValues("RestoredActivityId", out var ids))
+                {
+                    restoredActivityId = ids.First();
+                }
+
+                Assert.AreNotEqual(0, Int32.Parse(response.Headers.GetValues("BodyLength").First()));
+            }
+
+            var dependencies = WaitForReceiveDependencyItemsFromDataIngestion(Apps[TestConstants.WebApiName].ipAddress, Apps[TestConstants.WebApiName].ikey);
+            Trace.WriteLine("Dependencies count for WebApp:" + dependencies.Count);
+            PrintDependencies(dependencies);
+            Assert.AreEqual(1, dependencies.Count);
+
+            var requests = WaitForReceiveRequestItemsFromDataIngestion(Apps[TestConstants.WebApiName].ipAddress, Apps[TestConstants.WebApiName].ikey);
+            Trace.WriteLine("Requests count for WebApp:" + requests.Count);
+            PrintRequests(requests);
+
+            var dependency = dependencies[0];
+            if (supportsOnRequestExecute)
+            {
+                Assert.AreEqual(operationId, dependency.tags["ai.operation.id"]);
+            }
+            else
+            {
+                Assert.AreNotEqual(operationId, dependency.tags["ai.operation.id"]);
+            }
+
+            if (restoredActivityId != null)
+            {
+                Assert.AreEqual(2, requests.Count);
+                Assert.AreEqual(restoredActivityId, dependency.tags["ai.operation.parentId"]);
+            }
+            else
+            {
+                Assert.AreEqual(1, requests.Count);
+                if (supportsOnRequestExecute)
+                {
+                    Assert.AreEqual(requests[0].data.baseData.id, dependency.tags["ai.operation.parentId"]);
+                }
+            }
         }
 
         public void TestAsyncWithHttpClientHttpDependency(string expectedPrefix)
