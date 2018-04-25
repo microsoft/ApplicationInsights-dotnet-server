@@ -11,11 +11,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.TestFramework;
-#if !NETCORE
-
-#else
-    // using Microsoft.ApplicationInsights.Tests;
-#endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
