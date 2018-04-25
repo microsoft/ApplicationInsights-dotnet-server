@@ -12,7 +12,7 @@
 #if !NETCORE
     
 #else
-    //using Microsoft.ApplicationInsights.Tests;
+    // using Microsoft.ApplicationInsights.Tests;
 #endif
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 

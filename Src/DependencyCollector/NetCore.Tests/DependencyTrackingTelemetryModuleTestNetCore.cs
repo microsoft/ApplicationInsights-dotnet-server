@@ -98,7 +98,7 @@
 
                 // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
                 // let's wait until dependency is collected
-                Assert.IsTrue(SpinWait.SpinUntil(() => sentTelemetry != null, TimeSpan.FromSeconds(1)));
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
 
                 this.ValidateTelemetryForDiagnosticSource(this.sentTelemetry.Single(), url, request, true, "200");
             }
@@ -126,7 +126,7 @@
 
                 // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
                 // let's wait until dependency is collected
-                Assert.IsTrue(SpinWait.SpinUntil(() => sentTelemetry != null, TimeSpan.FromSeconds(1)));
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
 
                 parent.Stop();
 
@@ -200,7 +200,7 @@
                     .UseUrls(url)
                     .Build();
 
-                Task.Run( () => this.host.Run(cts.Token));
+                Task.Run(() => this.host.Run(this.cts.Token));
             }
 
             public void Dispose()
