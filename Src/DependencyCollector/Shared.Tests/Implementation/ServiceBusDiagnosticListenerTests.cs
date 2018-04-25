@@ -75,7 +75,7 @@
                 DiagnosticListener listener = new DiagnosticListener("Microsoft.Azure.ServiceBus");
 
                 Activity parentActivity = new Activity("parent").AddBaggage("k1", "v1").Start();
-                var telemetry  = this.TrackOperation<DependencyTelemetry>(listener, "Microsoft.Azure.ServiceBus.Send", TaskStatus.RanToCompletion);
+                var telemetry = this.TrackOperation<DependencyTelemetry>(listener, "Microsoft.Azure.ServiceBus.Send", TaskStatus.RanToCompletion);
 
                 Assert.IsNotNull(telemetry);
                 Assert.AreEqual("Send", telemetry.Name);
