@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Microsoft.ApplicationInsights.Web.TestFramework, PublicKey=" + AssemblyInfo.PublicKey)]
 [assembly: InternalsVisibleTo("WindowsServer.Nuget.Tests, PublicKey=" + AssemblyInfo.PublicKey)]
 
-[assembly: AssemblyCopyright("© Microsoft Corporation. All Rights Reserved.")]
+[assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 
 internal static class AssemblyInfo
 {
