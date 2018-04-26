@@ -1,8 +1,8 @@
 ﻿namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
-    using System.Diagnostics;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net.Http;
     using System.Net.Http.Headers;
@@ -20,7 +20,6 @@
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 
     /// <summary>
     /// .NET Core specific tests that verify Http Dependencies are collected for outgoing request
@@ -100,7 +99,7 @@
 
                 // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
                 // let's wait until dependency is collected
-                Assert.IsTrue(SpinWait.SpinUntil(() => sentTelemetry != null, TimeSpan.FromSeconds(1)));
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
 
                 this.ValidateTelemetryForDiagnosticSource(this.sentTelemetry.Single(), url, request, true, "200");
             }
@@ -128,7 +127,7 @@
 
                 // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
                 // let's wait until dependency is collected
-                Assert.IsTrue(SpinWait.SpinUntil(() => sentTelemetry != null, TimeSpan.FromSeconds(1)));
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
 
                 parent.Stop();
 
@@ -138,7 +137,6 @@
             }
         }
 
-
         /// <summary>
         /// Tests dependency collection when request procession causes exception (DNS issue).
         /// On .netcore1.1 and before, such dependencies are ot collected
@@ -146,7 +144,7 @@
         /// TODO: add tests for 2.0
         /// </summary>
         [TestMethod]
-        [Timeout(5000)]
+        [Timeout(10000)]
         public async Task TestDependencyCollectionDnsIssue()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -223,7 +221,7 @@
                     .UseUrls(url)
                     .Build();
 
-                Task.Run( () => this.host.Run(cts.Token));
+                Task.Run(() => this.host.Run(this.cts.Token));
             }
 
             public void Dispose()

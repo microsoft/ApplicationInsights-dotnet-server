@@ -30,7 +30,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly IEnumerable<string> correlationDomainExclusionList;
         private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
         private readonly bool setComponentCorrelationHttpHeaders;
-        private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
         private readonly TelemetryClient client;
         private readonly TelemetryConfiguration configuration;
         private readonly HttpCoreDiagnosticSourceSubscriber subscriber;
@@ -57,12 +56,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         private bool isNetCore20HttpClient;
 
-        public HttpCoreDiagnosticSourceListener(
-            TelemetryConfiguration configuration,
-            string effectiveProfileQueryEndpoint,
-            bool setComponentCorrelationHttpHeaders,
-            IEnumerable<string> correlationDomainExclusionList,
-            ICorrelationIdLookupHelper correlationIdLookupHelper)
+        public HttpCoreDiagnosticSourceListener(TelemetryConfiguration configuration, bool setComponentCorrelationHttpHeaders, IEnumerable<string> correlationDomainExclusionList)
         {
             this.client = new TelemetryClient(configuration);
             this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceCore + ":");
@@ -73,14 +67,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.configuration = configuration;
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
-            this.correlationIdLookupHelper = correlationIdLookupHelper ?? new CorrelationIdLookupHelper(effectiveProfileQueryEndpoint);
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
 
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(this, this.applicationInsightsUrlFilter, this.isNetCore20HttpClient);
         }
 
         /// <summary>
-        /// Get the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
+        /// Gets the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
         /// </summary>
         internal ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> PendingDependencyTelemetry => this.pendingTelemetry;
 
@@ -137,19 +130,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             var response = this.stopResponseFetcher.Fetch(evnt.Value) as HttpResponseMessage;
                             var request = this.stopRequestFetcher.Fetch(evnt.Value) as HttpRequestMessage;
                             var requestTaskStatusString = this.stopRequestStatusFetcher.Fetch(evnt.Value).ToString();
-                            TaskStatus requestTaskStatus;
 
-                            if (response == null)
-                            {
-                                var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateTypeCast, evnt.Key, "response", "HttpResponseMessage");
-                                DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
-                            }
-                            else if (request == null)
+                            if (request == null)
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateTypeCast, evnt.Key, "request", "HttpRequestMessage");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
                             }
-                            else if (!Enum.TryParse(requestTaskStatusString, out requestTaskStatus))
+                            else if (!Enum.TryParse(requestTaskStatusString, out TaskStatus requestTaskStatus))
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateValueParse, evnt.Key, requestTaskStatusString, "TaskStatus");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
@@ -195,14 +182,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                             var request = this.deprecatedRequestFetcher.Fetch(evnt.Value) as HttpRequestMessage;
                             var loggingRequestIdString = this.deprecatedRequestGuidFetcher.Fetch(evnt.Value).ToString();
-                            Guid loggingRequestId;
 
                             if (request == null)
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateTypeCast, evnt.Key, "request", "HttpRequestMessage");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
                             }
-                            else if (!Guid.TryParse(loggingRequestIdString, out loggingRequestId))
+                            else if (!Guid.TryParse(loggingRequestIdString, out Guid loggingRequestId))
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateValueParse, evnt.Key, loggingRequestIdString, "Guid");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
@@ -225,14 +211,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                             var response = this.deprecatedResponseFetcher.Fetch(evnt.Value) as HttpResponseMessage;
                             var loggingRequestIdString = this.deprecatedResponseGuidFetcher.Fetch(evnt.Value).ToString();
-                            Guid loggingRequestId;
 
                             if (response == null)
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateTypeCast, evnt.Key, "response", "HttpResponseMessage");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
                             }
-                            else if (!Guid.TryParse(loggingRequestIdString, out loggingRequestId))
+                            else if (!Guid.TryParse(loggingRequestIdString, out Guid loggingRequestId))
                             {
                                 var error = string.Format(CultureInfo.InvariantCulture, ErrorTemplateValueParse, evnt.Key, loggingRequestIdString, "Guid");
                                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerOnNextFailed(error);
@@ -371,8 +356,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
             else
             {
-                Exception exception;
-                if (this.pendingExceptions.TryRemove(currentActivity.Id, out exception))
+                if (this.pendingExceptions.TryRemove(currentActivity.Id, out Exception exception))
                 {
                     telemetry.Context.Properties[DependencyErrorPropertyKey] = exception.GetBaseException().Message;
                 }
@@ -422,8 +406,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             {
                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerResponse(loggingRequestId);
                 var request = response.RequestMessage;
-                IOperationHolder<DependencyTelemetry> dependency;
-                if (this.pendingTelemetry.TryGetValue(request, out dependency))
+
+                if (this.pendingTelemetry.TryGetValue(request, out IOperationHolder<DependencyTelemetry> dependency))
                 {
                     dependency.Telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseOperationDetailName] = response;
                     dependency.Telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = response.Headers;
@@ -448,13 +432,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 {
                     try
                     {
-                        if (!string.IsNullOrEmpty(instrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey))
+                        string sourceApplicationId = null;
+                        if (!string.IsNullOrEmpty(instrumentationKey)
+                            && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey)
+                            && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(instrumentationKey, out sourceApplicationId) ?? false))
                         {
-                            string sourceApplicationId;
-                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(instrumentationKey, out sourceApplicationId))
-                            {
-                                HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
-                            }
+                            HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
                         }
                     }
                     catch (Exception e)
@@ -516,12 +499,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                 {
                     // We only add the cross component correlation key if the key does not represent the current component.
-                    string sourceApplicationId;
-                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
-                        targetApplicationId != sourceApplicationId)
+                    string sourceApplicationId = null;
+                    if (this.configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) ?? false)
                     {
-                        telemetry.Type = RemoteDependencyConstants.AI;
-                        telemetry.Target += " | " + targetApplicationId;
+                        if (targetApplicationId != sourceApplicationId)
+                        {
+                            telemetry.Type = RemoteDependencyConstants.AI;
+                            telemetry.Target += " | " + targetApplicationId;
+                        }
                     }
                 }
             }
@@ -588,7 +573,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             this.httpDiagnosticListener,
                             (evnt, r, _) =>
                             {
-                                if (isNetCore20HttpClient)
+                                if (this.isNetCore20HttpClient)
                                 {
                                     if (evnt == HttpExceptionEventName)
                                     {

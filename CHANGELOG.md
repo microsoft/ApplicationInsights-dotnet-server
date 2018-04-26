@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 2.7.0-beta1
+- [Added support to collect Perf Counters for .NET Core Apps if running inside Azure WebApps] (https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/889)
+- [Add operation details for HTTP and SQL operation to the dependency telemetry.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/587)
+
+## Version 2.6.0-beta4
+- [Remove CorrelationIdLookupHelper. Use TelemetryConfiguration.ApplicationIdProvider instead.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/880) With this change you can update URL to query application ID from which enables environments with reverse proxy configuration to access Application Insights ednpoints.
+- [Update Microsoft.AspNet.TelemetryCorrelation package to 1.0.1: Fix endless loop when activity stack is broken](https://github.com/aspnet/Microsoft.AspNet.TelemetryCorrelation/issues/22)
+- [Fix: Failed HTTP outgoing requests are not tracked on .NET Core](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/780)
+- [Enable collection of Available Memory counter on Azure Web Apps](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/585)
+
+
 ## Version 2.6.0-beta3
 - [Ignore Deprecated events if running under netcore20](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/848)
 - [Implement unhandled exception auto-tracking (500 requests) for MVC 5 and WebAPI 2 applications.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/847)
@@ -10,7 +21,6 @@
   - `DeveloperModeWithDebuggerAttachedTelemetryModule`
   - `UnobservedExceptionTelemetryModule`
 - [Add default heartbeat properties for Azure App Services (web apps).](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/868)
-- [Add operation details for HTTP and SQL operation to the dependency telemetry.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/587)
 
 ## Version 2.6.0-beta2
 - [Added a max length restriction to values passed in through requests.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/810)
