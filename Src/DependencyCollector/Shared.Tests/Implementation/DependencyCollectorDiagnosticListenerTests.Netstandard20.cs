@@ -82,7 +82,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(false, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry, responseExpected: false);
+            this.ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(false, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry, responseExpected: false);
+            this.ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual("The server name or address could not be resolved", dependencyTelemetry.Context.Properties["Error"]);
 
             // Check the operation details
-            ValidateOperationDetails(dependencyTelemetry, responseExpected: false);
+            this.ValidateOperationDetails(dependencyTelemetry, responseExpected: false);
         }
 
         /// <summary>

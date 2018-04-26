@@ -459,7 +459,7 @@
             }
         }
 
-        private void ValidateTelemetry(bool diagnosticSource, DependencyTelemetry item, Uri url, WebRequest request, bool success, string resultCode, bool responseExpected = true, bool headersExpected= true)
+        private void ValidateTelemetry(bool diagnosticSource, DependencyTelemetry item, Uri url, WebRequest request, bool success, string resultCode, bool responseExpected = true, bool headersExpected = true)
         {
             Assert.AreEqual(url, item.Data);
 
@@ -499,6 +499,7 @@
                 // When diagnostic source is not enabled we will not get any details
                 expectedDetails = 0;
             }
+
             Assert.AreEqual(expectedDetails, item.OperationDetails.Count, "The expected number of operation detail items were not returned.");
 
             // Validate the http request is present

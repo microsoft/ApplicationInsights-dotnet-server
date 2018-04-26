@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-
 namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
@@ -8,6 +6,7 @@ namespace Microsoft.ApplicationInsights.Tests
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Http.Headers;
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
@@ -279,7 +278,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -317,7 +316,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(false, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -356,7 +355,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(true, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -394,7 +393,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(false, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -433,7 +432,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(true, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -472,7 +471,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(false, telemetry.Success);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -516,7 +515,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(parentActivity.Id, telemetry.Context.Operation.ParentId);
 
             // Check the operation details
-            ValidateOperationDetails(telemetry);
+            this.ValidateOperationDetails(telemetry);
 
             parentActivity.Stop();
         }
