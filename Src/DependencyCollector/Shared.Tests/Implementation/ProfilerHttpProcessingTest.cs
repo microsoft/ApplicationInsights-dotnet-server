@@ -70,11 +70,11 @@
         [Owner("cithomas")]
         [TestCategory("CVT")]
         public void RddTestHttpProcessingProfilerOnBeginForGetResponse()
-        {                        
+        {
             var request = WebRequest.Create(this.testUrl);
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(operationReturned, "Operation returned should be null as all context is maintained internally");
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
         }
 
         /// <summary>
@@ -85,14 +85,14 @@
         [Owner("cithomas")]
         [TestCategory("CVT")]
         public void RddTestHttpProcessingProfilerOnEndForGetResponse()
-        {            
+        {
             var request = WebRequest.Create(this.testUrl);
             var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK);
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             var objectReturned = this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, request);
             stopwatch.Stop();
 
@@ -315,12 +315,12 @@
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             Exception exc = new Exception();
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             this.httpProcessingProfiler.OnExceptionForGetResponse(null, exc, request);
             stopwatch.Stop();
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty, responseExpected: false);
         }
 
         /// <summary>
@@ -388,7 +388,7 @@
                 DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForGetResponse(request);
                 var objectReturned = this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, null);
                 Assert.AreSame(returnObjectPassed, objectReturned, "Object returned from OnEndForGetResponse processor is not the same as expected return object");
-                Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+                Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
                 
                 var message = listener.Messages.First(item => item.EventId == 14);
                 Assert.IsNotNull(message);  
@@ -411,7 +411,7 @@
             var request = WebRequest.Create(this.testUrl);
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);
             Assert.IsNull(operationReturned, "Operation returned should be null as all context is maintained internally");
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
         }
         
         /// <summary>
@@ -429,13 +429,13 @@
             stopwatch.Start();
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             Exception exc = new Exception();
             this.httpProcessingProfiler.OnExceptionForGetResponse(null, exc, request);
             stopwatch.Stop();
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty, responseExpected: false);
         }
 
         #endregion //GetRequestStream
@@ -454,7 +454,7 @@
             var request = WebRequest.Create(this.testUrl);
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForBeginGetResponse(request, null, null);
             Assert.IsNull(operationReturned, "For async methods, operation returned should be null as correlation is done internally using WeakTables.");
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
         }
 
         /// <summary>
@@ -472,7 +472,7 @@
             stopwatch.Start();
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForBeginGetResponse(request, null, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             var objectReturned = this.httpProcessingProfiler.OnEndForEndGetResponse(operationReturned, returnObjectPassed, request, null);
             stopwatch.Stop();
 
@@ -502,7 +502,7 @@
 
             Assert.AreSame(returnObjectPassed, objectReturned, "Object returned from OnEndForEndGetResponse processor is not the same as expected return object");
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty, responseExpected: false);
         }
 
         /// <summary>
@@ -520,13 +520,13 @@
             stopwatch.Start();
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForBeginGetResponse(request, null, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             Exception exc = new Exception();
             this.httpProcessingProfiler.OnExceptionForEndGetResponse(operationReturned, exc, request, null);
             stopwatch.Stop();
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty, responseExpected: false);
         }
 
         #endregion //BeginGetResponse-EndGetResponse
@@ -545,7 +545,7 @@
             var request = WebRequest.Create(this.testUrl);
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForBeginGetRequestStream(request, null, null);
             Assert.IsNull(operationReturned, "For async methods, operation returned should be null as correlation is done internally using WeakTables.");
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
         }
 
         /// <summary>
@@ -563,13 +563,13 @@
             stopwatch.Start();
             DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForBeginGetRequestStream(request, null, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             Exception exc = new Exception();
             this.httpProcessingProfiler.OnExceptionForEndGetRequestStream(operationReturned, exc, request, null, null);
             stopwatch.Stop();
 
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, stopwatch.Elapsed.TotalMilliseconds, string.Empty, responseExpected: false);
         }
 
         #endregion //BeginGetRequestStream-EndGetRequestStream
@@ -597,13 +597,13 @@
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);
-            this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);            
+            this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
 
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             this.httpProcessingProfiler.OnEndForGetResponse(null, returnObjectPassed, request);
             stopwatch.Stop();
@@ -616,10 +616,10 @@
             ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, true, stopwatch.Elapsed.TotalMilliseconds, "200");
         }
 
-        /// <summary>        
+        /// <summary>
         /// Validates that HttpProcessingProfiler will sent RDD telemetry when GetRequestStream fails and GetResponse is not invoked
         /// 1.create request
-        /// 2.request.GetRequestStream  fails.                
+        /// 2.request.GetRequestStream  fails.
         /// </summary>
         [TestMethod]
         [Description("Validates that HttpProcessingProfiler will sent RDD telemetry when GetRequestStream fails and GetResponse is not invoked.")]
@@ -630,11 +630,11 @@
             var request = WebRequest.Create(this.testUrl);
             
             this.httpProcessingProfiler.OnBeginForGetRequestStream(request, null);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             this.httpProcessingProfiler.OnExceptionForGetRequestStream(null, this.ex, request, null);
 
             Assert.AreEqual(1, this.sendItems.Count, "Exactly one telemetry item should be sent");
-            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, 0, string.Empty);
+            ValidateTelemetryPacket(this.sendItems[0] as DependencyTelemetry, this.testUrl, RemoteDependencyConstants.HTTP, false, 0, string.Empty, responseExpected: false);
         }
         #endregion //SyncScenarios
 
@@ -665,7 +665,7 @@
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             this.httpProcessingProfiler.OnBeginForBeginGetResponse(request, null, null);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
-            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");         
+            Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             this.httpProcessingProfiler.OnEndForEndGetResponse(null, returnObjectPassed, request, null);
             stopwatch.Stop();
 
@@ -800,7 +800,7 @@
             Assert.AreEqual(expectedTarget, receivedItem.Target, "HttpProcessingProfiler returned incorrect target for non standard port.");
         }
 
-        #endregion //Misc       
+        #endregion //Misc
 
         #region LoggingTests
 
@@ -823,7 +823,7 @@
                 DependencyTelemetry operationReturned = (DependencyTelemetry)this.httpProcessingProfiler.OnBeginForGetResponse(request);
                 
                 Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
-                TestUtils.ValidateEventLogMessage(listener, "UnexpectedCallbackParameter", EventLevel.Warning);                
+                TestUtils.ValidateEventLogMessage(listener, "UnexpectedCallbackParameter", EventLevel.Warning);
             }
         }
 
@@ -840,7 +840,7 @@
         #region Helpers
 
         private static void ValidateTelemetryPacket(
-            DependencyTelemetry remoteDependencyTelemetryActual, Uri uri, string type, bool success, double expectedValue, string resultCode)
+            DependencyTelemetry remoteDependencyTelemetryActual, Uri uri, string type, bool success, double expectedValue, string resultCode, bool responseExpected = true)
         {
             Assert.AreEqual("GET " + uri.AbsolutePath, remoteDependencyTelemetryActual.Name, true, "Resource name in the sent telemetry is wrong");
             Assert.AreEqual(uri.Host, remoteDependencyTelemetryActual.Target, true, "Resource target in the sent telemetry is wrong");
@@ -848,6 +848,30 @@
             Assert.AreEqual(type.ToString(), remoteDependencyTelemetryActual.Type, "DependencyKind in the sent telemetry is wrong");
             Assert.AreEqual(success, remoteDependencyTelemetryActual.Success, "Success in the sent telemetry is wrong");
             Assert.AreEqual(resultCode, remoteDependencyTelemetryActual.ResultCode, "ResultCode in the sent telemetry is wrong");
+
+            // Verify the operation details
+            Assert.IsNotNull(remoteDependencyTelemetryActual.OperationDetails);
+
+            var expectedDetails = responseExpected ? 3 : 1;
+            Assert.AreEqual(expectedDetails, remoteDependencyTelemetryActual.OperationDetails.Count, "The expected number of operation detail items were not returned.");
+
+            // Validate the http request is present
+            Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
+            Assert.IsNotNull(requestObject as WebRequest, "Http request was not the expected type.");
+
+            // If expected -- validate the response
+            if (responseExpected)
+            {
+                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
+                Assert.IsNotNull(responseObject as HttpWebResponse, "Http response was not the expected type.");
+                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
+
+                // Due to how the response is initialized this could be null
+                if (headersObject != null)
+                {
+                    Assert.IsNotNull(headersObject as WebHeaderCollection, "Http response headers were not the expected type.");
+                }
+            }
 
             var valueMinRelaxed = expectedValue - TimeAccuracyMilliseconds;
             Assert.IsTrue(

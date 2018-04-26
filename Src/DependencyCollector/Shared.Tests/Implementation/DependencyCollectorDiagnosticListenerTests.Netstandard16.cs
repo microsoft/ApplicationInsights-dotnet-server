@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 namespace Microsoft.ApplicationInsights.Tests
 {
     using System;
@@ -275,6 +277,9 @@ namespace Microsoft.ApplicationInsights.Tests
             string expectedVersion =
                 SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -310,6 +315,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -346,6 +354,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -381,6 +392,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -417,6 +431,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -453,6 +470,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -495,6 +515,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(parentActivity.RootId, telemetry.Context.Operation.Id);
             Assert.AreEqual(parentActivity.Id, telemetry.Context.Operation.ParentId);
 
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
+
             parentActivity.Stop();
         }
 
@@ -511,6 +534,28 @@ namespace Microsoft.ApplicationInsights.Tests
         private static string GetRequestContextKeyValue(HttpRequestMessage request, string keyName)
         {
             return HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, keyName);
+        }
+
+        private void ValidateOperationDetails(DependencyTelemetry telemetry, bool responseExpected = true)
+        {
+            var detailsExpected = responseExpected ? 3 : 1;
+
+            Assert.IsNotNull(telemetry.OperationDetails, "Operation details not initialized.");
+            Assert.AreEqual(detailsExpected, telemetry.OperationDetails.Count, "The expected number of objects were not contained in the operation details.");
+            Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Request was not present and expected.");
+            Assert.IsNotNull(requestObject as HttpRequestMessage, "Request was not the expected type.");
+            if (responseExpected)
+            {
+                Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was not present and expected.");
+                Assert.IsNotNull(responseObject as HttpResponseMessage, "Response was not the expected type.");
+                Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were not present and expected.");
+                Assert.IsNotNull(headersObject as HttpResponseHeaders, "Response headers were not the expected type.");
+            }
+            else
+            {
+                Assert.IsFalse(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was present and not expected.");
+                Assert.IsFalse(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were present and not expected.");
+            }
         }
     }
 }

@@ -80,6 +80,9 @@ namespace Microsoft.ApplicationInsights.Tests
             string expectedVersion =
                 SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -100,6 +103,9 @@ namespace Microsoft.ApplicationInsights.Tests
 
             Assert.AreEqual("Canceled", telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -120,6 +126,9 @@ namespace Microsoft.ApplicationInsights.Tests
 
             Assert.AreEqual("Faulted", telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -146,6 +155,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(exceptionTelemetry.Context.Operation.Id, dependencyTelemetry.Context.Operation.Id);
             Assert.AreEqual(exceptionTelemetry.Context.Operation.ParentId, dependencyTelemetry.Id);
             Assert.AreEqual("The server name or address could not be resolved", dependencyTelemetry.Context.Properties["Error"]);
+
+            // Check the operation details
+            ValidateOperationDetails(dependencyTelemetry, responseExpected: false);
         }
 
         /// <summary>

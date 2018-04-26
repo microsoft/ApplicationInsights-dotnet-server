@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
@@ -186,6 +187,26 @@
                 Assert.AreEqual(requestId, request.Headers.GetValues(RequestResponseHeaders.StandardParentIdHeader).Single());
                 Assert.AreEqual(item.Context.Operation.Id, request.Headers.GetValues(RequestResponseHeaders.StandardRootIdHeader).Single());
             }
+
+            // Verify the operation details
+            Assert.IsNotNull(item.OperationDetails);
+
+            Assert.AreEqual(3, item.OperationDetails.Count, "The expected number of operation detail items were not returned.");
+
+            // Validate the http request is present
+            Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
+            var webRequest = requestObject as HttpRequestMessage;
+            Assert.IsNotNull(webRequest, "Http request was not the expected type.");
+
+            // Validate the http response is present
+            Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
+            var webResponse = responseObject as HttpResponseMessage;
+            Assert.IsNotNull(webResponse, "Http response was not the expected type.");
+
+            // Validate the http response headers
+            Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
+            var headers = headersObject as HttpResponseHeaders;
+            Assert.IsNotNull(headers, "Http response headers were not the expected type.");
         }
 
         private sealed class LocalServer : IDisposable

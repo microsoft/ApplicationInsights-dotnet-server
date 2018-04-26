@@ -89,7 +89,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         internal object OnBegin(object thisObj, bool injectCorrelationHeaders = true)
         {
             try
-            {                
+            {
                 if (thisObj == null)
                 {
                     DependencyCollectorEventSource.Log.NotExpectedCallback(0, "OnBeginHttp", "thisObj == null");
@@ -161,6 +161,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 telemetry.Target = DependencyTargetNameHelper.GetDependencyTargetName(url);
                 telemetry.Type = RemoteDependencyConstants.HTTP;
                 telemetry.Data = url.OriginalString;
+                telemetry.OperationDetails[RemoteDependencyConstants.HttpRequestOperationDetailName] = webRequest;
 
                 // Add the source instrumentation key header if collection is enabled, the request host is not in the excluded list and the same header doesn't already exist
                 if (this.setCorrelationHeaders
@@ -231,9 +232,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         /// <summary>
         /// Common helper for all End Callbacks.
-        /// </summary>        
+        /// </summary>
         /// <param name="request">The HttpWebRequest instance.</param>
-        /// <param name="response">The HttpWebResponse instance.</param>                
+        /// <param name="response">The HttpWebResponse instance.</param>
         internal void OnEndResponse(object request, object response)
         {
             try
@@ -250,6 +251,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             statusCode = (int)responseObj.StatusCode;
                             this.SetTarget(telemetry, responseObj.Headers);
+
+                            // Set the operation details for the response
+                            telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseOperationDetailName] = responseObj;
+                            telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = responseObj.Headers;
                         }
                         catch (ObjectDisposedException)
                         {
@@ -271,9 +276,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         /// <summary>
         /// Common helper for all End Callbacks.
-        /// </summary>        
+        /// </summary>
         /// <param name="exception">The exception object if any.</param>
-        /// <param name="request">HttpWebRequest instance.</param>                
+        /// <param name="request">HttpWebRequest instance.</param>
         internal void OnEndException(object exception, object request)
         {
             try
@@ -292,6 +297,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             statusCode = (int)responseObj.StatusCode;
                             this.SetTarget(telemetry, responseObj.Headers);
+
+                            // Set the operation details for the response
+                            telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseOperationDetailName] = responseObj;
+                            telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = responseObj.Headers;
                         }
                         catch (ObjectDisposedException)
                         {
@@ -322,9 +331,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         /// <summary>
         /// Common helper for all End Callbacks.
-        /// </summary>        
+        /// </summary>
         /// <param name="request">WebRequest object.</param>
-        /// <param name="statusCode">HttpStatusCode from response.</param>                
+        /// <param name="statusCode">HttpStatusCode from response.</param>
         /// <param name="responseHeaders">Response headers.</param>
         internal void OnEndResponse(object request, object statusCode, object responseHeaders)
         {
@@ -339,6 +348,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     }
 
                     this.SetTarget(telemetry, (WebHeaderCollection)responseHeaders);
+                    telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = responseHeaders;
 
                     ClientServerDependencyTracker.EndTracking(this.telemetryClient, telemetry);
                 }

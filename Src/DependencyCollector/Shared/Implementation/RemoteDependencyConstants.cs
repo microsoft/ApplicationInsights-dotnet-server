@@ -16,5 +16,13 @@
 
         public const string WcfService = "WCF Service";
         public const string WebService = "Web Service";
+
+        public const string HttpRequestOperationDetailName = "HttpRequest";
+        public const string HttpResponseOperationDetailName = "HttpResponse";
+        public const string HttpResponseHeadersOperationDetailName = "HttpResponseHeaders";
+
+        public const string SqlConnectionOperationDetailName = "SqlConnection";
+        public const string SqlCommandOperationDetailName = "SqlCommand";
+        public const string SqlOperationOperationDetailName = "SqlOperation";
     }
 }

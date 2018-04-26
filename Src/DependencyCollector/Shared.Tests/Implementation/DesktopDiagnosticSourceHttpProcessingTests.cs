@@ -103,11 +103,11 @@ namespace Microsoft.ApplicationInsights.Tests
             var successResponse = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
-            this.httpDesktopProcessingFramework.OnBegin(request);  
-            this.httpDesktopProcessingFramework.OnBegin(request);  
-            this.httpDesktopProcessingFramework.OnBegin(request);  
-            this.httpDesktopProcessingFramework.OnBegin(request);  
-            this.httpDesktopProcessingFramework.OnBegin(request);  
+            this.httpDesktopProcessingFramework.OnBegin(request);
+            this.httpDesktopProcessingFramework.OnBegin(request);
+            this.httpDesktopProcessingFramework.OnBegin(request);
+            this.httpDesktopProcessingFramework.OnBegin(request);
+            this.httpDesktopProcessingFramework.OnBegin(request);
             Thread.Sleep(this.sleepTimeMsecBetweenBeginAndEnd);
             Assert.AreEqual(0, this.sendItems.Count, "No telemetry item should be processed without calling End");
             this.httpDesktopProcessingFramework.OnEndResponse(request, redirectResponse);
@@ -281,13 +281,37 @@ namespace Microsoft.ApplicationInsights.Tests
             ValidateTelemetryPacket(remoteDependencyTelemetryActual, url, kind, success, valueMin, statusCode, expectedVersion);
         }
 
-        private static void ValidateTelemetryPacket(DependencyTelemetry remoteDependencyTelemetryActual, Uri url, string kind, bool? success, double valueMin, string statusCode, string expectedVersion)
+        private static void ValidateTelemetryPacket(DependencyTelemetry remoteDependencyTelemetryActual, Uri url, string kind, bool? success, double valueMin, string statusCode, string expectedVersion, bool responseExpected = true)
         {
             Assert.AreEqual(url.Host, remoteDependencyTelemetryActual.Target, true, "Resource target in the sent telemetry is wrong");
             Assert.AreEqual(url.OriginalString, remoteDependencyTelemetryActual.Data, true, "Resource data in the sent telemetry is wrong");
             Assert.AreEqual(kind.ToString(), remoteDependencyTelemetryActual.Type, "DependencyKind in the sent telemetry is wrong");
             Assert.AreEqual(success, remoteDependencyTelemetryActual.Success, "Success in the sent telemetry is wrong");
             Assert.AreEqual(statusCode, remoteDependencyTelemetryActual.ResultCode, "ResultCode in the sent telemetry is wrong");
+
+            // Verify the operation details
+            Assert.IsNotNull(remoteDependencyTelemetryActual.OperationDetails);
+
+            var expectedDetails = responseExpected ? 3 : 1;
+            Assert.AreEqual(expectedDetails, remoteDependencyTelemetryActual.OperationDetails.Count, "The expected number of operation detail items were not returned.");
+
+            // Validate the http request is present
+            Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
+            Assert.IsNotNull(requestObject as WebRequest, "Http request was not the expected type.");
+
+            // If expected -- validate the response
+            if (responseExpected)
+            {
+                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
+                Assert.IsNotNull(responseObject as WebResponse, "Http response was not the expected type.");
+                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
+
+                // Due to how the response is initialized this could be null
+                if (headersObject != null)
+                {
+                    Assert.IsNotNull(headersObject as WebHeaderCollection, "Http response headers were not the expected type.");
+                }
+            }
 
             var valueMinRelaxed = valueMin - TimeAccuracyMilliseconds;
             Assert.IsTrue(

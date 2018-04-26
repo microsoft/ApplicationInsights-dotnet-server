@@ -90,18 +90,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                         {
                             var dependencyName = string.Empty;
                             var target = string.Empty;
+                            SqlConnection connection = null;
 
                             if (command.Connection != null)
                             {
-                                target = string.Join(" | ", command.Connection.DataSource, command.Connection.Database);
+                                connection = command.Connection;
+                                target = string.Join(" | ", connection.DataSource, connection.Database);
 
                                 var commandName = command.CommandType == CommandType.StoredProcedure
                                     ? command.CommandText
                                     : string.Empty;
 
                                 dependencyName = string.IsNullOrEmpty(commandName)
-                                    ? string.Join(" | ", command.Connection.DataSource, command.Connection.Database)
-                                    : string.Join(" | ", command.Connection.DataSource, command.Connection.Database, commandName);
+                                    ? string.Join(" | ", connection.DataSource, connection.Database)
+                                    : string.Join(" | ", connection.DataSource, connection.Database, commandName);
                             }
 
                             var timestamp = CommandBefore.Timestamp.Fetch(evnt.Value) as long?
@@ -116,7 +118,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                                 Data = command.CommandText,
                                 Success = true
                             };
-                            
+
+                            // Populate the operation details for intializers
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlCommandOperationDetailName] = command;
+                            if (connection != null)
+                            {
+                                telemetry.OperationDetails[RemoteDependencyConstants.SqlConnectionOperationDetailName] = connection;
+                            }
+
                             InitializeTelemetry(telemetry, operationId, timestamp);
 
                             this.operationHolder.Store(command, Tuple.Create(telemetry, /* isCustomCreated: */ false));
@@ -213,7 +222,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                                 Data = operation,
                                 Success = true
                             };
-                        
+
+                            // Populate the operation details for intializers
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlConnectionOperationDetailName] = connection;
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlOperationOperationDetailName] = operation;
+
                             InitializeTelemetry(telemetry, operationId, timestamp);
 
                             this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
@@ -301,8 +314,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                                 Type = RemoteDependencyConstants.SQL,
                                 Target = string.Join(" | ", connection.DataSource, connection.Database),
                                 Data = operation,
-                                Success = true
+                                Success = true,
                             };
+
+                            // Populate the operation details for intializers
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlConnectionOperationDetailName] = connection;
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlOperationOperationDetailName] = operation;
 
                             InitializeTelemetry(telemetry, operationId, timestamp);
 
@@ -339,6 +356,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                                 Data = operation,
                                 Success = true
                             };
+
+                            // Populate the operation details for intializers
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlConnectionOperationDetailName] = connection;
+                            telemetry.OperationDetails[RemoteDependencyConstants.SqlOperationOperationDetailName] = operation;
 
                             InitializeTelemetry(telemetry, operationId, timestamp);
 

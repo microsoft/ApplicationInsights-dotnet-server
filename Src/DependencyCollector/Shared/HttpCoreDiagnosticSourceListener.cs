@@ -341,6 +341,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             var resourceName = request.Method.Method + " " + requestUri.AbsolutePath;
 
             DependencyTelemetry telemetry = new DependencyTelemetry();
+            telemetry.OperationDetails[RemoteDependencyConstants.HttpRequestOperationDetailName] = request;
 
             // properly fill dependency telemetry operation context: OperationCorrelationTelemetryInitializer initializes child telemetry
             telemetry.Context.Operation.Id = currentActivity.RootId;
@@ -365,6 +366,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             if (response != null)
             {
                 this.ParseResponse(response, telemetry);
+                telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseOperationDetailName] = response;
+                telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = response.Headers;
             }
             else
             {
@@ -400,6 +403,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 dependency.Telemetry.Target = requestUri.Host;
                 dependency.Telemetry.Type = RemoteDependencyConstants.HTTP;
                 dependency.Telemetry.Data = requestUri.OriginalString;
+                dependency.Telemetry.OperationDetails[RemoteDependencyConstants.HttpRequestOperationDetailName] = request;
                 this.pendingTelemetry.AddIfNotExists(request, dependency);
 
                 this.InjectRequestHeaders(request, dependency.Telemetry.Context.InstrumentationKey, true);
@@ -419,11 +423,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerResponse(loggingRequestId);
                 var request = response.RequestMessage;
                 IOperationHolder<DependencyTelemetry> dependency;
-                if (request != null && this.pendingTelemetry.TryGetValue(request, out dependency))
+                if (this.pendingTelemetry.TryGetValue(request, out dependency))
                 {
-                    this.ParseResponse(response, dependency.Telemetry);
-                    this.client.StopOperation(dependency);
-                    this.pendingTelemetry.Remove(request);
+                    dependency.Telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseOperationDetailName] = response;
+                    dependency.Telemetry.OperationDetails[RemoteDependencyConstants.HttpResponseHeadersOperationDetailName] = response.Headers;
+                    if (request != null)
+                    {
+                        this.ParseResponse(response, dependency.Telemetry);
+                        this.client.StopOperation(dependency);
+                        this.pendingTelemetry.Remove(request);
+                    }
                 }
             }
         }
