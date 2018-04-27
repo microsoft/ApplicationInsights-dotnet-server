@@ -531,23 +531,17 @@ namespace Microsoft.ApplicationInsights.Tests
 
         private void ValidateOperationDetails(DependencyTelemetry telemetry, bool responseExpected = true)
         {
-            var detailsExpected = responseExpected ? 3 : 1;
-
-            Assert.IsNotNull(telemetry.OperationDetails, "Operation details not initialized.");
-            Assert.AreEqual(detailsExpected, telemetry.OperationDetails.Count, "The expected number of objects were not contained in the operation details.");
-            Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Request was not present and expected.");
+            Assert.IsTrue(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Request was not present and expected.");
             Assert.IsNotNull(requestObject as HttpRequestMessage, "Request was not the expected type.");
+            Assert.IsFalse(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were present and not expected.");
             if (responseExpected)
             {
-                Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was not present and expected.");
+                Assert.IsTrue(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was not present and expected.");
                 Assert.IsNotNull(responseObject as HttpResponseMessage, "Response was not the expected type.");
-                Assert.IsTrue(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were not present and expected.");
-                Assert.IsNotNull(headersObject as HttpResponseHeaders, "Response headers were not the expected type.");
             }
             else
             {
-                Assert.IsFalse(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was present and not expected.");
-                Assert.IsFalse(telemetry.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were present and not expected.");
+                Assert.IsFalse(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was present and not expected.");
             }
         }
     }

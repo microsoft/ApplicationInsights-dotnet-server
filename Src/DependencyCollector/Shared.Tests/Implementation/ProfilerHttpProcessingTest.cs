@@ -847,28 +847,16 @@
             Assert.AreEqual(success, remoteDependencyTelemetryActual.Success, "Success in the sent telemetry is wrong");
             Assert.AreEqual(resultCode, remoteDependencyTelemetryActual.ResultCode, "ResultCode in the sent telemetry is wrong");
 
-            // Verify the operation details
-            Assert.IsNotNull(remoteDependencyTelemetryActual.OperationDetails);
-
-            var expectedDetails = responseExpected ? 3 : 1;
-            Assert.AreEqual(expectedDetails, remoteDependencyTelemetryActual.OperationDetails.Count, "The expected number of operation detail items were not returned.");
-
             // Validate the http request is present
-            Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
+            Assert.IsTrue(remoteDependencyTelemetryActual.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
             Assert.IsNotNull(requestObject as WebRequest, "Http request was not the expected type.");
 
             // If expected -- validate the response
             if (responseExpected)
             {
-                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
+                Assert.IsTrue(remoteDependencyTelemetryActual.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
                 Assert.IsNotNull(responseObject as HttpWebResponse, "Http response was not the expected type.");
-                Assert.IsTrue(remoteDependencyTelemetryActual.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
-
-                // Due to how the response is initialized this could be null
-                if (headersObject != null)
-                {
-                    Assert.IsNotNull(headersObject as WebHeaderCollection, "Http response headers were not the expected type.");
-                }
+                Assert.IsFalse(remoteDependencyTelemetryActual.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
             }
 
             var valueMinRelaxed = expectedValue - TimeAccuracyMilliseconds;

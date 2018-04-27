@@ -430,7 +430,7 @@
                     await httpClient.GetAsync(url, cts.Token).ContinueWith(t => { });
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), null, false, string.Empty, responseExpected: false, headersExpected: false);
+                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), null, false, string.Empty, responseExpected: false);
             }
         }
 
@@ -458,7 +458,7 @@
             }
         }
 
-        private void ValidateTelemetry(bool diagnosticSource, DependencyTelemetry item, Uri url, WebRequest request, bool success, string resultCode, bool responseExpected = true, bool headersExpected = true)
+        private void ValidateTelemetry(bool diagnosticSource, DependencyTelemetry item, Uri url, WebRequest request, bool success, string resultCode, bool responseExpected = true, bool headersExpected = false)
         {
             Assert.AreEqual(url, item.Data);
 
@@ -487,24 +487,10 @@
             Assert.AreEqual(Activity.Current?.Id, item.Context.Operation.ParentId);
             Assert.IsTrue(item.Id.StartsWith('|' + item.Context.Operation.Id + '.'));
 
-            // Verify the operation details
-            Assert.IsNotNull(item.OperationDetails);
-
-            var expectedDetails = 1;
-            expectedDetails += responseExpected ? 1 : 0;
-            expectedDetails += headersExpected ? 1 : 0;
-            if (diagnosticSource == false)
-            {
-                // When diagnostic source is not enabled we will not get any details
-                expectedDetails = 0;
-            }
-
-            Assert.AreEqual(expectedDetails, item.OperationDetails.Count, "The expected number of operation detail items were not returned.");
-
             // Validate the http request is present
             if (diagnosticSource)
             {
-                Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
+                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
                 var webRequest = requestObject as WebRequest;
                 Assert.IsNotNull(webRequest, "Http request was not the expected type.");
             }
@@ -512,7 +498,7 @@
             // If expected -- validate the response
             if (diagnosticSource && responseExpected)
             {
-                Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
+                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
                 var webResponse = responseObject as WebResponse;
                 Assert.IsNotNull(webResponse, "Http response was not the expected type.");
             }
@@ -520,7 +506,7 @@
             // If expected -- validate the headers
             if (diagnosticSource && headersExpected)
             {
-                Assert.IsTrue(item.OperationDetails.TryGetValue(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
+                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
                 var headers = headersObject as WebHeaderCollection;
                 Assert.IsNotNull(headers, "Http response headers were not the expected type.");
             }
