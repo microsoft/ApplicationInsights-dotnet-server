@@ -3,7 +3,9 @@ using Microsoft.ApplicationInsights.DataContracts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
@@ -13,7 +15,16 @@ namespace E2ETestWebApi.Controllers
 {
     public class ValuesController : ApiController
     {
-        private static readonly TelemetryClient telemetryClient = new TelemetryClient(); 
+        private static readonly TelemetryClient telemetryClient = new TelemetryClient();
+
+        private static readonly AssemblyFileVersionAttribute objectAssemblyFileVer =
+            typeof(HttpApplication)
+                .GetTypeInfo()
+                .Assembly
+                .GetCustomAttributes(typeof(AssemblyFileVersionAttribute))
+                .Cast<AssemblyFileVersionAttribute>()
+                .FirstOrDefault();
+
         // GET api/values
         public IEnumerable<string> Get()
         {
@@ -40,6 +51,8 @@ namespace E2ETestWebApi.Controllers
 
             response.Headers.Add("OnExecuteRequestStep", (typeof(HttpApplication).GetMethod("OnExecuteRequestStep") != null).ToString());
             response.Headers.Add(".NetRelease", Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full", "Release", null)?.ToString());
+            response.Headers.Add("AspNetAssemblyVersion", objectAssemblyFileVer.Version);
+
             var restoredActivity = (Activity) HttpContext.Current.Items["__AspnetActivityRestored__"];
             if (restoredActivity != null)
             {
