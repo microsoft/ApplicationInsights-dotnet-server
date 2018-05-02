@@ -35,12 +35,18 @@
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
         private List<DependencyTelemetry> sentTelemetry;
+        private object request;
+        private object response;
+        private object responseHeaders;
 
         [TestInitialize]
         public void Initialize()
         {
             ServicePointManager.DefaultConnectionLimit = 1000;
             this.sentTelemetry = new List<DependencyTelemetry>();
+            this.request = null;
+            this.response = null;
+            this.responseHeaders = null;
 
             this.channel = new StubTelemetryChannel
             {
@@ -51,6 +57,9 @@
                     if (depTelemetry != null)
                     {
                         this.sentTelemetry.Add(depTelemetry);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out this.request);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.response);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.responseHeaders);
                     }
                 },
                 EndpointAddress = FakeProfileApiEndpoint
@@ -487,27 +496,27 @@
             Assert.AreEqual(Activity.Current?.Id, item.Context.Operation.ParentId);
             Assert.IsTrue(item.Id.StartsWith('|' + item.Context.Operation.Id + '.'));
 
-            // Validate the http request is present
+            // Validate the http request was captured
             if (diagnosticSource)
             {
-                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
-                var webRequest = requestObject as WebRequest;
+                Assert.IsNotNull(this.request, "Http request was not found within the operation details.");
+                var webRequest = this.request as WebRequest;
                 Assert.IsNotNull(webRequest, "Http request was not the expected type.");
             }
 
-            // If expected -- validate the response
+            // If expected -- validate the response was captured
             if (diagnosticSource && responseExpected)
             {
-                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
-                var webResponse = responseObject as WebResponse;
+                Assert.IsNotNull(this.response, "Http response was not found within the operation details.");
+                var webResponse = this.response as WebResponse;
                 Assert.IsNotNull(webResponse, "Http response was not the expected type.");
             }
 
-            // If expected -- validate the headers
+            // If expected -- validate the headers were captured
             if (diagnosticSource && headersExpected)
             {
-                Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
-                var headers = headersObject as WebHeaderCollection;
+                Assert.IsNotNull(this.responseHeaders, "Http response headers were not found within the operation details.");
+                var headers = this.responseHeaders as WebHeaderCollection;
                 Assert.IsNotNull(headers, "Http response headers were not the expected type.");
             }
 

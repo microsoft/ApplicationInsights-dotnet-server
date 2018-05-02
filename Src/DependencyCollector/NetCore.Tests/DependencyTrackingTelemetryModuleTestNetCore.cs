@@ -5,7 +5,6 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
@@ -34,6 +33,9 @@
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
         private List<DependencyTelemetry> sentTelemetry;
+        private object request;
+        private object response;
+        private object responseHeaders;
 
         /// <summary>
         /// Initialize.
@@ -42,6 +44,9 @@
         public void Initialize()
         {
             this.sentTelemetry = new List<DependencyTelemetry>();
+            this.request = null;
+            this.response = null;
+            this.responseHeaders = null;
 
             this.channel = new StubTelemetryChannel
             {
@@ -52,6 +57,9 @@
                     if (depTelemetry != null)
                     {
                         this.sentTelemetry.Add(depTelemetry);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out this.request);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.response);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out this.responseHeaders);
                     }
                 },
                 EndpointAddress = FakeProfileApiEndpoint
@@ -186,18 +194,18 @@
                 Assert.AreEqual(item.Context.Operation.Id, request.Headers.GetValues(RequestResponseHeaders.StandardRootIdHeader).Single());
             }
 
-            // Validate the http request is present
-            Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Http request was not found within the operation details.");
-            var webRequest = requestObject as HttpRequestMessage;
+            // Validate the http request was captured
+            Assert.IsNotNull(this.request, "Http request was not found within the operation details.");
+            var webRequest = this.request as HttpRequestMessage;
             Assert.IsNotNull(webRequest, "Http request was not the expected type.");
 
-            // Validate the http response is present
-            Assert.IsTrue(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Http response was not found within the operation details.");
-            var webResponse = responseObject as HttpResponseMessage;
+            // Validate the http response was captured
+            Assert.IsNotNull(this.response, "Http response was not found within the operation details.");
+            var webResponse = this.response as HttpResponseMessage;
             Assert.IsNotNull(webResponse, "Http response was not the expected type.");
 
-            // Validate the http response headers are not present
-            Assert.IsFalse(item.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Http response headers were not found within the operation details.");
+            // Validate the http response headers were not captured
+            Assert.IsNull(this.responseHeaders, "Http response headers were not found within the operation details.");
         }
 
         private sealed class LocalServer : IDisposable

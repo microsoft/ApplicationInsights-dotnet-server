@@ -6,7 +6,6 @@ namespace Microsoft.ApplicationInsights.Tests
     using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Net.Http.Headers;
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
@@ -30,7 +29,10 @@ namespace Microsoft.ApplicationInsights.Tests
         private const string HttpOkResultCode = "200";
         private const string NotFoundResultCode = "404";
 
-        private readonly List<ITelemetry> sentTelemetry = new List<ITelemetry>();
+        private List<ITelemetry> sentTelemetry;
+        private object request;
+        private object response;
+        private object responseHeaders;
 
         private string testInstrumentationKey1 = nameof(testInstrumentationKey1);
         private string testInstrumentationKey2 = nameof(testInstrumentationKey2);
@@ -45,10 +47,27 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestInitialize]
         public void Initialize()
         {
+            this.sentTelemetry = new List<ITelemetry>();
+            this.request = null;
+            this.response = null;
+            this.responseHeaders = null;
+
             this.telemetryChannel = new StubTelemetryChannel()
             {
                 EndpointAddress = "https://endpointaddress",
-                OnSend = this.sentTelemetry.Add
+                OnSend = telemetry =>
+                {
+                    this.sentTelemetry.Add(telemetry);
+
+                    // The correlation id lookup service also makes http call, just make sure we skip that
+                    DependencyTelemetry depTelemetry = telemetry as DependencyTelemetry;
+                    if (depTelemetry != null)
+                    {
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out this.request);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.response);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out this.responseHeaders);
+                    }
+                },
             };
 
             this.testInstrumentationKey1 = Guid.NewGuid().ToString();
@@ -531,17 +550,17 @@ namespace Microsoft.ApplicationInsights.Tests
 
         private void ValidateOperationDetails(DependencyTelemetry telemetry, bool responseExpected = true)
         {
-            Assert.IsTrue(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out var requestObject), "Request was not present and expected.");
-            Assert.IsNotNull(requestObject as HttpRequestMessage, "Request was not the expected type.");
-            Assert.IsFalse(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out var headersObject), "Response headers were present and not expected.");
+            Assert.IsNotNull(this.request, "Request was not present and expected.");
+            Assert.IsNotNull(this.request as HttpRequestMessage, "Request was not the expected type.");
+            Assert.IsNull(this.responseHeaders, "Response headers were present and not expected.");
             if (responseExpected)
             {
-                Assert.IsTrue(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was not present and expected.");
-                Assert.IsNotNull(responseObject as HttpResponseMessage, "Response was not the expected type.");
+                Assert.IsNotNull(this.response, "Response was not present and expected.");
+                Assert.IsNotNull(this.response as HttpResponseMessage, "Response was not the expected type.");
             }
             else
             {
-                Assert.IsFalse(telemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out var responseObject), "Response was present and not expected.");
+                Assert.IsNull(this.response, "Response was present and not expected.");
             }
         }
     }
