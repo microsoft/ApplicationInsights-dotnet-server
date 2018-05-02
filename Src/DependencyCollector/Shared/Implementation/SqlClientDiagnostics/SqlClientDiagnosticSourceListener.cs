@@ -153,7 +153,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                             telemetry.Stop(timestamp);
 
-                            this.client.Track(telemetry);
+                            this.client.TrackDependency(telemetry);
                         }
                         else
                         {
@@ -186,7 +186,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                             ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.Track(telemetry);
+                            this.client.TrackDependency(telemetry);
                         }
                         else
                         {
@@ -275,7 +275,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                             ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.Track(telemetry);
+                            this.client.TrackDependency(telemetry);
                         }
                         else
                         {
@@ -377,7 +377,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                             telemetry.Stop(timestamp);
 
-                            this.client.Track(telemetry);
+                            this.client.TrackDependency(telemetry);
                         }
                         else
                         {
@@ -411,7 +411,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                             ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.Track(telemetry);
+                            this.client.TrackDependency(telemetry);
                         }
                         else
                         {

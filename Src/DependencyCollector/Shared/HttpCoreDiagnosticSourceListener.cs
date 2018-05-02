@@ -364,7 +364,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 telemetry.Success = false;
             }
 
-            this.client.Track(telemetry);
+            this.client.TrackDependency(telemetry);
         }
 
         //// netcoreapp1.1 and prior event. See https://github.com/dotnet/corefx/blob/release/1.0.0-rc2/src/Common/src/System/Net/Http/HttpHandlerDiagnosticListenerExtensions.cs.
