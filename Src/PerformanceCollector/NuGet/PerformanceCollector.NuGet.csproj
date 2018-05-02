@@ -17,25 +17,25 @@
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <PackageSpecFile>$(MSBuildProjectDirectory)\Package.nuspec</PackageSpecFile>
     <PackageVersionFile>$(BinRoot)\$(Configuration)\Src\PerformanceCollector\Net45\Microsoft.AI.PerfCounterCollector.dll</PackageVersionFile>
-    <TargetFrameworkProfile />
     <NuGetPackageImportStamp>dd2813bf</NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
     <DisablePackageAnalysis>true</DisablePackageAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="ApplicationInsights.config.transform">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Package.nuspec">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="ApplicationInsights.config.uninstall.xdt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ApplicationInsights.config.install.xdt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="ApplicationInsights.config.transform">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Package.nuspec">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
@@ -50,7 +50,7 @@
     <!-- IsPackable & PackageOutputPath properties are required by SignNuGetPackage target: https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/MicroBuild?path=%2Fsrc%2FPlugins%2FSigning%2FbuildCrossTargeting%2FMicroBuild.Plugins.Signing.targets&version=GBmaster&_a=contents&line=10&lineStyle=plain&lineEnd=10&lineStartColumn=17&lineEndColumn=33 -->
     <PropertyGroup>
       <IsPackable>True</IsPackable>
-      <PackageOutputPath>$(PackageOutputDir)</PackageOutputPath>
+      <PackageOutputPath>$(PackageOutputDir)\PerformanceCollector</PackageOutputPath>
     </PropertyGroup>
     <ItemGroup>
       <SignNuGetPackFiles Include="$(PackageOutputPath)\**\*.nupkg">
