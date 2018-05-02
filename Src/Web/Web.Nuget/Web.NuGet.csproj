@@ -58,7 +58,7 @@
     <!-- IsPackable & PackageOutputPath properties are required by SignNuGetPackage target: https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/MicroBuild?path=%2Fsrc%2FPlugins%2FSigning%2FbuildCrossTargeting%2FMicroBuild.Plugins.Signing.targets&version=GBmaster&_a=contents&line=10&lineStyle=plain&lineEnd=10&lineStartColumn=17&lineEndColumn=33 -->
     <PropertyGroup>
       <IsPackable>True</IsPackable>
-      <PackageOutputPath>$(PackageOutputDir)\Web\</PackageOutputPath>
+      <PackageOutputPath>$(PackageOutputDir)</PackageOutputPath>
     </PropertyGroup>
     <ItemGroup>
       <SignNuGetPackFiles Include="$(PackageOutputPath)\**\*.nupkg">
