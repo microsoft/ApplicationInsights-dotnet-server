@@ -54,9 +54,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly ConcurrentDictionary<string, Exception> pendingExceptions =
             new ConcurrentDictionary<string, Exception>();
 
-        private bool isNetCore20HttpClient;
+        private readonly bool isNetCore20HttpClient;
+        private readonly bool injectLegacyHeaders = false;
 
-        public HttpCoreDiagnosticSourceListener(TelemetryConfiguration configuration, bool setComponentCorrelationHttpHeaders, IEnumerable<string> correlationDomainExclusionList)
+        public HttpCoreDiagnosticSourceListener(TelemetryConfiguration configuration, bool setComponentCorrelationHttpHeaders, IEnumerable<string> correlationDomainExclusionList, bool injectLegacyHeaders)
         {
             this.client = new TelemetryClient(configuration);
             this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceCore + ":");
@@ -68,6 +69,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
+            this.injectLegacyHeaders = injectLegacyHeaders;
 
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(this, this.applicationInsightsUrlFilter, this.isNetCore20HttpClient);
         }
@@ -435,28 +437,28 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         AppMapCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
                     }
 
-                    // Add the root ID
-                    string rootId = currentActivity.RootId;
-                    if (!string.IsNullOrEmpty(rootId) &&
-                        !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
+                    if (this.injectLegacyHeaders)
                     {
-                        requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
-                    }
-
-                    // Add the parent ID
-                    string parentId = currentActivity.Id;
-                    if (!string.IsNullOrEmpty(parentId) &&
-                        !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
-                    {
-                        requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
-                        if (isLegacyEvent)
+                        // Add the root ID
+                        string rootId = currentActivity.RootId;
+                        if (!string.IsNullOrEmpty(rootId) &&
+                            !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
                         {
-                            requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, parentId);
+                            requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
+                        }
+
+                        // Add the parent ID
+                        string parentId = currentActivity.Id;
+                        if (!string.IsNullOrEmpty(parentId) &&
+                            !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
+                        {
+                            requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
                         }
                     }
 
                     if (isLegacyEvent)
                     {
+                        requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, currentActivity.Id);
                         // we expect baggage to be empty or contain a few items
                         using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
                         {
