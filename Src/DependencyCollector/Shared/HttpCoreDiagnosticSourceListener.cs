@@ -437,42 +437,48 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         AppMapCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
                     }
 
+                    if (isLegacyEvent)
+                    {
+                        if (!requestHeaders.Contains(RequestResponseHeaders.RequestIdHeader))
+                        {
+                            requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, currentActivity.Id);
+                        }
+
+                        if (!requestHeaders.Contains(RequestResponseHeaders.CorrelationContextHeader))
+                        {
+                            // we expect baggage to be empty or contain a few items
+                            using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
+                            {
+                                if (e.MoveNext())
+                                {
+                                    var baggage = new List<string>();
+                                    do
+                                    {
+                                        KeyValuePair<string, string> item = e.Current;
+                                        baggage.Add(new NameValueHeaderValue(item.Key, item.Value).ToString());
+                                    }
+                                    while (e.MoveNext());
+
+                                    requestHeaders.Add(RequestResponseHeaders.CorrelationContextHeader, baggage);
+                                }
+                            }
+                        }
+                    }
+
                     if (this.injectLegacyHeaders)
                     {
                         // Add the root ID
                         string rootId = currentActivity.RootId;
-                        if (!string.IsNullOrEmpty(rootId) &&
-                            !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
+                        if (!string.IsNullOrEmpty(rootId) && !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
                         {
                             requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
                         }
 
                         // Add the parent ID
                         string parentId = currentActivity.Id;
-                        if (!string.IsNullOrEmpty(parentId) &&
-                            !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
+                        if (!string.IsNullOrEmpty(parentId) && !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
                         {
                             requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
-                        }
-                    }
-
-                    if (isLegacyEvent)
-                    {
-                        requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, currentActivity.Id);
-                        // we expect baggage to be empty or contain a few items
-                        using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
-                        {
-                            if (e.MoveNext())
-                            {
-                                var baggage = new List<string>();
-                                do
-                                {
-                                    KeyValuePair<string, string> item = e.Current;
-                                    baggage.Add(new NameValueHeaderValue(item.Key, item.Value).ToString());
-                                }
-                                while (e.MoveNext());
-                                request.Headers.Add(RequestResponseHeaders.CorrelationContextHeader, baggage);
-                            }
                         }
                     }
                 }
