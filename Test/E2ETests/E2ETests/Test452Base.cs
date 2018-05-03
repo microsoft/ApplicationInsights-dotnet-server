@@ -264,6 +264,10 @@ namespace E2ETests
                 true);
         }
 
+        /// <summary>
+        /// Tests correlation between POST request and depdendency call that is done from the controller.
+        /// </summary>
+        /// <returns></returns>
         public async Task TestHttpDependencyCorrelationInPostRequest()
         {
             var operationId = Guid.NewGuid().ToString();
@@ -271,6 +275,7 @@ namespace E2ETests
             string restoredActivityId = null;
             using (var httpClient = new HttpClient())
             {
+                // The POST controller method wi;ll manually track dependency through the StartOperation 
                 var request = new HttpRequestMessage(HttpMethod.Post, string.Format($"http://{Apps[TestConstants.WebApiName].ipAddress}/api/values"));
                 request.Headers.Add("Request-Id", $"|{operationId}.");
 
@@ -303,6 +308,9 @@ namespace E2ETests
             PrintRequests(requests);
 
             var dependency = dependencies[0];
+
+            // if the App runs on ASP.NET 4.7.1+ version that supports OnExecuteRequestStep
+            // depednency should be correlated to the request, false otherwise
             if (supportsOnRequestExecute)
             {
                 Assert.AreEqual(operationId, dependency.tags["ai.operation.id"]);
@@ -312,6 +320,9 @@ namespace E2ETests
                 Assert.AreNotEqual(operationId, dependency.tags["ai.operation.id"]);
             }
 
+            // if Activity was restored by TelemetryCorrelation module
+            // we should have 2 requests, otherwise just one request
+            // in any case, if supportsOnRequestExecute is true, we must have correct parentId
             if (restoredActivityId != null)
             {
                 Assert.AreEqual(2, requests.Count);
