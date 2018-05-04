@@ -64,6 +64,7 @@
       <SignNuGetPackFiles Include="$(PackageOutputPath)\**\*.nupkg">
       </SignNuGetPackFiles>
     </ItemGroup>
-    <Message Text="Files to sign: @(SignNuGetPackFiles)" />
+    <Message Text="Package Output Path: $(PackageOutputPath)" />
+    <Message Text="Files to sign for Web: @(SignNuGetPackFiles)" />
   </Target>
 </Project>
