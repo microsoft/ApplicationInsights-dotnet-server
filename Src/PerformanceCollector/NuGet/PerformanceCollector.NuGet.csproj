@@ -19,7 +19,7 @@
     <PackageVersionFile>$(BinRoot)\$(Configuration)\Src\PerformanceCollector\Net45\Microsoft.AI.PerfCounterCollector.dll</PackageVersionFile>
     <NuGetPackageImportStamp>dd2813bf</NuGetPackageImportStamp>
     <TargetFrameworkProfile />
-    <DisablePackageAnalysis>true</DisablePackageAnalysis>
+    <!--<DisablePackageAnalysis>true</DisablePackageAnalysis>-->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
