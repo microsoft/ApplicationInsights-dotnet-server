@@ -19,7 +19,6 @@
     <PackageVersionFile>$(BinRoot)\$(Configuration)\Src\Web\Web.Net45\Microsoft.AI.Web.dll</PackageVersionFile>
     <NuGetPackageImportStamp>e93f6f39</NuGetPackageImportStamp>
     <TargetFrameworkProfile />
-    <!--<DisablePackageAnalysis>true</DisablePackageAnalysis>-->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' " />
