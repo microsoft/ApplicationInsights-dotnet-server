@@ -42,15 +42,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WindowsServer.Shared", "Win
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WindowsServer.Shared.Tests", "WindowsServer\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.shproj", "{7916AE39-AE89-4886-8842-33AC9883905A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.Net45", "DependencyCollector\Net45\DependencyCollector.Net45.csproj", "{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.Net45.Tests", "DependencyCollector\Net45.Tests\DependencyCollector.Net45.Tests.csproj", "{257FCE5A-0779-45A5-B541-0CE43D79D009}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyCollector.NetCore", "DependencyCollector\NetCore\DependencyCollector.NetCore.csproj", "{28F3DDD7-7377-4EB6-B0E6-3D25A2D343D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyCollector", "DependencyCollector\NetCore\DependencyCollector.csproj", "{28F3DDD7-7377-4EB6-B0E6-3D25A2D343D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.NuGet", "DependencyCollector\NuGet\DependencyCollector.NuGet.csproj", "{AD6E4937-CEEE-4F10-9460-A1E4C7449D51}"
 	ProjectSection(ProjectDependencies) = postProject
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529} = {EA2D14AA-AE1E-4982-9326-11D4DCBB9529}
 		{FE97E6BB-7C7E-4503-AF35-EBBBEDEB850A} = {FE97E6BB-7C7E-4503-AF35-EBBBEDEB850A}
 	EndProjectSection
 EndProject
@@ -154,8 +151,6 @@ Global
 		Common\Common.projitems*{ccab7a34-8dc5-4a6f-b637-46ceba93c687}*SharedItemsImports = 13
 		Common\Common.projitems*{e7e874bd-609c-41ca-8594-f793da2fa0d0}*SharedItemsImports = 4
 		WindowsServer\WindowsServer.Shared\WindowsServer.Shared.projitems*{e7e874bd-609c-41ca-8594-f793da2fa0d0}*SharedItemsImports = 4
-		Common\Common.projitems*{ea2d14aa-ae1e-4982-9326-11d4dcbb9529}*SharedItemsImports = 4
-		DependencyCollector\Shared\DependencyCollector.Shared.projitems*{ea2d14aa-ae1e-4982-9326-11d4dcbb9529}*SharedItemsImports = 4
 		TestFramework\Shared\TestFramework.Shared.projitems*{f05eb480-b209-47dd-90e3-1ddc47efc579}*SharedItemsImports = 4
 		WindowsServer\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems*{f05eb480-b209-47dd-90e3-1ddc47efc579}*SharedItemsImports = 4
 		PerformanceCollector\Perf.Shared.Tests\Perf.Shared.Tests.projitems*{f254d4fb-428d-408e-8251-39bca7b4b5ce}*SharedItemsImports = 4
@@ -200,14 +195,6 @@ Global
 		{F05EB480-B209-47DD-90E3-1DDC47EFC579}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F05EB480-B209-47DD-90E3-1DDC47EFC579}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{F05EB480-B209-47DD-90E3-1DDC47EFC579}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{257FCE5A-0779-45A5-B541-0CE43D79D009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{257FCE5A-0779-45A5-B541-0CE43D79D009}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{257FCE5A-0779-45A5-B541-0CE43D79D009}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -395,7 +382,6 @@ Global
 		{F05EB480-B209-47DD-90E3-1DDC47EFC579} = {D87119AF-CD35-46F2-84A6-ED54CC42027E}
 		{579F42E8-B711-411E-BE52-4A3FD208507F} = {D87119AF-CD35-46F2-84A6-ED54CC42027E}
 		{7916AE39-AE89-4886-8842-33AC9883905A} = {D87119AF-CD35-46F2-84A6-ED54CC42027E}
-		{EA2D14AA-AE1E-4982-9326-11D4DCBB9529} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}
 		{257FCE5A-0779-45A5-B541-0CE43D79D009} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}
 		{28F3DDD7-7377-4EB6-B0E6-3D25A2D343D9} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}
 		{AD6E4937-CEEE-4F10-9460-A1E4C7449D51} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}

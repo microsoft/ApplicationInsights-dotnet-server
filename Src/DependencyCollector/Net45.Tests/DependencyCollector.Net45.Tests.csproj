@@ -72,9 +72,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Net45\DependencyCollector.Net45.csproj">
-      <Project>{ea2d14aa-ae1e-4982-9326-11d4dcbb9529}</Project>
-      <Name>DependencyCollector.Net45</Name>
+    <ProjectReference Include="..\NetCore\DependencyCollector.csproj">
+      <Project>{28f3ddd7-7377-4eb6-b0e6-3d25a2d343d9}</Project>
+      <Name>DependencyCollector</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
