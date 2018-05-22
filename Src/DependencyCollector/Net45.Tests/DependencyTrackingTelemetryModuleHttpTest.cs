@@ -100,7 +100,7 @@
         }
 
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public async Task TestZeroAndNonZeroContentResponseDiagnosticSource()
         {
             await this.TestZeroContentResponseAfterNonZeroResponse(LocalhostUrlDiagSource, 200);
