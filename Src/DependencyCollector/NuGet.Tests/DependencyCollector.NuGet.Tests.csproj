@@ -58,16 +58,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Net45\DependencyCollector.Net45.csproj">
-      <Project>{ea2d14aa-ae1e-4982-9326-11d4dcbb9529}</Project>
-      <Name>DependencyCollector.Net45</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\NuGet\DependencyCollector.NuGet.csproj">
-      <Project>{ad6e4937-ceee-4f10-9460-a1e4c7449d51}</Project>
-      <Name>DependencyCollector.NuGet</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
@@ -84,6 +74,12 @@
   <ItemGroup>
     <Analyzer Include="..\..\..\..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\..\..\..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NetCore\DependencyCollector.csproj">
+      <Project>{28f3ddd7-7377-4eb6-b0e6-3d25a2d343d9}</Project>
+      <Name>DependencyCollector</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
