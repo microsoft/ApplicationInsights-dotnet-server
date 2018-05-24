@@ -21,7 +21,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <IncludeSymbols>False</IncludeSymbols>
-    <PackageId>Microsoft.AI.DependencyCollector</PackageId>
+    <PackageId>Microsoft.ApplicationInsights.DependencyCollector</PackageId>
     <PackageTags>Analytics;ApplicationInsights;Telemetry;AppInsights</PackageTags>
     <PackageIconUrl>https://appanacdn.blob.core.windows.net/cdn/icons/aic.png</PackageIconUrl>
     <PackageLicenseUrl>https://go.microsoft.com/fwlink/?LinkID=510709</PackageLicenseUrl>
