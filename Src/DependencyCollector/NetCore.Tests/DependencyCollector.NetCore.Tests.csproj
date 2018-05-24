@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetCore\DependencyCollector.csproj" />
+    <ProjectReference Include="..\DependencyCollector\DependencyCollector.csproj" />
   </ItemGroup>
 
   <ItemGroup>

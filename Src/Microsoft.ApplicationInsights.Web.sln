@@ -44,7 +44,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "WindowsServer.Shared.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.Net45.Tests", "DependencyCollector\Net45.Tests\DependencyCollector.Net45.Tests.csproj", "{257FCE5A-0779-45A5-B541-0CE43D79D009}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyCollector", "DependencyCollector\NetCore\DependencyCollector.csproj", "{28F3DDD7-7377-4EB6-B0E6-3D25A2D343D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyCollector", "DependencyCollector\DependencyCollector\DependencyCollector.csproj", "{28F3DDD7-7377-4EB6-B0E6-3D25A2D343D9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollector.NuGet.Tests", "DependencyCollector\NuGet.Tests\DependencyCollector.NuGet.Tests.csproj", "{881AE34E-822C-4245-B314-579F7C85B5B3}"
 EndProject
