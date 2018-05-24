@@ -50,10 +50,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\NuGet\ApplicationInsights.config.install.xdt">
+    <EmbeddedResource Include="..\NetCore\ApplicationInsights.config.install.xdt">
       <Link>Resources\ApplicationInsights.config.install.xdt</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\NuGet\ApplicationInsights.config.uninstall.xdt">
+    <EmbeddedResource Include="..\NetCore\ApplicationInsights.config.uninstall.xdt">
       <Link>Resources\ApplicationInsights.config.uninstall.xdt</Link>
     </EmbeddedResource>
   </ItemGroup>
