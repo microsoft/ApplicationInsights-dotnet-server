@@ -19,11 +19,13 @@
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
-        private readonly IList<string> handlersToFilter = new List<string>();
+        private const string IntermediateRequestHttpContextKey = "IntermediateRequest";
+        // if HttpApplicaiton.OnRequestExecute is available, we don't attempt to detect any correlation issues
+        private static bool correlationIssuesDetectionComplete = typeof(HttpApplication).GetMethod("OnExecuteRequestStep") != null;
+
         private TelemetryClient telemetryClient;
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
-        private bool correlationHeadersEnabled = true;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
         /// <summary>
@@ -52,34 +54,17 @@
         /// See also <see cref="ChildRequestTrackingSuppressionModule" />.
         /// </remarks>
         public int ChildRequestTrackingInternalDictionarySize { get; set; }
-        
+
         /// <summary>
         /// Gets the list of handler types for which requests telemetry will not be collected
         /// if request was successful.
         /// </summary>
-        public IList<string> Handlers
-        {
-            get
-            {
-                return this.handlersToFilter;
-            }
-        }
+        public IList<string> Handlers { get; } = new List<string>();
 
         /// <summary>
         /// Gets or sets a value indicating whether the component correlation headers would be set on http responses.
         /// </summary>
-        public bool SetComponentCorrelationHttpHeaders
-        {
-            get
-            {
-                return this.correlationHeadersEnabled;
-            }
-
-            set
-            {
-                this.correlationHeadersEnabled = value;
-            }
-        }
+        public bool SetComponentCorrelationHttpHeaders { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
@@ -211,7 +196,19 @@
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
             {
+                var intermediateRequest = (RequestTelemetry)context.Items[IntermediateRequestHttpContextKey];
+                if (intermediateRequest != null)
+                {
+                    this.telemetryClient.TrackRequest(intermediateRequest);
+                }
+
                 this.telemetryClient.TrackRequest(requestTelemetry);
+
+                if (!correlationIssuesDetectionComplete && context.Request.ContentLength > 0)
+                {
+                    WebEventSource.Log.CorrelationIssueIsDetectedForRequestWithBody();
+                    correlationIssuesDetectionComplete = true;
+                }
             }
             else
             {
@@ -338,8 +335,7 @@
             intermediateRequest.Context.Operation.ParentId = activity.ParentId;
             intermediateRequest.ResponseCode = null;
             intermediateRequest.Properties.Add("AI internal", "Execute request handler step");
-
-            this.telemetryClient.TrackRequest(intermediateRequest);
+            context.Items[IntermediateRequestHttpContextKey] = intermediateRequest;
         }
 
         /// <summary>
@@ -388,7 +384,7 @@
 
             return false;
         }
-        
+
         /// <summary>
         /// <see cref="System.Web.Handlers.TransferRequestHandler"/> can create a Child request to route extension-less requests to a controller.
         /// (ex: site/home -> site/HomeController.cs)
