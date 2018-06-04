@@ -27,16 +27,17 @@ The goal of instrumentation is to give the users the visibility to how particula
 In the simplest case, the operation that is being monitored has to be wrapped by an activity. 
 
 ```csharp
-    // create DiagnosticListener with unique name
-    static DiagnosticListener source = new DiagnosticListener("Example.MyLibrary");
 
     Activity activity = null;
     
     // check if listener is interested in this operation
-    if (source.IsEnabled() && source.IsEnabled("MyOperation"))
+    if (source.IsEnabled() && source.IsEnabled("OperationName"))
     {
-        activity = new Activity("MyOperation");
-        activity.Start();
+        activity = new Activity("OperationName");
+        if (source.IsEnabled("OperationName.Start"))
+            source.StartActivity(activity, new StartPayload { Input = input });
+        else
+            activity.Start();
     }
 
     object output = null;
@@ -47,18 +48,25 @@ In the simplest case, the operation that is being monitored has to be wrapped by
     }
     catch (Exception ex)
     {
-        activity?.AddTag("error", true);
+        activity?.AddTag("error", "true");
     }
     finally
     {
         // stop activity if started
         if (activity != null)
-             source.StopActivity(activity, new MyStopPayload { Input = input, Output = output }); 
+             source.StopActivity(activity, new StopPayload { Input = input, Output = output }); 
     }
 ```
+
+Create a static DiagnosticListener for library/component with a unique name.
+
+```csharp
+    static DiagnosticListener source = new DiagnosticListener("NameSpace.ComponentName");
+```
+
 > ### *__TODO__ - provide a pointer to a document with more advanced instrumentation examples (WIP)* 
 
-This minimum instrumentation give tracing system a chance to trace something like '<timestamp> [Example.MyLibrary] MyOperation, Id 'abc.1.2.3.', took <duration> ms, with properties [{ "error": true }]'.
+This minimum instrumentation give tracing system a chance to trace something like '<timestamp> [NameSpace.ComponentName] MyOperation, Id 'abc.1.2.3.', took <duration> ms, with tags [{ "error": "true" }]'.
 While in majority of cases some other details are desirable (and we will get to it [here](TBD)), this instrumentation gives bare minimum.
 
 ### Instrumentation control and sampling considerations
@@ -67,48 +75,29 @@ While in majority of cases some other details are desirable (and we will get to 
 Every DiagnosticListener has a name. Tracing system discovers all available sources and subscribes to them based on the name. 
 [DiagnosticSource guide](https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/DiagnosticSourceUsersGuide.md#naming-conventions) provides more naming considerations.
 
+**DO** Create one `DiagnosticListener` instance for a particular source (make it static): each time when new DiagnoscticListener is created, all subscribers are notified and about it.
+
 **DO** call 'IsEnabled()' for every operation.
 The first `source.IsEnabled()` call efficiently tell if there is any listener in the system for our source. 
 
-**DO** make operation name unique within the DiagnosticListener. Operation name is coarse name that remains the same for ALL operations of this kind (e.g. `HttpRequestIn` or `HttpRequestOut`)
+**DO** make operation name unique within the DiagnosticListener. Operation name is coarse name that remains the same for ALL operations of this kind (e.g. `HttpRequestIn` or `HttpRequestOut`).
 
 **DO** call 'IsEnabled(OperationName)' for every operation
-If there is a listener, we ask tracing system if it is interested in 'MyOperation' with `source.IsEnabled("MyOperation")`. It enables filtering based on the operation name, but more importantly gives a tracing system a chance to sample this trace out based on the current Activity: tracing system samples events consistently to trace all or nothing for high-level operation. 
+If there is a listener, we ask tracing system if it is interested in 'MyOperation' with `source.IsEnabled(OperationName)`. It enables filtering based on the operation name, but more importantly gives a tracing system a chance to sample this trace out based on the current Activity: tracing system samples events consistently to trace all or nothing for high-level operation. 
+
+**DO** fire 'OperationName.Start' event. Tracing system may need to inject additional properties (e.g. Http headers), add tags or mutate some properties on `Activity`. In [W3C distributed tracing standard](https://w3c.github.io/distributed-tracing), `tracestate` support depends on this extensibility. In many cases tracing system may disable this event, so guard 'Start' event with `IsEnabled` cliche, but make sure `Activity` is started in any case.
+
+**DO NOT** cache results of IsEnabled: tracing system may subscribe/unsubscribe at any moment. Results of IsEnabled are dynamic and depend on the context.
 
 **CONSIDER** providing more context via 'IsEnabled(OperationName, Input)' overload instaed of 'IsEnabled(OperationName)'
 In some cases tracing system needs more context to filter operations. A good example is tracing system that tracks HTTP calls and sends telemetry over HTTP as well. To avoid recursive tracing and save performance tracing system want to prevent such calls to be instrumented at all based on some request properties.
 
-**CONSIDER** firing 'MyOperation.Start' event
-In many cases it makes sense to send Start event to tracing system. It may use it to inject some context into the `Input`. However tracing system may not be interested in such event at all, so guard 'Start' event with `IsEnabled` cliche, 
-but make sure `Activity` is started in any case:
-
+**CONSIDER** sending Exception event and providing Exception object and input in the payload (in case tracing system did wants to log exception along with some input properties).
 
 ```csharp
-    if (source.IsEnabled("MyOperation.Start"))
-        source.StartActivity(activity, new MyStartPayload {Input = input});
-    else
-        activity.Start();
+    if (source.IsEnabled("Exception"))
+        source.Write("Exception", new ExceptionPayload { Exception = ex, Input = input })
 ```
-
-DO NOT cache results of IsEnabled: tracing system may subscribe/unsubscribe at any moment. Results of IsEnabled are dynamic and depend on the context (`Activity.Current`, `Input`).
-
-### Context Propagation
-
-In distributed systems, one user operation may be processed by many applications. To trace operation end-to-end, some context must be propagated along with external call.
-
-#### Injection (outgoing calls)
-
-Library should inject the context into the wired protocols if there is a standard defined for this protocol and library implements this protocol and let tracing system add/change correlation context.
-
-* DO fire 'MyOperation.Start' (guarded by IsEnabled) event if your operation involves out-of-process process call. Provide raw request (`Input`) in the event payload so tracing system could inject context.
-* DO include raw response into the 'MyOperation.Stop' event payload (`Output`): tracing system may want to access response and parse context that back propagated back in response.
-* DO propagate context if the standard for the propagation exists. Some servers (e.g. SQL) could support correlating internal logs with external operations and define metadata fields for correlation identifiers, however may require specific identifier(s) format. Use `activity.Id` if possible, otherwise generate a compatible id and add a tag: `activity.AddTag("sqlCorrelationId", myGeneratedId)`
-* DO NOT propagate context if your library only uses HTTP protocol. .NET handles HTTP layer, and tracing system may alter it.
-* CONSIDER If the standard does not exists, but you see a value in propagating context for correlation, use the names and format suggested by the [W3C distributed tracing](https://w3c.github.io/distributed-tracing). Use [TBD] field in `tracestate` for `activity.Id`.
-
-#### Extraction (incoming calls)
-
-TODO
 
 ### Payload
 
