@@ -391,7 +391,7 @@
                     }
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), request, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), injectLegacyHeaders);
+                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), request, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), expectLegacyHeaders: injectLegacyHeaders);
             }
         }
 
@@ -477,7 +477,7 @@
                 }
 
                 Assert.AreEqual(2, this.sentTelemetry.Count);
-                this.ValidateTelemetry(true, this.sentTelemetry.Last(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture));
+                this.ValidateTelemetry(true, this.sentTelemetry.Last(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), responseExpected: false);
             }
         }
 
