@@ -111,6 +111,8 @@ TODO:
 DO Use public concrete types. 
 DO Use PascalCase for properties
 DO ensure back-compat, consider it as public API area
+
+
 Remove defined payload properties and define tags
 Describe payload usage scenarios, 
 How to efficiently parse payloads for anonymous types
