@@ -69,12 +69,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey, TestApplicationId)
             };
 
-            this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(
-                this.configuration, 
-                new CacheBasedOperationHolder("testCache", 100 * 1000),
-                setCorrelationHeaders: true,
-                correlationDomainExclusionList: new List<string>(), 
-                injectLegacyHeaders: false);
+            this.httpDesktopProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>(), false);
             DependencyTableStore.IsDesktopHttpDiagnosticSourceActivated = false;
         }
 
@@ -199,12 +194,7 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestMethod]
         public void RddTestHttpDesktopProcessingFrameworkOnBeginAddsLegacyHeaders()
         {
-            var httpProcessingLegacyHeaders = new DesktopDiagnosticSourceHttpProcessing(
-                this.configuration,
-                new CacheBasedOperationHolder("testCache", 100 * 1000),
-                setCorrelationHeaders: true,
-                correlationDomainExclusionList: new List<string>(),
-                injectLegacyHeaders: true);
+            var httpProcessingLegacyHeaders = new DesktopDiagnosticSourceHttpProcessing(this.configuration, new CacheBasedOperationHolder("testCache", 100 * 1000), /*setCorrelationHeaders*/ true, new List<string>(), true);
             var request = WebRequest.Create(this.testUrl);
 
             Assert.IsNull(request.Headers[RequestResponseHeaders.StandardParentIdHeader]);
@@ -287,9 +277,9 @@ namespace Microsoft.ApplicationInsights.Tests
             var localHttpProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(
                 this.configuration, 
                 new CacheBasedOperationHolder("testCache", 100 * 1000),  
-                setCorrelationHeaders: false, 
-                correlationDomainExclusionList: new List<string>(),
-                injectLegacyHeaders: false);
+                false, 
+                new List<string>(),
+                false);
 
             localHttpProcessingFramework.OnBegin(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
@@ -298,10 +288,10 @@ namespace Microsoft.ApplicationInsights.Tests
             ICollection<string> exclusionList = new SanitizedHostList() { "randomstringtoexclude", hostnamepart };
             localHttpProcessingFramework = new DesktopDiagnosticSourceHttpProcessing(
                 this.configuration,
-                new CacheBasedOperationHolder("testCache", 100 * 1000),
-                setCorrelationHeaders: true,
-                correlationDomainExclusionList: new List<string>(),
-                injectLegacyHeaders: false);
+                new CacheBasedOperationHolder("testCache", 100 * 1000), 
+                true, 
+                exclusionList,
+                false);
 
             localHttpProcessingFramework.OnBegin(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);

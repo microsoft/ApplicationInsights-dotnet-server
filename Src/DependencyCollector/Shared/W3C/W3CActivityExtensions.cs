@@ -34,28 +34,35 @@
         /// <returns>The same Activity for chaining.</returns>
         public static Activity UpdateContextFromParent(this Activity activity)
         {
-            if (activity.Tags.All(t => t.Key != W3CConstants.TraceIdTag))
+            if (activity != null && activity.Tags.All(t => t.Key != W3CConstants.TraceIdTag))
             {
-                foreach (var tag in activity.Parent.Tags)
+                if (activity.Parent == null)
                 {
-                    switch (tag.Key)
+                    activity.GenerateW3CContext();
+                }
+                else
+                {
+                    foreach (var tag in activity.Parent.Tags)
                     {
-                        case W3CConstants.TraceIdTag:
-                            activity.SetTraceId(tag.Value);
-                            break;
-                        case W3CConstants.SpanIdTag:
-                            activity.SetParentSpanId(tag.Value);
-                            activity.SetSpanId(GenerateSpanId());
-                            break;
-                        case W3CConstants.VersionTag:
-                            activity.SetVersion(tag.Value);
-                            break;
-                        case W3CConstants.SampledTag:
-                            activity.SetSampled(tag.Value);
-                            break;
-                        case W3CConstants.TraceStateTag:
-                            activity.SetTraceState(tag.Value);
-                            break;
+                        switch (tag.Key)
+                        {
+                            case W3CConstants.TraceIdTag:
+                                activity.SetTraceId(tag.Value);
+                                break;
+                            case W3CConstants.SpanIdTag:
+                                activity.SetParentSpanId(tag.Value);
+                                activity.SetSpanId(GenerateSpanId());
+                                break;
+                            case W3CConstants.VersionTag:
+                                activity.SetVersion(tag.Value);
+                                break;
+                            case W3CConstants.SampledTag:
+                                activity.SetSampled(tag.Value);
+                                break;
+                            case W3CConstants.TraceStateTag:
+                                activity.SetTraceState(tag.Value);
+                                break;
+                        }
                     }
                 }
             }

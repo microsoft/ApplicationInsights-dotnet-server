@@ -20,7 +20,7 @@
         }
 
         [TestMethod]
-        public void InitializerNoopWithoutW3CContext()
+        public void InitializerCreatesNewW3CContext()
         {
             Activity a = new Activity("dummy")
                 .Start();
@@ -30,9 +30,9 @@
 
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
 
-            Assert.IsNull(request.Context.Operation.Id);
+            Assert.IsNotNull(request.Context.Operation.Id);
             Assert.IsNull(request.Context.Operation.ParentId);
-            Assert.AreEqual(expectedId, request.Id);
+            Assert.AreNotEqual(expectedId, request.Id);
             Assert.IsFalse(request.Properties.Any());
         }
 
@@ -161,8 +161,7 @@
         public void InitializerOnNestedActivitities()
         {
             Activity requestActivity = new Activity("request")
-                .Start()
-                .GenerateW3CContext();
+                .Start();
 
             RequestTelemetry request = new RequestTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);

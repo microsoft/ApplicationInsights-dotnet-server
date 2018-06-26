@@ -26,40 +26,33 @@
         public void Initialize(ITelemetry telemetry)
         {
             Activity currentActivity = Activity.Current;
-            if (this.UpdateActivity(currentActivity))
-            {
-                this.UpdateTelemetry(telemetry, currentActivity);
-            }
+            this.UpdateActivity(currentActivity);
+            this.UpdateTelemetry(telemetry, currentActivity);
         }
 
-        private bool UpdateActivity(Activity activity)
+        private void UpdateActivity(Activity activity)
         {
-            // if there is activity - we've gone all the way to the root and did not find any w3c tags
-            // do not update telemtery
-            if (activity == null)
+            if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
             {
-                return false;
-            }
-
-            // if activity has trace id already - return true
-            if (activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
-            {
-                return true;
+                return;
             }
 
             // no w3c Tags on Activity
-            if (this.UpdateActivity(activity.Parent))
-            {
-                // at this point, Parent has W3C tags, but current activity does not - update it
-                activity.UpdateContextFromParent();
-                return true;
-            }
+            this.UpdateActivity(activity.Parent);
 
-            return false;
+            // at this point, Parent has W3C tags, but current activity does not - update it
+            activity.UpdateContextFromParent();
+
+            return;
         }
 
         private void UpdateTelemetry(ITelemetry telemetry, Activity activity)
         {
+            if (activity == null)
+            {
+                return;
+            }
+
             // Requests and dependnecies are initialized from the current Activity 
             // (i.e. telemetry.Id = current.Id). Activity is created for such requests specifically
             // Traces, exceptions, events on the other side are children of current activity
@@ -88,7 +81,7 @@
                         if (initializeFromCurrent)
                         {
                             opTelemetry.Id = tag.Value;
-}
+                        }
                         else
                         {
                             telemetry.Context.Operation.ParentId = tag.Value;
