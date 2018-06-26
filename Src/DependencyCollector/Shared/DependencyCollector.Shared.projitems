@@ -44,6 +44,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Properties\AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SanitizedHostList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)TelemetryDiagnosticSourceListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CActivityExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3COperationCorrelationTelemetryInitializer.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard1.6' ">
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\ClientServerDependencyTracker.cs" />

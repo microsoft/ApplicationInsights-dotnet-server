@@ -52,7 +52,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
-                injectLegacyHeaders: true);
+                injectLegacyHeaders: true,
+                injectW3CHeaders: false);
 
             var activity = new Activity("System.Net.Http.HttpRequestOut");
             activity.AddBaggage("k", "v");

@@ -84,7 +84,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
-                injectLegacyHeaders: false);
+                injectLegacyHeaders: false,
+                injectW3CHeaders: false);
         }
 
         /// <summary>
@@ -216,7 +217,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
-                injectLegacyHeaders: true);
+                injectLegacyHeaders: true,
+                injectW3CHeaders: false);
 
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);

@@ -62,6 +62,11 @@
         public bool EnableLegacyCorrelationHeadersInjection { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to enable W3C distributed tracing headers injection.
+        /// </summary>
+        public bool EnableW3CHeadersInjection { get; set; }
+
+        /// <summary>
         /// Gets the component correlation configuration.
         /// </summary>
         public ICollection<string> ExcludeComponentCorrelationHttpHeadersOnDomains
@@ -144,7 +149,8 @@
                                 configuration,
                                 this.SetComponentCorrelationHttpHeaders,
                                 this.ExcludeComponentCorrelationHttpHeadersOnDomains,
-                                this.EnableLegacyCorrelationHeadersInjection);
+                                this.EnableLegacyCorrelationHeadersInjection,
+                                this.EnableW3CHeadersInjection);
 
                             if (this.IncludeDiagnosticSourceActivities != null && this.IncludeDiagnosticSourceActivities.Count > 0)
                             {

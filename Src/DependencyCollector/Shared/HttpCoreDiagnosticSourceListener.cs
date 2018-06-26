@@ -13,6 +13,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector.W3C;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
@@ -56,8 +57,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         private readonly bool isNetCore20HttpClient;
         private readonly bool injectLegacyHeaders = false;
+        private readonly bool injectW3CHeaders = false;
 
-        public HttpCoreDiagnosticSourceListener(TelemetryConfiguration configuration, bool setComponentCorrelationHttpHeaders, IEnumerable<string> correlationDomainExclusionList, bool injectLegacyHeaders)
+        public HttpCoreDiagnosticSourceListener(
+            TelemetryConfiguration configuration, 
+            bool setComponentCorrelationHttpHeaders, 
+            IEnumerable<string> correlationDomainExclusionList,
+            bool injectLegacyHeaders,
+            bool injectW3CHeaders)
         {
             this.client = new TelemetryClient(configuration);
             this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceCore + ":");
@@ -70,6 +77,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
             this.injectLegacyHeaders = injectLegacyHeaders;
+            this.injectW3CHeaders = injectW3CHeaders;
 
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(this, this.applicationInsightsUrlFilter, this.isNetCore20HttpClient);
         }
@@ -510,6 +518,22 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         if (!string.IsNullOrEmpty(parentId) && !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
                         {
                             requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
+                        }
+                    }
+
+                    if (this.injectW3CHeaders)
+                    {
+                        currentActivity.UpdateContextFromParent();
+                        string traceParent = currentActivity.GetTraceParent();
+                        if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
+                        {
+                            requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
+                        }
+
+                        string traceState = currentActivity.GetTraceState();
+                        if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
+                        {
+                            requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
                         }
                     }
                 }
