@@ -18,6 +18,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
+#pragma warning disable 612, 618
     internal class HttpCoreDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
         private const string DependencyErrorPropertyKey = "Error";
@@ -520,21 +521,21 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
                         }
                     }
+                }
 
-                    if (this.injectW3CHeaders)
+                if (this.injectW3CHeaders)
+                {
+                    currentActivity.UpdateContextFromParent();
+                    string traceParent = currentActivity.GetTraceParent();
+                    if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
                     {
-                        currentActivity.UpdateContextFromParent();
-                        string traceParent = currentActivity.GetTraceParent();
-                        if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
-                        {
-                            requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
-                        }
+                        requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
+                    }
 
-                        string traceState = currentActivity.GetTraceState();
-                        if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
-                        {
-                            requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
-                        }
+                    string traceState = currentActivity.GetTraceState();
+                    if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
+                    {
+                        requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
                     }
                 }
             }
@@ -682,4 +683,5 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
         }
     }
+#pragma warning restore 612, 618
 }
