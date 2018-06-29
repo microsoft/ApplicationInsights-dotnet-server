@@ -12,13 +12,16 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.Implementation;
-
+    
     /// <summary>
     /// Telemetry module tracking requests using http module.
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
+        internal bool EnableW3CHeadersExtraction = false;
+
         private const string IntermediateRequestHttpContextKey = "IntermediateRequest";
         // if HttpApplicaiton.OnRequestExecute is available, we don't attempt to detect any correlation issues
         private static bool correlationIssuesDetectionComplete = typeof(HttpApplication).GetMethod("OnExecuteRequestStep") != null;
@@ -27,6 +30,16 @@
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
+
+#pragma warning disable 612, 618
+        /// <summary>
+        /// Creates DependencyTrackingTelemetryModule
+        /// </summary>
+        public RequestTrackingTelemetryModule()
+        {
+            this.EnableW3CHeadersExtraction = W3CConstants.IsW3CTracingEnabled();
+        }
+#pragma warning restore 612, 618
 
         /// <summary>
         /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
@@ -174,6 +187,12 @@
                 try
                 {
                     sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey);
+                    if (sourceAppId == null && this.EnableW3CHeadersExtraction)
+                    {
+#pragma warning disable 612, 618
+                        sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField);
+#pragma warning restore  612, 618
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -276,6 +295,8 @@
             {
                 this.childRequestTrackingSuppressionModule = new ChildRequestTrackingSuppressionModule(maxRequestsTracked: this.ChildRequestTrackingInternalDictionarySize);
             }
+
+            ActivityHelpers.IsW3CTracingEnabled = this.EnableW3CHeadersExtraction;
         }
 
         /// <summary>

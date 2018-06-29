@@ -4,6 +4,7 @@
     using System.Linq;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable 612, 618

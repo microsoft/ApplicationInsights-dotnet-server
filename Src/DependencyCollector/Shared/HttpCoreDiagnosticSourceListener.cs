@@ -13,12 +13,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.DependencyCollector.W3C;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.W3C;
 
-#pragma warning disable 612, 618
     internal class HttpCoreDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
         private const string DependencyErrorPropertyKey = "Error";
@@ -453,18 +452,18 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
         }
 
+#pragma warning disable 612, 618
         private void InjectRequestHeaders(HttpRequestMessage request, string instrumentationKey, bool isLegacyEvent = false)
         {
             try
             {
                 var currentActivity = Activity.Current;
-
                 HttpRequestHeaders requestHeaders = request.Headers;
                 if (requestHeaders != null && this.setComponentCorrelationHttpHeaders && !this.correlationDomainExclusionList.Contains(request.RequestUri.Host))
                 {
+                    string sourceApplicationId = null;
                     try
                     {
-                        string sourceApplicationId = null;
                         if (!string.IsNullOrEmpty(instrumentationKey)
                             && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey)
                             && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(instrumentationKey, out sourceApplicationId) ?? false))
@@ -484,25 +483,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, currentActivity.Id);
                         }
 
-                        if (!requestHeaders.Contains(RequestResponseHeaders.CorrelationContextHeader))
-                        {
-                            // we expect baggage to be empty or contain a few items
-                            using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
-                            {
-                                if (e.MoveNext())
-                                {
-                                    var baggage = new List<string>();
-                                    do
-                                    {
-                                        KeyValuePair<string, string> item = e.Current;
-                                        baggage.Add(new NameValueHeaderValue(item.Key, item.Value).ToString());
-                                    }
-                                    while (e.MoveNext());
-
-                                    requestHeaders.Add(RequestResponseHeaders.CorrelationContextHeader, baggage);
-                                }
-                            }
-                        }
+                        this.InjectCorrelationContext(requestHeaders, currentActivity);
                     }
 
                     if (this.injectLegacyHeaders)
@@ -521,21 +502,29 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
                         }
                     }
-                }
 
-                if (this.injectW3CHeaders)
-                {
-                    currentActivity.UpdateContextFromParent();
-                    string traceParent = currentActivity.GetTraceParent();
-                    if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
+                    if (this.injectW3CHeaders)
                     {
-                        requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
-                    }
+                        currentActivity.UpdateContextFromParent();
+                        string traceParent = currentActivity.GetTraceParent();
+                        if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
+                        {
+                            requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
+                        }
 
-                    string traceState = currentActivity.GetTraceState();
-                    if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
-                    {
-                        requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
+                        string traceState = currentActivity.GetTraceState();
+                        if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
+                        {
+                            requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
+                        }
+
+                        if (sourceApplicationId != null)
+                        {
+                            // TODO: there could be another msappid in the state.
+                            HttpHeadersUtilities.SetHeaderKeyValue(requestHeaders, W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField, sourceApplicationId);
+                        }
+
+                        this.InjectCorrelationContext(requestHeaders, currentActivity);
                     }
                 }
             }
@@ -544,6 +533,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 AppMapCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
             }
         }
+#pragma warning restore 612, 618
 
         private void ParseResponse(HttpResponseMessage response, DependencyTelemetry telemetry)
         {
@@ -572,6 +562,29 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             int statusCode = (int)response.StatusCode;
             telemetry.ResultCode = (statusCode > 0) ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
             telemetry.Success = (statusCode > 0) && (statusCode < 400);
+        }
+
+        private void InjectCorrelationContext(HttpRequestHeaders requestHeaders, Activity currentActivity)
+        {
+            if (!requestHeaders.Contains(RequestResponseHeaders.CorrelationContextHeader))
+            {
+                // we expect baggage to be empty or contain a few items
+                using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
+                {
+                    if (e.MoveNext())
+                    {
+                        var baggage = new List<string>();
+                        do
+                        {
+                            KeyValuePair<string, string> item = e.Current;
+                            baggage.Add(new NameValueHeaderValue(item.Key, item.Value).ToString());
+                        }
+                        while (e.MoveNext());
+
+                        requestHeaders.Add(RequestResponseHeaders.CorrelationContextHeader, baggage);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -683,5 +696,4 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
         }
     }
-#pragma warning restore 612, 618
 }

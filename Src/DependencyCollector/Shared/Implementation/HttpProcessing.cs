@@ -11,6 +11,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.W3C;
 
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the callbacks
@@ -24,11 +25,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly ICollection<string> correlationDomainExclusionList;
         private readonly bool setCorrelationHeaders;
         private readonly bool injectLegacyHeaders;
+        private readonly bool enableW3CHeaders;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpProcessing"/> class.
         /// </summary>
-        public HttpProcessing(TelemetryConfiguration configuration, string sdkVersion, string agentVersion, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, bool injectLegacyHeaders)
+        public HttpProcessing(TelemetryConfiguration configuration, string sdkVersion, string agentVersion, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, bool injectLegacyHeaders, bool enableW3CHeaders)
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
@@ -44,6 +46,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
 
             this.injectLegacyHeaders = injectLegacyHeaders;
+            this.enableW3CHeaders = enableW3CHeaders;
         }
 
         /// <summary>
@@ -89,7 +92,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                 if (url == null)
                 {
-                    DependencyCollectorEventSource.Log.NotExpectedCallback(thisObj.GetHashCode(), "OnBeginHttp", "resourceName is empty");
+                    DependencyCollectorEventSource.Log.NotExpectedCallback(thisObj.GetHashCode(), "OnBeginHttp",
+                        "resourceName is empty");
                     return null;
                 }
 
@@ -149,19 +153,23 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 // Add the source instrumentation key header if collection is enabled, the request host is not in the excluded list and the same header doesn't already exist
                 if (this.setCorrelationHeaders && !this.correlationDomainExclusionList.Contains(url.Host))
                 {
+                    string applicationId = null;
                     try
                     {
-                        string applicationId = null;
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
-                            && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
-                            && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(telemetry.Context.InstrumentationKey, out applicationId) ?? false))
+                            && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader,
+                                RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
+                            && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(
+                                    telemetry.Context.InstrumentationKey, out applicationId) ?? false))
                         {
-                            webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey, applicationId);
+                            webRequest.Headers.SetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader,
+                                RequestResponseHeaders.RequestContextCorrelationSourceKey, applicationId);
                         }
                     }
                     catch (Exception ex)
                     {
-                        AppMapCorrelationEventSource.Log.SetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                        AppMapCorrelationEventSource.Log.SetCrossComponentCorrelationHeaderFailed(
+                            ex.ToInvariantString());
                     }
 
                     if (this.injectLegacyHeaders)
@@ -185,6 +193,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
                     }
 
+                    Activity currentActivity = Activity.Current;
+
                     // ApplicationInsights only need to inject Request-Id and Correlation-Context headers 
                     // for profiler instrumentation, in case of Http Desktop DiagnosticSourceListener
                     // they are injected in DiagnosticSource (with the System.Net.Http.Desktop.HttpRequestOut.Start event)
@@ -195,20 +205,49 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);
                         }
 
-                        if (webRequest.Headers[RequestResponseHeaders.CorrelationContextHeader] == null)
+                        if (currentActivity != null)
                         {
-                            var currentActivity = Activity.Current;
-                            if (currentActivity != null && currentActivity.Baggage.Any())
-                            {
-                                webRequest.Headers.SetHeaderFromNameValueCollection(RequestResponseHeaders.CorrelationContextHeader, currentActivity.Baggage);
-                            }
+                            this.InjectCorrelationContext(webRequest.Headers, currentActivity);
                         }
                     }
+
+#pragma warning disable 612, 618
+                    if (this.enableW3CHeaders && currentActivity != null)
+                    {
+                        // currentActivity.UpdateContextFromParent();
+                        string traceParent = currentActivity.GetTraceParent();
+                        if (traceParent != null && webRequest.Headers[W3CConstants.TraceParentHeader] == null)
+                        {
+                            webRequest.Headers.Add(W3CConstants.TraceParentHeader, traceParent);
+                        }
+
+                        string traceState = currentActivity.GetTraceState();
+                        if (traceState != null && webRequest.Headers[W3CConstants.TraceStateHeader] == null)
+                        {
+                            webRequest.Headers.Add(W3CConstants.TraceStateHeader, traceState);
+                        }
+
+                        if (applicationId != null)
+                        {
+                            // TODO: there could be another msappid in the state.
+                            webRequest.Headers.SetNameValueHeaderValue(W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField, applicationId);
+                        }
+                    }
+#pragma warning restore 612, 618
                 }
             }
             catch (Exception exception)
             {
-                DependencyCollectorEventSource.Log.CallbackError(thisObj == null ? 0 : thisObj.GetHashCode(), "OnBeginHttp", exception);
+                DependencyCollectorEventSource.Log.CallbackError(thisObj == null ? 0 : thisObj.GetHashCode(),
+                    "OnBeginHttp", exception);
+            }
+            finally
+            {
+                Activity current = Activity.Current;
+                if (current?.OperationName == ClientServerDependencyTracker.DependencyActivityName)
+                {
+                    current.Stop();
+                }
             }
 
             return null;
@@ -434,6 +473,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             telemetry.ResultCode = statusCode > 0 ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
             telemetry.Success = (statusCode > 0) && (statusCode < 400);
+        }
+
+        private void InjectCorrelationContext(WebHeaderCollection requestHeaders, Activity activity)
+        {
+            if (requestHeaders[RequestResponseHeaders.CorrelationContextHeader] == null && activity.Baggage.Any())
+            {
+                requestHeaders.SetHeaderFromNameValueCollection(RequestResponseHeaders.CorrelationContextHeader, activity.Baggage);
+            }
         }
     }
 }

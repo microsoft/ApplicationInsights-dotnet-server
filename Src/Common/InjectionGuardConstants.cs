@@ -10,11 +10,31 @@
         /// <summary>
         /// Max length of AppId allowed in response from Breeze.
         /// </summary>
-        public const int AppIdMaxLengeth = 50;
+        public const int AppIdMaxLength = 50;
 
         /// <summary>
         /// Max length of incoming Request Header value allowed.
         /// </summary>
         public const int RequestHeaderMaxLength = 1024;
+
+        /// <summary>
+        /// Max length of context header key.
+        /// </summary>
+        public const int ContextHeaderKeyMaxLength = 50;
+
+        /// <summary>
+        /// Max length of context header value.
+        /// </summary>
+        public const int ContextHeaderValueMaxLength = 1024;
+
+        /// <summary>
+        /// Max length of traceparent header value.
+        /// </summary>
+        public const int TraceParentHeaderMaxLength = 55;
+
+        /// <summary>
+        /// Max length of tracestate header value.
+        /// </summary>
+        public const int TraceStateHeaderMaxLength = 512;
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.W3C
+﻿namespace Microsoft.ApplicationInsights.W3C
 {
     using System;
     using System.ComponentModel;
@@ -20,10 +20,10 @@
         /// <returns>The same Activity for chaining.</returns>
         public static Activity GenerateW3CContext(this Activity activity)
         {
-            activity.SetTraceId(GenerateTraceId());
-            activity.SetSpanId(GenerateSpanId());
             activity.SetVersion(W3CConstants.DefaultVersion);
             activity.SetSampled(W3CConstants.DefaultSampled);
+            activity.SetSpanId(GenerateSpanId());
+            activity.SetTraceId(GenerateTraceId());
             return activity;
         }
 
@@ -117,11 +117,11 @@
                 var parts = value.Split('-');
                 if (parts.Length == 4)
                 {
-                    activity.SetTraceId(parts[1]);
-                    activity.SetParentSpanId(parts[2]);
                     activity.SetVersion(parts[0]);
                     activity.SetSampled(parts[3]);
+                    activity.SetParentSpanId(parts[2]);
                     activity.SetSpanId(GenerateSpanId());
+                    activity.SetTraceId(parts[1]);
                 }
             }
         }
@@ -160,7 +160,7 @@
         private static string GenerateSpanId()
         {
             // inefficient
-            return BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 8).ToString("x", CultureInfo.InvariantCulture);
+            return BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 8).ToString("x16", CultureInfo.InvariantCulture);
         }
 
         private static string GenerateTraceId()

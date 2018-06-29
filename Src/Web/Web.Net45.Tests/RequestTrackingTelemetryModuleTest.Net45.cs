@@ -4,15 +4,18 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Text.RegularExpressions;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Web;
 
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using Assert = Xunit.Assert;
 
+#pragma warning disable 612, 618
     /// <summary>
     /// NET 4.5 specific tests for RequestTrackingTelemetryModule.
     /// </summary>
@@ -133,6 +136,117 @@
             Assert.Equal("guid1", requestTelemetry.Context.Operation.ParentId);
 
             Assert.True(requestTelemetry.Id.StartsWith("|guid2.", StringComparison.Ordinal));
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CHeaders()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabled(
+                startActivity: true, 
+                addRequestId: false);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CHeadersAndNoParentActivity()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabled(
+                startActivity: false,
+                addRequestId: false);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CAndRequestIdHeaders()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabled(
+                startActivity: true,
+                addRequestId: true);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CAndRequestIdHeadersAndNoParentActivity()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabled(
+                startActivity: false,
+                addRequestId: true);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndNoHeaders()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(
+                startActivity: true,
+                addRequestId: false);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndNoHeadersAndNoParentActivity()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(
+                startActivity: false,
+                addRequestId: false);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndRequestIdHeader()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(
+                startActivity: true,
+                addRequestId: true);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndRequestIdHeaderAndNoParentActivity()
+        {
+            this.TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(
+                startActivity: false,
+                addRequestId: true);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndAppIdInState()
+        {
+            string expectedAppId = "some-app-id";
+            var headers = new Dictionary<string, string>
+            {
+                ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                ["tracestate"] = $"state=some,msappid={expectedAppId}",
+            };
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var module = this.RequestTrackingTelemetryModuleFactory(this.CreateDefaultConfig(context), enableW3CTracing: true);
+
+            module.OnBeginRequest(context);
+            var activityInitializedByW3CHeader = Activity.Current;
+            Assert.Equal("state=some", activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceStateTag).Value);
+
+            var requestTelemetry = context.GetRequestTelemetry();
+            module.OnEndRequest(context);
+
+            Assert.Equal(expectedAppId, requestTelemetry.Source);
+        }
+
+        [TestMethod]
+        public void TrackRequestWithW3CEnabledAndRequestContextAndAppIdInState()
+        {
+            string expectedAppId = "some-app-id";
+            var headers = new Dictionary<string, string>
+            {
+                ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                ["tracestate"] = "state=some,msappid=dummy",
+                ["Request-Context"] = $"appId={expectedAppId}"
+            };
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var module = this.RequestTrackingTelemetryModuleFactory(this.CreateDefaultConfig(context), enableW3CTracing: true);
+
+            module.OnBeginRequest(context);
+            var activityInitializedByW3CHeader = Activity.Current;
+            Assert.Equal("state=some", activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceStateTag).Value);
+
+            var requestTelemetry = context.GetRequestTelemetry();
+            module.OnEndRequest(context);
+
+            Assert.Equal(expectedAppId, requestTelemetry.Source);
         }
 
         [TestMethod]
@@ -280,5 +394,83 @@
             Assert.True(trace.Context.Operation.ParentId.StartsWith(requestTelemetry.Id, StringComparison.Ordinal));
             Assert.Equal("v", trace.Context.Properties["k"]);
         }
+
+        private void TestRequestTrackingWithW3CSupportEnabled(bool startActivity, bool addRequestId)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+                ["tracestate"] = "state=some",
+                ["Correlation-Context"] = "k=v"
+            };
+
+            if (addRequestId)
+            {
+                headers.Add("Request-Id", "|abc.1.2.3.");
+            }
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+            var module = this.RequestTrackingTelemetryModuleFactory(this.CreateDefaultConfig(context), enableW3CTracing: true);
+
+            if (startActivity)
+            {
+                var activity = new Activity("operation");
+                activity.Start();
+            }
+
+            module.OnBeginRequest(context);
+            var activityInitializedByW3CHeader = Activity.Current;
+            Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", activityInitializedByW3CHeader.ParentId);
+            Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value);
+            Assert.Equal("00f067aa0ba902b7", activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.ParentSpanIdTag).Value);
+            Assert.Equal(16, activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value.Length);
+            Assert.Equal("state=some", activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceStateTag).Value);
+            Assert.Equal("v", activityInitializedByW3CHeader.Baggage.Single(t => t.Key == "k").Value);
+
+            var requestTelemetry = context.GetRequestTelemetry();
+            module.OnEndRequest(context);
+
+            Assert.Equal(activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value, requestTelemetry.Id);
+            Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", requestTelemetry.Context.Operation.Id);
+            Assert.Equal("00f067aa0ba902b7", requestTelemetry.Context.Operation.ParentId);
+        }
+
+        private void TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(bool startActivity, bool addRequestId)
+        {
+            var headers = new Dictionary<string, string>();
+
+            if (addRequestId)
+            {
+                headers.Add("Request-Id", "|abc.1.2.3.");
+            }
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+
+            var module = this.RequestTrackingTelemetryModuleFactory(this.CreateDefaultConfig(context), enableW3CTracing: true);
+
+            if (startActivity)
+            {
+                var activity = new Activity("operation");
+                activity.Start();
+            }
+
+            module.OnBeginRequest(context);
+            var activityInitializedByW3CHeader = Activity.Current;
+
+            Assert.Equal(activityInitializedByW3CHeader.ParentId, activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value);
+            Assert.Equal(32, activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value.Length);
+            Assert.Equal(16, activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value.Length);
+            Assert.False(activityInitializedByW3CHeader.Tags.Any(t => t.Key == W3CConstants.ParentSpanIdTag));
+            Assert.False(activityInitializedByW3CHeader.Tags.Any(t => t.Key == W3CConstants.TraceStateTag));
+            Assert.False(activityInitializedByW3CHeader.Baggage.Any());
+
+            var requestTelemetry = context.GetRequestTelemetry();
+            module.OnEndRequest(context);
+
+            Assert.Equal(activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value, requestTelemetry.Id);
+            Assert.Equal(activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value, requestTelemetry.Context.Operation.Id);
+            Assert.Null(requestTelemetry.Context.Operation.ParentId);
+        }
     }
+#pragma warning restore 612, 618
 }

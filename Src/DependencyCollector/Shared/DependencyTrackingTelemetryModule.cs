@@ -9,6 +9,7 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlClientDiagnostics;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.W3C;
 #if NETSTANDARD1_6
     using System.Reflection;
     using System.Runtime.Versioning;
@@ -21,6 +22,8 @@
     /// </summary>
     public class DependencyTrackingTelemetryModule : ITelemetryModule, IDisposable
     {
+        internal bool EnableW3CHeadersInjection = false;
+
         private readonly object lockObject = new object();
 
 #if NET45
@@ -46,6 +49,16 @@
         private ICollection<string> excludedCorrelationDomains = new SanitizedHostList();
         private ICollection<string> includeDiagnosticSourceActivities = new List<string>();
 
+#pragma warning disable 612, 618
+        /// <summary>
+        /// Creates DependencyTrackingTelemetryModule
+        /// </summary>
+        public DependencyTrackingTelemetryModule()
+        {
+            this.EnableW3CHeadersInjection = W3CConstants.IsW3CTracingEnabled();
+        }
+#pragma warning restore 612, 618
+
         /// <summary>
         /// Gets or sets a value indicating whether to disable runtime instrumentation.
         /// </summary>
@@ -60,11 +73,6 @@
         /// Gets or sets a value indicating whether to enable legacy (x-ms*) correlation headers injection.
         /// </summary>
         public bool EnableLegacyCorrelationHeadersInjection { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether to enable W3C distributed tracing headers injection.
-        /// </summary>
-        public bool EnableW3CHeadersInjection { get; set; }
 
         /// <summary>
         /// Gets the component correlation configuration.
@@ -135,8 +143,12 @@
                     if (!this.isInitialized)
                     {
                         try
-                        {                            
+                        {
                             this.telemetryConfiguration = configuration;
+
+#if NET45
+                            ClientServerDependencyTracker.IsW3CEnabled = this.EnableW3CHeadersInjection;
+#endif
 
 #if !NETSTANDARD1_6
                             // Net40 only supports runtime instrumentation
@@ -204,7 +216,8 @@
                 DependencyTableStore.Instance.WebRequestConditionalHolder,
                 this.SetComponentCorrelationHttpHeaders,
                 this.ExcludeComponentCorrelationHttpHeadersOnDomains,
-                this.EnableLegacyCorrelationHeadersInjection);
+                this.EnableLegacyCorrelationHeadersInjection,
+                this.EnableW3CHeadersInjection);
             this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
             this.sqlConnectionProcessing = new ProfilerSqlConnectionProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
 
@@ -280,7 +293,8 @@
                     DependencyTableStore.Instance.WebRequestCacheHolder,
                     this.SetComponentCorrelationHttpHeaders,
                     this.ExcludeComponentCorrelationHttpHeadersOnDomains,
-                    this.EnableLegacyCorrelationHeadersInjection);
+                    this.EnableLegacyCorrelationHeadersInjection,
+                    this.EnableW3CHeadersInjection);
                 this.httpDesktopDiagnosticSourceListener = new HttpDesktopDiagnosticSourceListener(desktopHttpProcessing, new ApplicationInsightsUrlFilter(this.telemetryConfiguration));
             }
 

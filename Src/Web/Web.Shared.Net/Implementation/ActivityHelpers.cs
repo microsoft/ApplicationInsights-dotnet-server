@@ -11,6 +11,8 @@ namespace Microsoft.ApplicationInsights.Common
 
         internal static string ParentOperationIdHeaderName { get; set; }
 
+        internal static bool IsW3CTracingEnabled { get; set; } = false;
+
         /// <summary> 
         /// Checks if given RequestId is hierarchical.
         /// </summary>

@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.W3C
+﻿namespace Microsoft.ApplicationInsights.W3C
 {
     using System;
     using System.ComponentModel;
@@ -6,7 +6,6 @@
     using System.Linq;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
 
@@ -17,7 +16,7 @@
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class W3COperationCorrelationTelemetryInitializer : ITelemetryInitializer
     {
-        private static readonly string RddDiagnosticSourcePrefix = "rdd" + RddSource.DiagnosticSourceCore;
+        private static readonly string RddDiagnosticSourcePrefix = "rdddsc";
 
         /// <summary>
         /// Initializes telemety item.
@@ -26,32 +25,17 @@
         public void Initialize(ITelemetry telemetry)
         {
             Activity currentActivity = Activity.Current;
-            this.UpdateActivity(currentActivity);
-            this.UpdateTelemetry(telemetry, currentActivity);
+            UpdateTelemetry(telemetry, currentActivity, false);
         }
 
-        private void UpdateActivity(Activity activity)
-        {
-            if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
-            {
-                return;
-            }
-
-            // no w3c Tags on Activity
-            this.UpdateActivity(activity.Parent);
-
-            // at this point, Parent has W3C tags, but current activity does not - update it
-            activity.UpdateContextFromParent();
-
-            return;
-        }
-
-        private void UpdateTelemetry(ITelemetry telemetry, Activity activity)
+        internal static void UpdateTelemetry(ITelemetry telemetry, Activity activity, bool forceUpdate)
         {
             if (activity == null)
             {
                 return;
             }
+
+            UpdateActivity(activity);
 
             // Requests and dependnecies are initialized from the current Activity 
             // (i.e. telemetry.Id = current.Id). Activity is created for such requests specifically
@@ -65,8 +49,8 @@
             if (initializeFromCurrent)
             {
                 initializeFromCurrent &= !(opTelemetry is DependencyTelemetry dependency &&
-                                           dependency.Type == RemoteDependencyConstants.SQL
-                                           && dependency.Context.GetInternalContext().SdkVersion
+                                           dependency.Type == "SQL" && 
+                                           dependency.Context.GetInternalContext().SdkVersion
                                                .StartsWith(RddDiagnosticSourcePrefix, StringComparison.Ordinal)); 
             }
 
@@ -75,6 +59,11 @@
                 switch (tag.Key)
                 {
                     case W3CConstants.TraceIdTag:
+                        if (telemetry.Context.Operation.Id == tag.Value && !forceUpdate)
+                        {
+                            return;
+                        }
+
                         telemetry.Context.Operation.Id = tag.Value;
                         break;
                     case W3CConstants.SpanIdTag:
@@ -97,6 +86,20 @@
                         break;
                 }
             }
+        }
+
+        private static void UpdateActivity(Activity activity)
+        {
+            if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
+            {
+                return;
+            }
+
+            // no w3c Tags on Activity
+            UpdateActivity(activity.Parent);
+
+            // at this point, Parent has W3C tags, but current activity does not - update it
+            activity.UpdateContextFromParent();
         }
     }
 }

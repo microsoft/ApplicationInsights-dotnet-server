@@ -12,10 +12,11 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
-    using Microsoft.ApplicationInsights.DependencyCollector.W3C;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.ApplicationId;
     using Microsoft.ApplicationInsights.TestFramework;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -33,10 +34,13 @@
         private const string IKey = "F8474271-D231-45B6-8DD4-D344C309AE69";
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
         private const string localhostUrl = "http://localhost:5050";
+        private const string expectedAppId = "someAppId";
 
+        private readonly DictionaryApplicationIdProvider appIdProvider = new DictionaryApplicationIdProvider();
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
         private List<DependencyTelemetry> sentTelemetry;
+
         private object request;
         private object response;
         private object responseHeaders;
@@ -69,10 +73,16 @@
                 EndpointAddress = FakeProfileApiEndpoint
             };
 
+            this.appIdProvider.Defined = new Dictionary<string, string>
+            {
+                [IKey] = expectedAppId
+            };
+
             this.config = new TelemetryConfiguration
             {
                 InstrumentationKey = IKey,
-                TelemetryChannel = this.channel
+                TelemetryChannel = this.channel,
+                ApplicationIdProvider = this.appIdProvider
             };
 
             this.config.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
@@ -202,7 +212,7 @@
         /// </summary>
         [TestMethod]
         [Timeout(5000)]
-        public async Task TestDependencyCollectionWithW3CHeaders()
+        public async Task TestDependencyCollectionWithW3CHeadersAndRequestId()
         {
             using (var module = new DependencyTrackingTelemetryModule())
             {
@@ -239,8 +249,51 @@
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceParentHeader));
                 Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-01", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
-                Assert.IsFalse(request.Headers.Contains(W3CConstants.TraceStateHeader));
+                Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
+                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+
+                Assert.IsTrue(request.Headers.Contains(RequestResponseHeaders.CorrelationContextHeader));
+                Assert.AreEqual("k=v", request.Headers.GetValues(RequestResponseHeaders.CorrelationContextHeader).Single());
+
                 Assert.AreEqual("v", dependency.Properties["k"]);
+            }
+        }
+
+        /// <summary>
+        /// Tests that dependency is collected properly when there is parent activity.
+        /// </summary>
+        [TestMethod]
+        [Timeout(5000)]
+        public async Task TestDependencyCollectionWithW3CHeadersWithState()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                this.config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+                module.Initialize(this.config);
+
+                var parent = new Activity("parent")
+                    .Start()
+                    .GenerateW3CContext();
+
+                parent.SetTraceState("some=state");
+
+                var url = new Uri(localhostUrl);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using (new LocalServer(localhostUrl))
+                {
+                    await new HttpClient().SendAsync(request);
+                }
+
+                // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
+                // let's wait until dependency is collected
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
+
+                parent.Stop();
+
+                Assert.AreEqual(2, request.Headers.GetValues(W3CConstants.TraceStateHeader).Count());
+                Assert.IsTrue(request.Headers.GetValues(W3CConstants.TraceStateHeader).Contains($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}"));
+                Assert.IsTrue(request.Headers.GetValues(W3CConstants.TraceStateHeader).Contains("some=state"));
             }
         }
 

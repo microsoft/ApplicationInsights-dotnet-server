@@ -17,7 +17,9 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.ApplicationId;
     using Microsoft.ApplicationInsights.TestFramework;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -31,10 +33,13 @@
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
         private const string LocalhostUrlDiagSource = "http://localhost:8088/";
         private const string LocalhostUrlEventSource = "http://localhost:8089/";
+        private const string expectedAppId = "someAppId";
 
+        private readonly DictionaryApplicationIdProvider appIdProvider = new DictionaryApplicationIdProvider();
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
         private List<DependencyTelemetry> sentTelemetry;
+
         private object request;
         private object response;
         private object responseHeaders;
@@ -65,10 +70,16 @@
                 EndpointAddress = FakeProfileApiEndpoint
             };
 
+            this.appIdProvider.Defined = new Dictionary<string, string>
+            {
+                [IKey] = expectedAppId
+            };
+
             this.config = new TelemetryConfiguration
             {
                 InstrumentationKey = IKey,
-                TelemetryChannel = this.channel
+                TelemetryChannel = this.channel,
+                ApplicationIdProvider = this.appIdProvider
             };
 
             this.config.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
@@ -298,6 +309,99 @@
         {
             this.TestCollectionResponseWithRedirects(false, LocalhostUrlEventSource);
         }
+
+#pragma warning disable 612, 618
+        /// <summary>
+        /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
+        /// </summary>
+        [TestMethod]
+        [Timeout(500000)]
+        public void TestDependencyCollectionWithW3CHeadersDiagnosticSource()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                this.config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+                module.Initialize(this.config);
+
+                var parent = new Activity("parent")
+                    .AddBaggage("k", "v")
+                    .SetParentId("|guid.")
+                    .Start()
+                    .GenerateW3CContext();
+
+                var url = new Uri(LocalhostUrlDiagSource);
+                HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);
+                using (new LocalServer(LocalhostUrlDiagSource))
+                {
+                    using (request.GetResponse())
+                    {
+                    }
+                }
+
+                // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
+                // let's wait until dependency is collected
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
+
+                parent.Stop();
+
+                string expectedTraceId = parent.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
+                string expectedParentId = parent.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+
+                DependencyTelemetry dependency = this.sentTelemetry.Single();
+                Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
+                Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
+
+                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-01", request.Headers[W3CConstants.TraceParentHeader]);
+
+                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers[W3CConstants.TraceStateHeader]);
+
+                Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
+                Assert.AreEqual("v", dependency.Properties["k"]);
+            }
+        }
+
+        /// <summary>
+        /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
+        /// </summary>
+        [TestMethod]
+        [Timeout(5000)]
+        public void TestDependencyCollectionWithW3CHeadersAndStateDiagnosticSource()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                this.config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+                module.Initialize(this.config);
+
+                var parent = new Activity("parent")
+                    .Start()
+                    .GenerateW3CContext();
+
+                parent.SetTraceState("some=state");
+
+                var url = new Uri(LocalhostUrlDiagSource);
+                HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);
+                using (new LocalServer(LocalhostUrlDiagSource))
+                {
+                    using (request.GetResponse())
+                    {
+                    }
+                }
+
+                // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
+                // let's wait until dependency is collected
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
+
+                parent.Stop();
+
+                Assert.IsTrue(request.Headers[W3CConstants.TraceStateHeader].Contains($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}"));
+                Assert.IsTrue(request.Headers[W3CConstants.TraceStateHeader].Contains("some=state"));
+                Assert.AreEqual(2, request.Headers[W3CConstants.TraceStateHeader].Split(',').Length);
+            }
+        }
+
+#pragma warning restore 612, 618
 
         private void TestCollectionPostRequests(bool enableDiagnosticSource, string url)
         {
