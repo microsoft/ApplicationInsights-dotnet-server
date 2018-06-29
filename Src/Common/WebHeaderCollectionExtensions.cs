@@ -56,7 +56,7 @@
             Debug.Assert(keyName != null, "keyName must not be null");
 
             IEnumerable<string> headerValue = GetHeaderValue(headers, headerName);
-            headers[headerName] = string.Join(", ", HeadersUtilities.UpdateHeaderWithKeyValue(headerValue, keyName, value));
+            headers[headerName] = string.Join(",", HeadersUtilities.UpdateHeaderWithKeyValue(headerValue, keyName, value));
         }
 
         /// <summary>

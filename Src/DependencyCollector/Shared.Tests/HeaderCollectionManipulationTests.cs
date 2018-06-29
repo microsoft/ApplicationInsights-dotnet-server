@@ -58,13 +58,13 @@
             // Non empty collection - adding new key
             headers.SetNameValueHeaderValue("Request-Context", "roleName", "workerRole");
             Assert.AreEqual(1, headers.Keys.Count);
-            Assert.AreEqual("appId=appIdValue, roleName=workerRole", headers["Request-Context"]);
+            Assert.AreEqual("appId=appIdValue,roleName=workerRole", headers["Request-Context"]);
 
             // overwritting existing key
             headers.SetNameValueHeaderValue("Request-Context", "roleName", "webRole");
             headers.SetNameValueHeaderValue("Request-Context", "appId", "udpatedAppId");
             Assert.AreEqual(1, headers.Keys.Count);
-            Assert.AreEqual("roleName=webRole, appId=udpatedAppId", headers["Request-Context"]);
+            Assert.AreEqual("roleName=webRole,appId=udpatedAppId", headers["Request-Context"]);
         }
 
         /// <summary>
