@@ -28,46 +28,22 @@
         }
 
         /// <summary>
-        /// Updates context on the Activity based on the W3C Context in the parent Activity.
+        /// Updates context on the Activity based on the W3C Context in the parent Activity tree.
         /// </summary>
         /// <param name="activity">Activity to update W3C context on.</param>
         /// <returns>The same Activity for chaining.</returns>
-        public static Activity UpdateContextFromParent(this Activity activity)
+        public static Activity UpdateContextOnActivity(this Activity activity)
         {
-            if (activity != null && activity.Tags.All(t => t.Key != W3CConstants.TraceIdTag))
+            if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
             {
-                if (activity.Parent == null)
-                {
-                    activity.GenerateW3CContext();
-                }
-                else
-                {
-                    foreach (var tag in activity.Parent.Tags)
-                    {
-                        switch (tag.Key)
-                        {
-                            case W3CConstants.TraceIdTag:
-                                activity.SetTraceId(tag.Value);
-                                break;
-                            case W3CConstants.SpanIdTag:
-                                activity.SetParentSpanId(tag.Value);
-                                activity.SetSpanId(GenerateSpanId());
-                                break;
-                            case W3CConstants.VersionTag:
-                                activity.SetVersion(tag.Value);
-                                break;
-                            case W3CConstants.SampledTag:
-                                activity.SetSampled(tag.Value);
-                                break;
-                            case W3CConstants.TraceStateTag:
-                                activity.SetTraceState(tag.Value);
-                                break;
-                        }
-                    }
-                }
+                return activity;
             }
 
-            return activity;
+            // no w3c Tags on Activity
+            activity.Parent.UpdateContextOnActivity();
+
+            // at this point, Parent has W3C tags, but current activity does not - update it
+            return activity.UpdateContextFromParent();
         }
 
         /// <summary>
@@ -191,6 +167,44 @@
         {
             // inefficient
             return GenerateSpanId() + GenerateSpanId();
+        }
+
+        private static Activity UpdateContextFromParent(this Activity activity)
+        {
+            if (activity != null && activity.Tags.All(t => t.Key != W3CConstants.TraceIdTag))
+            {
+                if (activity.Parent == null)
+                {
+                    activity.GenerateW3CContext();
+                }
+                else
+                {
+                    foreach (var tag in activity.Parent.Tags)
+                    {
+                        switch (tag.Key)
+                        {
+                            case W3CConstants.TraceIdTag:
+                                activity.SetTraceId(tag.Value);
+                                break;
+                            case W3CConstants.SpanIdTag:
+                                activity.SetParentSpanId(tag.Value);
+                                activity.SetSpanId(GenerateSpanId());
+                                break;
+                            case W3CConstants.VersionTag:
+                                activity.SetVersion(tag.Value);
+                                break;
+                            case W3CConstants.SampledTag:
+                                activity.SetSampled(tag.Value);
+                                break;
+                            case W3CConstants.TraceStateTag:
+                                activity.SetTraceState(tag.Value);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return activity;
         }
     }
 }

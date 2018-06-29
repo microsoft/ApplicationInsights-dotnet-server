@@ -214,6 +214,23 @@
             Assert.AreEqual(request.Id, sqlDependency.Context.Operation.ParentId);
             Assert.AreEqual(expectedId, sqlDependency.Id);
         }
+
+        [TestMethod]
+        public void InitializerOnActivityWithParentWithoutW3CTags()
+        {
+            Activity parentActivity = new Activity("parent")
+                .Start();
+            Activity childActivity = new Activity("child")
+                .Start();
+
+            RequestTelemetry request = new RequestTelemetry();
+            new W3COperationCorrelationTelemetryInitializer().Initialize(request);
+
+            Assert.AreEqual(request.Context.Operation.Id, parentActivity.GetTraceId());
+            Assert.AreEqual(request.Context.Operation.Id, childActivity.GetTraceId());
+            Assert.AreEqual(request.Id, childActivity.GetSpanId());
+            Assert.AreEqual(request.Context.Operation.ParentId, parentActivity.GetSpanId());
+        }
     }
 #pragma warning restore 612, 618
 }

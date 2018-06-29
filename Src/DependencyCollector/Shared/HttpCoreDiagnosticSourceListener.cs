@@ -457,7 +457,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             try
             {
-                var currentActivity = Activity.Current;
                 HttpRequestHeaders requestHeaders = request.Headers;
                 if (requestHeaders != null && this.setComponentCorrelationHttpHeaders && !this.correlationDomainExclusionList.Contains(request.RequestUri.Host))
                 {
@@ -476,6 +475,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         AppMapCorrelationEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
                     }
 
+                    var currentActivity = Activity.Current;
                     if (isLegacyEvent)
                     {
                         if (!requestHeaders.Contains(RequestResponseHeaders.RequestIdHeader))
@@ -505,7 +505,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                     if (this.injectW3CHeaders)
                     {
-                        currentActivity.UpdateContextFromParent();
+                        currentActivity.UpdateContextOnActivity();
                         string traceParent = currentActivity.GetTraceParent();
                         if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
                         {
@@ -523,8 +523,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             // TODO: there could be another msappid in the state.
                             HttpHeadersUtilities.SetHeaderKeyValue(requestHeaders, W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField, sourceApplicationId);
                         }
-
-                        this.InjectCorrelationContext(requestHeaders, currentActivity);
                     }
                 }
             }

@@ -35,7 +35,7 @@
                 return;
             }
 
-            UpdateActivity(activity);
+            activity.UpdateContextOnActivity();
 
             // Requests and dependnecies are initialized from the current Activity 
             // (i.e. telemetry.Id = current.Id). Activity is created for such requests specifically
@@ -90,20 +90,6 @@
                         break;
                 }
             }
-        }
-
-        private static void UpdateActivity(Activity activity)
-        {
-            if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
-            {
-                return;
-            }
-
-            // no w3c Tags on Activity
-            UpdateActivity(activity.Parent);
-
-            // at this point, Parent has W3C tags, but current activity does not - update it
-            activity.UpdateContextFromParent();
         }
     }
 }
