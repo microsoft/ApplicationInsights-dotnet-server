@@ -44,8 +44,8 @@
                 .Start()
                 .GenerateW3CContext();
             
-            string expectedTrace = a.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-            string expectedParent = a.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+            string expectedTrace = a.GetTraceId();
+            string expectedParent = a.GetSpanId();
 
             TraceTelemetry trace = new TraceTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(trace);
@@ -63,8 +63,8 @@
                 .Start()
                 .GenerateW3CContext();
 
-            string expectedTrace = a.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-            string expectedId = a.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+            string expectedTrace = a.GetTraceId();
+            string expectedId = a.GetSpanId();
 
             string expectedParent = "0123456789abcdef";
             a.AddTag(W3CConstants.ParentSpanIdTag, expectedParent);
@@ -86,8 +86,8 @@
                 .Start()
                 .GenerateW3CContext();
 
-            string expectedTrace = a.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-            string expectedId = a.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+            string expectedTrace = a.GetTraceId();
+            string expectedId = a.GetSpanId();
 
             RequestTelemetry request = new RequestTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
@@ -118,8 +118,9 @@
                 .Start()
                 .GenerateW3CContext();
 
-            string expectedTrace = a.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-            string expectedId = a.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+            string expectedTrace = a.GetTraceId();
+            string expectedId = a.GetSpanId();
+
             string expectedParent = "0123456789abcdef";
             a.AddTag(W3CConstants.ParentSpanIdTag, expectedParent);
 
@@ -145,8 +146,8 @@
                 
             a.SetTraceState("key=value");
 
-            string expectedTrace = a.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-            string expectedId = a.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+            string expectedTrace = a.GetTraceId();
+            string expectedId = a.GetSpanId();
 
             RequestTelemetry request = new RequestTelemetry();
 
@@ -173,11 +174,11 @@
             DependencyTelemetry dependency2 = new DependencyTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(dependency2);
 
-            Assert.AreEqual(request.Context.Operation.Id, nested2.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value);
-            Assert.AreEqual(request.Context.Operation.Id, nested1.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value);
+            Assert.AreEqual(request.Context.Operation.Id, nested2.GetTraceId());
+            Assert.AreEqual(request.Context.Operation.Id, nested1.GetTraceId());
 
-            Assert.AreEqual(request.Id, nested1.Tags.Single(t => t.Key == W3CConstants.ParentSpanIdTag).Value);
-            Assert.AreEqual(nested1.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value, nested2.Tags.Single(t => t.Key == W3CConstants.ParentSpanIdTag).Value);
+            Assert.AreEqual(request.Id, nested1.GetParentSpanId());
+            Assert.AreEqual(nested1.GetSpanId(), nested2.GetParentSpanId());
 
             Assert.AreEqual(request.Context.Operation.Id, dependency2.Context.Operation.Id);
 

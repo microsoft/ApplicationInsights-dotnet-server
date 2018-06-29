@@ -345,8 +345,8 @@
 
                 parent.Stop();
 
-                string expectedTraceId = parent.Tags.Single(t => t.Key == W3CConstants.TraceIdTag).Value;
-                string expectedParentId = parent.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value;
+                string expectedTraceId = parent.GetTraceId();
+                string expectedParentId = parent.GetSpanId();
 
                 DependencyTelemetry dependency = this.sentTelemetry.Single();
                 Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);

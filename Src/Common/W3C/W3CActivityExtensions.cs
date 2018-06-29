@@ -142,6 +142,30 @@
         public static void SetTraceState(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.TraceStateTag, value);
 
+        /// <summary>
+        /// Gets TraceId from the Activity.
+        /// Use carefully: if may cause iteration over all tags!
+        /// </summary>
+        /// <param name="activity">Activity to get traceId from.</param>
+        /// <returns>TraceId value or null if it does not exist.</returns>
+        public static string GetTraceId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TraceIdTag).Value;
+
+        /// <summary>
+        /// Gets SpanId from the Activity.
+        /// Use carefully: if may cause iteration over all tags!
+        /// </summary>
+        /// <param name="activity">Activity to get spanId from.</param>
+        /// <returns>SpanId value or null if it does not exist.</returns>
+        public static string GetSpanId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.SpanIdTag).Value;
+
+        /// <summary>
+        /// Gets ParentSpanId from the Activity.
+        /// Use carefully: if may cause iteration over all tags!
+        /// </summary>
+        /// <param name="activity">Activity to get ParentSpanId from.</param>
+        /// <returns>ParentSpanId value or null if it does not exist.</returns>
+        public static string GetParentSpanId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.ParentSpanIdTag).Value;
+
         private static void SetTraceId(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.TraceIdTag, value);
 

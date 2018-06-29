@@ -59,11 +59,15 @@
                 switch (tag.Key)
                 {
                     case W3CConstants.TraceIdTag:
+#if NET45
+                        // on .NET Fx Activities are not always reliable, this code prevents update
+                        // of the telemetry that was forcibly update during Activity lifetime
+                        // ON .NET Core there is no such problem 
                         if (telemetry.Context.Operation.Id == tag.Value && !forceUpdate)
                         {
                             return;
                         }
-
+#endif
                         telemetry.Context.Operation.Id = tag.Value;
                         break;
                     case W3CConstants.SpanIdTag:

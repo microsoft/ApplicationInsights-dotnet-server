@@ -34,8 +34,8 @@
                     SetW3CContext(platformContext.Request, currentActivity);
 
                     // length enforced in TrySetW3CContext
-                    currentActivity.SetParentId(currentActivity.Tags.SingleOrDefault(t => t.Key == W3CConstants.TraceIdTag).Value);
-                    requestContext.ParentId = currentActivity.Tags.SingleOrDefault(t => t.Key == W3CConstants.ParentSpanIdTag).Value;
+                    currentActivity.SetParentId(currentActivity.GetTraceId());
+                    requestContext.ParentId = currentActivity.GetParentSpanId();
                 }
                 else if (currentActivity.Extract(platformContext.Request.Headers))
                 {
@@ -79,10 +79,10 @@
                     SetW3CContext(platformContext.Request, currentActivity);
                    
                     // length enforced in TrySetW3CContext
-                    currentActivity.SetParentId(currentActivity.Tags.SingleOrDefault(t => t.Key == W3CConstants.TraceIdTag).Value);
+                    currentActivity.SetParentId(currentActivity.GetTraceId());
                     currentActivity.Start();
 
-                    requestContext.ParentId = currentActivity.Tags.SingleOrDefault(t => t.Key == W3CConstants.ParentSpanIdTag).Value;
+                    requestContext.ParentId = currentActivity.GetParentSpanId();
                 }
                 else if (ActivityHelpers.IsHierarchicalRequestId(currentActivity.ParentId))
                 {

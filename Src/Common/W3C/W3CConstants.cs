@@ -21,34 +21,39 @@
         public const string TraceStateHeader = "tracestate";
 
         /// <summary>
+        /// Name of the field that carry ApplicationInsights application Id in the tracestate header.
+        /// </summary>
+        public const string ApplicationIdTraceStateField = "msappid";
+
+        /// <summary>
         /// Trace-Id tag name.
         /// </summary>
-        public const string TraceIdTag = "w3c_traceId";
+        internal const string TraceIdTag = "w3c_traceId";
 
         /// <summary>
         /// Span-Id tag name.
         /// </summary>
-        public const string SpanIdTag = "w3c_spanId";
+        internal const string SpanIdTag = "w3c_spanId";
 
         /// <summary>
         /// Parent span-Id tag name.
         /// </summary>
-        public const string ParentSpanIdTag = "w3c_parentSpanId";
+        internal const string ParentSpanIdTag = "w3c_parentSpanId";
 
         /// <summary>
         /// Version tag name.
         /// </summary>
-        public const string VersionTag = "w3c_version";
+        internal const string VersionTag = "w3c_version";
 
         /// <summary>
         /// Sampled tag name.
         /// </summary>
-        public const string SampledTag = "w3c_sampled";
+        internal const string SampledTag = "w3c_sampled";
 
         /// <summary>
         /// TraceState tag name.
         /// </summary>
-        public const string TraceStateTag = "w3c_traceState";
+        internal const string TraceStateTag = "w3c_traceState";
 
         /// <summary>
         /// Default version value.
@@ -66,23 +71,14 @@
         internal const string EnableW3CHeadersEnvironmentVariable = "APPLICATIONINSIGHTS_ENABLE_W3C_TRACING";
 
         /// <summary>
-        /// Name of the field that carry ApplicationInsights application Id in the tracestate header.
-        /// </summary>
-        internal const string ApplicationIdTraceStateField = "msappid";
-
-        /// <summary>
         /// Determines if W3C tracing is enabled.
         /// </summary>
         /// <returns>True if enabled, false otherwise.</returns>
         public static bool IsW3CTracingEnabled()
         {
+            // TODO: cache result, but before create test W3C apps
             string w3CEnabledStr = Environment.GetEnvironmentVariable(EnableW3CHeadersEnvironmentVariable);
-            if (bool.TryParse(w3CEnabledStr, out bool w3CEnabled))
-            {
-                return w3CEnabled;
-            }
-
-            return false;
+            return bool.TryParse(w3CEnabledStr, out bool enabled) && enabled;
         }
     }
 }
