@@ -264,6 +264,50 @@
         /// </summary>
         [TestMethod]
         [Timeout(5000)]
+        public async Task TestDependencyCollectionWithW3CHeadersAndNoParentContext()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                this.config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+                module.Initialize(this.config);
+
+                var parent = new Activity("parent")
+                    .Start();
+
+                var url = new Uri(localhostUrl);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using (new LocalServer(localhostUrl))
+                {
+                    await new HttpClient().SendAsync(request);
+                }
+
+                // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
+                // let's wait until dependency is collected
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
+
+                parent.Stop();
+
+                string expectedTraceId = parent.GetTraceId();
+                string expectedParentId = parent.GetSpanId();
+
+                DependencyTelemetry dependency = this.sentTelemetry.Single();
+                Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
+                Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
+
+                Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceParentHeader));
+                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-01", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+
+                Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
+                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+            }
+        }
+
+        /// <summary>
+        /// Tests that dependency is collected properly when there is parent activity.
+        /// </summary>
+        [TestMethod]
+        [Timeout(5000)]
         public async Task TestDependencyCollectionWithW3CHeadersWithState()
         {
             using (var module = new DependencyTrackingTelemetryModule())
