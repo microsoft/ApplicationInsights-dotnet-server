@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.7.0-beta1
+## Version 2.7.0-beta3
 - [Fix: SerializationException resolving Activity in cross app-domain calls](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/613)
 
 ## Version 2.7.0-beta1
