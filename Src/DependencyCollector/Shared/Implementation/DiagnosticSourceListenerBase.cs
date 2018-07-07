@@ -16,13 +16,21 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         protected readonly TelemetryClient Client;
         protected readonly TelemetryConfiguration Configuration;
 
-        private readonly IDisposable listenerSubscription;
+        private IDisposable listenerSubscription;
         private List<IDisposable> individualSubscriptions;
 
         protected DiagnosticSourceListenerBase(TelemetryConfiguration configuration)
         {
             this.Configuration = configuration;
             this.Client = new TelemetryClient(configuration);
+        }
+
+        public void Subscribe()
+        {
+            if (this.listenerSubscription != null)
+            {
+                return;
+            }
 
             try
             {
