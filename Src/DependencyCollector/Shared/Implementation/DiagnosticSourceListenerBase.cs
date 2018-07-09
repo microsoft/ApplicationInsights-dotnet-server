@@ -25,6 +25,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.Client = new TelemetryClient(configuration);
         }
 
+        /// <summary>
+        /// Subscribes the listener to all enabled sources. This method must be called
+        /// to enable dependency calls collection.
+        /// </summary>
         public void Subscribe()
         {
             if (this.listenerSubscription != null)
