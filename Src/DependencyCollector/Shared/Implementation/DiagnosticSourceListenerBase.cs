@@ -19,6 +19,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private IDisposable listenerSubscription;
         private List<IDisposable> individualSubscriptions;
 
+        /// <summary>
+        /// Creates DiagnosticSourceListenerBase. To finish the initialization and subscribe to all enabled sources,
+        /// call <see cref="Subscribe"/>
+        /// </summary>
+        /// <param name="configuration"><see cref="TelemetryConfiguration"/> instance.
+        /// The listener tracks dependency calls and uses configuration to construct <see cref="TelemetryClient"/></param>
         protected DiagnosticSourceListenerBase(TelemetryConfiguration configuration)
         {
             this.Configuration = configuration;
