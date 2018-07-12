@@ -312,7 +312,7 @@
                 httpProcessingW3C.OnBeginForGetResponse(request);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
-                Assert.AreEqual($"some=state,msappid={TestApplicationId}", request.Headers[W3CConstants.TraceStateHeader]);
+                Assert.AreEqual($"msappid={TestApplicationId},some=state", request.Headers[W3CConstants.TraceStateHeader]);
 
                 requestTelemetry = op.Telemetry;
 

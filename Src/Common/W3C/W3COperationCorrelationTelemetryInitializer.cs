@@ -16,7 +16,8 @@
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class W3COperationCorrelationTelemetryInitializer : ITelemetryInitializer
     {
-        private static readonly string RddDiagnosticSourcePrefix = "rdddsc";
+        private const string RddDiagnosticSourcePrefix = "rdddsc";
+        private const string SqlRemoteDependencyType = "SQL";
 
         /// <summary>
         /// Initializes telemety item.
@@ -49,7 +50,7 @@
             if (initializeFromCurrent)
             {
                 initializeFromCurrent &= !(opTelemetry is DependencyTelemetry dependency &&
-                                           dependency.Type == "SQL" && 
+                                           dependency.Type == SqlRemoteDependencyType && 
                                            dependency.Context.GetInternalContext().SdkVersion
                                                .StartsWith(RddDiagnosticSourcePrefix, StringComparison.Ordinal)); 
             }
@@ -61,7 +62,7 @@
                     case W3CConstants.TraceIdTag:
 #if NET45
                         // on .NET Fx Activities are not always reliable, this code prevents update
-                        // of the telemetry that was forcibly update during Activity lifetime
+                        // of the telemetry that was forcibly updated during Activity lifetime
                         // ON .NET Core there is no such problem 
                         if (telemetry.Context.Operation.Id == tag.Value && !forceUpdate)
                         {
@@ -85,6 +86,13 @@
                         if (initializeFromCurrent)
                         {
                             telemetry.Context.Operation.ParentId = tag.Value;
+                        }
+
+                        break;
+                    case W3CConstants.TraceStateTag:
+                        if (telemetry is OperationTelemetry operation)
+                        {
+                            operation.Properties[W3CConstants.TraceStateTag] = tag.Value;
                         }
 
                         break;

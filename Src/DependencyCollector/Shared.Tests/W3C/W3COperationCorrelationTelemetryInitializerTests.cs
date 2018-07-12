@@ -138,7 +138,7 @@
         }
 
         [TestMethod]
-        public void InitializerDoesNotPopulateTraceStateOnTelemetry()
+        public void InitializerPopulatesTraceStateOnRequestAndDependencyTelemetry()
         {
             Activity a = new Activity("dummy")
                 .Start()
@@ -150,13 +150,19 @@
             string expectedId = a.GetSpanId();
 
             RequestTelemetry request = new RequestTelemetry();
-
-            new W3COperationCorrelationTelemetryInitializer().Initialize(request);
+            DependencyTelemetry dependency = new DependencyTelemetry();
+            TraceTelemetry trace = new TraceTelemetry();
+            var initializer = new W3COperationCorrelationTelemetryInitializer();
+            initializer.Initialize(request);
+            initializer.Initialize(dependency);
+            initializer.Initialize(trace);
 
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
             Assert.AreEqual(expectedId, request.Id);
 
-            Assert.IsFalse(request.Properties.Any());
+            Assert.AreEqual("key=value", request.Properties[W3CConstants.TraceStateTag]);
+            Assert.AreEqual("key=value", dependency.Properties[W3CConstants.TraceStateTag]);
+            Assert.IsFalse(trace.Properties.Any());
         }
 
         [TestMethod]

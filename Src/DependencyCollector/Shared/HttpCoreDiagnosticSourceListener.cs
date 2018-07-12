@@ -513,15 +513,27 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
 
                         string traceState = currentActivity.GetTraceState();
-                        if (traceState != null && !requestHeaders.Contains(W3CConstants.TraceStateHeader))
+                        if (!requestHeaders.Contains(W3CConstants.TraceStateHeader))
                         {
-                            requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
-                        }
+                            if (sourceApplicationId != null)
+                            {
+                                // TODO: there could be another msappid in the state.
+                                // last updated state should appear first in the tracestate
+                                string appIdPair = W3CConstants.ApplicationIdTraceStateField + "=" + sourceApplicationId;
+                                if (traceState == null)
+                                {
+                                    traceState = appIdPair;
+                                }
+                                else
+                                {
+                                    traceState = appIdPair + "," + traceState;
+                                }
+                            }
 
-                        if (sourceApplicationId != null)
-                        {
-                            // TODO: there could be another msappid in the state.
-                            HttpHeadersUtilities.SetHeaderKeyValue(requestHeaders, W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField, sourceApplicationId);
+                            if (traceState != null)
+                            {
+                                requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
+                            }
                         }
                     }
                 }

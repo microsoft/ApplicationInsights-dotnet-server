@@ -315,7 +315,7 @@
         /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
         /// </summary>
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public void TestDependencyCollectionWithW3CHeadersDiagnosticSource()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -329,6 +329,7 @@
                     .SetParentId("|guid.")
                     .Start()
                     .GenerateW3CContext();
+                parent.SetTraceState("state=some");
 
                 var url = new Uri(LocalhostUrlDiagSource);
                 HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);
@@ -354,10 +355,11 @@
 
                 Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-01", request.Headers[W3CConstants.TraceParentHeader]);
 
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers[W3CConstants.TraceStateHeader]);
+                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
                 Assert.AreEqual("v", dependency.Properties["k"]);
+                Assert.AreEqual("state=some", dependency.Properties[W3CConstants.TraceStateTag]);
             }
         }
 

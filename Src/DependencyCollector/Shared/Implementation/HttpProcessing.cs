@@ -222,15 +222,26 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
 
                         string traceState = currentActivity.GetTraceState();
-                        if (traceState != null && webRequest.Headers[W3CConstants.TraceStateHeader] == null)
+                        if (webRequest.Headers[W3CConstants.TraceStateHeader] == null)
                         {
-                            webRequest.Headers.Add(W3CConstants.TraceStateHeader, traceState);
-                        }
+                            if (applicationId != null)
+                            {
+                                // TODO: there could be another msappid in the state.
+                                string appIdPair = W3CConstants.ApplicationIdTraceStateField + "=" + applicationId;
+                                if (traceState == null)
+                                {
+                                    traceState = appIdPair;
+                                }
+                                else
+                                {
+                                    traceState = appIdPair + "," + traceState;
+                                }
+                            }
 
-                        if (applicationId != null)
-                        {
-                            // TODO: there could be another msappid in the state.
-                            webRequest.Headers.SetNameValueHeaderValue(W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField, applicationId);
+                            if (traceState != null)
+                            {
+                                webRequest.Headers.Add(W3CConstants.TraceStateHeader, traceState);
+                            }
                         }
                     }
 #pragma warning restore 612, 618

@@ -76,7 +76,7 @@
         /// <returns>True if enabled, false otherwise.</returns>
         public static bool IsW3CTracingEnabled()
         {
-            // TODO: cache result, but before create test W3C apps
+            // TODO: cache result, but before that create test W3C apps
             string w3CEnabledStr = Environment.GetEnvironmentVariable(EnableW3CHeadersEnvironmentVariable);
             return bool.TryParse(w3CEnabledStr, out bool enabled) && enabled;
         }

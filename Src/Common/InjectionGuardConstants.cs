@@ -33,8 +33,13 @@
         public const int TraceParentHeaderMaxLength = 55;
 
         /// <summary>
-        /// Max length of tracestate header value.
+        /// Max length of tracestate header value string.
         /// </summary>
         public const int TraceStateHeaderMaxLength = 512;
+
+        /// <summary>
+        /// Max number of key value pairs in the tracestate header.
+        /// </summary>
+        public const int TraceStateMaxPairs = 128;
     }
 }

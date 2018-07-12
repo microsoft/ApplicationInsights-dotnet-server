@@ -18,6 +18,8 @@
         /// </summary>
         /// <param name="activity">Activity to generate W3C context on.</param>
         /// <returns>The same Activity for chaining.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Activity GenerateW3CContext(this Activity activity)
         {
             activity.SetVersion(W3CConstants.DefaultVersion);
@@ -32,6 +34,8 @@
         /// </summary>
         /// <param name="activity">Activity to update W3C context on.</param>
         /// <returns>The same Activity for chaining.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Activity UpdateContextOnActivity(this Activity activity)
         {
             if (activity == null || activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag))
@@ -51,6 +55,8 @@
         /// </summary>
         /// <param name="activity">Activity to read W3C context from.</param>
         /// <returns>traceparent header value.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetTraceParent(this Activity activity)
         {
             string version = null, traceId = null, spanId = null, sampled = null;
@@ -84,8 +90,10 @@
         /// <summary>
         /// Intializes W3C context on the Activity from traceparent header value.
         /// </summary>
-        /// <param name="activity">Avtivity to set W3C context on.</param>
+        /// <param name="activity">Activity to set W3C context on.</param>
         /// <param name="value">Valid traceparent header like 00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01.</param>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetTraceParent(this Activity activity, string value)
         {
             if (value != null)
@@ -107,6 +115,8 @@
         /// </summary>
         /// <param name="activity">Activity to get tracestate from.</param>
         /// <returns>tracestate header value.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetTraceState(this Activity activity) =>
             activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TraceStateTag).Value;
 
@@ -115,6 +125,8 @@
         /// </summary>
         /// <param name="activity">Activity to set tracestate on.</param>
         /// <param name="value">tracestate header value.</param>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetTraceState(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.TraceStateTag, value);
 
@@ -124,6 +136,8 @@
         /// </summary>
         /// <param name="activity">Activity to get traceId from.</param>
         /// <returns>TraceId value or null if it does not exist.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetTraceId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TraceIdTag).Value;
 
         /// <summary>
@@ -132,6 +146,8 @@
         /// </summary>
         /// <param name="activity">Activity to get spanId from.</param>
         /// <returns>SpanId value or null if it does not exist.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetSpanId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.SpanIdTag).Value;
 
         /// <summary>
@@ -140,6 +156,8 @@
         /// </summary>
         /// <param name="activity">Activity to get ParentSpanId from.</param>
         /// <returns>ParentSpanId value or null if it does not exist.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetParentSpanId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.ParentSpanIdTag).Value;
 
         private static void SetTraceId(this Activity activity, string value) =>
@@ -159,13 +177,11 @@
 
         private static string GenerateSpanId()
         {
-            // inefficient
             return BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 8).ToString("x16", CultureInfo.InvariantCulture);
         }
 
         private static string GenerateTraceId()
         {
-            // inefficient
             return GenerateSpanId() + GenerateSpanId();
         }
 

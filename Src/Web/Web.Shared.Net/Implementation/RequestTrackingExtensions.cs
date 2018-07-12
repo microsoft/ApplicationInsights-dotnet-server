@@ -211,11 +211,15 @@
                 activity.GenerateW3CContext();
             }
 
-            var traceState = request.UnvalidatedGetHeaders().GetNameValueCollectionFromHeader(W3CConstants.TraceStateHeader);
+            var traceState = request.UnvalidatedGetHeaders().GetHeaderValue(
+                W3CConstants.TraceStateHeader, 
+                InjectionGuardConstants.TraceStateHeaderMaxLength,
+                InjectionGuardConstants.TraceStateMaxPairs)?.ToList();
             if (traceState != null && traceState.Any())
             {
-                string traceStateExceptAppId = string.Join(",",
-                    traceState.Where(s => s.Key != W3CConstants.ApplicationIdTraceStateField).Select(kvp => kvp.Key + "=" + kvp.Value));
+                var pairsExceptAppId = traceState.Where(s => !s.StartsWith(W3CConstants.ApplicationIdTraceStateField + "=", StringComparison.Ordinal));
+                string traceStateExceptAppId = string.Join(",", pairsExceptAppId);
+
                 activity.SetTraceState(StringUtilities.EnforceMaxLength(traceStateExceptAppId, InjectionGuardConstants.TraceStateHeaderMaxLength));
             }
 

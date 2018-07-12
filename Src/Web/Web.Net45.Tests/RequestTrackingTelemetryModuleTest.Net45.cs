@@ -433,6 +433,7 @@
             Assert.Equal(activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value, requestTelemetry.Id);
             Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", requestTelemetry.Context.Operation.Id);
             Assert.Equal("00f067aa0ba902b7", requestTelemetry.Context.Operation.ParentId);
+            Assert.Equal("state=some", requestTelemetry.Properties[W3CConstants.TraceStateTag]);
         }
 
         private void TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(bool startActivity, bool addRequestId)
