@@ -63,7 +63,7 @@
         /// <summary>
         /// Default sampled flag value.
         /// </summary>
-        internal const string DefaultSampled = "01";
+        internal const string DefaultSampled = "00";
 
         /// <summary>
         /// Name of the environment variable that controls W3C distributed tracing support.

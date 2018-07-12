@@ -353,7 +353,7 @@
                 Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
                 Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
 
-                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-01", request.Headers[W3CConstants.TraceParentHeader]);
+                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-00", request.Headers[W3CConstants.TraceParentHeader]);
 
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
 
