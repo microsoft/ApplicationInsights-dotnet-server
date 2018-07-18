@@ -12,7 +12,6 @@
     internal static class ClientServerDependencyTracker
     {
         private const string DependencyActivityName = "Microsoft.AppInsights.Web.Dependency";
-        private const string AuxiliaryActivityName = nameof(ClientServerDependencyTracker);
 
         /// <summary>
         /// Gets or sets a value indicating whether pretending the profiler is attached or not.
