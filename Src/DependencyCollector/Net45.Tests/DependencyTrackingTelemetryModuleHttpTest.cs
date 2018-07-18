@@ -8,6 +8,7 @@
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -30,7 +31,7 @@
         private const string IKey = "F8474271-D231-45B6-8DD4-D344C309AE69";
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
         private const string LocalhostUrlDiagSource = "http://localhost:8088/";
-        private const string LocalhostUrlEventSource = "http://localhost:8089/";
+        private const string LocalhostUrlEventSource = "http://localhost:8090/";
 
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
@@ -88,7 +89,7 @@
         }
 
         [TestMethod]
-        [Timeout(5000)]
+        [Timeout(500000)]
         public void TestBasicDependencyCollectionDiagnosticSource()
         {
             this.TestCollectionSuccessfulResponse(true, LocalhostUrlDiagSource, 200);
