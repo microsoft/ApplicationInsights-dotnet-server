@@ -33,7 +33,7 @@
         /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#trace-id
         /// </summary>
         /// <returns>Random 16 bytes array encoded as hex string</returns>
-        internal static string GenerateTraceId()
+        public static string GenerateTraceId()
         {
             // See https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa/24343727#24343727
             var bytes = Guid.NewGuid().ToByteArray();
