@@ -21,7 +21,7 @@
 
 # Visual Studio Application Insights SDK for .NET Web Applications
 
-The code in this repository is the .NET web application SDK for Application Insights. [Application Insights][AILandingPage] is a service that lets you monitor your live application's performance and usage. This SDK sends telemetry to the service. It collects data such as web request timings and success rates, dependency calls, exceptions, and server performance counters. You can also use the SDK to send your own telemetry and add modules to collect logs. You can use this SDK in any .NET web application, hosted either on your own servers or on Microsoft Azure.
+The code in this repository is the .NET web application SDK for Application Insights. [Application Insights][AILandingPage] is to monitor performance and usage of user’s live application.. This SDK sends telemetry to the service. It collects data such as web request timings and success rates, dependency calls, exceptions, and server performance counters. You can use the SDK to send your telemetry and add modules to collect logs. This SDK can be used in any .NET web application hosted on your servers or on Microsoft Azure.
 
 ## Get the SDK
 
@@ -56,7 +56,7 @@ Follow [contributor's guide](https://github.com/Microsoft/ApplicationInsights-do
 
 Our projects target multiple frameworks (ex: Net45 & NetCore). We have framework specific projects and a shared project for common files between them. (ex: Perf.Net45, Perf.NetCore, Perf.Shared). If a file is used by both frameworks, we prefer to store that file in a Shared project and use preprocessor directives to separate framework specific code (ex: `#if NETCORE, #if !NETCORE`). We also use a conditional ItemGroup to assign files to a framework (ex: `ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp1.0' "`).
 
-We've found that this makes our projects easier to maintain because it keeps Framework assignments in a single project. As an added bonus our Framework specific projects can include a single Shared project instead of individual files, which keeps our project files neat and clean.
+This makes our projects easier to maintain because it keeps Framework assignments in a single project. As an added bonus our Framework specific projects can include a single Shared project instead of individual files, which keeps our project files neat and clean.
 
 ## Contributing
 
