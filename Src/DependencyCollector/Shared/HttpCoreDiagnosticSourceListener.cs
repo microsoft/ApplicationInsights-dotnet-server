@@ -26,7 +26,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private const string HttpExceptionEventName = "System.Net.Http.Exception";
         private const string DeprecatedRequestEventName = "System.Net.Http.Request";
         private const string DeprecatedResponseEventName = "System.Net.Http.Response";
-        private const string AuxiliaryActivityName = nameof(HttpCoreDiagnosticSourceListener);
 
         private readonly IEnumerable<string> correlationDomainExclusionList;
         private readonly ApplicationInsightsUrlFilter applicationInsightsUrlFilter;
@@ -306,21 +305,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331
             if (currentActivity.Parent == null)
             {
-                Activity auxActivity = new Activity(AuxiliaryActivityName)
-                    .SetParentId(StringUtilities.GenerateTraceId())
-                    .SetStartTime(currentActivity.StartTimeUtc);
-
-                foreach (var baggageItem in currentActivity.Baggage)
-                {
-                    auxActivity.AddBaggage(baggageItem.Key, baggageItem.Value);
-                }
-
-                foreach (var tag in currentActivity.Tags)
-                {
-                    auxActivity.AddTag(tag.Key, tag.Value);
-                }
-
-                auxActivity.Start();
+                currentActivity.UpdateParent(StringUtilities.GenerateTraceId());
             }
 
             // end of workaround
@@ -351,8 +336,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 return;
             }
 
-            // If we started auxiliary Activity before to override the Id with W3C compatible one, now it;s time to stop it
-            if (currentActivity.OperationName == AuxiliaryActivityName)
+            // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
+            if (currentActivity.Duration == TimeSpan.Zero)
             {
                 currentActivity.Stop();
             }
