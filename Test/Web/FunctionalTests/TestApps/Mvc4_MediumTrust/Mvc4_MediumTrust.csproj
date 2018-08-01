@@ -59,11 +59,11 @@
     </Reference>
     <Reference Include="Microsoft.AI.ServerTelemetryChannel">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.7.0\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.7.1\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.7.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.7.1\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -118,11 +118,11 @@
     </Reference>
     <Reference Include="System.Net.Http">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.Net.Http.2.0.20710.0\lib\net45\System.Net.Http.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.Net.Http.2.0.2.7.1.0\lib\net45\System.Net.Http.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.Http.WebRequest">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.Net.Http.2.0.20710.0\lib\net45\System.Net.Http.WebRequest.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.Net.Http.2.0.2.7.1.0\lib\net45\System.Net.Http.WebRequest.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Helpers">
       <Private>True</Private>
@@ -154,7 +154,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WebMatrix.Data">
       <Private>True</Private>
-      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.Data.2.0.20710.0\lib\net40\WebMatrix.Data.dll</HintPath>
+      <HintPath>$(PackagesDir)\Microsoft.AspNet.WebPages.Data.2.0.2.7.1.0\lib\net40\WebMatrix.Data.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Web.WebPages.OAuth">
       <Private>True</Private>
