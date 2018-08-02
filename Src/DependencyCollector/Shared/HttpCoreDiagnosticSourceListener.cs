@@ -344,12 +344,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 return;
             }
 
-            // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
-            if (currentActivity.Duration == TimeSpan.Zero)
-            {
-                currentActivity.Stop();
-            }
-
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(currentActivity.Id);
 
             Uri requestUri = request.RequestUri;
@@ -372,6 +366,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             
             this.client.Initialize(telemetry);
 
+            // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
+            if (currentActivity.Duration == TimeSpan.Zero)
+            {
+                currentActivity.Stop();
+            }
+
             telemetry.Timestamp = currentActivity.StartTimeUtc;
             telemetry.Name = resourceName;
             telemetry.Target = requestUri.Host;
@@ -392,6 +392,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                 telemetry.ResultCode = requestTaskStatus.ToString();
                 telemetry.Success = false;
+            }
+
+            if (this.injectW3CHeaders)
+            {
+                // this.SetLegacyId(telemetry, request);
             }
 
             this.client.TrackDependency(telemetry);
@@ -444,6 +449,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     dependency.Telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, response);
                     if (request != null)
                     {
+                        if (this.injectW3CHeaders)
+                        {
+                            // this.SetLegacyId(dependency.Telemetry, request);
+                        }
+
                         this.ParseResponse(response, dependency.Telemetry);
                         this.client.StopOperation(dependency);
                         this.pendingTelemetry.Remove(request);

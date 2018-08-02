@@ -30,6 +30,18 @@
         }
 
         /// <summary>
+        /// Checks if current Actuvuty has W3C properties on it.
+        /// </summary>
+        /// <param name="activity">Activity to check.</param>
+        /// <returns>True if Activity has W3C properties, false otherwise.</returns>
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static bool IsW3CActivity(this Activity activity)
+        {
+            return activity != null && activity.Tags.Any(t => t.Key == W3CConstants.TraceIdTag);
+        }
+
+        /// <summary>
         /// Updates context on the Activity based on the W3C Context in the parent Activity tree.
         /// </summary>
         /// <param name="activity">Activity to update W3C context on.</param>
@@ -160,14 +172,16 @@
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetParentSpanId(this Activity activity) => activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.ParentSpanIdTag).Value;
 
+        [Obsolete("Not ready for public consumption.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        internal static void SetParentSpanId(this Activity activity, string value) =>
+            activity.AddTag(W3CConstants.ParentSpanIdTag, value);
+
         private static void SetTraceId(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.TraceIdTag, value);
 
         private static void SetSpanId(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.SpanIdTag, value);
-
-        private static void SetParentSpanId(this Activity activity, string value) =>
-            activity.AddTag(W3CConstants.ParentSpanIdTag, value);
 
         private static void SetVersion(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.VersionTag, value);

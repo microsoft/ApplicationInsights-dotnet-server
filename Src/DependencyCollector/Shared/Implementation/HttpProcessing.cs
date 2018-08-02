@@ -25,12 +25,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly ICollection<string> correlationDomainExclusionList;
         private readonly bool setCorrelationHeaders;
         private readonly bool injectLegacyHeaders;
-        private readonly bool enableW3CHeaders;
+        private readonly bool injectW3CHeaders;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpProcessing"/> class.
         /// </summary>
-        public HttpProcessing(TelemetryConfiguration configuration, string sdkVersion, string agentVersion, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, bool injectLegacyHeaders, bool enableW3CHeaders)
+        protected HttpProcessing(TelemetryConfiguration configuration, string sdkVersion, string agentVersion, bool setCorrelationHeaders, ICollection<string> correlationDomainExclusionList, bool injectLegacyHeaders, bool injectW3CHeaders)
         {
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             this.applicationInsightsUrlFilter = new ApplicationInsightsUrlFilter(configuration);
@@ -46,7 +46,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
 
             this.injectLegacyHeaders = injectLegacyHeaders;
-            this.enableW3CHeaders = enableW3CHeaders;
+            this.injectW3CHeaders = injectW3CHeaders;
         }
 
         /// <summary>
@@ -212,9 +212,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     }
 
 #pragma warning disable 612, 618
-                    if (this.enableW3CHeaders && currentActivity != null)
+                    if (this.injectW3CHeaders && currentActivity != null)
                     {
-                        // currentActivity.UpdateContextFromParent();
                         string traceParent = currentActivity.GetTraceParent();
                         if (traceParent != null && webRequest.Headers[W3CConstants.TraceParentHeader] == null)
                         {
@@ -283,6 +282,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             statusCode = (int)responseObj.StatusCode;
                             this.SetTarget(telemetry, responseObj.Headers);
+                            if (this.injectW3CHeaders && request is HttpWebRequest httpRequest)
+                            {
+                                // this.SetLegacyId(telemetry, httpRequest.Headers);
+                            }
 
                             // Set the operation details for the response
                             telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, responseObj);
@@ -326,6 +329,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             statusCode = (int)responseObj.StatusCode;
                             this.SetTarget(telemetry, responseObj.Headers);
+                            if (this.injectW3CHeaders && request is HttpWebRequest httpRequest)
+                            {
+                                // this.SetLegacyId(telemetry, httpRequest.Headers);
+                            }
 
                             // Set the operation details for the response
                             telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, responseObj);
@@ -375,6 +382,11 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     }
 
                     this.SetTarget(telemetry, (WebHeaderCollection)responseHeaders);
+                    if (this.injectW3CHeaders && request is HttpWebRequest httpRequest)
+                    {
+                        // this.SetLegacyId(telemetry, httpRequest.Headers);
+                    }
+
                     telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, responseHeaders);
 
                     ClientServerDependencyTracker.EndTracking(this.telemetryClient, telemetry);

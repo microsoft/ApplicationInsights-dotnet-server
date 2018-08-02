@@ -27,14 +27,20 @@
                 .Start();
 
             RequestTelemetry request = new RequestTelemetry();
-            string expectedId = request.Id;
 
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
 
             Assert.IsNotNull(request.Context.Operation.Id);
             Assert.IsNull(request.Context.Operation.ParentId);
-            Assert.AreNotEqual(expectedId, request.Id);
-            Assert.IsFalse(request.Properties.Any());
+            Assert.AreEqual($"|{a.GetTraceId()}.{a.GetSpanId()}.", request.Id);
+
+            Assert.AreEqual(2, request.Properties.Count);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+            Assert.AreEqual(a.Id, request.Properties[W3CConstants.LegacyRequestIdProperty]);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+            Assert.AreEqual(a.RootId, request.Properties[W3CConstants.LegacyRootIdProperty]);
         }
 
         [TestMethod]
@@ -51,7 +57,7 @@
             new W3COperationCorrelationTelemetryInitializer().Initialize(trace);
 
             Assert.AreEqual(expectedTrace, trace.Context.Operation.Id);
-            Assert.AreEqual(expectedParent, trace.Context.Operation.ParentId);
+            Assert.AreEqual($"|{expectedTrace}.{expectedParent}.", trace.Context.Operation.ParentId);
 
             Assert.IsFalse(trace.Properties.Any());
         }
@@ -64,7 +70,7 @@
                 .GenerateW3CContext();
 
             string expectedTrace = a.GetTraceId();
-            string expectedId = a.GetSpanId();
+            string expectedSpanId = a.GetSpanId();
 
             string expectedParent = "0123456789abcdef";
             a.AddTag(W3CConstants.ParentSpanIdTag, expectedParent);
@@ -73,10 +79,16 @@
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
 
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
-            Assert.AreEqual(expectedParent, request.Context.Operation.ParentId);
-            Assert.AreEqual(expectedId, request.Id);
+            Assert.AreEqual($"|{expectedTrace}.{expectedParent}.", request.Context.Operation.ParentId);
+            Assert.AreEqual($"|{expectedTrace}.{expectedSpanId}.", request.Id);
 
-            Assert.IsFalse(request.Properties.Any());
+            Assert.AreEqual(2, request.Properties.Count);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+            Assert.AreEqual(a.Id, request.Properties[W3CConstants.LegacyRequestIdProperty]);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+            Assert.AreEqual(a.RootId, request.Properties[W3CConstants.LegacyRootIdProperty]);
         }
 
         [TestMethod]
@@ -87,16 +99,22 @@
                 .GenerateW3CContext();
 
             string expectedTrace = a.GetTraceId();
-            string expectedId = a.GetSpanId();
+            string expectedSpanId = a.GetSpanId();
 
             RequestTelemetry request = new RequestTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
 
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
             Assert.IsNull(request.Context.Operation.ParentId);
-            Assert.AreEqual(expectedId, request.Id);
+            Assert.AreEqual($"|{expectedTrace}.{expectedSpanId}.", request.Id);
 
-            Assert.IsFalse(request.Properties.Any());
+            Assert.AreEqual(2, request.Properties.Count);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+            Assert.AreEqual(a.Id, request.Properties[W3CConstants.LegacyRequestIdProperty]);
+
+            Assert.IsTrue(request.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+            Assert.AreEqual(a.RootId, request.Properties[W3CConstants.LegacyRootIdProperty]);
         }
 
         [TestMethod]
@@ -119,7 +137,7 @@
                 .GenerateW3CContext();
 
             string expectedTrace = a.GetTraceId();
-            string expectedId = a.GetSpanId();
+            string expectedSpanId = a.GetSpanId();
 
             string expectedParent = "0123456789abcdef";
             a.AddTag(W3CConstants.ParentSpanIdTag, expectedParent);
@@ -133,8 +151,8 @@
             new W3COperationCorrelationTelemetryInitializer().Initialize(request);
 
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
-            Assert.AreEqual(expectedParent, request.Context.Operation.ParentId);
-            Assert.AreEqual(expectedId, request.Id);
+            Assert.AreEqual($"|{expectedTrace}.{expectedParent}.", request.Context.Operation.ParentId);
+            Assert.AreEqual($"|{expectedTrace}.{expectedSpanId}.", request.Id);
         }
 
         [TestMethod]
@@ -147,7 +165,7 @@
             a.SetTraceState("key=value");
 
             string expectedTrace = a.GetTraceId();
-            string expectedId = a.GetSpanId();
+            string expectedSpanId = a.GetSpanId();
 
             RequestTelemetry request = new RequestTelemetry();
             DependencyTelemetry dependency = new DependencyTelemetry();
@@ -158,7 +176,7 @@
             initializer.Initialize(trace);
 
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
-            Assert.AreEqual(expectedId, request.Id);
+            Assert.AreEqual($"|{expectedTrace}.{expectedSpanId}.", request.Id);
 
             Assert.AreEqual("key=value", request.Properties[W3CConstants.TraceStateTag]);
             Assert.AreEqual("key=value", dependency.Properties[W3CConstants.TraceStateTag]);
@@ -183,7 +201,7 @@
             Assert.AreEqual(request.Context.Operation.Id, nested2.GetTraceId());
             Assert.AreEqual(request.Context.Operation.Id, nested1.GetTraceId());
 
-            Assert.AreEqual(request.Id, nested1.GetParentSpanId());
+            Assert.AreEqual(request.Id, $"|{nested1.GetTraceId()}.{nested1.GetParentSpanId()}.");
             Assert.AreEqual(nested1.GetSpanId(), nested2.GetParentSpanId());
 
             Assert.AreEqual(request.Context.Operation.Id, dependency2.Context.Operation.Id);
@@ -193,6 +211,7 @@
             DependencyTelemetry dependency1 = new DependencyTelemetry();
             new W3COperationCorrelationTelemetryInitializer().Initialize(dependency1);
 
+            Assert.AreEqual(request.Id, $"|{nested1.GetTraceId()}.{nested1.GetParentSpanId()}.");
             Assert.AreEqual(dependency2.Context.Operation.ParentId, dependency1.Id);
             Assert.AreEqual(request.Context.Operation.Id, dependency1.Context.Operation.Id);
             Assert.AreEqual(request.Id, dependency1.Context.Operation.ParentId);
@@ -234,8 +253,8 @@
 
             Assert.AreEqual(request.Context.Operation.Id, parentActivity.GetTraceId());
             Assert.AreEqual(request.Context.Operation.Id, childActivity.GetTraceId());
-            Assert.AreEqual(request.Id, childActivity.GetSpanId());
-            Assert.AreEqual(request.Context.Operation.ParentId, parentActivity.GetSpanId());
+            Assert.AreEqual(request.Id, $"|{childActivity.GetTraceId()}.{childActivity.GetSpanId()}.");
+            Assert.AreEqual(request.Context.Operation.ParentId, $"|{childActivity.GetTraceId()}.{parentActivity.GetSpanId()}.");
         }
     }
 #pragma warning restore 612, 618

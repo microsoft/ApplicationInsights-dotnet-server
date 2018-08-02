@@ -71,6 +71,16 @@
         internal const string EnableW3CHeadersEnvironmentVariable = "APPLICATIONINSIGHTS_ENABLE_W3C_TRACING";
 
         /// <summary>
+        /// Legacy root Id tag name.
+        /// </summary>
+        internal const string LegacyRootIdProperty = "ai_legacyRootId";
+
+        /// <summary>
+        /// Legacy root Id tag name.
+        /// </summary>
+        internal const string LegacyRequestIdProperty = "ai_legacyParentId";
+
+        /// <summary>
         /// Determines if W3C tracing is enabled.
         /// </summary>
         /// <returns>True if enabled, false otherwise.</returns>

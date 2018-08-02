@@ -17,7 +17,6 @@
     using Microsoft.ApplicationInsights.DependencyCollector;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
-    using Microsoft.ApplicationInsights.DependencyCollector.W3C;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
@@ -86,7 +85,7 @@
                 setCorrelationHeaders: true,
                 correlationDomainExclusionList: new List<string>(),
                 injectLegacyHeaders: false,
-                enableW3CHeaders: false);
+                injectW3CHeaders: false);
         }
 
         [TestCleanup]
@@ -204,7 +203,7 @@
                 setCorrelationHeaders: true,
                 correlationDomainExclusionList: new List<string>(),
                 injectLegacyHeaders: true,
-                enableW3CHeaders: false);
+                injectW3CHeaders: false);
 
             var client = new TelemetryClient(this.configuration);
             using (var op = client.StartOperation<RequestTelemetry>("request"))
@@ -299,12 +298,13 @@
                 setCorrelationHeaders: true,
                 correlationDomainExclusionList: new List<string>(),
                 injectLegacyHeaders: true,
-                enableW3CHeaders: true);
+                injectW3CHeaders: true);
             ClientServerDependencyTracker.IsW3CEnabled = true;
 
             var client = new TelemetryClient(this.configuration);
             RequestTelemetry requestTelemetry;
-            DependencyTelemetry dependency;
+
+            Activity dependencyActivity;
             using (var op = client.StartOperation<RequestTelemetry>("request"))
             {
                 Activity.Current.AddBaggage("k", "v");
@@ -316,15 +316,24 @@
 
                 requestTelemetry = op.Telemetry;
 
+                dependencyActivity = Activity.Current;
+
                 var returnObjectPassed = TestUtils.GenerateHttpWebResponse(HttpStatusCode.OK);
                 httpProcessingW3C.OnEndForEndGetResponse(null, returnObjectPassed, request, null);
-                Assert.AreEqual(1, this.sendItems.Count);
-                dependency = this.sendItems.Single() as DependencyTelemetry;
-                Assert.IsNotNull(dependency);
             }
 
+            Assert.AreEqual(2, this.sendItems.Count);
+            var dependencies = this.sendItems.OfType<DependencyTelemetry>().ToArray();
+
+            Assert.AreEqual(1, dependencies.Length);
+            var dependency = dependencies.Single();
+            Assert.IsNotNull(dependency);
+
+            var dependencyIdParts = dependency.Id.Split('.', '|');
+            Assert.AreEqual(4, dependencyIdParts.Length);
+
             var traceParent = request.Headers[W3CConstants.TraceParentHeader];
-            Assert.AreEqual($"{W3CConstants.DefaultVersion}-{requestTelemetry.Context.Operation.Id}-{dependency.Id}-{W3CConstants.DefaultSampled}",
+            Assert.AreEqual($"{W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3CConstants.DefaultSampled}",
                 traceParent);
         }
 #pragma warning restore 612, 618
@@ -350,7 +359,7 @@
                 setCorrelationHeaders: false,
                 correlationDomainExclusionList: new List<string>(),
                 injectLegacyHeaders: true,
-                enableW3CHeaders: false);
+                injectW3CHeaders: false);
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());
@@ -363,7 +372,7 @@
                 setCorrelationHeaders: true,
                     correlationDomainExclusionList: exclusionList,
                     injectLegacyHeaders: true,
-                    enableW3CHeaders: false);
+                    injectW3CHeaders: false);
             httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
             Assert.AreEqual(0, request.Headers.Keys.Cast<string>().Where((x) => { return x.StartsWith("x-ms-", StringComparison.OrdinalIgnoreCase); }).Count());

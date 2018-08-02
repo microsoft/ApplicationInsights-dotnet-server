@@ -55,6 +55,7 @@
                                                .StartsWith(RddDiagnosticSourcePrefix, StringComparison.Ordinal)); 
             }
 
+            string spanId = null, parentSpanId = null;
             foreach (var tag in activity.Tags)
             {
                 switch (tag.Key)
@@ -72,22 +73,10 @@
                         telemetry.Context.Operation.Id = tag.Value;
                         break;
                     case W3CConstants.SpanIdTag:
-                        if (initializeFromCurrent)
-                        {
-                            opTelemetry.Id = tag.Value;
-                        }
-                        else
-                        {
-                            telemetry.Context.Operation.ParentId = tag.Value;
-                        }
-
+                        spanId = tag.Value;
                         break;
                     case W3CConstants.ParentSpanIdTag:
-                        if (initializeFromCurrent)
-                        {
-                            telemetry.Context.Operation.ParentId = tag.Value;
-                        }
-
+                        parentSpanId = tag.Value;
                         break;
                     case W3CConstants.TraceStateTag:
                         if (telemetry is OperationTelemetry operation)
@@ -98,6 +87,37 @@
                         break;
                 }
             }
+
+            if (initializeFromCurrent)
+            {
+                opTelemetry.Id = "|" + telemetry.Context.Operation.Id + "." + spanId + ".";
+                if (parentSpanId != null)
+                {
+                    telemetry.Context.Operation.ParentId = FormatId(telemetry.Context.Operation.Id, parentSpanId);
+                }
+            }
+            else
+            {
+                telemetry.Context.Operation.ParentId = FormatId(telemetry.Context.Operation.Id, spanId);
+            }
+
+            if (opTelemetry != null)
+            {
+                if (opTelemetry.Context.Operation.Id != activity.RootId)
+                {
+                    opTelemetry.Properties[W3CConstants.LegacyRootIdProperty] = activity.RootId;
+                }
+
+                if (opTelemetry.Id != activity.Id)
+                {
+                    opTelemetry.Properties[W3CConstants.LegacyRequestIdProperty] = activity.Id;
+                }
+            }
+        }
+
+        private static string FormatId(string traceId, string spanId)
+        {
+            return "|" + traceId + "." + spanId + ".";
         }
     }
 }

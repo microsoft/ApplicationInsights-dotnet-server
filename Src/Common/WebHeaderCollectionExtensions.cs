@@ -96,7 +96,7 @@
             var headerValueStr = headers[headerName];
             if (headerValueStr != null)
             {
-                if (maxStringLength > 0 && headerValueStr.Length > maxStringLength)
+                if (maxStringLength >= 0 && headerValueStr.Length > maxStringLength)
                 {
                     int lastValidComma = maxStringLength;
                     while (headerValueStr[lastValidComma] != ',' && lastValidComma > 0)

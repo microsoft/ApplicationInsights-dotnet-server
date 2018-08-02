@@ -220,20 +220,26 @@ namespace Microsoft.ApplicationInsights.Tests
                 injectLegacyHeaders: true,
                 injectW3CHeaders: false);
 
-            Guid loggingRequestId = Guid.NewGuid();
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
-            listenerWithLegacyHeaders.OnRequest(request, loggingRequestId);
+            using (listenerWithLegacyHeaders)
+            {
+                Guid loggingRequestId = Guid.NewGuid();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+                listenerWithLegacyHeaders.OnRequest(request, loggingRequestId);
 
-            IOperationHolder<DependencyTelemetry> dependency;
-            Assert.IsTrue(listenerWithLegacyHeaders.PendingDependencyTelemetry.TryGetValue(request, out dependency));
-            Assert.AreEqual(0, this.sentTelemetry.Count);
+                IOperationHolder<DependencyTelemetry> dependency;
+                Assert.IsTrue(
+                    listenerWithLegacyHeaders.PendingDependencyTelemetry.TryGetValue(request, out dependency));
+                Assert.AreEqual(0, this.sentTelemetry.Count);
 
-            var legacyRootIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardRootIdHeader).Single();
-            var legacyParentIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();
-            var requestIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.RequestIdHeader).Single();
-            Assert.AreEqual(dependency.Telemetry.Id, legacyParentIdHeader);
-            Assert.AreEqual(dependency.Telemetry.Context.Operation.Id, legacyRootIdHeader);
-            Assert.AreEqual(dependency.Telemetry.Id, requestIdHeader);
+                var legacyRootIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardRootIdHeader)
+                    .Single();
+                var legacyParentIdHeader =
+                    GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();
+                var requestIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.RequestIdHeader).Single();
+                Assert.AreEqual(dependency.Telemetry.Id, legacyParentIdHeader);
+                Assert.AreEqual(dependency.Telemetry.Context.Operation.Id, legacyRootIdHeader);
+                Assert.AreEqual(dependency.Telemetry.Id, requestIdHeader);
+            }
         }
 
         /// <summary>

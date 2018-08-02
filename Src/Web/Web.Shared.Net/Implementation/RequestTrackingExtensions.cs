@@ -24,25 +24,26 @@
             var currentActivity = Activity.Current;
             var requestContext = result.Context.Operation;
 
-            if (currentActivity == null) 
+            if (currentActivity == null)
             {
                 // if there was no BeginRequest, ASP.NET HttpModule did not have a chance to set current activity (and will never do it).
                 currentActivity = new Activity(ActivityHelpers.RequestActivityItemName);
 
                 if (ActivityHelpers.IsW3CTracingEnabled)
                 {
-                    SetW3CContext(platformContext.Request, currentActivity);
+                    ActivityHelpers.ExtractW3CContext(platformContext.Request, currentActivity);
 
-                    // length enforced in TrySetW3CContext
+                    // length enforced in SetW3CContext
                     currentActivity.SetParentId(currentActivity.GetTraceId());
-                    requestContext.ParentId = currentActivity.GetParentSpanId();
-                }
+                    W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
+
+                    SetLegacyContextIds(platformContext.Request, currentActivity, result);
+		}
                 else if (currentActivity.Extract(platformContext.Request.Headers))
                 {
                     requestContext.ParentId = currentActivity.ParentId;
                 }
-                else if (ActivityHelpers.TryParseCustomHeaders(platformContext.Request, out var rootId,
-                    out var parentId))
+                else if (ActivityHelpers.TryParseCustomHeaders(platformContext.Request, out var rootId, out var parentId))
                 {
                     currentActivity.SetParentId(rootId);
                     if (!string.IsNullOrEmpty(parentId))
@@ -53,36 +54,34 @@
                             requestContext.ParentId = parentId;
                         }
                     }
-                    else
-                    {
-                        // As a first step in supporting W3C protocol in ApplicationInsights,
-                        // we want to generate Activity Ids in the W3C compatible format.
-                        // While .NET changes to Activity are pending, we want to ensure trace starts with W3C compatible Id
-                        // as early as possible, so that everyone has a chance to upgrade and have compatibility with W3C systems once they arrive.
-                        // So if there is no current Activity (i.e. there were no Request-Id header in the incoming request), we'll override ParentId on 
-                        // the current Activity by the properly formatted one. This workaround should go away
-                        // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331 (TODO)
-                        currentActivity.SetParentId(StringUtilities.GenerateTraceId());
-
-                        // end of workaround
-                        requestContext.ParentId = parentId;
-                    }
+                }
+                else
+                {
+                    // As a first step in supporting W3C protocol in ApplicationInsights,
+                    // we want to generate Activity Ids in the W3C compatible format.
+                    // While .NET changes to Activity are pending, we want to ensure trace starts with W3C compatible Id
+                    // as early as possible, so that everyone has a chance to upgrade and have compatibility with W3C systems once they arrive.
+                    // So if there is no current Activity (i.e. there were no Request-Id header in the incoming request), we'll override ParentId on 
+                    // the current Activity by the properly formatted one. This workaround should go away
+                    // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331
+                    currentActivity.SetParentId(StringUtilities.GenerateTraceId());
+                    // end of workaround
                 }
 
                 currentActivity.Start();
             }
             else
             {
+                // currentActivity != null
                 if (ActivityHelpers.IsW3CTracingEnabled)
                 {
-                    currentActivity = new Activity(ActivityHelpers.RequestActivityItemName);
-                    SetW3CContext(platformContext.Request, currentActivity);
-                   
-                    // length enforced in TrySetW3CContext
-                    currentActivity.SetParentId(currentActivity.GetTraceId());
-                    currentActivity.Start();
+                    if (!currentActivity.IsW3CActivity())
+                    {
+                        ActivityHelpers.ExtractW3CContext(platformContext.Request, currentActivity);
+                    }
 
-                    requestContext.ParentId = currentActivity.GetParentSpanId();
+                    W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
+                    SetLegacyContextIds(platformContext.Request, currentActivity, result);
                 }
                 else if (ActivityHelpers.IsHierarchicalRequestId(currentActivity.ParentId))
                 {
@@ -90,8 +89,7 @@
                 }
                 else if (ActivityHelpers.ParentOperationIdHeaderName != null)
                 {
-                    var parentId =
-                        platformContext.Request.UnvalidatedGetHeader(ActivityHelpers.ParentOperationIdHeaderName);
+                    var parentId = platformContext.Request.UnvalidatedGetHeader(ActivityHelpers.ParentOperationIdHeaderName);
                     if (!string.IsNullOrEmpty(parentId))
                     {
                         requestContext.ParentId = parentId;
@@ -99,21 +97,19 @@
                 }
             }
 
-            // we have Activity.Current, we need to properly initialize request telemetry and store it in HttpContext
-            if (string.IsNullOrEmpty(requestContext.Id))
+            if (!ActivityHelpers.IsW3CTracingEnabled)
             {
-                requestContext.Id = currentActivity.RootId;
-                foreach (var item in currentActivity.Baggage)
+                // we have Activity.Current, we need to properly initialize request telemetry and store it in HttpContext
+                if (string.IsNullOrEmpty(requestContext.Id))
                 {
-                    result.Context.Properties[item.Key] = item.Value;
+                    requestContext.Id = currentActivity.RootId;
+                    foreach (var item in currentActivity.Baggage)
+                    {
+                        result.Context.Properties[item.Key] = item.Value;
+                    }
                 }
-            }
 
-            result.Id = currentActivity.Id;
-
-            if (ActivityHelpers.IsW3CTracingEnabled)
-            {
-                W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
+                result.Id = currentActivity.Id;
             }
 
             // save current activity in case it will be lost - we will use it in Web.OperationCorrelationTelemetryIntitalizer
@@ -199,43 +195,23 @@
             return name;
         }
 
-        private static void SetW3CContext(HttpRequest request, Activity activity)
+        private static void SetLegacyContextIds(HttpRequest request, Activity activity, RequestTelemetry requestTelemetry)
         {
-            var traceParent = request.UnvalidatedGetHeader(W3CConstants.TraceParentHeader);
-            if (traceParent != null)
+            if (request.UnvalidatedGetHeader(W3CConstants.TraceParentHeader) != null)
             {
-                activity.SetTraceParent(StringUtilities.EnforceMaxLength(traceParent, InjectionGuardConstants.TraceParentHeaderMaxLength));
-            }
-            else
-            {
-                activity.GenerateW3CContext();
+                return;
             }
 
-            var traceState = request.UnvalidatedGetHeaders().GetHeaderValue(
-                W3CConstants.TraceStateHeader, 
-                InjectionGuardConstants.TraceStateHeaderMaxLength,
-                InjectionGuardConstants.TraceStateMaxPairs)?.ToList();
-            if (traceState != null && traceState.Any())
+            var requestId = request.UnvalidatedGetHeader(RequestResponseHeaders.RequestIdHeader);
+            if (requestId != null)
             {
-                var pairsExceptAppId = traceState.Where(s => !s.StartsWith(W3CConstants.ApplicationIdTraceStateField + "=", StringComparison.Ordinal));
-                string traceStateExceptAppId = string.Join(",", pairsExceptAppId);
-
-                activity.SetTraceState(StringUtilities.EnforceMaxLength(traceStateExceptAppId, InjectionGuardConstants.TraceStateHeaderMaxLength));
+                var parentId = StringUtilities.EnforceMaxLength(requestId, InjectionGuardConstants.RequestHeaderMaxLength);
+                requestTelemetry.Context.Operation.ParentId = parentId;
             }
-
-            if (!activity.Baggage.Any())
+            else if (ActivityHelpers.TryParseCustomHeaders(request, out var _, out var parentId))
             {
-                var baggage = request.Headers.GetNameValueCollectionFromHeader(RequestResponseHeaders.CorrelationContextHeader);
-                    
-                if (baggage != null && baggage.Any())
-                {
-                    foreach (var item in baggage)
-                    {
-                        var itemName = StringUtilities.EnforceMaxLength(item.Key, InjectionGuardConstants.ContextHeaderKeyMaxLength);
-                        var itemValue = StringUtilities.EnforceMaxLength(item.Value, InjectionGuardConstants.ContextHeaderValueMaxLength);
-                        activity.AddBaggage(itemName, itemValue);
-                    }
-                }
+                parentId = StringUtilities.EnforceMaxLength(parentId, InjectionGuardConstants.RequestHeaderMaxLength);
+                requestTelemetry.Context.Operation.ParentId = parentId;
             }
         }
     }

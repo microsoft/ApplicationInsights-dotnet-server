@@ -11,6 +11,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.DependencyCollector;
@@ -32,13 +33,13 @@
         private const string IKey = "F8474271-D231-45B6-8DD4-D344C309AE69";
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
         private const string LocalhostUrlDiagSource = "http://localhost:8088/";
-        private const string LocalhostUrlEventSource = "http://localhost:8089/";
+        private const string LocalhostUrlEventSource = "http://localhost:8090/";
         private const string expectedAppId = "someAppId";
 
         private readonly DictionaryApplicationIdProvider appIdProvider = new DictionaryApplicationIdProvider();
         private StubTelemetryChannel channel;
         private TelemetryConfiguration config;
-        private List<DependencyTelemetry> sentTelemetry;
+        private List<ITelemetry> sentTelemetry;
 
         private object request;
         private object response;
@@ -48,7 +49,7 @@
         public void Initialize()
         {
             ServicePointManager.DefaultConnectionLimit = 1000;
-            this.sentTelemetry = new List<DependencyTelemetry>();
+            this.sentTelemetry = new List<ITelemetry>();
             this.request = null;
             this.response = null;
             this.responseHeaders = null;
@@ -57,11 +58,10 @@
             {
                 OnSend = telemetry =>
                 {
-                    // The correlation id lookup service also makes http call, just make sure we skip that
-                    DependencyTelemetry depTelemetry = telemetry as DependencyTelemetry;
-                    if (depTelemetry != null)
+                    this.sentTelemetry.Add(telemetry);
+
+                    if (telemetry is DependencyTelemetry depTelemetry)
                     {
-                        this.sentTelemetry.Add(depTelemetry);
                         depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out this.request);
                         depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.response);
                         depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.responseHeaders);
@@ -349,17 +349,68 @@
                 string expectedTraceId = parent.GetTraceId();
                 string expectedParentId = parent.GetSpanId();
 
-                DependencyTelemetry dependency = this.sentTelemetry.Single();
+                DependencyTelemetry dependency = (DependencyTelemetry)this.sentTelemetry.Single();
                 Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
-                Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
+                Assert.AreEqual($"|{expectedTraceId}.{expectedParentId}.", dependency.Context.Operation.ParentId);
 
-                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-00", request.Headers[W3CConstants.TraceParentHeader]);
+                var dependencyIdParts = dependency.Id.Split('.', '|');
+                Assert.AreEqual(4, dependencyIdParts.Length);
+                Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers[W3CConstants.TraceParentHeader]);
 
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
                 Assert.AreEqual("v", dependency.Properties["k"]);
                 Assert.AreEqual("state=some", dependency.Properties[W3CConstants.TraceStateTag]);
+
+                Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+                Assert.IsTrue(dependency.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith("|guid."));
+
+                Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+                Assert.AreEqual("guid", dependency.Properties[W3CConstants.LegacyRootIdProperty]);
+            }
+        }
+
+        /// <summary>
+        /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
+        /// </summary>
+        [TestMethod]
+        [Timeout(500000)]
+        public void TestDependencyCollectionWithW3CHeadersDiagnosticSourceAndStartParentOperation()
+        {
+            var telemetryClient = new TelemetryClient(this.config);
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                this.config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+                module.Initialize(this.config);
+
+                Activity operationActvity;
+                using (telemetryClient.StartOperation<RequestTelemetry>("foo"))
+                {
+                    operationActvity = Activity.Current;
+                    HttpWebRequest httpRequest = WebRequest.CreateHttp(LocalhostUrlDiagSource);
+                    using (new LocalServer(LocalhostUrlDiagSource))
+                    {
+                        using (httpRequest.GetResponse())
+                        {
+                        }
+                    }
+                }
+
+                // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
+                // let's wait until dependency is collected
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry.Count >= 2, TimeSpan.FromSeconds(1)));
+
+                RequestTelemetry requestTelemetry = this.sentTelemetry.OfType<RequestTelemetry>().Single();
+                DependencyTelemetry dependencyTelemetry = this.sentTelemetry.OfType<DependencyTelemetry>().Single();
+
+                Assert.AreEqual(requestTelemetry.Context.Operation.Id, dependencyTelemetry.Context.Operation.Id);
+                Assert.AreEqual(requestTelemetry.Id, dependencyTelemetry.Context.Operation.ParentId);
+
+                Assert.AreEqual(operationActvity.RootId, dependencyTelemetry.Properties[W3CConstants.LegacyRootIdProperty]);
+                Assert.IsTrue(dependencyTelemetry.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith(operationActvity.Id));
             }
         }
 
@@ -426,7 +477,7 @@
                     }
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), request, true, "200");
+                this.ValidateTelemetry(enableDiagnosticSource, (DependencyTelemetry)this.sentTelemetry.Single(), new Uri(url), request, true, "200");
             }
         }
 
@@ -459,7 +510,7 @@
                     }
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), request, true, "200");
+                this.ValidateTelemetry(enableDiagnosticSource, (DependencyTelemetry)this.sentTelemetry.Single(), new Uri(url), request, true, "200");
             }
         }
 
@@ -497,7 +548,7 @@
                     }
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), request, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), expectLegacyHeaders: injectLegacyHeaders);
+                this.ValidateTelemetry(enableDiagnosticSource, (DependencyTelemetry)this.sentTelemetry.Single(), new Uri(url), request, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), expectLegacyHeaders: injectLegacyHeaders);
             }
         }
 
@@ -527,7 +578,7 @@
                     }
                 }
 
-                this.ValidateTelemetry(true, this.sentTelemetry.Single(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), responseExpected: contentLength != 0);
+                this.ValidateTelemetry(true, (DependencyTelemetry)this.sentTelemetry.Single(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), responseExpected: contentLength != 0);
             }
         }
 
@@ -583,7 +634,7 @@
                 }
 
                 Assert.AreEqual(2, this.sentTelemetry.Count);
-                this.ValidateTelemetry(true, this.sentTelemetry.Last(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), responseExpected: false);
+                this.ValidateTelemetry(true, (DependencyTelemetry)this.sentTelemetry.Last(), new Uri(url), null, statusCode >= 200 && statusCode < 300, statusCode.ToString(CultureInfo.InvariantCulture), responseExpected: false);
             }
         }
 
@@ -613,7 +664,7 @@
                     await httpClient.GetAsync(url, cts.Token).ContinueWith(t => { });
                 }
 
-                this.ValidateTelemetry(enableDiagnosticSource, this.sentTelemetry.Single(), new Uri(url), null, false, string.Empty, responseExpected: false);
+                this.ValidateTelemetry(enableDiagnosticSource, (DependencyTelemetry)this.sentTelemetry.Single(), new Uri(url), null, false, string.Empty, responseExpected: false);
             }
         }
 
@@ -630,7 +681,7 @@
                     // here the start of dependency is tracked with HttpDesktopDiagnosticSourceListener, 
                     // so the expected SDK version should have DiagnosticSource 'rdddsd' prefix. 
                     // however the end is tracked by FrameworkHttpEventListener
-                    this.ValidateTelemetry(true, this.sentTelemetry.Single(), url, null, false, string.Empty, responseExpected: false);
+                    this.ValidateTelemetry(true, (DependencyTelemetry)this.sentTelemetry.Single(), url, null, false, string.Empty, responseExpected: false);
                 }
                 else
                 {

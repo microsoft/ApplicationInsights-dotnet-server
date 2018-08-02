@@ -49,6 +49,24 @@
             return new string(result);
         }
 
+        /// <summary>
+        /// Gets root id (string between '|' and the first dot) from the hierarchical Id.
+        /// </summary>
+        /// <param name="hierarchicalId">Id to extract root from.</param>
+        /// <returns>Root operation id.</returns>
+        internal static string GetRootId(string hierarchicalId)
+        {
+            // Returns the root Id from the '|' to the first '.' if any.
+            int rootEnd = hierarchicalId.IndexOf('.');
+            if (rootEnd < 0)
+            {
+                rootEnd = hierarchicalId.Length;
+            }
+
+            int rootStart = hierarchicalId[0] == '|' ? 1 : 0;
+            return hierarchicalId.Substring(rootStart, rootEnd - rootStart);
+        }
+
         private static uint[] CreateLookup32()
         {
             // See https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa/24343727#24343727

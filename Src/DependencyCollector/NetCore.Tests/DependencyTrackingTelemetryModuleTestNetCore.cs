@@ -132,7 +132,7 @@
         /// Tests that dependency is collected properly when there is no parent activity.
         /// </summary>
         [TestMethod]
-        [Timeout(5000)]
+        [Timeout(500000)]
         public async Task TestDependencyCollectionNoParentActivity()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -211,7 +211,7 @@
         /// Tests that dependency is collected properly when there is parent activity.
         /// </summary>
         [TestMethod]
-        [Timeout(5000)]
+        [Timeout(500000)]
         public async Task TestDependencyCollectionWithW3CHeadersAndRequestId()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -235,7 +235,7 @@
 
                 // DiagnosticSource Response event is fired after SendAsync returns on netcoreapp1.*
                 // let's wait until dependency is collected
-                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry != null, TimeSpan.FromSeconds(1)));
+                Assert.IsTrue(SpinWait.SpinUntil(() => this.sentTelemetry.Count > 0, TimeSpan.FromSeconds(1)));
 
                 parent.Stop();
 
@@ -244,10 +244,15 @@
 
                 DependencyTelemetry dependency = this.sentTelemetry.Single();
                 Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
-                Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
+                Assert.AreEqual($"|{expectedTraceId}.{expectedParentId}.", dependency.Context.Operation.ParentId);
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceParentHeader));
-                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+
+                var dependencyIdParts = dependency.Id.Split('.', '|');
+                Assert.AreEqual(4, dependencyIdParts.Length);
+
+                Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
@@ -257,6 +262,9 @@
 
                 Assert.AreEqual("v", dependency.Properties["k"]);
                 Assert.AreEqual("state=some", dependency.Properties[W3CConstants.TraceStateTag]);
+
+                Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+                Assert.IsTrue(dependency.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith("|guid."));
             }
         }
 
@@ -294,13 +302,21 @@
 
                 DependencyTelemetry dependency = this.sentTelemetry.Single();
                 Assert.AreEqual(expectedTraceId, dependency.Context.Operation.Id);
-                Assert.AreEqual(expectedParentId, dependency.Context.Operation.ParentId);
+                Assert.AreEqual($"|{expectedTraceId}.{expectedParentId}.", dependency.Context.Operation.ParentId);
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceParentHeader));
-                Assert.AreEqual($"00-{expectedTraceId}-{dependency.Id}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+
+                var dependencyIdParts = dependency.Id.Split('.', '|');
+                Assert.AreEqual(4, dependencyIdParts.Length);
+
+                Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+
+                Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+                Assert.IsTrue(dependency.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith(parent.Id));
             }
         }
 
@@ -308,7 +324,7 @@
         /// Tests that dependency is collected properly when there is parent activity.
         /// </summary>
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public async Task TestDependencyCollectionWithW3CHeadersWithState()
         {
             using (var module = new DependencyTrackingTelemetryModule())

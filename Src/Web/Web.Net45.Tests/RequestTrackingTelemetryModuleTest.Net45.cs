@@ -3,11 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Text.RegularExpressions;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using System.Web;
 
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.Helpers;
@@ -420,7 +421,7 @@
 
             module.OnBeginRequest(context);
             var activityInitializedByW3CHeader = Activity.Current;
-            Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", activityInitializedByW3CHeader.ParentId);
+            
             Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", activityInitializedByW3CHeader.GetTraceId());
             Assert.Equal("00f067aa0ba902b7", activityInitializedByW3CHeader.GetParentSpanId());
             Assert.Equal(16, activityInitializedByW3CHeader.GetSpanId().Length);
@@ -430,9 +431,10 @@
             var requestTelemetry = context.GetRequestTelemetry();
             module.OnEndRequest(context);
 
-            Assert.Equal(activityInitializedByW3CHeader.Tags.Single(t => t.Key == W3CConstants.SpanIdTag).Value, requestTelemetry.Id);
+            Assert.Equal($"|4bf92f3577b34da6a3ce929d0e0e4736.{activityInitializedByW3CHeader.GetSpanId()}.", requestTelemetry.Id);
             Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", requestTelemetry.Context.Operation.Id);
-            Assert.Equal("00f067aa0ba902b7", requestTelemetry.Context.Operation.ParentId);
+            Assert.Equal("|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7.", requestTelemetry.Context.Operation.ParentId);
+
             Assert.Equal("state=some", requestTelemetry.Properties[W3CConstants.TraceStateTag]);
         }
 
@@ -458,19 +460,27 @@
             module.OnBeginRequest(context);
             var activityInitializedByW3CHeader = Activity.Current;
 
-            Assert.Equal(activityInitializedByW3CHeader.ParentId, activityInitializedByW3CHeader.GetTraceId());
             Assert.Equal(32, activityInitializedByW3CHeader.GetTraceId().Length);
             Assert.Equal(16, activityInitializedByW3CHeader.GetSpanId().Length);
             Assert.Null(activityInitializedByW3CHeader.GetParentSpanId());
+
             Assert.Null(activityInitializedByW3CHeader.GetTraceState());
             Assert.False(activityInitializedByW3CHeader.Baggage.Any());
 
             var requestTelemetry = context.GetRequestTelemetry();
             module.OnEndRequest(context);
 
-            Assert.Equal(activityInitializedByW3CHeader.GetSpanId(), requestTelemetry.Id);
+            Assert.Equal($"|{activityInitializedByW3CHeader.GetTraceId()}.{activityInitializedByW3CHeader.GetSpanId()}.", requestTelemetry.Id);
             Assert.Equal(activityInitializedByW3CHeader.GetTraceId(), requestTelemetry.Context.Operation.Id);
-            Assert.Null(requestTelemetry.Context.Operation.ParentId);
+
+            if (addRequestId)
+            {
+                Assert.Equal("|abc.1.2.3.", requestTelemetry.Context.Operation.ParentId);
+            }
+            else
+            {
+                Assert.Null(requestTelemetry.Context.Operation.ParentId);
+            }
         }
     }
 #pragma warning restore 612, 618
