@@ -90,7 +90,7 @@
 
             if (initializeFromCurrent)
             {
-                opTelemetry.Id = "|" + telemetry.Context.Operation.Id + "." + spanId + ".";
+                opTelemetry.Id = FormatId(telemetry.Context.Operation.Id, spanId);
                 if (parentSpanId != null)
                 {
                     telemetry.Context.Operation.ParentId = FormatId(telemetry.Context.Operation.Id, parentSpanId);
@@ -117,7 +117,7 @@
 
         private static string FormatId(string traceId, string spanId)
         {
-            return "|" + traceId + "." + spanId + ".";
+            return String.Concat("|", traceId,".", spanId, ".");
         }
     }
 }
