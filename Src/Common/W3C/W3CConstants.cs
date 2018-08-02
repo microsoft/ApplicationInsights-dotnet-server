@@ -66,11 +66,6 @@
         internal const string DefaultSampled = "00";
 
         /// <summary>
-        /// Name of the environment variable that controls W3C distributed tracing support.
-        /// </summary>
-        internal const string EnableW3CHeadersEnvironmentVariable = "APPLICATIONINSIGHTS_ENABLE_W3C_TRACING";
-
-        /// <summary>
         /// Legacy root Id tag name.
         /// </summary>
         internal const string LegacyRootIdProperty = "ai_legacyRootId";
@@ -79,16 +74,5 @@
         /// Legacy root Id tag name.
         /// </summary>
         internal const string LegacyRequestIdProperty = "ai_legacyParentId";
-
-        /// <summary>
-        /// Determines if W3C tracing is enabled.
-        /// </summary>
-        /// <returns>True if enabled, false otherwise.</returns>
-        public static bool IsW3CTracingEnabled()
-        {
-            // TODO: cache result, but before that create test W3C apps
-            string w3CEnabledStr = Environment.GetEnvironmentVariable(EnableW3CHeadersEnvironmentVariable);
-            return bool.TryParse(w3CEnabledStr, out bool enabled) && enabled;
-        }
     }
 }

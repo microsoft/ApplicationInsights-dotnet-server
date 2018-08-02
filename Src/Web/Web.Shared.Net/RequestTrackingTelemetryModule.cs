@@ -20,8 +20,6 @@
     /// </summary>
     public class RequestTrackingTelemetryModule : ITelemetryModule
     {
-        internal bool EnableW3CHeadersExtraction = false;
-
         private const string IntermediateRequestHttpContextKey = "IntermediateRequest";
         // if HttpApplicaiton.OnRequestExecute is available, we don't attempt to detect any correlation issues
         private static bool correlationIssuesDetectionComplete = typeof(HttpApplication).GetMethod("OnExecuteRequestStep") != null;
@@ -30,16 +28,6 @@
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
-
-#pragma warning disable 612, 618
-        /// <summary>
-        /// Creates DependencyTrackingTelemetryModule
-        /// </summary>
-        public RequestTrackingTelemetryModule()
-        {
-            this.EnableW3CHeadersExtraction = W3CConstants.IsW3CTracingEnabled();
-        }
-#pragma warning restore 612, 618
 
         /// <summary>
         /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
@@ -78,6 +66,11 @@
         /// Gets or sets a value indicating whether the component correlation headers would be set on http responses.
         /// </summary>
         public bool SetComponentCorrelationHttpHeaders { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to enable W3C distributed tracing headers support.
+        /// </summary>
+        public bool EnableW3CHeadersExtraction { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).

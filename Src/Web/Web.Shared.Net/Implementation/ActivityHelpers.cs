@@ -97,5 +97,5 @@ namespace Microsoft.ApplicationInsights.Common
             }
         }
     }
-#pragma warning 612, 618
+#pragma warning restore 612, 618
 }
