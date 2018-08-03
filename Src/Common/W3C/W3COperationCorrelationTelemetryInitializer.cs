@@ -117,7 +117,7 @@
 
         private static string FormatId(string traceId, string spanId)
         {
-            return String.Concat("|", traceId,".", spanId, ".");
+            return String.Concat("|", traceId, ".", spanId, ".");
         }
     }
 }
