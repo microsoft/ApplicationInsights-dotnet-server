@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Linq;
     using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -95,15 +96,15 @@
 
             if (initializeFromCurrent)
             {
-                opTelemetry.Id = FormatId(telemetry.Context.Operation.Id, spanId);
+                opTelemetry.Id = StringUtilities.FormatRequestId(telemetry.Context.Operation.Id, spanId);
                 if (parentSpanId != null)
                 {
-                    telemetry.Context.Operation.ParentId = FormatId(telemetry.Context.Operation.Id, parentSpanId);
+                    telemetry.Context.Operation.ParentId = StringUtilities.FormatRequestId(telemetry.Context.Operation.Id, parentSpanId);
                 }
             }
             else
             {
-                telemetry.Context.Operation.ParentId = FormatId(telemetry.Context.Operation.Id, spanId);
+                telemetry.Context.Operation.ParentId = StringUtilities.FormatRequestId(telemetry.Context.Operation.Id, spanId);
             }
 
             if (opTelemetry != null)
@@ -118,11 +119,6 @@
                     opTelemetry.Properties[W3CConstants.LegacyRequestIdProperty] = activity.Id;
                 }
             }
-        }
-
-        private static string FormatId(string traceId, string spanId)
-        {
-            return String.Concat("|", traceId, ".", spanId, ".");
         }
     }
 }

@@ -54,6 +54,17 @@
         }
 
         /// <summary>
+        /// Formats trace Id and span Id into valid Request-Id: |trace.span.
+        /// </summary>
+        /// <param name="traceId">Trace Id.</param>
+        /// <param name="spanId">Span id.</param>
+        /// <returns>valid Request-Id.</returns>
+        public static string FormatRequestId(string traceId, string spanId)
+        {
+            return String.Concat("|", traceId, ".", spanId, ".");
+        }
+
+        /// <summary>
         /// Gets root id (string between '|' and the first dot) from the hierarchical Id.
         /// </summary>
         /// <param name="hierarchicalId">Id to extract root from.</param>
