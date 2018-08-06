@@ -14,7 +14,12 @@
     /// </summary>
     [Obsolete("Not ready for public consumption.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public class W3COperationCorrelationTelemetryInitializer : ITelemetryInitializer
+#if DEPENDENCY_COLLECTOR
+    public
+#else
+    internal
+#endif
+    class W3COperationCorrelationTelemetryInitializer : ITelemetryInitializer
     {
         private const string RddDiagnosticSourcePrefix = "rdddsc";
         private const string SqlRemoteDependencyType = "SQL";

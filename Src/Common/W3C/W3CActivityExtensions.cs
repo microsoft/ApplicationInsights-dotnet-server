@@ -5,13 +5,19 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using Microsoft.ApplicationInsights.Common;
 
     /// <summary>
     /// Extends Activity to support W3C distributed tracing standard.
     /// </summary>
     [Obsolete("Not ready for public consumption.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static class W3CActivityExtensions
+#if DEPENDENCY_COLLECTOR
+    public
+#else
+    internal
+#endif
+    static class W3CActivityExtensions
     {
         /// <summary>
         /// Generate new W3C context.
@@ -24,8 +30,8 @@
         {
             activity.SetVersion(W3CConstants.DefaultVersion);
             activity.SetSampled(W3CConstants.DefaultSampled);
-            activity.SetSpanId(GenerateSpanId());
-            activity.SetTraceId(GenerateTraceId());
+            activity.SetSpanId(StringUtilities.GenerateSpanId());
+            activity.SetTraceId(StringUtilities.GenerateTraceId());
             return activity;
         }
 
@@ -116,7 +122,7 @@
                     activity.SetVersion(parts[0]);
                     activity.SetSampled(parts[3]);
                     activity.SetParentSpanId(parts[2]);
-                    activity.SetSpanId(GenerateSpanId());
+                    activity.SetSpanId(StringUtilities.GenerateSpanId());
                     activity.SetTraceId(parts[1]);
                 }
             }
@@ -189,16 +195,6 @@
         private static void SetSampled(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.SampledTag, value);
 
-        private static string GenerateSpanId()
-        {
-            return BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 8).ToString("x16", CultureInfo.InvariantCulture);
-        }
-
-        private static string GenerateTraceId()
-        {
-            return GenerateSpanId() + GenerateSpanId();
-        }
-
         private static Activity UpdateContextFromParent(this Activity activity)
         {
             if (activity != null && activity.Tags.All(t => t.Key != W3CConstants.TraceIdTag))
@@ -218,7 +214,7 @@
                                 break;
                             case W3CConstants.SpanIdTag:
                                 activity.SetParentSpanId(tag.Value);
-                                activity.SetSpanId(GenerateSpanId());
+                                activity.SetSpanId(StringUtilities.GenerateSpanId());
                                 break;
                             case W3CConstants.VersionTag:
                                 activity.SetVersion(tag.Value);

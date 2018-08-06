@@ -38,7 +38,7 @@
                     W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
 
                     SetLegacyContextIds(platformContext.Request, currentActivity, result);
-		}
+                }
                 else if (currentActivity.Extract(platformContext.Request.Headers))
                 {
                     requestContext.ParentId = currentActivity.ParentId;

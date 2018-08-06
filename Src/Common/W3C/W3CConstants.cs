@@ -8,7 +8,12 @@
     /// </summary>
     [Obsolete("Not ready for public consumption.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static class W3CConstants
+#if DEPENDENCY_COLLECTOR
+    public
+#else
+    internal
+#endif
+    static class W3CConstants
     {
         /// <summary>
         /// W3C traceparent header name.
@@ -73,6 +78,6 @@
         /// <summary>
         /// Legacy root Id tag name.
         /// </summary>
-        internal const string LegacyRequestIdProperty = "ai_legacyParentId";
+        internal const string LegacyRequestIdProperty = "ai_legacyRequestId";
     }
 }
