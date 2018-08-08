@@ -303,7 +303,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             // So if there is no parent Activity (i.e. this request has happened in the background, without parent scope), we'll override 
             // the current Activity with the one with properly formatted Id. This workaround should go away
             // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331
-            if (currentActivity.Parent == null)
+            if (currentActivity.Parent == null && currentActivity.ParentId == null)
             {
                 currentActivity.UpdateParent(StringUtilities.GenerateTraceId());
             }

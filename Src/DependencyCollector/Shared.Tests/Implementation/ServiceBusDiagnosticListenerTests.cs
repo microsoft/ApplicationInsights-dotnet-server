@@ -242,7 +242,7 @@
             {
                 activity = new Activity(activityName);
                 activity.AddTag("MessageId", "messageId");
-                if (Activity.Current == null)
+                if (Activity.Current == null && parentId != null)
                 {
                     activity.SetParentId(parentId);
                 }
