@@ -57,7 +57,7 @@ namespace Microsoft.ApplicationInsights.Common
             if (traceParent != null)
             {
                 var traceParentStr = StringUtilities.EnforceMaxLength(traceParent, InjectionGuardConstants.TraceParentHeaderMaxLength);
-                activity.SetTraceParent(traceParentStr);
+                activity.SetTraceparent(traceParentStr);
 
                 if (activity.ParentId == null)
                 {

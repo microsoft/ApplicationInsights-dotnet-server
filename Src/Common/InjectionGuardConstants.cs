@@ -45,6 +45,6 @@
         /// <summary>
         /// Max number of key value pairs in the tracestate header.
         /// </summary>
-        public const int TraceStateMaxPairs = 128;
+        public const int TraceStateMaxPairs = 32;
     }
 }

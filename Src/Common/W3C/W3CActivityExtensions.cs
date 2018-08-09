@@ -105,24 +105,51 @@
         }
 
         /// <summary>
-        /// Intializes W3C context on the Activity from traceparent header value.
+        /// Initializes W3C context on the Activity from traceparent header value.
         /// </summary>
         /// <param name="activity">Activity to set W3C context on.</param>
         /// <param name="value">Valid traceparent header like 00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01.</param>
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetTraceParent(this Activity activity, string value)
+        public static void SetTraceparent(this Activity activity, string value)
         {
             if (value != null)
             {
-                var parts = value.Split('-');
+                var parts = value.Trim(' ', '-').Split('-');
                 if (parts.Length == 4)
                 {
-                    activity.SetVersion(parts[0]);
-                    activity.SetSampled(parts[3]);
-                    activity.SetParentSpanId(parts[2]);
-                    activity.SetSpanId(StringUtilities.GenerateSpanId());
-                    activity.SetTraceId(parts[1]);
+                    string traceId = parts[1];
+                    string sampled = parts[3];
+                    string parentSpanId = parts[2];
+
+                    if (traceId.Length == 32 && parentSpanId.Length == 16)
+                    {
+                        // we only support 00 version and ignore caller version
+                        activity.SetVersion(W3CConstants.DefaultVersion);
+                        
+                        // we always defer sampling
+                        switch (sampled)
+                        {
+                            case "00":
+                                activity.SetSampled("02");
+                                break;
+                            case "01":
+                                activity.SetSampled("03");
+                                break;
+                            case "02":
+                                activity.SetSampled("02");
+                                break;
+                            case "03":
+                                activity.SetSampled("03");
+                                break;
+                            default:
+                                activity.SetSampled(W3CConstants.DefaultTraceFlags);
+                        }
+
+                        activity.SetParentSpanId(parentSpanId);
+                        activity.SetSpanId(StringUtilities.GenerateSpanId());
+                        activity.SetTraceId(traceId);
+                    }
                 }
             }
         }
@@ -134,7 +161,7 @@
         /// <returns>tracestate header value.</returns>
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetTraceState(this Activity activity) =>
+        public static string GetTracestate(this Activity activity) =>
             activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TraceStateTag).Value;
 
         /// <summary>

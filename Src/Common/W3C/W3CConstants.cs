@@ -66,9 +66,9 @@
         internal const string DefaultVersion = "00";
 
         /// <summary>
-        /// Default sampled flag value.
+        /// Default sampled flag value: may be recorded, not requested
         /// </summary>
-        internal const string DefaultSampled = "00";
+        internal const string DefaultTraceFlags = "02";
 
         /// <summary>
         /// Legacy root Id tag name.

@@ -522,7 +522,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
                         }
 
-                        string traceState = currentActivity.GetTraceState();
+                        string traceState = currentActivity.GetTracestate();
                         if (!requestHeaders.Contains(W3CConstants.TraceStateHeader))
                         {
                             if (sourceApplicationId != null)

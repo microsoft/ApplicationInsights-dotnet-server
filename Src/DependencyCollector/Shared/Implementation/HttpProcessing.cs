@@ -220,7 +220,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             webRequest.Headers.Add(W3CConstants.TraceParentHeader, traceParent);
                         }
 
-                        string traceState = currentActivity.GetTraceState();
+                        string traceState = currentActivity.GetTracestate();
                         if (webRequest.Headers[W3CConstants.TraceStateHeader] == null)
                         {
                             if (applicationId != null)

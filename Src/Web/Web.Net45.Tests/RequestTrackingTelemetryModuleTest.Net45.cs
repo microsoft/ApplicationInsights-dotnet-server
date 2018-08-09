@@ -218,7 +218,7 @@
 
             module.OnBeginRequest(context);
             var activityInitializedByW3CHeader = Activity.Current;
-            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTraceState());
+            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTracestate());
 
             var requestTelemetry = context.GetRequestTelemetry();
             module.OnEndRequest(context);
@@ -242,7 +242,7 @@
 
             module.OnBeginRequest(context);
             var activityInitializedByW3CHeader = Activity.Current;
-            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTraceState());
+            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTracestate());
 
             var requestTelemetry = context.GetRequestTelemetry();
             module.OnEndRequest(context);
@@ -425,7 +425,7 @@
             Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", activityInitializedByW3CHeader.GetTraceId());
             Assert.Equal("00f067aa0ba902b7", activityInitializedByW3CHeader.GetParentSpanId());
             Assert.Equal(16, activityInitializedByW3CHeader.GetSpanId().Length);
-            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTraceState());
+            Assert.Equal("state=some", activityInitializedByW3CHeader.GetTracestate());
             Assert.Equal("v", activityInitializedByW3CHeader.Baggage.Single(t => t.Key == "k").Value);
 
             var requestTelemetry = context.GetRequestTelemetry();
@@ -464,7 +464,7 @@
             Assert.Equal(16, activityInitializedByW3CHeader.GetSpanId().Length);
             Assert.Null(activityInitializedByW3CHeader.GetParentSpanId());
 
-            Assert.Null(activityInitializedByW3CHeader.GetTraceState());
+            Assert.Null(activityInitializedByW3CHeader.GetTracestate());
             Assert.False(activityInitializedByW3CHeader.Baggage.Any());
 
             var requestTelemetry = context.GetRequestTelemetry();
