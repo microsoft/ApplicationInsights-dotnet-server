@@ -204,7 +204,7 @@
                 Assert.AreEqual($"type:{RemoteDependencyConstants.AzureServiceBus} | name:queueName | endpoint:sb://queuename.myservicebus.com/", telemetry.Source);
                 Assert.IsTrue(telemetry.Success.Value);
 
-                // W3C compatible-Id ( should go away when W3C is implemented in .NET https://github.com/dotnet/corefx/issues/30331)
+                // W3C compatible-Id ( should go away when W3C is implemented in .NET https://github.com/dotnet/corefx/issues/30331 TODO)
                 Assert.AreEqual(32, telemetry.Context.Operation.Id.Length);
                 Assert.IsTrue(Regex.Match(telemetry.Context.Operation.Id, @"[a-z][0-9]").Success);
                 // end of workaround test
