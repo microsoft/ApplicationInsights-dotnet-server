@@ -102,7 +102,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 // Request-Id and Correlation-Context are injected by HttpClient
                 // check only W3C headers here
                 Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
-                Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+                Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
                 Assert.AreEqual($"msappid={this.testApplicationId1}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
             }
         }

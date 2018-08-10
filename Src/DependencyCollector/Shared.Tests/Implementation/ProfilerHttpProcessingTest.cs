@@ -333,7 +333,7 @@
             Assert.AreEqual(4, dependencyIdParts.Length);
 
             var traceParent = request.Headers[W3CConstants.TraceParentHeader];
-            Assert.AreEqual($"{W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3CConstants.DefaultSampled}",
+            Assert.AreEqual($"{W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3CConstants.TraceFlagRecordedAndNotRequested}",
                 traceParent);
         }
 #pragma warning restore 612, 618

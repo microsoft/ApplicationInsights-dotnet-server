@@ -83,10 +83,9 @@
         }
 
         /// <summary>
-        /// Generates random trace Id as per W3C Distributed tracing specification.
-        /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#trace-id
+        /// Converts byte array to hex lower case string.
         /// </summary>
-        /// <returns>Random 16 bytes array encoded as hex string</returns>
+        /// <returns>Array encoded as hex string</returns>
         private static string GenerateId(byte[] bytes, int start, int length)
         {
             // See https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa/24343727#24343727

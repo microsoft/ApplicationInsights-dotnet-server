@@ -516,7 +516,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     if (this.injectW3CHeaders)
                     {
                         currentActivity.UpdateContextOnActivity();
-                        string traceParent = currentActivity.GetTraceParent();
+                        string traceParent = currentActivity.GetTraceparent();
                         if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
                         {
                             requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);

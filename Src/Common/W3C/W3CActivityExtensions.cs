@@ -3,6 +3,7 @@
     using System;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using Microsoft.ApplicationInsights.Common;
 
@@ -28,7 +29,7 @@
         public static Activity GenerateW3CContext(this Activity activity)
         {
             activity.SetVersion(W3CConstants.DefaultVersion);
-            activity.SetSampled(W3CConstants.DefaultSampled);
+            activity.SetSampled(W3CConstants.TraceFlagRecordedAndNotRequested);
             activity.SetSpanId(StringUtilities.GenerateSpanId());
             activity.SetTraceId(StringUtilities.GenerateTraceId());
             return activity;
@@ -74,7 +75,7 @@
         /// <returns>traceparent header value.</returns>
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetTraceParent(this Activity activity)
+        public static string GetTraceparent(this Activity activity)
         {
             string version = null, traceId = null, spanId = null, sampled = null;
             foreach (var tag in activity.Tags)
@@ -116,11 +117,12 @@
             if (value != null)
             {
                 var parts = value.Trim(' ', '-').Split('-');
-                if (parts.Length == 4)
+                if (parts.Length == 4 && !activity.IsW3CActivity())
                 {
                     string traceId = parts[1];
-                    string sampled = parts[3];
                     string parentSpanId = parts[2];
+
+                    byte.TryParse(parts[3], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var sampled);
 
                     if (traceId.Length == 32 && parentSpanId.Length == 16)
                     {
@@ -128,22 +130,13 @@
                         activity.SetVersion(W3CConstants.DefaultVersion);
                         
                         // we always defer sampling
-                        switch (sampled)
+                        if ((sampled & W3CConstants.RequestedTraceFlag) == W3CConstants.RequestedTraceFlag)
                         {
-                            case "00":
-                                activity.SetSampled("02");
-                                break;
-                            case "01":
-                                activity.SetSampled("03");
-                                break;
-                            case "02":
-                                activity.SetSampled("02");
-                                break;
-                            case "03":
-                                activity.SetSampled("03");
-                                break;
-                            default:
-                                activity.SetSampled(W3CConstants.DefaultTraceFlags);
+                            activity.SetSampled(W3CConstants.TraceFlagRecordedAndRequested);
+                        }
+                        else
+                        {
+                            activity.SetSampled(W3CConstants.TraceFlagRecordedAndNotRequested);
                         }
 
                         activity.SetParentSpanId(parentSpanId);

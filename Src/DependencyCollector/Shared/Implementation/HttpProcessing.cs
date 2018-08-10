@@ -214,7 +214,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 #pragma warning disable 612, 618
                     if (this.injectW3CHeaders && currentActivity != null)
                     {
-                        string traceParent = currentActivity.GetTraceParent();
+                        string traceParent = currentActivity.GetTraceparent();
                         if (traceParent != null && webRequest.Headers[W3CConstants.TraceParentHeader] == null)
                         {
                             webRequest.Headers.Add(W3CConstants.TraceParentHeader, traceParent);

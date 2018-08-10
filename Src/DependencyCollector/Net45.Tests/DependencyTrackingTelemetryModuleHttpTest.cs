@@ -356,7 +356,7 @@
                 var dependencyIdParts = dependency.Id.Split('.', '|');
                 Assert.AreEqual(4, dependencyIdParts.Length);
                 Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
-                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers[W3CConstants.TraceParentHeader]);
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers[W3CConstants.TraceParentHeader]);
 
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
 

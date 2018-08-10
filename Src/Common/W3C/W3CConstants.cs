@@ -68,7 +68,17 @@
         /// <summary>
         /// Default sampled flag value: may be recorded, not requested
         /// </summary>
-        internal const string DefaultTraceFlags = "02";
+        internal const string TraceFlagRecordedAndNotRequested = "02";
+
+        /// <summary>
+        /// Recorded and requested sampled flag value
+        /// </summary>
+        internal const string TraceFlagRecordedAndRequested = "03";
+
+        /// <summary>
+        /// Requested trace flag
+        /// </summary>
+        internal const byte RequestedTraceFlag = 1;
 
         /// <summary>
         /// Legacy root Id tag name.

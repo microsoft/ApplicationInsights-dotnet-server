@@ -252,7 +252,7 @@
                 Assert.AreEqual(4, dependencyIdParts.Length);
 
                 Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
-                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
@@ -310,7 +310,7 @@
                 Assert.AreEqual(4, dependencyIdParts.Length);
 
                 Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
-                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-00", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+                Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
                 Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
