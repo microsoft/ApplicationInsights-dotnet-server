@@ -435,7 +435,7 @@
             Assert.Equal("4bf92f3577b34da6a3ce929d0e0e4736", requestTelemetry.Context.Operation.Id);
             Assert.Equal("|4bf92f3577b34da6a3ce929d0e0e4736.00f067aa0ba902b7.", requestTelemetry.Context.Operation.ParentId);
 
-            Assert.Equal("state=some", requestTelemetry.Properties[W3CConstants.TraceStateTag]);
+            Assert.Equal("state=some", requestTelemetry.Properties[W3CConstants.TracestateTag]);
         }
 
         private void TestRequestTrackingWithW3CSupportEnabledAndNoW3CHeaders(bool startActivity, bool addRequestId)

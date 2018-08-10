@@ -56,9 +56,9 @@
         internal const string SampledTag = "w3c_sampled";
 
         /// <summary>
-        /// TraceState tag name.
+        /// Tracestate tag name.
         /// </summary>
-        internal const string TraceStateTag = "w3c_traceState";
+        internal const string TracestateTag = "w3c_tracestate";
 
         /// <summary>
         /// Default version value.

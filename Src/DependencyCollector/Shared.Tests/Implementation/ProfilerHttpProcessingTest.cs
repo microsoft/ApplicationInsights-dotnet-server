@@ -308,7 +308,7 @@
             using (var op = client.StartOperation<RequestTelemetry>("request"))
             {
                 Activity.Current.AddBaggage("k", "v");
-                Activity.Current.AddTag(W3CConstants.TraceStateTag, "some=state");
+                Activity.Current.AddTag(W3CConstants.TracestateTag, "some=state");
                 httpProcessingW3C.OnBeginForGetResponse(request);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);

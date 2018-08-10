@@ -178,8 +178,8 @@
             Assert.AreEqual(expectedTrace, request.Context.Operation.Id);
             Assert.AreEqual($"|{expectedTrace}.{expectedSpanId}.", request.Id);
 
-            Assert.AreEqual("key=value", request.Properties[W3CConstants.TraceStateTag]);
-            Assert.AreEqual("key=value", dependency.Properties[W3CConstants.TraceStateTag]);
+            Assert.AreEqual("key=value", request.Properties[W3CConstants.TracestateTag]);
+            Assert.AreEqual("key=value", dependency.Properties[W3CConstants.TracestateTag]);
             Assert.IsFalse(trace.Properties.Any());
         }
 

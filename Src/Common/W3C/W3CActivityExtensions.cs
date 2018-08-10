@@ -155,7 +155,7 @@
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetTracestate(this Activity activity) =>
-            activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TraceStateTag).Value;
+            activity.Tags.FirstOrDefault(t => t.Key == W3CConstants.TracestateTag).Value;
 
         /// <summary>
         /// Sets tracestate header value on the Activity.
@@ -165,7 +165,7 @@
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetTraceState(this Activity activity, string value) =>
-            activity.AddTag(W3CConstants.TraceStateTag, value);
+            activity.AddTag(W3CConstants.TracestateTag, value);
 
         /// <summary>
         /// Gets TraceId from the Activity.
@@ -241,7 +241,7 @@
                             case W3CConstants.SampledTag:
                                 activity.SetSampled(tag.Value);
                                 break;
-                            case W3CConstants.TraceStateTag:
+                            case W3CConstants.TracestateTag:
                                 activity.SetTraceState(tag.Value);
                                 break;
                         }

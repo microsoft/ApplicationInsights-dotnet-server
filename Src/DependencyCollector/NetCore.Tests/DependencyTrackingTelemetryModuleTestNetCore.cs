@@ -261,7 +261,7 @@
                 Assert.AreEqual("k=v", request.Headers.GetValues(RequestResponseHeaders.CorrelationContextHeader).Single());
 
                 Assert.AreEqual("v", dependency.Properties["k"]);
-                Assert.AreEqual("state=some", dependency.Properties[W3CConstants.TraceStateTag]);
+                Assert.AreEqual("state=some", dependency.Properties[W3CConstants.TracestateTag]);
 
                 Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
                 Assert.IsTrue(dependency.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith("|guid."));

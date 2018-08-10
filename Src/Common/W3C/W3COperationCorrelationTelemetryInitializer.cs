@@ -84,10 +84,10 @@
                     case W3CConstants.ParentSpanIdTag:
                         parentSpanId = tag.Value;
                         break;
-                    case W3CConstants.TraceStateTag:
+                    case W3CConstants.TracestateTag:
                         if (telemetry is OperationTelemetry operation)
                         {
-                            operation.Properties[W3CConstants.TraceStateTag] = tag.Value;
+                            operation.Properties[W3CConstants.TracestateTag] = tag.Value;
                         }
 
                         break;
