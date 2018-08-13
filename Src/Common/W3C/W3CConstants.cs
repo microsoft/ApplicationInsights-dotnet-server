@@ -28,7 +28,7 @@
         /// <summary>
         /// Name of the field that carry ApplicationInsights application Id in the tracestate header.
         /// </summary>
-        public const string ApplicationIdTraceStateField = "msappid";
+        public const string ApplicationIdTraceStateField = "@msappid";
 
         /// <summary>
         /// Trace-Id tag name.

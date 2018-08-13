@@ -210,7 +210,7 @@
             var headers = new Dictionary<string, string>
             {
                 ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-                ["tracestate"] = $"state=some,msappid={expectedAppId}",
+                ["tracestate"] = $"state=some,{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}",
             };
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
@@ -233,7 +233,7 @@
             var headers = new Dictionary<string, string>
             {
                 ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-                ["tracestate"] = "state=some,msappid=dummy",
+                ["tracestate"] = $"state=some,{W3CConstants.ApplicationIdTraceStateField}=dummy",
                 ["Request-Context"] = $"appId={expectedAppId}"
             };
 
