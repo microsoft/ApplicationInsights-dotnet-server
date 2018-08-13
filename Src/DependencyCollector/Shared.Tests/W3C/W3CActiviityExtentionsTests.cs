@@ -95,7 +95,7 @@
         {
             var parent = new Activity("foo").Start();
             parent.SetTraceparent($"00-{TraceId}-{ParenSpanId}-01");
-            parent.SetTraceState("some=state");
+            parent.SetTracestate("some=state");
             var child = new Activity("bar").Start();
             child.UpdateContextOnActivity();
 
@@ -110,7 +110,7 @@
         public void SetTraceState()
         {
             var a = new Activity("foo").Start();
-            a.SetTraceState("some=state");
+            a.SetTracestate("some=state");
             Assert.AreEqual("some=state", a.GetTracestate());
         }
 

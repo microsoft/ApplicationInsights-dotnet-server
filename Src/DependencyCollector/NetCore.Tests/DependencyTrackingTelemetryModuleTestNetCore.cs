@@ -132,7 +132,7 @@
         /// Tests that dependency is collected properly when there is no parent activity.
         /// </summary>
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public async Task TestDependencyCollectionNoParentActivity()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -211,7 +211,7 @@
         /// Tests that dependency is collected properly when there is parent activity.
         /// </summary>
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public async Task TestDependencyCollectionWithW3CHeadersAndRequestId()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -225,7 +225,7 @@
                     .SetParentId("|guid.")
                     .Start()
                     .GenerateW3CContext();
-                parent.SetTraceState("state=some");
+                parent.SetTracestate("state=some");
                 var url = new Uri(localhostUrl);
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 using (new LocalServer(localhostUrl))
@@ -337,7 +337,7 @@
                     .Start()
                     .GenerateW3CContext();
 
-                parent.SetTraceState("some=state");
+                parent.SetTracestate("some=state");
 
                 var url = new Uri(localhostUrl);
                 var request = new HttpRequestMessage(HttpMethod.Get, url);

@@ -78,7 +78,7 @@ namespace Microsoft.ApplicationInsights.Common
                 var pairsExceptAppId = traceState.Where(s => !s.StartsWith(W3CConstants.ApplicationIdTraceStateField + "=", StringComparison.Ordinal));
                 string traceStateExceptAppId = string.Join(",", pairsExceptAppId);
 
-                activity.SetTraceState(StringUtilities.EnforceMaxLength(traceStateExceptAppId, InjectionGuardConstants.TraceStateHeaderMaxLength));
+                activity.SetTracestate(StringUtilities.EnforceMaxLength(traceStateExceptAppId, InjectionGuardConstants.TraceStateHeaderMaxLength));
             }
 
             if (!activity.Baggage.Any())

@@ -164,7 +164,7 @@
         /// <param name="value">tracestate header value.</param>
         [Obsolete("Not ready for public consumption.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetTraceState(this Activity activity, string value) =>
+        public static void SetTracestate(this Activity activity, string value) =>
             activity.AddTag(W3CConstants.TracestateTag, value);
 
         /// <summary>
@@ -242,7 +242,7 @@
                                 activity.SetSampled(tag.Value);
                                 break;
                             case W3CConstants.TracestateTag:
-                                activity.SetTraceState(tag.Value);
+                                activity.SetTracestate(tag.Value);
                                 break;
                         }
                     }

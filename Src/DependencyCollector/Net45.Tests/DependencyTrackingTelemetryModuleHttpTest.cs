@@ -329,7 +329,7 @@
                     .SetParentId("|guid.")
                     .Start()
                     .GenerateW3CContext();
-                parent.SetTraceState("state=some");
+                parent.SetTracestate("state=some");
 
                 var url = new Uri(LocalhostUrlDiagSource);
                 HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);
@@ -431,7 +431,7 @@
                     .Start()
                     .GenerateW3CContext();
 
-                parent.SetTraceState("some=state");
+                parent.SetTracestate("some=state");
 
                 var url = new Uri(LocalhostUrlDiagSource);
                 HttpWebRequest request = WebRequest.CreateHttp(LocalhostUrlDiagSource);

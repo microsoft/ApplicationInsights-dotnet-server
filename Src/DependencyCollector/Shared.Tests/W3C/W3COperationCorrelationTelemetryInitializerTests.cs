@@ -162,7 +162,7 @@
                 .Start()
                 .GenerateW3CContext();
                 
-            a.SetTraceState("key=value");
+            a.SetTracestate("key=value");
 
             string expectedTrace = a.GetTraceId();
             string expectedSpanId = a.GetSpanId();
