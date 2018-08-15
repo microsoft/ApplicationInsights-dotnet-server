@@ -314,7 +314,7 @@
 
             Assert.Equal("guid1", exceptionTelemetry.Context.Operation.Id);
             Assert.Equal(requestTelemetry.Id, exceptionTelemetry.Context.Operation.ParentId);
-            Assert.Equal("v", exceptionTelemetry.Context.Properties["k"]);
+            Assert.Equal("v", exceptionTelemetry.Properties["k"]);
         }
 
         [TestMethod]
@@ -360,7 +360,7 @@
             Assert.Equal(Activity.Current.ParentId, requestTelemetry.Id);
             Assert.True(trace.Context.Operation.ParentId.StartsWith(requestTelemetry.Id, StringComparison.Ordinal));
             Assert.Equal(Activity.Current.Id, trace.Context.Operation.ParentId);
-            Assert.Equal("v", trace.Context.Properties["k"]);
+            Assert.Equal("v", trace.Properties["k"]);
         }
 
         [TestMethod]
@@ -393,7 +393,7 @@
             // then we lost it and restored (started a new child activity), so the Id is guid1.1.123_1.abc
             // so the request is grand parent to the trace
             Assert.True(trace.Context.Operation.ParentId.StartsWith(requestTelemetry.Id, StringComparison.Ordinal));
-            Assert.Equal("v", trace.Context.Properties["k"]);
+            Assert.Equal("v", trace.Properties["k"]);
         }
 
         private void TestRequestTrackingWithW3CSupportEnabled(bool startActivity, bool addRequestId)
