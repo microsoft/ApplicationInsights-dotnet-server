@@ -158,7 +158,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     {
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
                             && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader,
-                                RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
+                                RequestResponseHeaders.RequestContextCorrelationSourceKey,
+                                RequestResponseHeaders.RequestContextKeyValuePairSeparator) == null
                             && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(
                                     telemetry.Context.InstrumentationKey, out applicationId) ?? false))
                         {
@@ -225,8 +226,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             if (applicationId != null)
                             {
-                                // TODO: there could be another msappid in the state.
-                                string appIdPair = W3CConstants.ApplicationIdTraceStateField + "=" + applicationId;
+                                // TODO: there could be another az in the state.
+                                string appIdPair = StringUtilities.FormatAzureTracestate(applicationId);
                                 if (traceState == null)
                                 {
                                     traceState = appIdPair;
@@ -472,7 +473,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                 try
                 {
-                    targetAppId = responseHeaders.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey);
+                    targetAppId = responseHeaders.GetNameValueHeaderValue(
+                        RequestResponseHeaders.RequestContextHeader, 
+                        RequestResponseHeaders.RequestContextCorrelationTargetKey,
+                        RequestResponseHeaders.RequestContextKeyValuePairSeparator);
                 }
                 catch (Exception ex)
                 {
@@ -502,7 +506,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             if (requestHeaders[RequestResponseHeaders.CorrelationContextHeader] == null && activity.Baggage.Any())
             {
-                requestHeaders.SetHeaderFromNameValueCollection(RequestResponseHeaders.CorrelationContextHeader, activity.Baggage);
+                requestHeaders.SetHeaderFromNameValueCollection(
+                    RequestResponseHeaders.CorrelationContextHeader, 
+                    activity.Baggage,
+                    RequestResponseHeaders.RequestContextKeyValuePairSeparator);
             }
         }
     }

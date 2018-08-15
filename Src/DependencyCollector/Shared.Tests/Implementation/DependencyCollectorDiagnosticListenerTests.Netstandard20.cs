@@ -103,7 +103,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 // check only W3C headers here
                 Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
                 Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={this.testApplicationId1}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={this.testApplicationId1}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
             }
         }
 

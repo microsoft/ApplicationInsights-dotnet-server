@@ -35,18 +35,84 @@
                 var a = new Activity("foo");
                 a.SetTraceparent(traceparent);
 
-                Assert.IsFalse(a.IsW3CActivity(), traceparent);
-                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.TraceIdTag), traceparent);
-                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.SpanIdTag), traceparent);
                 Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.ParentSpanIdTag), traceparent);
-                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.SampledTag), traceparent);
-                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.VersionTag), traceparent);
-
-                Assert.IsNull(a.GetTraceId());
-                Assert.IsNull(a.GetSpanId());
                 Assert.IsNull(a.GetParentSpanId());
-                Assert.IsNull(a.GetTraceparent());
                 Assert.IsNull(a.GetTracestate());
+
+                Assert.AreEqual(W3CConstants.DefaultVersion, a.Tags.Single(t => t.Key == W3CConstants.VersionTag).Value, traceparent);
+                Assert.AreEqual(W3CConstants.TraceFlagRecordedAndNotRequested, a.Tags.Single(t => t.Key == W3CConstants.SampledTag).Value, traceparent);
+
+                Assert.IsTrue(a.IsW3CActivity(), traceparent);
+                Assert.AreEqual(32, a.GetTraceId().Length, traceparent);
+                Assert.AreEqual(16, a.GetSpanId().Length, traceparent);
+
+                Assert.AreEqual($"{W3CConstants.DefaultVersion}-{a.GetTraceId()}-{a.GetSpanId()}-{W3CConstants.TraceFlagRecordedAndNotRequested}", a.GetTraceparent(), traceparent);
+            }
+        }
+
+        [TestMethod]
+        public void InvalidTraceIdAllTraceparentIsIgnored()
+        {
+            var invalidTraceIds = new[]
+            {
+                "123",
+                "000102030405060708090a0b0c0d0f", // 30 chars
+                "000102030405060708090a0b0c0d0f0", // 31 char
+                "000102030405060708090a0b0c0d0f0g", // 32 char non-hex
+                "000102030405060708090a0b0c0d0f0A", // 32 char upper case
+                "000102030405060708090a0b0c0d0f000" // 33 chars
+            };
+            foreach (var traceId in invalidTraceIds)
+            {
+                var a = new Activity("foo");
+
+                a.SetTraceparent($"00-{traceId}-{ParenSpanId}-00");
+
+                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.ParentSpanIdTag), traceId);
+                Assert.IsNull(a.GetParentSpanId());
+                Assert.IsNull(a.GetTracestate());
+
+                Assert.AreEqual(W3CConstants.DefaultVersion, a.Tags.Single(t => t.Key == W3CConstants.VersionTag).Value, traceId);
+                Assert.AreEqual(W3CConstants.TraceFlagRecordedAndNotRequested, a.Tags.Single(t => t.Key == W3CConstants.SampledTag).Value, traceId);
+
+                Assert.IsTrue(a.IsW3CActivity(), traceId);
+                Assert.AreEqual(32, a.GetTraceId().Length, traceId);
+                Assert.AreEqual(16, a.GetSpanId().Length, traceId);
+
+                Assert.AreEqual($"{W3CConstants.DefaultVersion}-{a.GetTraceId()}-{a.GetSpanId()}-{W3CConstants.TraceFlagRecordedAndNotRequested}", a.GetTraceparent(), traceId);
+            }
+        }
+
+        [TestMethod]
+        public void InvalidSapnIdAllTraceparentIsIgnored()
+        {
+            var invalidSpanIds = new[]
+            {
+                "123",
+                "00010203040506", // 14 chars
+                "000102030405060", // 15 char
+                "000102030405060g", // 16 char non-hex
+                "000102030405060A", // 16 char upper case
+                "00010203040506070" // 15 chars
+            };
+            foreach (var parentSpanId in invalidSpanIds)
+            {
+                var a = new Activity("foo");
+
+                a.SetTraceparent($"00-{TraceId}-{parentSpanId}-00");
+
+                Assert.IsFalse(a.Tags.Any(t => t.Key == W3CConstants.ParentSpanIdTag), parentSpanId);
+                Assert.IsNull(a.GetParentSpanId());
+                Assert.IsNull(a.GetTracestate());
+
+                Assert.AreEqual(W3CConstants.DefaultVersion, a.Tags.Single(t => t.Key == W3CConstants.VersionTag).Value, parentSpanId);
+                Assert.AreEqual(W3CConstants.TraceFlagRecordedAndNotRequested, a.Tags.Single(t => t.Key == W3CConstants.SampledTag).Value, parentSpanId);
+
+                Assert.IsTrue(a.IsW3CActivity(), parentSpanId);
+                Assert.AreEqual(32, a.GetTraceId().Length, parentSpanId);
+                Assert.AreEqual(16, a.GetSpanId().Length, parentSpanId);
+
+                Assert.AreEqual($"{W3CConstants.DefaultVersion}-{a.GetTraceId()}-{a.GetSpanId()}-{W3CConstants.TraceFlagRecordedAndNotRequested}", a.GetTraceparent(), parentSpanId);
             }
         }
 

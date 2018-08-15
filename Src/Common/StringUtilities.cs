@@ -3,6 +3,7 @@
     using System;
     using System.Diagnostics;
     using System.Globalization;
+    using Microsoft.ApplicationInsights.W3C;
 
     /// <summary>
     /// Generic functions to perform common operations on a string.
@@ -81,6 +82,13 @@
             int rootStart = hierarchicalId[0] == '|' ? 1 : 0;
             return hierarchicalId.Substring(rootStart, rootEnd - rootStart);
         }
+
+#pragma warning disable 612, 618
+        internal static string FormatAzureTracestate(string appId)
+        {
+            return String.Concat(W3CConstants.AzureTracestateNamespace, "=", appId);
+        }
+#pragma warning restore 612, 618
 
         /// <summary>
         /// Converts byte array to hex lower case string.

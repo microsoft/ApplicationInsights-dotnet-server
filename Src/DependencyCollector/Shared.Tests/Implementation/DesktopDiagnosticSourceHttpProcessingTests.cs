@@ -191,7 +191,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
 
             this.httpDesktopProcessingFramework.OnBegin(request);
-            Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(
+                RequestResponseHeaders.RequestContextHeader, 
+                RequestResponseHeaders.RequestContextCorrelationSourceKey,
+                RequestResponseHeaders.RequestContextKeyValuePairSeparator));
         }
 
         /// <summary>

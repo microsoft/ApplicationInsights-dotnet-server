@@ -26,9 +26,19 @@
         public const string TraceStateHeader = "tracestate";
 
         /// <summary>
-        /// Name of the field that carry ApplicationInsights application Id in the tracestate header.
+        /// Name of the field that carry ApplicationInsights application Id in the tracestate header under az key.
         /// </summary>
-        public const string ApplicationIdTraceStateField = "@msappid";
+        public const string ApplicationIdTraceStateField = "cid-v1";
+
+        /// <summary>
+        /// Name of the field that carry Azure-specific states in the tracestate header.
+        /// </summary>
+        public const string AzureTracestateNamespace = "az";
+
+        /// <summary>
+        /// Separator between Azure namespace values.
+        /// </summary>
+        public const char TracestateAzureSeparator = ';';
 
         /// <summary>
         /// Trace-Id tag name.

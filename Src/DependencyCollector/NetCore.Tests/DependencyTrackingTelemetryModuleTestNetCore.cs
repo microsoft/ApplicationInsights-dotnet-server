@@ -34,7 +34,7 @@
         private const string IKey = "F8474271-D231-45B6-8DD4-D344C309AE69";
         private const string FakeProfileApiEndpoint = "https://dc.services.visualstudio.com/v2/track";
         private const string localhostUrl = "http://localhost:5050";
-        private const string expectedAppId = "someAppId";
+        private const string expectedAppId = "cid-v1:someAppId";
 
         private readonly DictionaryApplicationIdProvider appIdProvider = new DictionaryApplicationIdProvider();
         private StubTelemetryChannel channel;
@@ -255,7 +255,7 @@
                 Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={expectedAppId},state=some", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(RequestResponseHeaders.CorrelationContextHeader));
                 Assert.AreEqual("k=v", request.Headers.GetValues(RequestResponseHeaders.CorrelationContextHeader).Single());
@@ -313,7 +313,7 @@
                 Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
 
                 Assert.IsTrue(request.Headers.Contains(W3CConstants.TraceStateHeader));
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={expectedAppId}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
 
                 Assert.IsTrue(dependency.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
                 Assert.IsTrue(dependency.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith(parent.Id));
@@ -353,7 +353,7 @@
                 parent.Stop();
 
                 var traceState = HttpHeadersUtilities.GetHeaderValues(request.Headers, W3CConstants.TraceStateHeader).First();
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},some=state", traceState);
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={expectedAppId},some=state", traceState);
             }
         }
 

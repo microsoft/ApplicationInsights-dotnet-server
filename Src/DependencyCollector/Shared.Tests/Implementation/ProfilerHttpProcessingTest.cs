@@ -32,7 +32,7 @@
         #region Fields
         private const int TimeAccuracyMilliseconds = 150; // this may be big number when under debugger
         private const string TestInstrumentationKey = nameof(TestInstrumentationKey);
-        private const string TestApplicationId = nameof(TestApplicationId);
+        private const string TestApplicationId = "cid-v1:" + nameof(TestApplicationId);
         private TelemetryConfiguration configuration;
         private Uri testUrl = new Uri("http://www.microsoft.com/");
         private Uri testUrlNonStandardPort = new Uri("http://www.microsoft.com:911/");
@@ -184,7 +184,10 @@
             Assert.IsNull(request.Headers[RequestResponseHeaders.RequestContextHeader]);
 
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
-            Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(
+                RequestResponseHeaders.RequestContextHeader, 
+                RequestResponseHeaders.RequestContextCorrelationSourceKey,
+                RequestResponseHeaders.RequestContextKeyValuePairSeparator));
         }
 
         /// <summary>
@@ -312,7 +315,7 @@
                 httpProcessingW3C.OnBeginForGetResponse(request);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={TestApplicationId},some=state", request.Headers[W3CConstants.TraceStateHeader]);
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={TestApplicationId},some=state", request.Headers[W3CConstants.TraceStateHeader]);
 
                 requestTelemetry = op.Telemetry;
 

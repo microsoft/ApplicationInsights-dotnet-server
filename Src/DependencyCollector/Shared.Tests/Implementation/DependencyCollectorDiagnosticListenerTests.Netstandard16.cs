@@ -36,8 +36,8 @@ namespace Microsoft.ApplicationInsights.Tests
 
         private TelemetryConfiguration configuration;
         private string testInstrumentationKey1 = nameof(testInstrumentationKey1);
-        private string testApplicationId1 = nameof(testApplicationId1);
-        private string testApplicationId2 = nameof(testApplicationId2);
+        private string testApplicationId1 = "cid-v1:" + nameof(testApplicationId1);
+        private string testApplicationId2 = "cid-v1:" + nameof(testApplicationId2);
         private StubTelemetryChannel telemetryChannel;
         private HttpCoreDiagnosticSourceListener listener;
 

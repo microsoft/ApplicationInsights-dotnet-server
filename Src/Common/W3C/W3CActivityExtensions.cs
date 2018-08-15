@@ -5,6 +5,7 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using Microsoft.ApplicationInsights.Common;
 
     /// <summary>
@@ -19,6 +20,9 @@
 #endif
     static class W3CActivityExtensions
     {
+        private static readonly Regex TraceIdRegex = new Regex("^[a-f0-9]{32}$", RegexOptions.Compiled);
+        private static readonly Regex SpanIdRegex = new Regex("^[a-f0-9]{16}$", RegexOptions.Compiled);
+
         /// <summary>
         /// Generate new W3C context.
         /// </summary>
@@ -114,36 +118,49 @@
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void SetTraceparent(this Activity activity, string value)
         {
-            if (value != null)
+            if (activity.IsW3CActivity())
             {
-                var parts = value.Trim(' ', '-').Split('-');
-                if (parts.Length == 4 && !activity.IsW3CActivity())
+                return;
+            }
+
+            // we only support 00 version and ignore caller version
+            activity.SetVersion(W3CConstants.DefaultVersion);
+
+            string traceId = null, parentSpanId = null, sampledStr = null;
+            bool isValid = false;
+
+            var parts = value?.Split('-');
+            if (parts != null && parts.Length == 4)
+            {
+                traceId = parts[1];
+                parentSpanId = parts[2];
+                sampledStr = parts[3];
+                isValid = TraceIdRegex.IsMatch(traceId) && SpanIdRegex.IsMatch(parentSpanId);
+            }
+
+            if (isValid)
+            {
+                byte.TryParse(sampledStr, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var sampled);
+
+                // we always defer sampling
+                if ((sampled & W3CConstants.RequestedTraceFlag) == W3CConstants.RequestedTraceFlag)
                 {
-                    string traceId = parts[1];
-                    string parentSpanId = parts[2];
-
-                    byte.TryParse(parts[3], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var sampled);
-
-                    if (traceId.Length == 32 && parentSpanId.Length == 16)
-                    {
-                        // we only support 00 version and ignore caller version
-                        activity.SetVersion(W3CConstants.DefaultVersion);
-                        
-                        // we always defer sampling
-                        if ((sampled & W3CConstants.RequestedTraceFlag) == W3CConstants.RequestedTraceFlag)
-                        {
-                            activity.SetSampled(W3CConstants.TraceFlagRecordedAndRequested);
-                        }
-                        else
-                        {
-                            activity.SetSampled(W3CConstants.TraceFlagRecordedAndNotRequested);
-                        }
-
-                        activity.SetParentSpanId(parentSpanId);
-                        activity.SetSpanId(StringUtilities.GenerateSpanId());
-                        activity.SetTraceId(traceId);
-                    }
+                    activity.SetSampled(W3CConstants.TraceFlagRecordedAndRequested);
                 }
+                else
+                {
+                    activity.SetSampled(W3CConstants.TraceFlagRecordedAndNotRequested);
+                }
+
+                activity.SetParentSpanId(parentSpanId);
+                activity.SetSpanId(StringUtilities.GenerateSpanId());
+                activity.SetTraceId(traceId);
+            }
+            else
+            {
+                activity.SetSampled(W3CConstants.TraceFlagRecordedAndNotRequested);
+                activity.SetSpanId(StringUtilities.GenerateSpanId());
+                activity.SetTraceId(StringUtilities.GenerateTraceId());
             }
         }
 

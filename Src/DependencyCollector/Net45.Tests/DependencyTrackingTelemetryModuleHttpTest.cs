@@ -358,7 +358,7 @@
                 Assert.AreEqual(expectedTraceId, dependencyIdParts[1]);
                 Assert.AreEqual($"00-{expectedTraceId}-{dependencyIdParts[2]}-02", request.Headers[W3CConstants.TraceParentHeader]);
 
-                Assert.AreEqual($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={expectedAppId},state=some", request.Headers[W3CConstants.TraceStateHeader]);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
                 Assert.AreEqual("v", dependency.Properties["k"]);
@@ -376,7 +376,7 @@
         /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
         /// </summary>
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public void TestDependencyCollectionWithW3CHeadersDiagnosticSourceAndStartParentOperation()
         {
             var telemetryClient = new TelemetryClient(this.config);
@@ -448,7 +448,7 @@
 
                 parent.Stop();
 
-                Assert.IsTrue(request.Headers[W3CConstants.TraceStateHeader].Contains($"{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}"));
+                Assert.IsTrue(request.Headers[W3CConstants.TraceStateHeader].Contains($"{W3CConstants.AzureTracestateNamespace}={expectedAppId}"));
                 Assert.IsTrue(request.Headers[W3CConstants.TraceStateHeader].Contains("some=state"));
                 Assert.AreEqual(2, request.Headers[W3CConstants.TraceStateHeader].Split(',').Length);
             }

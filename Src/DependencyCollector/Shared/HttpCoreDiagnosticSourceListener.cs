@@ -449,11 +449,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     dependency.Telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, response);
                     if (request != null)
                     {
-                        if (this.injectW3CHeaders)
-                        {
-                            // this.SetLegacyId(dependency.Telemetry, request);
-                        }
-
                         this.ParseResponse(response, dependency.Telemetry);
                         this.client.StopOperation(dependency);
                         this.pendingTelemetry.Remove(request);
@@ -527,9 +522,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             if (sourceApplicationId != null)
                             {
-                                // TODO: there could be another msappid in the state.
+                                // TODO: there could be another az in the state.
                                 // last updated state should appear first in the tracestate
-                                string appIdPair = W3CConstants.ApplicationIdTraceStateField + "=" + sourceApplicationId;
+                                string appIdPair = StringUtilities.FormatAzureTracestate(sourceApplicationId);
                                 if (traceState == null)
                                 {
                                     traceState = appIdPair;

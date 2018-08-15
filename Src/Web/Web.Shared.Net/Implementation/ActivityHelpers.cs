@@ -3,8 +3,10 @@ namespace Microsoft.ApplicationInsights.Common
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Text;
     using System.Web;
 
+    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
@@ -69,18 +71,6 @@ namespace Microsoft.ApplicationInsights.Common
                 activity.GenerateW3CContext();
             }
 
-            var traceState = request.UnvalidatedGetHeaders().GetHeaderValue(
-                W3CConstants.TraceStateHeader,
-                InjectionGuardConstants.TraceStateHeaderMaxLength,
-                InjectionGuardConstants.TraceStateMaxPairs)?.ToList();
-            if (traceState != null && traceState.Any())
-            {
-                var pairsExceptAppId = traceState.Where(s => !s.StartsWith(W3CConstants.ApplicationIdTraceStateField + "=", StringComparison.Ordinal));
-                string traceStateExceptAppId = string.Join(",", pairsExceptAppId);
-
-                activity.SetTracestate(StringUtilities.EnforceMaxLength(traceStateExceptAppId, InjectionGuardConstants.TraceStateHeaderMaxLength));
-            }
-
             if (!activity.Baggage.Any())
             {
                 var baggage = request.Headers.GetNameValueCollectionFromHeader(RequestResponseHeaders.CorrelationContextHeader);
@@ -95,6 +85,57 @@ namespace Microsoft.ApplicationInsights.Common
                     }
                 }
             }
+        }
+
+        internal static void ExtractTracestate(HttpRequest request, Activity activity, RequestTelemetry requestTelemetry)
+        {
+            var tracestate = request.UnvalidatedGetHeaders().GetHeaderValue(
+                W3CConstants.TraceStateHeader,
+                InjectionGuardConstants.TraceStateHeaderMaxLength,
+                InjectionGuardConstants.TraceStateMaxPairs)?.ToList();
+            if (tracestate != null && tracestate.Any())
+            {
+                // it's likely there are a few and string builder is not beneficial in this case
+                var pairsExceptAz = new StringBuilder();
+                for (int i = 0; i < tracestate.Count; i++)
+                {
+                    if (tracestate[i].StartsWith(W3CConstants.AzureTracestateNamespace + "=", StringComparison.Ordinal))
+                    {
+                        // start after 'az='
+                        if (TryExtractAppIdFromAzureTracestate(tracestate[i].Substring(3), out var appId))
+                        {
+                            requestTelemetry.Source = appId;
+                        }
+                    }
+                    else
+                    {
+                        pairsExceptAz.Append(tracestate[i]).Append(',');
+                    }
+                }
+
+                if (pairsExceptAz.Length > 0)
+                {
+                    // remove last comma
+                    var tracestateStr = pairsExceptAz.ToString(0, pairsExceptAz.Length - 1);
+                    activity.SetTracestate(StringUtilities.EnforceMaxLength(tracestateStr, InjectionGuardConstants.TraceStateHeaderMaxLength));
+                }
+            }
+        }
+
+        private static bool TryExtractAppIdFromAzureTracestate(string azTracestate, out string appId)
+        {
+            appId = null;
+            var parts = azTracestate.Split(W3CConstants.TracestateAzureSeparator);
+
+            var appIds = parts.Where(p => p.StartsWith(W3CConstants.ApplicationIdTraceStateField, StringComparison.Ordinal)).ToArray();
+
+            if (appIds.Length != 1)
+            {
+                return false;
+            }
+
+            appId = appIds[0];
+            return true;
         }
     }
 #pragma warning restore 612, 618

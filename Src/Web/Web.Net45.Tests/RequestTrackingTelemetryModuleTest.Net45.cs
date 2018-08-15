@@ -206,11 +206,11 @@
         [TestMethod]
         public void TrackRequestWithW3CEnabledAndAppIdInState()
         {
-            string expectedAppId = "some-app-id";
+            string expectedAppId = "cid-v1:some-app-id";
             var headers = new Dictionary<string, string>
             {
                 ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-                ["tracestate"] = $"state=some,{W3CConstants.ApplicationIdTraceStateField}={expectedAppId}",
+                ["tracestate"] = $"state=some,{W3CConstants.AzureTracestateNamespace}={expectedAppId}",
             };
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);
@@ -229,12 +229,12 @@
         [TestMethod]
         public void TrackRequestWithW3CEnabledAndRequestContextAndAppIdInState()
         {
-            string expectedAppId = "some-app-id";
+            string expectedAppId = "cid-v1:some-app-id";
             var headers = new Dictionary<string, string>
             {
                 ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
-                ["tracestate"] = $"state=some,{W3CConstants.ApplicationIdTraceStateField}=dummy",
-                ["Request-Context"] = $"appId={expectedAppId}"
+                ["tracestate"] = $"state=some,{W3CConstants.AzureTracestateNamespace}={expectedAppId}",
+                ["Request-Context"] = "cid-v1:dummy"
             };
 
             var context = HttpModuleHelper.GetFakeHttpContext(headers);

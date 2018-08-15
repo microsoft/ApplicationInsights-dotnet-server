@@ -179,11 +179,17 @@
 
                 try
                 {
-                    sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationSourceKey);
+                    sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(
+                        RequestResponseHeaders.RequestContextHeader, 
+                        RequestResponseHeaders.RequestContextCorrelationSourceKey,
+                        RequestResponseHeaders.RequestContextKeyValuePairSeparator);
                     if (sourceAppId == null && this.EnableW3CHeadersExtraction)
                     {
 #pragma warning disable 612, 618
-                        sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(W3CConstants.TraceStateHeader, W3CConstants.ApplicationIdTraceStateField);
+                        sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(
+                            W3CConstants.TraceStateHeader, 
+                            W3CConstants.AzureTracestateNamespace,
+                            W3CConstants.TracestateAzureSeparator);
 #pragma warning restore  612, 618
                     }
                 }
@@ -250,7 +256,10 @@
             try
             {
                 if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                    && context.Response.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null)
+                    && context.Response.Headers.GetNameValueHeaderValue(
+                        RequestResponseHeaders.RequestContextHeader, 
+                        RequestResponseHeaders.RequestContextCorrelationTargetKey,
+                        RequestResponseHeaders.RequestContextKeyValuePairSeparator) == null)
                 {
                     string applicationId = null;
                     if (this.telemetryConfiguration.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out applicationId) ?? false)

@@ -32,7 +32,7 @@
                 if (ActivityHelpers.IsW3CTracingEnabled)
                 {
                     ActivityHelpers.ExtractW3CContext(platformContext.Request, currentActivity);
-
+                    ActivityHelpers.ExtractTracestate(platformContext.Request, currentActivity, result);
                     // length enforced in SetW3CContext
                     currentActivity.SetParentId(currentActivity.GetTraceId());
                     W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
@@ -79,6 +79,8 @@
                     {
                         ActivityHelpers.ExtractW3CContext(platformContext.Request, currentActivity);
                     }
+
+                    ActivityHelpers.ExtractTracestate(platformContext.Request, currentActivity, result);
 
                     W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(result, currentActivity, true);
                     SetLegacyContextIds(platformContext.Request, currentActivity, result);
