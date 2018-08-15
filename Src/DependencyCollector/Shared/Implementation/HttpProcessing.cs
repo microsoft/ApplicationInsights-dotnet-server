@@ -158,8 +158,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     {
                         if (!string.IsNullOrEmpty(telemetry.Context.InstrumentationKey)
                             && webRequest.Headers.GetNameValueHeaderValue(RequestResponseHeaders.RequestContextHeader,
-                                RequestResponseHeaders.RequestContextCorrelationSourceKey,
-                                RequestResponseHeaders.RequestContextKeyValuePairSeparator) == null
+                                RequestResponseHeaders.RequestContextCorrelationSourceKey) == null
                             && (this.configuration.ApplicationIdProvider?.TryGetApplicationId(
                                     telemetry.Context.InstrumentationKey, out applicationId) ?? false))
                         {
@@ -475,8 +474,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 {
                     targetAppId = responseHeaders.GetNameValueHeaderValue(
                         RequestResponseHeaders.RequestContextHeader, 
-                        RequestResponseHeaders.RequestContextCorrelationTargetKey,
-                        RequestResponseHeaders.RequestContextKeyValuePairSeparator);
+                        RequestResponseHeaders.RequestContextCorrelationTargetKey);
                 }
                 catch (Exception ex)
                 {
@@ -506,10 +504,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             if (requestHeaders[RequestResponseHeaders.CorrelationContextHeader] == null && activity.Baggage.Any())
             {
-                requestHeaders.SetHeaderFromNameValueCollection(
-                    RequestResponseHeaders.CorrelationContextHeader, 
-                    activity.Baggage,
-                    RequestResponseHeaders.RequestContextKeyValuePairSeparator);
+                requestHeaders.SetHeaderFromNameValueCollection(RequestResponseHeaders.CorrelationContextHeader, activity.Baggage);
             }
         }
     }

@@ -186,8 +186,7 @@
             this.httpProcessingProfiler.OnBeginForGetResponse(request);
             Assert.IsNotNull(request.Headers.GetNameValueHeaderValue(
                 RequestResponseHeaders.RequestContextHeader, 
-                RequestResponseHeaders.RequestContextCorrelationSourceKey,
-                RequestResponseHeaders.RequestContextKeyValuePairSeparator));
+                RequestResponseHeaders.RequestContextCorrelationSourceKey));
         }
 
         /// <summary>
