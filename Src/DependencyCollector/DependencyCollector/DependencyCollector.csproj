@@ -1,0 +1,97 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\Common\Common.projitems" Label="Shared" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" />
+  <Import Project="..\Shared\DependencyCollector.Shared.projitems" Label="Shared" />
+
+  <PropertyGroup>
+    <AssemblyName>Microsoft.AI.DependencyCollector</AssemblyName>
+    <VersionPrefix>2.8.0-beta1</VersionPrefix>
+    <Authors>Microsoft</Authors>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
+    <DefineConstants>DEPENDENCY_COLLECTOR</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <!--Package Settings-->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <IncludeSymbols>False</IncludeSymbols>
+    <PackageId>Microsoft.ApplicationInsights.DependencyCollector</PackageId>
+    <PackageTags>Analytics;ApplicationInsights;Telemetry;AppInsights</PackageTags>
+    <PackageIconUrl>https://appanacdn.blob.core.windows.net/cdn/icons/aic.png</PackageIconUrl>
+    <PackageLicenseUrl>https://go.microsoft.com/fwlink/?LinkID=510709</PackageLicenseUrl>
+    <PackageProjectUrl>https://go.microsoft.com/fwlink/?LinkId=392727</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' And '$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>NETSTANDARD;NETSTANDARD1_6;</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' And '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>CODE_ANALYSIS;NET45;ALLOW_AGGRESSIVE_INLIGNING_ATTRIBUTE</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!--Symbols Settings-->
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <!--Private Assets-->
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Desktop.Analyzers" version="1.1.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--Nuget Install Transformations-->
+    <Content Include="ApplicationInsights.config.install.xdt" />
+    <Content Include="ApplicationInsights.config.transform" />
+    <Content Include="ApplicationInsights.config.uninstall.xdt" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!--Common Dependencies-->
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta1" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <!--Net 4.5 Dependencies-->
+    <PackageReference Include="Microsoft.ApplicationInsights.Agent.Intercept" Version="2.4.0" />
+    <Reference Include="System" />
+    <Reference Include="System.Runtime.Caching" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <!--NetCore Dependencies-->
+    <PackageReference Include="Microsoft.Extensions.DiagnosticAdapter" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
+    <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.3.1" />
+  </ItemGroup>
+
+  <ImportGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
+    <!--NetCore Properties-->
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), NetCore.props))\NetCore.props" />
+  </ImportGroup>
+  
+</Project>
