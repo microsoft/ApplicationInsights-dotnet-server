@@ -39,7 +39,7 @@
         /// <summary>
         /// Gets or sets the base URI for the Azure Instance Metadata service. Internal to allow overriding in test.
         /// </summary>
-        internal string BaseAimsUri { get; set; } = "http://169.254.169.254/metadata/instance/compute";
+        internal string BaseAimsUri { get; set; } = "https://169.254.169.254/metadata/instance/compute";
 
         public Task<AzureInstanceComputeMetadata> GetAzureComputeMetadataAsync()
         {
