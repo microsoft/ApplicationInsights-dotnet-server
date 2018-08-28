@@ -4,6 +4,7 @@
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
@@ -12,6 +13,7 @@
     /// <summary>
     /// Utility functionality for performance counter collection.
     /// </summary>
+    [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields", Justification = "This class has different code for Net45/NetCore")]
     internal static class PerformanceCounterUtility
     {
         private const string Win32ProcessInstancePlaceholder = @"APP_WIN32_PROC";
@@ -297,6 +299,7 @@
 #endif
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "This method has different code for Net45/NetCore")]
         internal static string GetInstanceForClrProcess(IEnumerable<string> clrInstances)
         {
 #if NETSTANDARD1_6
