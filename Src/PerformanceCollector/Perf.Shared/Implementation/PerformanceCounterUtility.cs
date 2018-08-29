@@ -286,6 +286,7 @@
             return nameWithoutTrailingData.Replace('/', '_');
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "This method has different code for Net45/NetCore")]
         internal static string GetInstanceForWin32Process(IEnumerable<string> win32Instances)
         {
 #if NETSTANDARD1_6
