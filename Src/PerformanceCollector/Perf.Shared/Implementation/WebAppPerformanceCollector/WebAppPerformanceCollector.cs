@@ -9,8 +9,6 @@
     {
         private readonly List<Tuple<PerformanceCounterData, ICounterValue>> performanceCounters = new List<Tuple<PerformanceCounterData, ICounterValue>>();
 
-        private CounterFactory factory = new CounterFactory();
-
         /// <summary>
         /// Gets a collection of registered performance counters.
         /// </summary>
@@ -179,7 +177,7 @@
 
             try
             {
-                counter = this.factory.GetCounter(originalString, reportAs);
+                counter = CounterFactory.GetCounter(originalString, reportAs);
             }
             catch
             {
