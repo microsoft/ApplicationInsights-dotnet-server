@@ -122,15 +122,15 @@
         
         private static bool CheckFiltersGeneric<TTelemetry>(TTelemetry document, FilterConjunctionGroup<TTelemetry> filterGroup, List<CollectionConfigurationError> errorList)
         {
+            bool filterPassed = false;
+
             try
             {
                 if (filterGroup.CheckFilters(document, out CollectionConfigurationError[] groupErrors))
                 {
                     errorList.AddRange(groupErrors);
-                    return true;
+                    filterPassed = true;
                 }
-
-                return false;
             }
             catch (Exception)
             {
@@ -141,8 +141,9 @@
                 ////        CollectionConfigurationErrorType.DocumentStreamFilterFailureToRun,
                 ////        string.Format(CultureInfo.InvariantCulture, "Document stream filter failed to run"),
                 ////        e));
-                return false;
             }
+
+            return filterPassed;
         }
 
         private void CreateFilters(out CollectionConfigurationError[] errors)
