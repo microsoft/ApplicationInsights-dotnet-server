@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
 
@@ -98,11 +98,7 @@
 
             if (filterGroups.Count == 0)
             {
-#if NET45
-                errors = new CollectionConfigurationError[0];
-#else
-                errors = Array.Empty<CollectionConfigurationError>();
-#endif
+                errors = ArrayExtensions.Empty<CollectionConfigurationError>();
 
                 // no filters for the telemetry type - filter out, we're not interested
                 return false;
