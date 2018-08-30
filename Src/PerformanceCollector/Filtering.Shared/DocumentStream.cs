@@ -65,27 +65,27 @@
 
         public bool CheckFilters(RequestTelemetry document, out CollectionConfigurationError[] errors)
         {
-            return CheckFilters(this.requestFilterGroups, document, out errors);
+            return DocumentStream.CheckFilters(this.requestFilterGroups, document, out errors);
         }
         
         public bool CheckFilters(DependencyTelemetry document, out CollectionConfigurationError[] errors)
         {
-            return CheckFilters(this.dependencyFilterGroups, document, out errors);
+            return DocumentStream.CheckFilters(this.dependencyFilterGroups, document, out errors);
         }
 
         public bool CheckFilters(ExceptionTelemetry document, out CollectionConfigurationError[] errors)
         {
-            return CheckFilters(this.exceptionFilterGroups, document, out errors);
+            return DocumentStream.CheckFilters(this.exceptionFilterGroups, document, out errors);
         }
 
         public bool CheckFilters(EventTelemetry document, out CollectionConfigurationError[] errors)
         {
-            return CheckFilters(this.eventFilterGroups, document, out errors);
+            return DocumentStream.CheckFilters(this.eventFilterGroups, document, out errors);
         }
 
         public bool CheckFilters(TraceTelemetry document, out CollectionConfigurationError[] errors)
         {
-            return CheckFilters(this.traceFilterGroups, document, out errors);
+            return DocumentStream.CheckFilters(this.traceFilterGroups, document, out errors);
         }
 
         private static bool CheckFilters<TTelemetry>(
@@ -107,7 +107,7 @@
             // iterate over filter groups (filters within each group are evaluated as AND, the groups are evaluated as OR)
             foreach (FilterConjunctionGroup<TTelemetry> conjunctionFilterGroup in filterGroups)
             {
-                if (CheckFiltersGeneric(document, conjunctionFilterGroup, errorList))
+                if (DocumentStream.CheckFiltersGeneric(document, conjunctionFilterGroup, errorList))
                 {
                     // no need to check remaining groups, one OR-connected group has passed
                     leastOneConjunctionGroupPassed = true;
