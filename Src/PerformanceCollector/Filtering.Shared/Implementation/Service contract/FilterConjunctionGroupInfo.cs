@@ -2,7 +2,6 @@
 {
     using System.Linq;
     using System.Runtime.Serialization;
-    using Microsoft.ApplicationInsights.Common;
 
     /// <summary>
     /// An AND-connected group of FilterInfo objects.
@@ -15,7 +14,7 @@
 
         public override string ToString()
         {
-            return string.Join(", ", (this.Filters ?? ArrayExtensions.Empty<FilterInfo>()).Select(filter => filter.ToString()));
+            return string.Join(", ", (this.Filters ?? new FilterInfo[0]).Select(filter => filter.ToString()));
         }
     }
 }

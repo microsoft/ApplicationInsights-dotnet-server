@@ -4,7 +4,6 @@
     using System.Globalization;
     using System.Linq;
     using System.Runtime.Serialization;
-    using Microsoft.ApplicationInsights.Common;
 
     [DataContract]
     internal class CalculatedMetricInfo
@@ -78,7 +77,7 @@
                 this.TelemetryType,
                 this.Projection,
                 this.Aggregation,
-                string.Join(", ", (this.FilterGroups ?? ArrayExtensions.Empty<FilterConjunctionGroupInfo>()).Select(filterGroup => filterGroup.ToString())));
+                string.Join(", ", (this.FilterGroups ?? new FilterConjunctionGroupInfo[0]).Select(filterGroup => filterGroup.ToString())));
         }
     }
 }
