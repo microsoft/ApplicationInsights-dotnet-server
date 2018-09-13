@@ -2,6 +2,7 @@
 
 ## Version 2.8.0-beta2
 - [Microsoft.AspNet.TelemetryCorrelaiton package update to 1.0.4](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/987)
+- Add vmScaleSetName field to heartbeat properties collected by AzureInstanceMetadataTelemetryModule to allow navigation to right Azure VM Scale Set
 
 ## Version 2.8.0-beta1
 - [Adds opt-in support for W3C distributed tracing standard](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945)
