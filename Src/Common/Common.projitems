@@ -9,7 +9,10 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ActivityExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ApplicationNameProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AppMapCorrelationEventSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ConditionalWeakTableExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ExceptionUtilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)HeadersUtilities.cs" />
@@ -18,6 +21,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)RequestResponseHeaders.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SdkVersionUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CActivityExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3COperationCorrelationTelemetryInitializer.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard1.6' ">
     <Compile Include="$(MSBuildThisFileDirectory)WebHeaderCollectionExtensions.cs" />

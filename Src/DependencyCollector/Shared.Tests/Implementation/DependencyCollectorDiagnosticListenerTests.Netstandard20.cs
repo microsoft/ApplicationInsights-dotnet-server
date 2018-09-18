@@ -5,6 +5,7 @@ namespace Microsoft.ApplicationInsights.Tests
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Microsoft.ApplicationInsights.Common;
@@ -14,6 +15,7 @@ namespace Microsoft.ApplicationInsights.Tests
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.TestFramework;
+    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -51,21 +53,96 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
-                injectLegacyHeaders: true);
+                injectLegacyHeaders: true,
+                injectW3CHeaders: false);
 
-            var activity = new Activity("System.Net.Http.HttpRequestOut");
-            activity.AddBaggage("k", "v");
-            activity.Start();
+            using (listenerWithLegacyHeaders)
+            {
+                var activity = new Activity("System.Net.Http.HttpRequestOut");
+                activity.AddBaggage("k", "v");
+                activity.Start();
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
-            listenerWithLegacyHeaders.OnActivityStart(request);
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+                listenerWithLegacyHeaders.OnActivityStart(request);
 
-            // Request-Id and Correlation-Context are injected by HttpClient
-            // check only legacy headers here
-            Assert.AreEqual(activity.RootId, request.Headers.GetValues(RequestResponseHeaders.StandardRootIdHeader).Single());
-            Assert.AreEqual(activity.Id, request.Headers.GetValues(RequestResponseHeaders.StandardParentIdHeader).Single());
-            Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+                // Request-Id and Correlation-Context are injected by HttpClient
+                // check only legacy headers here
+                Assert.AreEqual(Activity.Current.RootId,
+                    request.Headers.GetValues(RequestResponseHeaders.StandardRootIdHeader).Single());
+                Assert.AreEqual(Activity.Current.Id,
+                    request.Headers.GetValues(RequestResponseHeaders.StandardParentIdHeader).Single());
+                Assert.AreEqual(this.testApplicationId1,
+                    GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+            }
         }
+
+#pragma warning disable 612, 618
+        /// <summary>
+        /// Tests that OnStartActivity injects W3C headers.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityStartInjectsW3CHeaders()
+        {
+            var listenerWithW3CHeaders = new HttpCoreDiagnosticSourceListener(
+                this.configuration,
+                setComponentCorrelationHttpHeaders: true,
+                correlationDomainExclusionList: new[] { "excluded.host.com" },
+                injectLegacyHeaders: false,
+                injectW3CHeaders: true);
+
+            this.configuration.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+
+            using (listenerWithW3CHeaders)
+            {
+                var activity = new Activity("System.Net.Http.HttpRequestOut").SetParentId("|guid.").Start();
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+                listenerWithW3CHeaders.OnActivityStart(request);
+
+                // Request-Id and Correlation-Context are injected by HttpClient
+                // check only W3C headers here
+                Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(request, RequestResponseHeaders.RequestContextCorrelationSourceKey));
+                Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-02", request.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
+                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={this.testApplicationId1}", request.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+            }
+        }
+
+        /// <summary>
+        /// Tests that OnStartActivity injects W3C headers.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityStartInjectsW3CHeadersAndTracksLegacyId()
+        {
+            var listenerWithW3CHeaders = new HttpCoreDiagnosticSourceListener(
+                this.configuration,
+                setComponentCorrelationHttpHeaders: true,
+                correlationDomainExclusionList: new string[0],
+                injectLegacyHeaders: false,
+                injectW3CHeaders: true);
+
+            this.configuration.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+            using (listenerWithW3CHeaders)
+            {
+                var activity = new Activity("System.Net.Http.HttpRequestOut").SetParentId("foo").Start();
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+                listenerWithW3CHeaders.OnActivityStart(request);
+
+                // simulate Request-Id injection by .NET
+                request.Headers.Add(RequestResponseHeaders.RequestIdHeader, activity.Id);
+
+                listenerWithW3CHeaders.OnActivityStop(new HttpResponseMessage(HttpStatusCode.OK), request, TaskStatus.RanToCompletion);
+
+                var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
+                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+                Assert.AreEqual(activity.Id, telemetry.Properties[W3CConstants.LegacyRequestIdProperty]);
+
+                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+                Assert.AreEqual(activity.RootId, telemetry.Properties[W3CConstants.LegacyRootIdProperty]);
+            }
+        }
+
+#pragma warning restore 612, 618
 
         /// <summary>
         /// Tests that OnStopActivity tracks telemetry.
@@ -82,8 +159,8 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnActivityStart(request);
 
+            activity = Activity.Current;
             HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
-            activity.SetEndTime(startTime.AddSeconds(1));
             this.listener.OnActivityStop(response, request, TaskStatus.RanToCompletion);
 
             var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
@@ -96,16 +173,123 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(true, telemetry.Success);
 
             Assert.AreEqual(activity.StartTimeUtc, telemetry.Timestamp);
-            Assert.AreEqual(1, telemetry.Duration.TotalSeconds);
+            Assert.IsTrue(1 <= telemetry.Duration.TotalSeconds);
+            Assert.IsTrue(2 > telemetry.Duration.TotalSeconds);
 
             Assert.AreEqual(activity.RootId, telemetry.Context.Operation.Id);
             Assert.AreEqual(activity.ParentId, telemetry.Context.Operation.ParentId);
             Assert.AreEqual(activity.Id, telemetry.Id);
-            Assert.AreEqual("v", telemetry.Context.Properties["k"]);
+            Assert.AreEqual("v", telemetry.Properties["k"]);
 
             string expectedVersion =
                 SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
+        }
+
+        /// <summary>
+        /// Tests that activity without parent gets a new W3C compatible root id.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityWithoutParentGeneratesW3CTraceId()
+        {
+            var activity = new Activity("System.Net.Http.HttpRequestOut");
+            activity.AddBaggage("k", "v");
+            var startTime = DateTime.UtcNow.AddSeconds(-1);
+            activity.SetStartTime(startTime);
+            activity.Start();
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+            this.listener.OnActivityStart(request);
+
+            activity = Activity.Current;
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            this.listener.OnActivityStop(response, request, TaskStatus.RanToCompletion);
+
+            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
+
+            // W3C compatible-Id ( should go away when W3C is implemented in .NET https://github.com/dotnet/corefx/issues/30331 TODO)
+            Assert.AreEqual(32, telemetry.Context.Operation.Id.Length);
+            Assert.IsTrue(Regex.Match(telemetry.Context.Operation.Id, @"[a-z][0-9]").Success);
+            // end of workaround test
+        }
+
+        /// <summary>
+        /// Tests that activity without parent id does not get a new W3C compatible root id.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityWithParentId()
+        {
+            var activity = new Activity("System.Net.Http.HttpRequestOut")
+                .SetParentId("parent")
+                .Start();
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+            this.listener.OnActivityStart(request);
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            this.listener.OnActivityStop(response, request, TaskStatus.RanToCompletion);
+
+            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
+
+            Assert.AreEqual("parent", telemetry.Context.Operation.Id);
+            Assert.AreEqual("parent", telemetry.Context.Operation.ParentId);
+        }
+
+        /// <summary>
+        /// Tests that activity without parent does not get a new W3C compatible root id.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityWithParent()
+        {
+            var parent = new Activity("dummy").Start();
+            var activity = new Activity("System.Net.Http.HttpRequestOut").Start();
+ 
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+            this.listener.OnActivityStart(request);
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            this.listener.OnActivityStop(response, request, TaskStatus.RanToCompletion);
+
+            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
+
+            Assert.AreEqual(parent.RootId, telemetry.Context.Operation.Id);
+            Assert.AreEqual(parent.Id, telemetry.Context.Operation.ParentId);
+        }
+
+        /// <summary>
+        /// Tests that OnStopActivity tracks telemetry.
+        /// </summary>
+        [TestMethod]
+        public void OnActivityStopWithParentTracksTelemetry()
+        {
+            var parent = new Activity("parent")
+                .AddBaggage("k", "v")
+                .Start();
+
+            var activity = new Activity("System.Net.Http.HttpRequestOut").Start();
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+            this.listener.OnActivityStart(request);
+
+            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK);
+            this.listener.OnActivityStop(response, request, TaskStatus.RanToCompletion);
+
+            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
+
+            Assert.AreEqual(parent.RootId, telemetry.Context.Operation.Id);
+            Assert.AreEqual(parent.Id, telemetry.Context.Operation.ParentId);
+            Assert.AreEqual(activity.Id, telemetry.Id);
+            Assert.AreEqual("v", telemetry.Properties["k"]);
+
+            string expectedVersion =
+                SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
+            Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -126,6 +310,9 @@ namespace Microsoft.ApplicationInsights.Tests
 
             Assert.AreEqual("Canceled", telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -146,6 +333,9 @@ namespace Microsoft.ApplicationInsights.Tests
 
             Assert.AreEqual("Faulted", telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry, responseExpected: false);
         }
 
         /// <summary>
@@ -171,7 +361,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(exception, exceptionTelemetry.Exception);
             Assert.AreEqual(exceptionTelemetry.Context.Operation.Id, dependencyTelemetry.Context.Operation.Id);
             Assert.AreEqual(exceptionTelemetry.Context.Operation.ParentId, dependencyTelemetry.Id);
-            Assert.AreEqual("The server name or address could not be resolved", dependencyTelemetry.Context.Properties["Error"]);
+            Assert.AreEqual("The server name or address could not be resolved", dependencyTelemetry.Properties["Error"]);
+
+            // Check the operation details
+            this.ValidateOperationDetails(dependencyTelemetry, responseExpected: false);
         }
 
         /// <summary>

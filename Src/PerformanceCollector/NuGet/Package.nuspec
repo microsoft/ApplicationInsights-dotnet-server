@@ -14,7 +14,7 @@
     <summary>Application Insights Performance Counters Collector allows you to send data collected by Performance Counters to Application Insights.</summary>
     <copyright>$copyright$</copyright>
     <releaseNotes>For the release notes please follow http://go.microsoft.com/fwlink/?LinkId=535037</releaseNotes>
-    <tags>Analytics ApplicationInsights Telemetry ASP.NET ASMX Web Azure Server Services ASPX Websites Performance Counters Performance Collection</tags>
+    <tags>Azure Monitoring Analytics ApplicationInsights Telemetry ASP.NET ASMX Web Azure Server Services ASPX Websites Performance Counters Performance Collection</tags>
     <dependencies>      
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[$coresdkversion$]" />
@@ -32,6 +32,7 @@
     <!-- Binaries for .NET 4.5 -->
     <file src="$configuration$\Src\PerformanceCollector\Net45\Microsoft.AI.PerfCounterCollector.dll" target="lib\net45" />
     <file src="$configuration$\Src\PerformanceCollector\Net45\Microsoft.AI.PerfCounterCollector.pdb" target="lib\net45" />
+    <file src="$configuration$\Src\PerformanceCollector\Net45\Microsoft.AI.PerfCounterCollector.xml" target="lib\net45" />
 
     <!-- For .NET Standard 1.6 projects -->
     <file src="$configuration$\Src\PerformanceCollector\NetCore\netstandard1.6\Microsoft.AI.PerfCounterCollector.dll" target="lib\netstandard1.6" />

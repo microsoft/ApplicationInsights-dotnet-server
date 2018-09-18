@@ -1,10 +1,34 @@
 # Changelog
 
+## Version 2.8.0-beta2
+- [LiveMetrics (QuickPulse) TelemetryProcessor added automatically to the default ApplicationInsights.config are moved under the default telemetry sink.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/987)
+	If you are upgrading, and have added/modified TelemetryProcessors, make sure to copy them to the default sink section.
+- [Microsoft.AspNet.TelemetryCorrelaiton package update to 1.0.4](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/991)
+- Add vmScaleSetName field to heartbeat properties collected by AzureInstanceMetadataTelemetryModule to allow navigation to right Azure VM Scale Set
+
+## Version 2.8.0-beta1
+- [Adds opt-in support for W3C distributed tracing standard](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945)
+- Update Base SDK to version 2.8.0-beta1
+
+## Version 2.7.2
+- [Fix ServiceBus requests correlation](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/970)
+
+## Version 2.7.0-beta4
+- [When there is no parent operation, generate W3C compatible operation Id](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/952)
+
+## Version 2.7.0-beta3
+- [Fix: SerializationException resolving Activity in cross app-domain calls](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/613)
+- [Fix: Race condition in generic diagnostic source listener](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/948)
+
 ## Version 2.7.0-beta1
+- [Add operation details for HTTP and SQL operation to the dependency telemetry.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/900)
+- [Fix: Do not call base HandleErrorAttribute.OnException in MVC unhandled exception filter](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/921)
 - [Send UserActionable event about correlation issue with HTTP request with body when .NET 4.7.1 is not installed](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/903)
 - [Added support to collect Perf Counters for .NET Core Apps if running inside Azure WebApps](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/889)
 - [Opt-in legacy correlation headers (x-ms-request-id and x-ms-request-root-id) extraction and injection](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/887)
 - [Fix: Correlation is not working for POST requests](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/898) when .NET 4.7.1 runtime is installed.
+- [Fix: Tracking mixed HTTP responses with and without content](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/919)
+
 
 ## Version 2.6.0-beta4
 - [Remove CorrelationIdLookupHelper. Use TelemetryConfiguration.ApplicationIdProvider instead.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/880) With this change you can update URL to query application ID from which enables environments with reverse proxy configuration to access Application Insights ednpoints.

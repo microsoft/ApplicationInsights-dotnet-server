@@ -29,12 +29,15 @@ namespace Microsoft.ApplicationInsights.Tests
         private const string HttpOkResultCode = "200";
         private const string NotFoundResultCode = "404";
 
-        private readonly List<ITelemetry> sentTelemetry = new List<ITelemetry>();
+        private List<ITelemetry> sentTelemetry;
+        private object request;
+        private object response;
+        private object responseHeaders;
 
         private TelemetryConfiguration configuration;
         private string testInstrumentationKey1 = nameof(testInstrumentationKey1);
-        private string testApplicationId1 = nameof(testApplicationId1);
-        private string testApplicationId2 = nameof(testApplicationId2);
+        private string testApplicationId1 = "cid-v1:" + nameof(testApplicationId1);
+        private string testApplicationId2 = "cid-v1:" + nameof(testApplicationId2);
         private StubTelemetryChannel telemetryChannel;
         private HttpCoreDiagnosticSourceListener listener;
 
@@ -44,10 +47,27 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestInitialize]
         public void Initialize()
         {
+            this.sentTelemetry = new List<ITelemetry>();
+            this.request = null;
+            this.response = null;
+            this.responseHeaders = null;
+
             this.telemetryChannel = new StubTelemetryChannel()
             {
                 EndpointAddress = "https://endpointaddress",
-                OnSend = this.sentTelemetry.Add
+                OnSend = telemetry =>
+                {
+                    this.sentTelemetry.Add(telemetry);
+
+                    // The correlation id lookup service also makes http call, just make sure we skip that
+                    DependencyTelemetry depTelemetry = telemetry as DependencyTelemetry;
+                    if (depTelemetry != null)
+                    {
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, out this.request);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, out this.response);
+                        depTelemetry.TryGetOperationDetail(RemoteDependencyConstants.HttpResponseHeadersOperationDetailName, out this.responseHeaders);
+                    }
+                },
             };
 
             this.testInstrumentationKey1 = Guid.NewGuid().ToString();
@@ -64,7 +84,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
-                injectLegacyHeaders: false);
+                injectLegacyHeaders: false,
+                injectW3CHeaders: false);
         }
 
         /// <summary>
@@ -196,22 +217,29 @@ namespace Microsoft.ApplicationInsights.Tests
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
-                injectLegacyHeaders: true);
+                injectLegacyHeaders: true,
+                injectW3CHeaders: false);
 
-            Guid loggingRequestId = Guid.NewGuid();
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
-            listenerWithLegacyHeaders.OnRequest(request, loggingRequestId);
+            using (listenerWithLegacyHeaders)
+            {
+                Guid loggingRequestId = Guid.NewGuid();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
+                listenerWithLegacyHeaders.OnRequest(request, loggingRequestId);
 
-            IOperationHolder<DependencyTelemetry> dependency;
-            Assert.IsTrue(listenerWithLegacyHeaders.PendingDependencyTelemetry.TryGetValue(request, out dependency));
-            Assert.AreEqual(0, this.sentTelemetry.Count);
+                IOperationHolder<DependencyTelemetry> dependency;
+                Assert.IsTrue(
+                    listenerWithLegacyHeaders.PendingDependencyTelemetry.TryGetValue(request, out dependency));
+                Assert.AreEqual(0, this.sentTelemetry.Count);
 
-            var legacyRootIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardRootIdHeader).Single();
-            var legacyParentIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();
-            var requestIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.RequestIdHeader).Single();
-            Assert.AreEqual(dependency.Telemetry.Id, legacyParentIdHeader);
-            Assert.AreEqual(dependency.Telemetry.Context.Operation.Id, legacyRootIdHeader);
-            Assert.AreEqual(dependency.Telemetry.Id, requestIdHeader);
+                var legacyRootIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.StandardRootIdHeader)
+                    .Single();
+                var legacyParentIdHeader =
+                    GetRequestHeaderValues(request, RequestResponseHeaders.StandardParentIdHeader).Single();
+                var requestIdHeader = GetRequestHeaderValues(request, RequestResponseHeaders.RequestIdHeader).Single();
+                Assert.AreEqual(dependency.Telemetry.Id, legacyParentIdHeader);
+                Assert.AreEqual(dependency.Telemetry.Context.Operation.Id, legacyRootIdHeader);
+                Assert.AreEqual(dependency.Telemetry.Id, requestIdHeader);
+            }
         }
 
         /// <summary>
@@ -314,6 +342,9 @@ namespace Microsoft.ApplicationInsights.Tests
             string expectedVersion =
                 SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
             Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -349,6 +380,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -385,6 +419,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success, "response was not successful");
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -420,6 +457,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(RequestUrl, telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -456,6 +496,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(HttpOkResultCode, telemetry.ResultCode);
             Assert.AreEqual(true, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -492,6 +535,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(GetApplicationInsightsTarget(targetApplicationId), telemetry.Target);
             Assert.AreEqual(NotFoundResultCode, telemetry.ResultCode);
             Assert.AreEqual(false, telemetry.Success);
+
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
         }
 
         /// <summary>
@@ -534,6 +580,9 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.AreEqual(parentActivity.RootId, telemetry.Context.Operation.Id);
             Assert.AreEqual(parentActivity.Id, telemetry.Context.Operation.ParentId);
 
+            // Check the operation details
+            this.ValidateOperationDetails(telemetry);
+
             parentActivity.Stop();
         }
 
@@ -550,6 +599,22 @@ namespace Microsoft.ApplicationInsights.Tests
         private static string GetRequestContextKeyValue(HttpRequestMessage request, string keyName)
         {
             return HttpHeadersUtilities.GetRequestContextKeyValue(request.Headers, keyName);
+        }
+
+        private void ValidateOperationDetails(DependencyTelemetry telemetry, bool responseExpected = true)
+        {
+            Assert.IsNotNull(this.request, "Request was not present and expected.");
+            Assert.IsNotNull(this.request as HttpRequestMessage, "Request was not the expected type.");
+            Assert.IsNull(this.responseHeaders, "Response headers were present and not expected.");
+            if (responseExpected)
+            {
+                Assert.IsNotNull(this.response, "Response was not present and expected.");
+                Assert.IsNotNull(this.response as HttpResponseMessage, "Response was not the expected type.");
+            }
+            else
+            {
+                Assert.IsNull(this.response, "Response was present and not expected.");
+            }
         }
     }
 }

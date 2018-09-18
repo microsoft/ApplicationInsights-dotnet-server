@@ -2,6 +2,7 @@
 {
     using System;
     using System.Data.SqlClient;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
@@ -245,6 +246,7 @@
                 telemetry.Type = RemoteDependencyConstants.SQL;
                 telemetry.Target = this.GetDependencyTarget(thisObj);
                 telemetry.Data = commandText;
+                telemetry.SetOperationDetail(RemoteDependencyConstants.SqlCommandOperationDetailName, thisObj);
 
                 // We use weaktables to store the thisObj for correlating begin with end call.
                 this.TelemetryTable.Store(thisObj, new Tuple<DependencyTelemetry, bool>(telemetry, isCustomCreated));
@@ -253,6 +255,14 @@
             catch (Exception exception)
             {
                 DependencyCollectorEventSource.Log.CallbackError(thisObj == null ? 0 : thisObj.GetHashCode(), "OnBeginSql", exception);
+            }
+            finally
+            {
+                Activity current = Activity.Current;
+                if (current?.OperationName == ClientServerDependencyTracker.DependencyActivityName)
+                {
+                    current.Stop();
+                }
             }
 
             return null;
@@ -299,7 +309,7 @@
                         DependencyCollectorEventSource.Log.CallbackError(thisObj == null ? 0 : thisObj.GetHashCode(), "OnEndAsyncSql", ex);
                     }
                 });
-            }            
+            }
             catch (Exception ex)
             {
                 DependencyCollectorEventSource.Log.CallbackError(thisObj == null ? 0 : thisObj.GetHashCode(), "OnEndAsyncSql", ex);

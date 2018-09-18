@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
@@ -95,6 +96,64 @@
         }
 
         [TestMethod]
+        public void EventHubsSuccessfulSendIsHandledWithoutParent()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.IncludeDiagnosticSourceActivities.Add("Microsoft.Azure.EventHubs");
+                module.Initialize(this.configuration);
+
+                DiagnosticListener listener = new DiagnosticListener("Microsoft.Azure.EventHubs");
+
+                var telemetry = this.TrackOperation<DependencyTelemetry>(listener, "Microsoft.Azure.EventHubs.Send", TaskStatus.RanToCompletion);
+
+                Assert.IsNotNull(telemetry);
+                Assert.AreEqual("Send", telemetry.Name);
+                Assert.AreEqual(RemoteDependencyConstants.AzureEventHubs, telemetry.Type);
+                Assert.AreEqual("sb://eventhubname.servicebus.windows.net/ | ehname", telemetry.Target);
+                Assert.IsTrue(telemetry.Success.Value);
+
+                // W3C compatible-Id ( should go away when W3C is implemented in .NET https://github.com/dotnet/corefx/issues/30331 TODO)
+                Assert.AreEqual(32, telemetry.Context.Operation.Id.Length);
+                Assert.IsTrue(Regex.Match(telemetry.Context.Operation.Id, @"[a-z][0-9]").Success);
+                // end of workaround test
+
+                Assert.AreEqual("eventhubname.servicebus.windows.net", telemetry.Properties["peer.hostname"]);
+                Assert.AreEqual("ehname", telemetry.Properties["eh.event_hub_name"]);
+                Assert.AreEqual("SomePartitionKeyHere", telemetry.Properties["eh.partition_key"]);
+                Assert.AreEqual("EventHubClient1(ehname)", telemetry.Properties["eh.client_id"]);
+            }
+        }
+
+        [TestMethod]
+        public void EventHubsSuccessfulSendIsHandledWithExternalParent()
+        {
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.IncludeDiagnosticSourceActivities.Add("Microsoft.Azure.EventHubs");
+                module.Initialize(this.configuration);
+
+                DiagnosticListener listener = new DiagnosticListener("Microsoft.Azure.EventHubs");
+
+                var telemetry = this.TrackOperation<DependencyTelemetry>(listener, "Microsoft.Azure.EventHubs.Send", TaskStatus.RanToCompletion, "parent");
+
+                Assert.IsNotNull(telemetry);
+                Assert.AreEqual("Send", telemetry.Name);
+                Assert.AreEqual(RemoteDependencyConstants.AzureEventHubs, telemetry.Type);
+                Assert.AreEqual("sb://eventhubname.servicebus.windows.net/ | ehname", telemetry.Target);
+                Assert.IsTrue(telemetry.Success.Value);
+
+                Assert.AreEqual("parent", telemetry.Context.Operation.ParentId);
+                Assert.AreEqual("parent", telemetry.Context.Operation.Id);
+
+                Assert.AreEqual("eventhubname.servicebus.windows.net", telemetry.Properties["peer.hostname"]);
+                Assert.AreEqual("ehname", telemetry.Properties["eh.event_hub_name"]);
+                Assert.AreEqual("SomePartitionKeyHere", telemetry.Properties["eh.partition_key"]);
+                Assert.AreEqual("EventHubClient1(ehname)", telemetry.Properties["eh.client_id"]);
+            }
+        }
+
+        [TestMethod]
         public void EventHubsFailedSendIsHandled()
         {
             using (var module = new DependencyTrackingTelemetryModule())
@@ -144,7 +203,7 @@
             }
         }
 
-        private T TrackOperation<T>(DiagnosticListener listener, string activityName, TaskStatus status) where T : OperationTelemetry
+        private T TrackOperation<T>(DiagnosticListener listener, string activityName, TaskStatus status, string parentId = null) where T : OperationTelemetry
         {
             Activity activity = null;
             int itemCountBefore = this.sentItems.Count;
@@ -156,6 +215,12 @@
                 activity.AddTag("eh.event_hub_name", "ehname");
                 activity.AddTag("eh.partition_key", "SomePartitionKeyHere");
                 activity.AddTag("eh.client_id", "EventHubClient1(ehname)");
+
+                if (Activity.Current == null && parentId != null)
+                {
+                    activity.SetParentId(parentId);
+                }
+
                 if (listener.IsEnabled(activityName + ".Start"))
                 {
                     listener.StartActivity(
