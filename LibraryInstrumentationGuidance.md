@@ -78,7 +78,7 @@ Every DiagnosticListener has a name. Tracing system discovers all available sour
 **DO** Create one `DiagnosticListener` instance for a particular source (make it static): each time when new DiagnoscticListener is created, all subscribers are notified and about it.
 
 **DO** call 'IsEnabled()' for every operation.
-The first `source.IsEnabled()` call efficiently tell if there is any listener in the system for our source. 
+The first `source.IsEnabled()` call efficiently tells if there is any listener in the system for our source. 
 
 **DO** make operation name unique within the DiagnosticListener. Operation name is coarse name that remains the same for ALL operations of this kind (e.g. `HttpRequestIn` or `HttpRequestOut`).
 
@@ -89,7 +89,7 @@ If there is a listener, we ask tracing system if it is interested in 'MyOperatio
 
 **DO NOT** cache results of IsEnabled: tracing system may subscribe/unsubscribe at any moment. Results of IsEnabled are dynamic and depend on the context.
 
-**CONSIDER** providing more context via 'IsEnabled(OperationName, Input)' overload instaed of 'IsEnabled(OperationName)'
+**CONSIDER** providing more context via 'IsEnabled(OperationName, Input)' overload instead of 'IsEnabled(OperationName)'
 In some cases tracing system needs more context to filter operations. A good example is tracing system that tracks HTTP calls and sends telemetry over HTTP as well. To avoid recursive tracing and save performance tracing system want to prevent such calls to be instrumented at all based on some request properties.
 
 **CONSIDER** sending Exception event and providing Exception object and input in the payload (in case tracing system did wants to log exception along with some input properties).
