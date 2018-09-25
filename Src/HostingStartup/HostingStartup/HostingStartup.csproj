@@ -8,7 +8,6 @@
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <TargetFramework>net45</TargetFramework>
     <Prefer32Bit>false</Prefer32Bit>
-    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\..\</SolutionDir> <!--needed?-->
     <DefineConstants>$(DefineConstants);NET45;ALLOW_AGGRESSIVE_INLIGNING_ATTRIBUTE</DefineConstants>
   </PropertyGroup>
 
