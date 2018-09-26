@@ -10,6 +10,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Net.Http.Headers;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
@@ -20,6 +21,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
     internal class HttpCoreDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
+        /// <summary>
+        /// Gets the DependencyTelemetry objects that are still waiting for a response from the dependency on .NET Core prior to .NET Core 2.0
+        /// This will most likely only be used for testing purposes.
+        /// </summary>
+        internal readonly ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> PendingDependencyTelemetryCore10
+            = new ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>>();
+
+        /// <summary>
+        /// Gets the DependencyTelemetry objects that are still waiting for a response from the dependency on .NET Core 2.0 and later
+        /// This will most likely only be used for testing purposes.
+        /// </summary>
+        internal readonly ConditionalWeakTable<HttpRequestMessage, DependencyTelemetry> PendingDependencyTelemetryCore20
+            = new ConditionalWeakTable<HttpRequestMessage, DependencyTelemetry>();
+
         private const string DependencyErrorPropertyKey = "Error";
         private const string HttpOutEventName = "System.Net.Http.HttpRequestOut";
         private const string HttpOutStartEventName = "System.Net.Http.HttpRequestOut.Start";
@@ -49,8 +64,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
         #endregion
 
-        private readonly ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> pendingTelemetry = 
-            new ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>>();
+        private readonly ConditionalWeakTable<HttpRequestMessage, DependencyTelemetry> pendingTelemetryCore20 =
+            new ConditionalWeakTable<HttpRequestMessage, DependencyTelemetry>();
 
         private readonly ConcurrentDictionary<string, Exception> pendingExceptions =
             new ConcurrentDictionary<string, Exception>();
@@ -81,11 +96,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(this, this.applicationInsightsUrlFilter, this.isNetCore20HttpClient);
         }
-
-        /// <summary>
-        /// Gets the DependencyTelemetry objects that are still waiting for a response from the dependency. This will most likely only be used for testing purposes.
-        /// </summary>
-        internal ConditionalWeakTable<HttpRequestMessage, IOperationHolder<DependencyTelemetry>> PendingDependencyTelemetry => this.pendingTelemetry;
 
         /// <summary>
         /// Notifies the observer that the provider has finished sending push-based notifications.
@@ -271,7 +281,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             Activity currentActivity = Activity.Current;
             if (currentActivity == null)
             {
-                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpExceptionEventName);
+                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpExceptionEventName, string.Empty);
                 return;
             }
             
@@ -298,7 +308,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             var currentActivity = Activity.Current;
             if (currentActivity == null)
             {
-                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpOutStartEventName);
+                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpOutStartEventName, string.Empty);
                 return;
             }
 
@@ -312,12 +322,44 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             if (currentActivity.Parent == null && currentActivity.ParentId == null)
             {
                 currentActivity.UpdateParent(StringUtilities.GenerateTraceId());
+
+                // it might be changed
+                currentActivity = Activity.Current;
             }
 
             // end of workaround
 
             DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStart(currentActivity.Id);
 
+            Uri requestUri = request.RequestUri;
+            var resourceName = request.Method.Method + " " + requestUri.AbsolutePath;
+
+            var dependency = new DependencyTelemetry
+            {
+                Name = resourceName,
+                Target = requestUri.Host,
+                Type = RemoteDependencyConstants.HTTP,
+                Data = requestUri.OriginalString,
+                Id = currentActivity.Id
+            };
+
+            dependency.Start();
+            this.PendingDependencyTelemetryCore20.AddIfNotExists(request, dependency);
+
+            // properly fill dependency telemetry operation context: OperationCorrelationTelemetryInitializer initializes child telemetry
+            dependency.Context.Operation.ParentId = currentActivity.ParentId;
+            dependency.Context.Operation.Id = currentActivity.RootId;
+            foreach (var item in currentActivity.Baggage)
+            {
+                if (!dependency.Properties.ContainsKey(item.Key))
+                {
+                    dependency.Properties[item.Key] = item.Value;
+                }
+            }
+
+            this.client.Initialize(dependency);
+
+            dependency.SetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, request);
             this.InjectRequestHeaders(request, this.configuration.InstrumentationKey);
         }
 
@@ -335,69 +377,67 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 return;
             }
 
+            string dependencyId = null;
             Activity currentActivity = Activity.Current;
             if (currentActivity == null)
             {
-                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpOutStopEventName);
-                return;
-            }
+                // this should not happen, but it happens rarely
+                // let's log more details to understand why
 
-            DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(currentActivity.Id);
-
-            Uri requestUri = request.RequestUri;
-            var resourceName = request.Method.Method + " " + requestUri.AbsolutePath;
-
-            DependencyTelemetry telemetry = new DependencyTelemetry();
-            telemetry.SetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, request);
-
-            // properly fill dependency telemetry operation context: OperationCorrelationTelemetryInitializer initializes child telemetry
-            telemetry.Context.Operation.Id = currentActivity.RootId;
-            telemetry.Context.Operation.ParentId = currentActivity.ParentId;
-            telemetry.Id = currentActivity.Id;
-            foreach (var item in currentActivity.Baggage)
-            {
-                if (!telemetry.Properties.ContainsKey(item.Key))
+                StringBuilder errorDetails = new StringBuilder();
+                if (request.Headers.TryGetValues(RequestResponseHeaders.RequestIdHeader, out var requestIds))
                 {
-                    telemetry.Properties[item.Key] = item.Value;
+                    dependencyId = string.Join(",", requestIds);
                 }
-            }
-            
-            this.client.Initialize(telemetry);
 
-            // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
-            if (currentActivity.Duration == TimeSpan.Zero)
-            {
-                currentActivity.Stop();
-            }
+                errorDetails.Append("RequestResponseHeaders.RequestIdHeader").Append("=");
+                errorDetails.AppendLine(dependencyId);
 
-            telemetry.Timestamp = currentActivity.StartTimeUtc;
-            telemetry.Name = resourceName;
-            telemetry.Target = requestUri.Host;
-            telemetry.Type = RemoteDependencyConstants.HTTP;
-            telemetry.Data = requestUri.OriginalString;
-            telemetry.Duration = currentActivity.Duration;
-            if (response != null)
-            {
-                this.ParseResponse(response, telemetry);
-                telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, response);
+                errorDetails.Append(nameof(requestTaskStatus)).Append("=");
+                errorDetails.AppendLine(requestTaskStatus.ToString());
+
+                errorDetails.Append("response is null=");
+                errorDetails.AppendLine((response == null).ToString());
+
+                DependencyCollectorEventSource.Log.CurrentActivityIsNull(HttpOutStopEventName, errorDetails.ToString());
+                DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(dependencyId);
             }
             else
             {
-                if (this.pendingExceptions.TryRemove(currentActivity.Id, out Exception exception))
+                DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerStop(currentActivity.Id);
+                dependencyId = currentActivity.Id;
+            }
+
+            if (this.PendingDependencyTelemetryCore20.TryGetValue(request, out DependencyTelemetry dependency))
+            {
+                this.PendingDependencyTelemetryCore20.Remove(request);
+
+                dependency.Stop();
+
+                // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
+                if (currentActivity != null && currentActivity.Duration == TimeSpan.Zero)
                 {
-                    telemetry.Properties[DependencyErrorPropertyKey] = exception.GetBaseException().Message;
+                    currentActivity.Stop();
                 }
 
-                telemetry.ResultCode = requestTaskStatus.ToString();
-                telemetry.Success = false;
-            }
+                if (response != null)
+                {
+                    this.ParseResponse(response, dependency);
+                    dependency.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, response);
+                }
+                else
+                {
+                    if (dependencyId != null && this.pendingExceptions.TryRemove(dependencyId, out Exception exception))
+                    {
+                        dependency.Properties[DependencyErrorPropertyKey] = exception.GetBaseException().Message;
+                    }
 
-            if (this.injectW3CHeaders)
-            {
-                // this.SetLegacyId(telemetry, request);
-            }
+                    dependency.ResultCode = requestTaskStatus.ToString();
+                    dependency.Success = false;
+                }
 
-            this.client.TrackDependency(telemetry);
+                this.client.TrackDependency(dependency);
+            }
         }
 
         //// netcoreapp1.1 and prior event. See https://github.com/dotnet/corefx/blob/release/1.0.0-rc2/src/Common/src/System/Net/Http/HttpHandlerDiagnosticListenerExtensions.cs.
@@ -423,7 +463,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 dependency.Telemetry.Type = RemoteDependencyConstants.HTTP;
                 dependency.Telemetry.Data = requestUri.OriginalString;
                 dependency.Telemetry.SetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, request);
-                this.pendingTelemetry.AddIfNotExists(request, dependency);
+                this.PendingDependencyTelemetryCore10.AddIfNotExists(request, dependency);
 
                 this.InjectRequestHeaders(request, dependency.Telemetry.Context.InstrumentationKey, true);
             }
@@ -442,14 +482,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 DependencyCollectorEventSource.Log.HttpCoreDiagnosticSourceListenerResponse(loggingRequestId);
                 var request = response.RequestMessage;
 
-                if (this.pendingTelemetry.TryGetValue(request, out IOperationHolder<DependencyTelemetry> dependency))
+                if (this.PendingDependencyTelemetryCore10.TryGetValue(request, out IOperationHolder<DependencyTelemetry> dependency))
                 {
                     dependency.Telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, response);
                     if (request != null)
                     {
                         this.ParseResponse(response, dependency.Telemetry);
                         this.client.StopOperation(dependency);
-                        this.pendingTelemetry.Remove(request);
+                        this.PendingDependencyTelemetryCore10.Remove(request);
                     }
                 }
             }
