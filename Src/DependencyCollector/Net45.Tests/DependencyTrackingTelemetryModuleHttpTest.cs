@@ -135,7 +135,7 @@
         }
 
         [TestMethod]
-        [Timeout(500000)]
+        [Timeout(5000)]
         public void TestBasicDependencyCollectionEventSource()
         {
             this.TestCollectionSuccessfulResponse(false, LocalhostUrlEventSource, 200);
