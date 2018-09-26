@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)HeadersUtilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InjectionGuardConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PropertyFetcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ActiveSubsciptionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RequestResponseHeaders.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SdkVersionUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringUtilities.cs" />

@@ -1,8 +1,10 @@
 namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
@@ -13,11 +15,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     /// </summary>
     internal abstract class DiagnosticSourceListenerBase<TContext> : IObserver<DiagnosticListener>, IDisposable
     {
+        protected static readonly ConcurrentDictionary<string, ActiveSubsciptionManager> SubscriptionManagers =
+            new ConcurrentDictionary<string, ActiveSubsciptionManager>();
+    
         protected readonly TelemetryClient Client;
         protected readonly TelemetryConfiguration Configuration;
 
+        private readonly ConcurrentQueue<IDisposable> individualSubscriptions = new ConcurrentQueue<IDisposable>();
+        private readonly ConcurrentQueue<IndividualDiagnosticSourceListener> individualListeners = new ConcurrentQueue<IndividualDiagnosticSourceListener>();
+
         private IDisposable listenerSubscription;
-        private List<IDisposable> individualSubscriptions;
 
         /// <summary>
         /// Creates DiagnosticSourceListenerBase. To finish the initialization and subscribe to all enabled sources,
@@ -71,16 +78,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
             IDiagnosticEventHandler eventHandler = this.GetEventHandler(value.Name);
             var individualListener = new IndividualDiagnosticSourceListener(value, eventHandler, this, this.GetListenerContext(value));
+
+            var manager = SubscriptionManagers.GetOrAdd(value.Name, (k) => new ActiveSubsciptionManager());
+            manager.Attach(individualListener);
+
             IDisposable subscription = value.Subscribe(
                 individualListener,
                 (evnt, input1, input2) => this.IsActivityEnabled(evnt, individualListener.Context) && eventHandler.IsEventEnabled(evnt, input1, input2));
 
-            if (this.individualSubscriptions == null)
-            {
-                this.individualSubscriptions = new List<IDisposable>();
-            }
-
-            this.individualSubscriptions.Add(subscription);
+            this.individualSubscriptions.Enqueue(subscription);
+            this.individualListeners.Enqueue(individualListener);
         }
 
         /// <summary>
@@ -142,18 +149,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         {
             if (disposing)
             {
-                if (this.individualSubscriptions != null)
+                while (this.individualListeners.TryDequeue(out var individualListener))
                 {
-                    foreach (var individualSubscription in this.individualSubscriptions)
+                    if (SubscriptionManagers.TryGetValue(individualListener.SourceName, out var manager))
                     {
-                        individualSubscription.Dispose();
+                        manager.Detach(individualListener);
                     }
                 }
 
-                if (this.listenerSubscription != null)
+                while (this.individualSubscriptions.TryDequeue(out var individualSubscription))
                 {
-                    this.listenerSubscription.Dispose();
+                    individualSubscription.Dispose();
                 }
+
+                this.listenerSubscription?.Dispose();
             }
         }
 
@@ -175,8 +184,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 this.telemetryDiagnosticSourceListener = telemetryDiagnosticSourceListener;
             }
 
+            internal string SourceName => this.diagnosticListener?.Name;
+
             public void OnNext(KeyValuePair<string, object> evnt)
             {
+                // TODO : comments
+                if (SubscriptionManagers.TryGetValue(this.SourceName, out var manager) && !manager.IsActive(this))
+                {
+                    return;
+                }
+
                 // while we provide IsEnabled callback during subscription, it does not gurantee events will not be fired
                 // In case of multiple subscribers, it's enough for one to reply true to IsEnabled.
                 // I.e. check for if activity is not disabled and particular handler wants to receive the event.
