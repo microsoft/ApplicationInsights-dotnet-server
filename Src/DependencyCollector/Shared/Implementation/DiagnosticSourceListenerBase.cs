@@ -185,7 +185,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     Activity currentActivity = Activity.Current;
                     if (currentActivity == null)
                     {
-                        DependencyCollectorEventSource.Log.CurrentActivityIsNull(evnt.Key);
+                        DependencyCollectorEventSource.Log.CurrentActivityIsNull(evnt.Key, string.Empty);
                         return;
                     }
 
