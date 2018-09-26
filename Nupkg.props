@@ -8,6 +8,7 @@
 
   <PropertyGroup>
     <!-- These are the common properties used when generating the nupkg -->
+    <!-- https://docs.microsoft.com/en-us/nuget/schema/msbuild-targets -->
     <Company>Microsoft</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <!-- <PackageVersion>Defined in GlobalStaticVersion.props</PackageVersion> -->
