@@ -15,7 +15,14 @@ $newVersion = "2.8.0-beta2"
 Write-Host "New Version: $newVersion";
 
 
-Get-ChildItem -Path $directory -Filter packages.config -Recurse | 
+Get-ChildItem -Path $directory -Filter *packages.config -Recurse | 
+foreach-object {
+  (Get-Content $_.FullName) | 
+  Foreach-Object {$_ -replace $oldVersion, $newVersion} | 
+  Set-Content $_.FullName
+}
+
+Get-ChildItem -Path $directory -Filter Test.Common.Sdk.Net45.targets -Recurse | 
 foreach-object {
   (Get-Content $_.FullName) | 
   Foreach-Object {$_ -replace $oldVersion, $newVersion} | 
