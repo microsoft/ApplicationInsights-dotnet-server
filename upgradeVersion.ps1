@@ -36,7 +36,7 @@ foreach-object {
   Set-Content $_.FullName
 }
   
-Get-ChildItem -Path $directory -Filter *.props -Recurse | 
+Get-ChildItem -Path $directory -Filter Directory.Build.props -Recurse | 
 foreach-object {
   (Get-Content $_.FullName) | 
   Foreach-Object {$_ -replace $oldVersion, $newVersion} | 
