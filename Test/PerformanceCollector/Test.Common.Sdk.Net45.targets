@@ -3,11 +3,11 @@
 	
 	<ItemGroup>
 		<Reference Include="Microsoft.AI.ServerTelemetryChannel">
-			<HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.8.0-beta2\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
+			<HintPath>$(SolutionDir)\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.8.0-beta2\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
 			<Private>True</Private>
 		</Reference>
 		<Reference Include="Microsoft.ApplicationInsights">
-			<HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.8.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
+			<HintPath>$(SolutionDir)\..\..\..\packages\Microsoft.ApplicationInsights.2.8.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
 			<Private>True</Private>
 		</Reference>
 	</ItemGroup>
