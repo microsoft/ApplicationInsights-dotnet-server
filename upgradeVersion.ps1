@@ -22,7 +22,7 @@ foreach-object {
   Set-Content $_.FullName
 }
 
-Get-ChildItem -Path $directory -Filter Test.Common.Sdk.Net45.targets -Recurse | 
+Get-ChildItem -Path $directory -Filter Test.Common.Dependencies.Net45.targets -Recurse | 
 foreach-object {
   (Get-Content $_.FullName) | 
   Foreach-Object {$_ -replace $oldVersion, $newVersion} | 
