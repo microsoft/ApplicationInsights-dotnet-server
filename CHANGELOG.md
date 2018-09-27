@@ -1,8 +1,5 @@
 # Changelog
 
-## Version 2.8.0-beta3
-- [Partial fix for Activity is null for event = System.Net.Http.HttpRequestOut.Stop](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1009)
-
 ## Version 2.8.0-beta2
 - [LiveMetrics (QuickPulse) TelemetryProcessor added automatically to the default ApplicationInsights.config are moved under the default telemetry sink.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/987)
 	If you are upgrading, and have added/modified TelemetryProcessors, make sure to copy them to the default sink section.
