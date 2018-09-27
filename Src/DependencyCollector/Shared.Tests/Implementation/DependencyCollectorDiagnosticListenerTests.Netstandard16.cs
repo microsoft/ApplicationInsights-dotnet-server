@@ -96,7 +96,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             this.listener.OnRequest(requestMsg, Guid.NewGuid());
 
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out _));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out _));
             Assert.AreEqual(0, this.sentTelemetry.Count);
         }
 
@@ -138,7 +138,7 @@ namespace Microsoft.ApplicationInsights.Tests
             // second request (BEFORE HANDLING FIRST RESPONSE), expected to pass 
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out _));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out _));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             // first request fails
@@ -148,7 +148,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.listener.OnResponse(responseMsg1, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out _));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out _));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreEqual(false, ((DependencyTelemetry)this.sentTelemetry.Last()).Success); // first request fails
 
@@ -164,7 +164,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.listener.OnResponse(responseMsg2, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out _));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out _));
             Assert.AreEqual(2, this.sentTelemetry.Count);
             Assert.AreEqual(true, ((DependencyTelemetry)this.sentTelemetry.Last()).Success); // second request is success
         }
@@ -179,7 +179,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, "http://excluded.host.com/path/to/file.html");
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out _));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out _));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(requestMsg.Headers, RequestResponseHeaders.RequestContextCorrelationSourceKey));
@@ -208,7 +208,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 listenerWithLegacyHeaders.OnRequest(requestMsg, loggingRequestId);
 
                 Assert.IsTrue(
-                    listenerWithLegacyHeaders.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+                    listenerWithLegacyHeaders.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
                 Assert.AreEqual(0, this.sentTelemetry.Count);
 
                 var legacyRootIdHeader = GetRequestHeaderValues(requestMsg, RequestResponseHeaders.StandardRootIdHeader)
@@ -232,7 +232,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             var requestIdHeader = GetRequestHeaderValues(requestMsg, RequestResponseHeaders.RequestIdHeader).Single();
@@ -251,7 +251,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
 
             DependencyTelemetry telemetry = dependency.Telemetry;
             Assert.AreEqual("POST /", telemetry.Name);
@@ -293,7 +293,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
 
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
@@ -307,7 +307,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -334,7 +334,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
 
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
@@ -348,7 +348,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -370,7 +370,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
 
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
@@ -386,7 +386,7 @@ namespace Microsoft.ApplicationInsights.Tests
             responseMsg.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, this.testApplicationId1);
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -408,7 +408,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             DependencyTelemetry telemetry = dependency.Telemetry;
@@ -423,7 +423,7 @@ namespace Microsoft.ApplicationInsights.Tests
             responseMsg.Headers.Add(RequestResponseHeaders.RequestContextCorrelationTargetKey, this.testApplicationId1);
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -445,7 +445,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             DependencyTelemetry telemetry = dependency.Telemetry;
@@ -461,7 +461,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpHeadersUtilities.SetRequestContextKeyValue(responseMsg.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -483,7 +483,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Guid loggingRequestId = Guid.NewGuid();
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
             this.listener.OnRequest(requestMsg, loggingRequestId);
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
             Assert.AreEqual(0, this.sentTelemetry.Count);
 
             DependencyTelemetry telemetry = dependency.Telemetry;
@@ -499,7 +499,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpHeadersUtilities.SetRequestContextKeyValue(responseMsg.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey, targetApplicationId);
 
             this.listener.OnResponse(responseMsg, loggingRequestId);
-            Assert.IsFalse(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out dependency));
+            Assert.IsFalse(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out dependency));
             Assert.AreEqual(1, this.sentTelemetry.Count);
             Assert.AreSame(telemetry, this.sentTelemetry.Single());
 
@@ -536,7 +536,7 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.IsTrue(correlationContextHeader.Contains("k1=v1"));
             Assert.IsTrue(correlationContextHeader.Contains("k2=v2"));
 
-            Assert.IsTrue(this.listener.PendingDependencyTelemetryCore10.TryGetValue(requestMsg, out var dependency));
+            Assert.IsTrue(this.listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
 
             DependencyTelemetry telemetry = dependency.Telemetry;
 
