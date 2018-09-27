@@ -272,7 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <None Include="$(SolutionDir)\test.common.packages.config">
+    <None Include="$(SolutionDir)\..\test.common.packages.config">
       <SubType>Designer</SubType>
     </None>
     <Content Include="Scripts\jquery-1.10.2.min.map" />

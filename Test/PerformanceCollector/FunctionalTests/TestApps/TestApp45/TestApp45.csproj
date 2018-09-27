@@ -115,7 +115,7 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
-    <None Include="$(SolutionDir)\test.common.packages.config">
+    <None Include="$(SolutionDir)\..\test.common.packages.config">
       <SubType>Designer</SubType>
     </None>
     <Content Include="ApplicationInsights.config">

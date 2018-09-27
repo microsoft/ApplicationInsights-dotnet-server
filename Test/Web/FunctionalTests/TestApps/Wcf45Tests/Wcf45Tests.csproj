@@ -104,7 +104,7 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
-    <None Include="$(SolutionDir)\FunctionalTests\test.common.packages.config">
+    <None Include="$(SolutionDir)\..\test.common.packages.config">
       <SubType>Designer</SubType>
     </None>
     <None Include="Web.Debug.config">
