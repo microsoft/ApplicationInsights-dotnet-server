@@ -21,7 +21,7 @@
     <IISExpressUseClassicPipelineMode>true</IISExpressUseClassicPipelineMode>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <UseGlobalApplicationHostFile />
-    <NuGetPackageImportStamp>
+	<NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <Use64BitIISExpress />
   </PropertyGroup>
@@ -43,13 +43,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.AI.ServerTelemetryChannel, Version=2.8.0-beta2, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.8.0-beta2\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights, Version=2.8.0-beta2, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.8.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\packages\Microsoft.AspNet.TelemetryCorrelation.1.0.4\lib\net45\Microsoft.AspNet.TelemetryCorrelation.dll</HintPath>
     </Reference>
@@ -215,6 +208,9 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <None Include="$(SolutionDir)\FunctionalTests\test.common.packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="ApplicationInsights.config">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

@@ -29,7 +29,7 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>12.0</OldToolsVersion>
     <UseGlobalApplicationHostFile />
-    <NuGetPackageImportStamp>
+	<NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <Use64BitIISExpress />
   </PropertyGroup>
@@ -56,15 +56,6 @@
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.AI.ServerTelemetryChannel">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.8.0-beta2\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.8.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\packages\Microsoft.AspNet.TelemetryCorrelation.1.0.4\lib\net45\Microsoft.AspNet.TelemetryCorrelation.dll</HintPath>
@@ -356,6 +347,9 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <None Include="$(SolutionDir)\FunctionalTests\test.common.packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
