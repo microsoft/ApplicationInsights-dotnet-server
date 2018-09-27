@@ -75,9 +75,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
         {
             try
             {
+                // It's possible to host multiple apps (ASP.NET Core or generic hosts) in the same process
+                // Each of this apps has it's own DependencyTrackingModule and corresponding SQL listener.
+                // We should ignore events for all of them except one
                 if (!SubscriptionManager.IsActive(this))
                 {
-                    // TODO: log
+                    DependencyCollectorEventSource.Log.NotActiveListenerNoTracking(evnt.Key, Activity.Current?.Id);
                     return;
                 }
 

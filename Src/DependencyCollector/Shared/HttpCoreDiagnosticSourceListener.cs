@@ -117,17 +117,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         /// <param name="evnt">The current notification information.</param>
         public void OnNext(KeyValuePair<string, object> evnt)
         {
-            if (!SubscriptionManager.IsActive(this))
-            {
-                // TODO: verbose log
-                return;
-            }
-
-            const string errorTemplateTypeCast = "Event {0}: cannot cast {1} to expected type {2}";
-            const string errorTemplateValueParse = "Event {0}: cannot parse '{1}' as type {2}";
-
             try
             {
+                // It's possible to host multiple apps (ASP.NET Core or generic hosts) in the same process
+                // Each of this apps has it's own DependencyTrackingModule and corresponding Http listener.
+                // We should ignore events for all of them except one
+                if (!SubscriptionManager.IsActive(this))
+                {
+                    DependencyCollectorEventSource.Log.NotActiveListenerNoTracking(evnt.Key, Activity.Current?.Id);
+                    return;
+                }
+
+                const string errorTemplateTypeCast = "Event {0}: cannot cast {1} to expected type {2}";
+                const string errorTemplateValueParse = "Event {0}: cannot parse '{1}' as type {2}";
+
                 switch (evnt.Key)
                 {
                     case HttpOutStartEventName:
