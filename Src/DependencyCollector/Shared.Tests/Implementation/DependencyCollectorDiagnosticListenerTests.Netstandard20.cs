@@ -143,44 +143,6 @@ namespace Microsoft.ApplicationInsights.Tests
             }
         }
 
-        /// <summary>
-        /// Tests that OnStartActivity injects W3C headers.
-        /// </summary>
-        [TestMethod]
-        public void OnActivityStartInjectsW3CHeadersAndTracksLegacyIdWhenActivityIsNullInStop()
-        {
-            var listenerWithW3CHeaders = new HttpCoreDiagnosticSourceListener(
-                this.configuration,
-                setComponentCorrelationHttpHeaders: true,
-                correlationDomainExclusionList: new string[0],
-                injectLegacyHeaders: false,
-                injectW3CHeaders: true);
-
-            this.configuration.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
-            using (listenerWithW3CHeaders)
-            {
-                var activity = new Activity("System.Net.Http.HttpRequestOut").SetParentId("foo").Start();
-
-                HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
-                listenerWithW3CHeaders.OnActivityStart(requestMsg);
-
-                // simulate Request-Id injection by .NET
-                requestMsg.Headers.Add(RequestResponseHeaders.RequestIdHeader, activity.Id);
-
-                activity.Stop();
-                Assert.IsNull(Activity.Current);
-                listenerWithW3CHeaders.OnActivityStop(new HttpResponseMessage(HttpStatusCode.OK), requestMsg, TaskStatus.RanToCompletion);
-
-                var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
-                Assert.IsNotNull(telemetry);
-                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
-                Assert.AreEqual(activity.Id, telemetry.Properties[W3CConstants.LegacyRequestIdProperty]);
-
-                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
-                Assert.AreEqual(activity.RootId, telemetry.Properties[W3CConstants.LegacyRootIdProperty]);
-            }
-        }
-
 #pragma warning restore 612, 618
 
         /// <summary>
@@ -454,10 +416,10 @@ namespace Microsoft.ApplicationInsights.Tests
         }
 
         /// <summary>
-        /// Tests that if OnStopActivity is called with null Activity, dependency is still tracked
+        /// Tests that if OnStopActivity is called with null Activity, dependency is not tracked
         /// </summary>
         [TestMethod]
-        public async Task OnActivityStopWithNullActivityTracksDependency()
+        public async Task OnActivityStopWithNullActivityDoesNotTrackDependency()
         {
             var activity = new Activity("System.Net.Http.HttpRequestOut")
                 .AddBaggage("k", "v")
@@ -476,67 +438,7 @@ namespace Microsoft.ApplicationInsights.Tests
             HttpResponseMessage responseMsg = new HttpResponseMessage(HttpStatusCode.OK);
             this.listener.OnActivityStop(responseMsg, requestMsg, TaskStatus.RanToCompletion);
 
-            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
-
-            Assert.IsNotNull(telemetry);
-            Assert.AreEqual("POST /", telemetry.Name);
-            Assert.AreEqual(RequestUrl, telemetry.Target);
-            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
-            Assert.AreEqual(RequestUrlWithScheme, telemetry.Data);
-            Assert.AreEqual("200", telemetry.ResultCode);
-            Assert.AreEqual(true, telemetry.Success);
-
-            Assert.AreEqual(activity.RootId, telemetry.Context.Operation.Id);
-            Assert.AreEqual(activity.ParentId, telemetry.Context.Operation.ParentId);
-            Assert.AreEqual(activity.Id, telemetry.Id);
-            Assert.AreEqual("v", telemetry.Properties["k"]);
-
-            string expectedVersion =
-                SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
-            Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
-
-            // Check the operation details
-            this.operationDetailsInitializer.ValidateOperationDetailsCore(telemetry);
-        }
-
-        [TestMethod]
-        public async Task OnActivityStopWithNullActivityAndNoResponseTracksDependency()
-        {
-            var activity = new Activity("System.Net.Http.HttpRequestOut")
-                .Start();
-
-            HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
-            this.listener.OnActivityStart(requestMsg);
-
-            await Task.Delay(10);
-
-            activity = Activity.Current;
-            activity.Stop();
-
-            Assert.IsNull(Activity.Current);
-
-            this.listener.OnActivityStop(null, requestMsg, TaskStatus.Faulted);
-
-            var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
-
-            Assert.IsNotNull(telemetry);
-            Assert.AreEqual("POST /", telemetry.Name);
-            Assert.AreEqual(RequestUrl, telemetry.Target);
-            Assert.AreEqual(RemoteDependencyConstants.HTTP, telemetry.Type);
-            Assert.AreEqual(RequestUrlWithScheme, telemetry.Data);
-            Assert.AreEqual(false, telemetry.Success);
-            Assert.AreEqual("Faulted", telemetry.ResultCode);
-
-            Assert.AreEqual(activity.RootId, telemetry.Context.Operation.Id);
-            Assert.AreEqual(activity.ParentId, telemetry.Context.Operation.ParentId);
-            Assert.AreEqual(activity.Id, telemetry.Id);
-
-            string expectedVersion =
-                SdkVersionHelper.GetExpectedSdkVersion(typeof(DependencyTrackingTelemetryModule), prefix: "rdddsc:");
-            Assert.AreEqual(expectedVersion, telemetry.Context.GetInternalContext().SdkVersion);
-
-            // Check the operation details
-            this.operationDetailsInitializer.ValidateOperationDetailsCore(telemetry, responseExpected: false);
+            Assert.IsFalse(this.sentTelemetry.Any());
         }
     }
 }
