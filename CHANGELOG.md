@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.8.0-beta3
+## Version 2.9.0-beta1
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
 
 ## Version 2.8.0-beta2
