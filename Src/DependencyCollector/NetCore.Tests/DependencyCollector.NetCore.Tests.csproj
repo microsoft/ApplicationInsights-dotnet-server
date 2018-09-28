@@ -6,7 +6,7 @@
     <TargetFramework>netcoreapp1.0</TargetFramework>
     <DelaySign>true</DelaySign>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyName>Microsoft.AI.DependencyCollector.Tests</AssemblyName>
+    <AssemblyName>Microsoft.ApplicationInsights.DependencyCollector.NetCore.Tests</AssemblyName>
 	<AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
 	<SignAssembly>true</SignAssembly>
 	<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
