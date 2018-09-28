@@ -100,6 +100,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "Web\Web\Web.csproj",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependencyCollector", "DependencyCollector\DependencyCollector\DependencyCollector.csproj", "{95D90911-2909-4914-920E-7710F7BB6C32}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Perf.Shared.NetCore.Stubs", "PerformanceCollector\Perf.Shared.NetCore.Stubs\Perf.Shared.NetCore.Stubs.shproj", "{76B21FAA-270D-47DE-B14B-BEC87EDC34F1}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Perf.Shared.NetCore", "PerformanceCollector\Perf.Shared.NetCore\Perf.Shared.NetCore.shproj", "{D13C3EC7-B300-4158-9054-216156B203BE}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DependencyCollector\Shared.Tests\DependencyCollector.Shared.Tests.projitems*{257fce5a-0779-45a5-b541-0ce43d79d009}*SharedItemsImports = 4
@@ -294,6 +298,8 @@ Global
 		{94127FD9-E516-4891-98D4-EF7523117F32} = {D87119AF-CD35-46F2-84A6-ED54CC42027E}
 		{E166D200-0687-4E6D-B836-029AE690AEAB} = {1A75535C-B8E5-4C31-BC6E-50456C8C4052}
 		{95D90911-2909-4914-920E-7710F7BB6C32} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}
+		{76B21FAA-270D-47DE-B14B-BEC87EDC34F1} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
+		{D13C3EC7-B300-4158-9054-216156B203BE} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F99E0A07-C363-49BF-BFA7-C748391CE38E}
