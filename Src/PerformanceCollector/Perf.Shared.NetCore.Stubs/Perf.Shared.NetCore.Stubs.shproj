@@ -8,6 +8,13 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.Common.Default.props" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.Common.props" />
   <PropertyGroup />
-  <Import Project="Perf.Shared.NetFull.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Implementation\QuickPulse\Process\PerfLib\NativeMethods.cs" />
+    <Compile Include="Implementation\QuickPulse\Process\PerfLib\PerformanceMonitor.cs" />
+    <Compile Include="Implementation\QuickPulse\Process\QuickPulseTopCpuCollector.cs" />
+    <Compile Include="Implementation\StandardPerformanceCollector\StandardPerformanceCollector.cs" />
+  </ItemGroup>
+  <Import Project="Perf.Shared.NetCore.Stubs.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\CodeSharing\Microsoft.CodeSharing.CSharp.targets" />
 </Project>

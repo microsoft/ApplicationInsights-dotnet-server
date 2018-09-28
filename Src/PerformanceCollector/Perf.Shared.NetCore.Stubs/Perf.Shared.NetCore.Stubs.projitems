@@ -9,6 +9,7 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\PerfLib\NativeMethods.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\PerfLib\PerformanceMonitor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Process\QuickPulseTopCpuCollector.cs" />

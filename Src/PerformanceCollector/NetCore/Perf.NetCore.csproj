@@ -3,6 +3,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" Condition="'$(DoNotSign)' == ''" />
 
   <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared.NetCore\Perf.Shared.NetCore.projitems" Label="Shared" />
   <Import Project="..\Perf.Shared.NetCore.Stubs\Perf.Shared.NetCore.Stubs.projitems" Label="Shared" />
 
   <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
@@ -43,8 +44,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Implementation\QuickPulse\QuickPulseServiceClient.cs">
-      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
-    </Compile>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>
