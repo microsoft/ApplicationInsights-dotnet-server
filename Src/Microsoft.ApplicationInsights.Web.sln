@@ -104,6 +104,8 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Perf.Shared.NetCore.Stubs",
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Perf.Shared.NetCore", "PerformanceCollector\Perf.Shared.NetCore\Perf.Shared.NetCore.shproj", "{D13C3EC7-B300-4158-9054-216156B203BE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perf", "PerformanceCollector\PerformanceCollector\Perf.csproj", "{00BF736C-B562-4251-9836-EF80282956AF}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DependencyCollector\Shared.Tests\DependencyCollector.Shared.Tests.projitems*{257fce5a-0779-45a5-b541-0ce43d79d009}*SharedItemsImports = 4
@@ -268,6 +270,14 @@ Global
 		{95D90911-2909-4914-920E-7710F7BB6C32}.Release|Any CPU.Build.0 = Release|Any CPU
 		{95D90911-2909-4914-920E-7710F7BB6C32}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{95D90911-2909-4914-920E-7710F7BB6C32}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -302,6 +312,7 @@ Global
 		{95D90911-2909-4914-920E-7710F7BB6C32} = {DF56FBAD-8745-404B-94A1-E83BFC4AD7CB}
 		{76B21FAA-270D-47DE-B14B-BEC87EDC34F1} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 		{D13C3EC7-B300-4158-9054-216156B203BE} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
+		{00BF736C-B562-4251-9836-EF80282956AF} = {A318CC6C-51C8-4BD6-BC85-2B4F35123BE7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F99E0A07-C363-49BF-BFA7-C748391CE38E}

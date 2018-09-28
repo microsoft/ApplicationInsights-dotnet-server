@@ -99,8 +99,10 @@
   
   <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
   <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
-  <Import Project="..\Perf.Shared.NetFull\Perf.Shared.NetFull.projitems" Label="Shared" />
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared.NetFull\Perf.Shared.NetFull.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'net45'" />
+  <Import Project="..\Perf.Shared.NetCore\Perf.Shared.NetCore.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'netstandard1.6'" />
+  <Import Project="..\Perf.Shared.NetCore.Stubs\Perf.Shared.NetCore.Stubs.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'netstandard1.6'" />
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
   
