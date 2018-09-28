@@ -105,4 +105,5 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
   <Import Project="..\..\TestFramework\Shared\TestFramework.Shared.projitems" Label="Shared" />
   <Import Project="..\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems" Label="Shared" />
+  <RuntimeIdentifier>win</RuntimeIdentifier>
 </Project>
