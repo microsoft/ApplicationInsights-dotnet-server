@@ -53,7 +53,7 @@
     <!--Nupkg properties-->
     <PackageId>Microsoft.ApplicationInsights.PerfCounterCollector</PackageId>
     <Title>Application Insights Performance Counters Collector</Title>
-    <Description>Application Insights Performance Counters Collector allows you to send data collected by Performance Counters to Application Insights. Application Insights Performance Counters Collector is supported for .NET FX 4.0 and later. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</Description>
+    <Description>Application Insights Performance Counters Collector allows you to send data collected by Performance Counters to Application Insights. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</Description>
     <PackageTags>Azure Monitoring Analytics ApplicationInsights Telemetry ASP.NET ASMX Web Azure Server Services ASPX Websites Performance Counters Performance Collection</PackageTags>
   </PropertyGroup>
 
