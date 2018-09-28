@@ -7,9 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using DependencyCollector.Shared;
 
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
-
 [assembly: ComVisible(false)]
 
 [assembly: InternalsVisibleTo("Microsoft.ApplicationInsights.DependencyCollector.Net45.Tests, PublicKey=" + AssemblyInfo.PublicKey)]
