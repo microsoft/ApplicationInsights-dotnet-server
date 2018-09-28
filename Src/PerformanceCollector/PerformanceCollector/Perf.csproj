@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\Common.props" />
+  <Import Project="..\..\..\Nupkg.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector</RootNamespace>
+    <AssemblyName>Microsoft.AI.PerfCounterCollector</AssemblyName>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <TargetFrameworks>net45</TargetFrameworks>
+  </PropertyGroup>
+
+   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
+    <DefineConstants>$(DefineConstants);NET45</DefineConstants>
+  </PropertyGroup>
+
+	  <PropertyGroup>
+    <!--Nupkg properties-->
+    <PackageId>Microsoft.ApplicationInsights.PerfCounterCollector</PackageId>
+    <Title>Application Insights Performance Counters Collector</Title>
+    <Description>Application Insights Performance Counters Collector allows you to send data collected by Performance Counters to Application Insights. Application Insights Performance Counters Collector is supported for .NET FX 4.0 and later. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</Description>
+    <PackageTags>Azure Monitoring Analytics ApplicationInsights Telemetry ASP.NET ASMX Web Azure Server Services ASPX Websites Performance Counters Performance Collection</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--TODO: Remove this as soon as all issues are resolved. Is true by default in Common.props-->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(Configuration)' == 'Release' And $(OS) == 'Windows_NT'">
+    <!--Analyzers and Build Infrastructure-->
+    <PackageReference Include="Desktop.Analyzers" Version="1.1.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.1">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!--Common Dependencies-->
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <!--Framework References-->
+    <Reference Include="System.Runtime.Caching" />
+  </ItemGroup>
+  
+  <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared.NetFull\Perf.Shared.NetFull.projitems" Label="Shared" />
+  <Import Project="..\..\Common\Common.projitems" Label="Shared" />
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
+  
+</Project>
