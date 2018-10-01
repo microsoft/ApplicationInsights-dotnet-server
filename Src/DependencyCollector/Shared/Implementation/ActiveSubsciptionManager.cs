@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Common
+﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -10,12 +10,7 @@
     /// Helps manage subsciptions in scenarios where multiple apps hosted in the same process.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-#if DEPENDENCY_COLLECTOR
-    public
-#else
-    internal
-#endif 
-    class ActiveSubsciptionManager
+    public class ActiveSubsciptionManager
     {
         private readonly object lockObject = new object();
         private readonly HashSet<object> subscriptions = new HashSet<object>();
@@ -26,10 +21,9 @@
         /// </summary>
         public void Attach(object subscription)
         {
-            Interlocked.CompareExchange(ref this.active, subscription, null);
-
             lock (this.lockObject)
             {
+                Interlocked.CompareExchange(ref this.active, subscription, null);
                 this.subscriptions.Add(subscription);
             }
         }
@@ -44,7 +38,6 @@
                 if (this.subscriptions.Contains(subscription))
                 {
                     this.subscriptions.Remove(subscription);
-
                     Interlocked.CompareExchange(ref this.active, this.subscriptions.FirstOrDefault(), subscription);
                 }
             }
@@ -57,7 +50,7 @@
         /// <returns>True is it is an active subscriber, false otherwise.</returns>
         public bool IsActive(object subscriber)
         {
-            return object.ReferenceEquals(this.active, subscriber);
+            return ReferenceEquals(this.active, subscriber);
         }
     }
 }
