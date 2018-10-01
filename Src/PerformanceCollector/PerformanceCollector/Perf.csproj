@@ -3,34 +3,14 @@
   <Import Project="..\..\..\Nupkg.props" />
 
   <PropertyGroup>
-    <RootNamespace>Microsoft.ApplicationInsights.WindowsServer</RootNamespace>
-    <AssemblyName>Microsoft.AI.WindowsServer</AssemblyName>
+    <RootNamespace>Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector</RootNamespace>
+    <AssemblyName>Microsoft.AI.PerfCounterCollector</AssemblyName>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-    <!--<Prefer32Bit>false</Prefer32Bit>-->  <!--net45 ?-->
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!--Nupkg properties-->
-    <PackageId>Microsoft.ApplicationInsights.WindowsServer</PackageId>
-    <Title>Application Insights Windows Server</Title>
-    <Description>Application Insights Windows Server nuget package provides automatic collection of application insights telemetry for .NET applications. This package can be used as a dependent package for Application Insights platform specific packages or as a standalone package for .NET applications that are not covered by platform specific packages (like for .NET worker roles). Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</Description>
-    <PackageTags>Azure Monitoring Analytics ApplicationInsights Telemetry AppInsights</PackageTags>
-  </PropertyGroup>
-
-<!--   
-  <PropertyGroup>
-    <DelaySign>true</DelaySign>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-  </PropertyGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" Condition="'$(DoNotSign)' == ''" />
--->
-  
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);NET45;</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET45</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
@@ -40,9 +20,41 @@
         Workaround is to disable Code Analysis.
     -->
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    
+
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-    <DefineConstants>$(DefineConstants);NETSTANDARD1_6;NETSTANDARD</DefineConstants>
+    <DefineConstants>$(DefineConstants);NETSTANDARD1_6;NETSTANDARD;</DefineConstants>
+  </PropertyGroup>
+
+
+
+  <!--
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), NetCore.props))\NetCore.props" />  
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" Condition="'$(DoNotSign)' == ''" />
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    
+    <DelaySign>true</DelaySign>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    
+  </PropertyGroup>
+
+  
+  -->
+
+  <PropertyGroup>
+    <!--Nupkg properties-->
+    <PackageId>Microsoft.ApplicationInsights.PerfCounterCollector</PackageId>
+    <Title>Application Insights Performance Counters Collector</Title>
+    <Description>Application Insights Performance Counters Collector allows you to send data collected by Performance Counters to Application Insights. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</Description>
+    <PackageTags>Azure Monitoring Analytics ApplicationInsights Telemetry ASP.NET ASMX Web Azure Server Services ASPX Websites Performance Counters Performance Collection</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -69,13 +81,20 @@
   <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
+    <!--Framework References-->
+    <Reference Include="System.Runtime.Caching" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
-    <!-- NetCore Dependencies -->
+    <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="1.0.0" />
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" /> 
   </ItemGroup>
 
   <ItemGroup>
@@ -85,13 +104,13 @@
     <Content Include="ApplicationInsights.config.uninstall.xdt" />
   </ItemGroup>
   
-  <ItemGroup  Condition="'$(TargetFramework)' == 'net45'">
-    <!--Framework References-->    
-    <Reference Include="System.Management" />
-  </ItemGroup>
-  
-  <Import Project="..\WindowsServer.Shared\WindowsServer.Shared.projitems" Label="Shared" />
+  <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />
+  <Import Project="..\Perf.Shared.NetFull\Perf.Shared.NetFull.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'net45'" />
+  <Import Project="..\Perf.Shared.NetCore\Perf.Shared.NetCore.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'netstandard1.6'" />
+  <Import Project="..\Perf.Shared.NetCore.Stubs\Perf.Shared.NetCore.Stubs.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'netstandard1.6'" />
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
+  
 </Project>
