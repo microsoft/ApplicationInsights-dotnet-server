@@ -22,7 +22,7 @@
         }
 
         [TestMethod]
-        public void AttachAndDetachMultiple()
+        public void AttachMultiple()
         {
             var dlSubscription = new ActiveSubsciptionManager();
 
@@ -62,7 +62,7 @@
         }
 
         [TestMethod]
-        public void AttachNamyAndDetachActive()
+        public void AttachManyAndDetachActive()
         {
             var dlSubscription = new ActiveSubsciptionManager();
 
