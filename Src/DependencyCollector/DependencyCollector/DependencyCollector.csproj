@@ -9,7 +9,7 @@
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <Prefer32Bit>false</Prefer32Bit> <!-- net45 -->
 
-    <DefineConstants>DEPENDENCY_COLLECTOR</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEPENDENCY_COLLECTOR</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
