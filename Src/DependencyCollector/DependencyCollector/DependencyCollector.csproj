@@ -9,7 +9,7 @@
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <Prefer32Bit>false</Prefer32Bit> <!-- net45 -->
 
-    <DefineConstants>$(DefineConstants);DEPENDENCY_COLLECTOR;</DefineConstants>
+    <DefineConstants>$(DefineConstants);DEPENDENCY_COLLECTOR;ALLOW_AGGRESSIVE_INLIGNING_ATTRIBUTE;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DefineConstants>$(DefineConstants);TRACE;DEBUG;CODE_ANALYSIS;ALLOW_AGGRESSIVE_INLIGNING_ATTRIBUTE;</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG;CODE_ANALYSIS;</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
