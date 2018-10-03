@@ -11,6 +11,10 @@
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Keys\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup> -->
 
+  <PropertyGroup Condition="'$(PublicRelease)' == 'True'">
+    <DefineConstants>$(DefineConstants);PUBLIC_RELEASE</DefineConstants>
+  </PropertyGroup>
+
 
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Keys\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
