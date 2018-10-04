@@ -57,6 +57,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <Target Name="AnalyzersAndBuild" AfterTargets="CopyFilesToOutputDirectory"  Condition=" '$(Configuration)' == 'Release' And $(OS) == 'Windows_NT'">
+    <Message Text="Analyzers and Build Dependencies are applied." Importance="high"/>
+  </Target>
+
   <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
