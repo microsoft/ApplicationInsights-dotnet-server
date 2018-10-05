@@ -65,6 +65,10 @@
     <Message Text="IsPackable: '$(IsPackable)'" Importance="high" />
     <Message Text="NonShipping: '$(NonShipping)'" Importance="high" />
     <Message Text="ESRPSigning: '$(ESRPSigning)'" Importance="high" />
+  
+  
+    <Message Text="SignNuGetPackageDependsOn: '@(SignNuGetPackageDependsOn)'" Importance="high" />
+  
   </Target>
 
   <ItemGroup>
