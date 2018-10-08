@@ -36,17 +36,6 @@
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="BuildConditions" AfterTargets="CopyFilesToOutputDirectory" >
-    <Message Text="Analyzers and Build Dependencies are applied." Importance="high" Condition=" '$(Configuration)' == 'Release' And $(OS) == 'Windows_NT'"/>
-    <!--Condition=" '$(MicroBuild_NuPkgSigningEnabled)' != 'false' and '$(MicroBuild_SigningEnabled)' == 'true' and '$(IsPackable)' == 'true' and '$(NonShipping)' != 'true' and '$(ESRPSigning)' == 'true' "-->
-    <Message Text="MicroBuild_NuPkgSigningEnabled: '$(MicroBuild_NuPkgSigningEnabled)'" Importance="high" />
-    <Message Text="MicroBuild_SigningEnabled: '$(MicroBuild_SigningEnabled)'" Importance="high" />
-    <Message Text="IsPackable: '$(IsPackable)'" Importance="high" />
-    <Message Text="NonShipping: '$(NonShipping)'" Importance="high" />
-    <Message Text="ESRPSigning: '$(ESRPSigning)'" Importance="high" />
-  </Target>
-
- 
   <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
