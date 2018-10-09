@@ -82,10 +82,13 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Perf.Shared.NetCore", "Perf
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perf", "PerformanceCollector\PerformanceCollector\Perf.csproj", "{00BF736C-B562-4251-9836-EF80282956AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PerfTestApp", "PerfTestApp\PerfTestApp\PerfTestApp.csproj", "{56FB6E6E-7F80-4901-9348-B4BB31500CB4}"
+EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		DependencyCollector\Shared.Tests\DependencyCollector.Shared.Tests.projitems*{257fce5a-0779-45a5-b541-0ce43d79d009}*SharedItemsImports = 4
-		TestFramework\Shared\TestFramework.Shared.projitems*{257fce5a-0779-45a5-b541-0ce43d79d009}*SharedItemsImports = 4
 		Web\Web.Shared.Net\Web.Shared.Net.projitems*{395e03bb-d061-4c9d-9d47-18676566444d}*SharedItemsImports = 13
 		PerformanceCollector\Filtering.Shared\Filtering.Shared.projitems*{568aeb4f-ba4c-47a5-9fa3-68f06cd11fed}*SharedItemsImports = 13
 		WindowsServer\WindowsServer.Shared\WindowsServer.Shared.projitems*{579f42e8-b711-411e-be52-4a3fd208507f}*SharedItemsImports = 13
@@ -102,10 +105,6 @@ Global
 		PerformanceCollector\Perf.Shared.NetCore\Perf.Shared.NetCore.projitems*{d13c3ec7-b300-4158-9054-216156b203be}*SharedItemsImports = 13
 		TestFramework\Shared\TestFramework.Shared.projitems*{f05eb480-b209-47dd-90e3-1ddc47efc579}*SharedItemsImports = 4
 		WindowsServer\WindowsServer.Shared.Tests\WindowsServer.Shared.Tests.projitems*{f05eb480-b209-47dd-90e3-1ddc47efc579}*SharedItemsImports = 4
-		PerformanceCollector\Perf.Shared.Tests\Perf.Shared.Tests.projitems*{f254d4fb-428d-408e-8251-39bca7b4b5ce}*SharedItemsImports = 4
-		TestFramework\Shared\TestFramework.Shared.projitems*{f254d4fb-428d-408e-8251-39bca7b4b5ce}*SharedItemsImports = 4
-		TestFramework\Shared\TestFramework.Shared.projitems*{f71138bb-b3f8-4767-b394-857b0776038e}*SharedItemsImports = 4
-		Web\Web.Shared.Net.Tests\Web.Shared.Net.Tests.projitems*{f71138bb-b3f8-4767-b394-857b0776038e}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -226,6 +225,14 @@ Global
 		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{00BF736C-B562-4251-9836-EF80282956AF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{56FB6E6E-7F80-4901-9348-B4BB31500CB4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
