@@ -13,7 +13,7 @@ Param(
 ) 
 
 
-$requiredCopyright = "$([char]0x00A9) Microsoft Corporation. All rights reserved.";#"© Microsoft Corporation. All rights reserved.";
+$requiredCopyright = "$([char]0x00A9) Microsoft Corporation. All rights reserved.";#"Â© Microsoft Corporation. All rights reserved.";
 $expectedProjectUrl = "https://go.microsoft.com/fwlink/?LinkId=392727"; # Application Insights Project Url
 $expectedLicenseUrl = "https://go.microsoft.com/fwlink/?LinkID=510709"; # Application Insights license Url
 $expectedOwner = "AppInsightsSdk"; # Application Insights Nuget Account
