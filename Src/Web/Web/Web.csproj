@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" />
   <Import Project="..\..\..\Common.props" />
   <Import Project="..\..\..\Nupkg.props" />
 
@@ -35,7 +36,7 @@
     </PackageReference>
   </ItemGroup>
 
- <ItemGroup>
+  <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
@@ -56,4 +57,5 @@
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />
   
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
+  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.targets" />
 </Project>
