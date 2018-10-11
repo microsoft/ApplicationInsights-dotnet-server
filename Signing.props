@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <PropertyGroup Condition="'$(PublicRelease)' == 'True'">
+    <DefineConstants>$(DefineConstants);PUBLIC_RELEASE</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Keys\InternalKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Keys\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <KeyOriginatorFile>$(MSBuildThisFileDirectory)\Keys\35MSSharedLib1024.snk</KeyOriginatorFile>
+    <!--https://github.com/dotnet/corefx/blob/master/Documentation/project-docs/public-signing.md-->
+    <PublicSign>true</PublicSign>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublicRelease)' == 'True'">
-    <DefineConstants>$(DefineConstants);PUBLIC_RELEASE</DefineConstants>
+    <SignAssembly>true</SignAssembly>
     <DelaySign>true</DelaySign>
-    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\Keys\35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
+    <PublicSign>false</PublicSign>
   </PropertyGroup>
-
+  
   <Target Name="AddToSign" AfterTargets="CopyFilesToOutputDirectory" >
 
     <ItemGroup>
