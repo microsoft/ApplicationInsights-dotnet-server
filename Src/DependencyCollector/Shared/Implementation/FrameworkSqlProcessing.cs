@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
-
-namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
@@ -13,7 +12,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     internal sealed class FrameworkSqlProcessing
     {
         internal CacheBasedOperationHolder TelemetryTable;
-        private TelemetryClient telemetryClient;
+        private readonly TelemetryClient telemetryClient;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrameworkSqlProcessing"/> class.
@@ -61,13 +60,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 var telemetryTuple = this.TelemetryTable.Get(id);
                 if (telemetryTuple == null)
                 {
-                    bool isCustomCreated = false;
                     var telemetry = ClientServerDependencyTracker.BeginTracking(this.telemetryClient);
                     telemetry.Name = resourceName;
                     telemetry.Target = string.Join(" | ", dataSource, database);
                     telemetry.Type = RemoteDependencyConstants.SQL;
                     telemetry.Data = commandText;
-                    this.TelemetryTable.Store(id, new Tuple<DependencyTelemetry, bool>(telemetry, isCustomCreated));
+                    this.TelemetryTable.Store(id, new Tuple<DependencyTelemetry, bool>(telemetry, false));
                 }
             }
             catch (Exception exception)
@@ -105,7 +103,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             if (!telemetryTuple.Item2)
             {
                 this.TelemetryTable.Remove(id);
-                var telemetry = telemetryTuple.Item1 as DependencyTelemetry;
+                var telemetry = telemetryTuple.Item1;
                 telemetry.Success = success;
                 telemetry.ResultCode = sqlExceptionNumber != 0 ? sqlExceptionNumber.ToString(CultureInfo.InvariantCulture) : string.Empty;
                 DependencyCollectorEventSource.Log.AutoTrackingDependencyItem(telemetry.Name);
