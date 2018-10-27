@@ -4,8 +4,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
-    using System.Linq;
-    using System.Reflection;
     using System.Threading;
 
     using Microsoft.ApplicationInsights.Channel;
@@ -68,6 +66,7 @@
             this.sqlProcessingFramework.OnEndExecuteCallback(id: 1111, success: true, sqlExceptionNumber: 0);
             stopwatch.Stop();
 
+            Assert.IsNull(Activity.Current);
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             ValidateTelemetryPacket(
                 this.sendItems[0] as DependencyTelemetry,
@@ -96,7 +95,7 @@
 
             this.sqlProcessingFramework.OnEndExecuteCallback(id: 1111, success: true, sqlExceptionNumber: 0);
             stopwatch.Stop();
-
+            Assert.IsNull(Activity.Current);
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             ValidateTelemetryPacket(
                 this.sendItems[0] as DependencyTelemetry,
@@ -126,6 +125,7 @@
             this.sqlProcessingFramework.OnEndExecuteCallback(id: 1111, success: false, sqlExceptionNumber: 1);
             stopwatch.Stop();
 
+            Assert.IsNull(Activity.Current);
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             ValidateTelemetryPacket(
                 this.sendItems[0] as DependencyTelemetry,
@@ -155,7 +155,7 @@
             this.sqlProcessingFramework.OnEndExecuteCallback(id: 1111, success: true, sqlExceptionNumber: 0);
 
             stopwatch.Stop();
-
+            Assert.IsNull(Activity.Current);
             Assert.AreEqual(1, this.sendItems.Count, "Only one telemetry item should be sent");
             ValidateTelemetryPacket(
                 this.sendItems[0] as DependencyTelemetry,

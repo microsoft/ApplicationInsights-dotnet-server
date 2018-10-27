@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿using System.Diagnostics;
+
+namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Globalization;
@@ -71,6 +73,14 @@
             catch (Exception exception)
             {
                 DependencyCollectorEventSource.Log.CallbackError(id, "OnBeginSql", exception);
+            }
+            finally
+            {
+                Activity current = Activity.Current;
+                if (current?.OperationName == ClientServerDependencyTracker.DependencyActivityName)
+                {
+                    current.Stop();
+                }
             }
         }
 
