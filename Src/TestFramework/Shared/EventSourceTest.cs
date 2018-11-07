@@ -104,7 +104,13 @@ namespace Microsoft.ApplicationInsights.Web.TestFramework
         {
             if (!expected.Equals(actual))
             {
-                throw new Exception($"{methodName} Failed: expected: '{expected}' actual: '{actual}'");
+                var errorMessage = string.Format(
+                    CultureInfo.InvariantCulture, 
+                    "{0} Failed: expected: '{1}' actual: '{2}'", 
+                    methodName, 
+                    expected, 
+                    actual);
+                throw new Exception(errorMessage);
             }
         }
 
