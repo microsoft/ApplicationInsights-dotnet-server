@@ -446,7 +446,7 @@
         [Event(
             43,
             Keywords = Keywords.RddEventKeywords,
-            Message = "Failed to handle {0} event, error = '{2}' ",
+            Message = "Failed to handle {0} event, error = '{1}' ",
             Level = EventLevel.Error)]
         public void TelemetryDiagnosticSourceCallbackException(string eventName, string error, string appDomainName = "Incorrect")
         {
