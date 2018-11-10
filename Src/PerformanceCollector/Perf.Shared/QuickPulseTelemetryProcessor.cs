@@ -180,6 +180,13 @@
 
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
+#if NET45
+            if (requestTelemetry.Url == null)
+            {
+                requestTelemetry.Url = System.Web.HttpContext.Current.Request.Unvalidated.Url;
+            }
+#endif
+
             ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
