@@ -47,7 +47,7 @@
         /// <param name="telemetry">Telemetry item to initialize.</param>
         protected override void OnInitializeTelemetry(HttpContext platformContext, RequestTelemetry requestTelemetry, ITelemetry telemetry)
         {
-            if (string.IsNullOrEmpty(telemetry.Context.Operation.SyntheticSource))
+            if (telemetry.Context.Operation.SyntheticSource != null)
             {
                 if (platformContext != null)
                 {
@@ -73,6 +73,10 @@
                                     return;
                                 }
                             }
+
+                            // Tried all filter patterns, and no match found. Set to Empty string, so that
+                            // re-running this initializer would not do the computations again.
+                            telemetry.Context.Operation.SyntheticSource = string.Empty;
                         }
                     }
                 }
