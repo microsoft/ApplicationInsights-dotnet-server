@@ -47,7 +47,7 @@
         /// <param name="telemetry">Telemetry item to initialize.</param>
         protected override void OnInitializeTelemetry(HttpContext platformContext, RequestTelemetry requestTelemetry, ITelemetry telemetry)
         {
-            if (telemetry.Context.Operation.SyntheticSource != null)
+            if (telemetry.Context.Operation.SyntheticSource == null)
             {
                 if (platformContext != null)
                 {
