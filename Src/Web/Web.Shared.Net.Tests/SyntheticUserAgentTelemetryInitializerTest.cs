@@ -45,7 +45,7 @@
         }
 
         [TestMethod]
-        public void SyntheticSourceIsNotSetIfNoMatch()
+        public void SyntheticSourceIsSetyToEmptyIfNoMatch()
         {
             var eventTelemetry = new EventTelemetry("name");
             var source = new TestableSyntheticUserAgentTelemetryInitializer(new Dictionary<string, string>
@@ -57,7 +57,7 @@
 
             source.Initialize(eventTelemetry);
 
-            Assert.IsNull(eventTelemetry.Context.Operation.SyntheticSource);
+            Assert.AreSame(string.Empty, eventTelemetry.Context.Operation.SyntheticSource));
         }
 
         [TestMethod]
