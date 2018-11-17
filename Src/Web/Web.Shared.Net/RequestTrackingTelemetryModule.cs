@@ -149,7 +149,7 @@
             if (string.IsNullOrEmpty(requestTelemetry.ResponseCode))
             {
                 var statusCode = context.Response.StatusCode;
-                requestTelemetry.ResponseCode = statusCode.ToString(CultureInfo.InvariantCulture);
+                requestTelemetry.ResponseCode = statusCode == 200 ? "200" : statusCode.ToString(CultureInfo.InvariantCulture);
 
                 if (statusCode >= 400 && statusCode != 401)
                 {
