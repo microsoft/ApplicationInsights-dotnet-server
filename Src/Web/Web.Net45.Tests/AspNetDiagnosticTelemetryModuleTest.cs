@@ -383,6 +383,7 @@
             Assert.AreEqual(32, request.Context.Operation.Id.Length);
             Assert.IsTrue(Regex.Match(request.Context.Operation.Id, @"[a-z][0-9]").Success);
 
+            Assert.AreEqual(request.Context.Operation.Id, activity.GetTraceId());
             Assert.AreEqual(request.Context.Operation.Id, activity.RootId);
             Assert.AreEqual(request.Context.Operation.ParentId, activity.GetParentSpanId());
             Assert.AreEqual(request.Id, $"|{activity.GetTraceId()}.{activity.GetSpanId()}.");
