@@ -57,7 +57,7 @@
 
             source.Initialize(eventTelemetry);
 
-            Assert.AreSame(string.Empty, eventTelemetry.Context.Operation.SyntheticSource));
+            Assert.AreSame(string.Empty, eventTelemetry.Context.Operation.SyntheticSource);
         }
 
         [TestMethod]
