@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.9.0-beta1
+## Version 2.9.0-beta2
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
 - [Fix missing transactions Sql dependencies](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1031)
 - [Fix: Do not stop Activity in the Stop events, set end time instead](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1038)
