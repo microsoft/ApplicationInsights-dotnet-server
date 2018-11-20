@@ -25,8 +25,9 @@
         public PostSamplingTelemetryProcessor(ITelemetryProcessor nextProcessorInPipeline)
         {
             this.nextProcessorInPipeline = nextProcessorInPipeline;
-            this.telemetryConfiguration = TelemetryConfiguration.Active;
         }
+
+        private TelemetryConfiguration TelemetryConfiguration => this.telemetryConfiguration ?? (this.telemetryConfiguration = TelemetryConfiguration.Active);
 
         /// <inheritdoc />
         public void Process(ITelemetry item)
@@ -57,7 +58,7 @@
 
                     string currentComponentAppId = null;
                     if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                        && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                        && (this.TelemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
                     {
                         // If the source header is present on the incoming request,
                         // and it is an external component (not the same ikey as the one used by the current component),
