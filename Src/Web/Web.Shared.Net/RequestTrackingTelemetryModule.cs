@@ -162,10 +162,12 @@
                 requestTelemetry.Success = success;
             }
 
-            if (false && requestTelemetry.Url == null)
+#if false
+            if (requestTelemetry.Url == null)
             {
                 requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
             }
+#endif
 
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
@@ -174,6 +176,7 @@
                 this.telemetryClient.InitializeInstrumentationKey(requestTelemetry);
             }
 
+#if false
             var headers = context.Request.UnvalidatedGetHeaders();
             if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
             {
@@ -203,6 +206,7 @@
                     }
                 }
             }
+#endif
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
             {
