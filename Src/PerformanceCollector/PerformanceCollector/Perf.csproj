@@ -37,14 +37,13 @@
 
   <ItemGroup>
     <!--Common Dependencies-->
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.0-beta1-build3615" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.0-beta2-build3872" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
     <!--Framework References-->
     <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Web" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
@@ -61,7 +60,7 @@
     <Content Include="ApplicationInsights.config.install.xdt" />
     <Content Include="ApplicationInsights.config.uninstall.xdt" />
   </ItemGroup>
-
+  
   <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
   <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />

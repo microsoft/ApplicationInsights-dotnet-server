@@ -36,12 +36,12 @@
 
   <ItemGroup>
     <!--Common Dependencies-->
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.0-beta1-build3615" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.9.0-beta2-build3872" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
-    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.5" />
+    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.4" />
     <PackageReference Include="Microsoft.ApplicationInsights.Agent.Intercept" Version="2.4.0" />
   </ItemGroup>
 
