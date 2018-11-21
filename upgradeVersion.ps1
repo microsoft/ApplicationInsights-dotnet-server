@@ -10,7 +10,7 @@ Write-Host "Old Version: $oldVersion";
 #$newVersion = .\NuGet.exe list "Microsoft.ApplicationInsights" -Source https://www.myget.org/F/applicationinsights -Pre -NonInteractive | Select-String -Pattern "Microsoft.ApplicationInsights " | %{$_.Line.Split(" ")} | Select -skip 1
 
 ##Use this to manually set the new version##
-$newVersion = "2.9.0-beta1-build2484"
+$newVersion = "2.9.0-beta1-build3615"
 Write-Host "New Version: $newVersion";
 
 
