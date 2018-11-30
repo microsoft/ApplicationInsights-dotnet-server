@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Target Name="CopyApplicationInsightsConfigToOutputDirectory" AfterTargets="CopyFilesToOutputDirectory" >
+    <!--Currently we cannot set the config's "Copy to Output Directory" property to "PreserveNewest.
+          Workaround is to use this targets file to manually copy into output path."-->
+
+    <Copy SourceFiles="ApplicationInsights.config" DestinationFolder="$(OutputPath)" ContinueOnError="true" />
+    <Message Text="Microsoft.ApplicationInsights.DependencyCollector: ApplicationInsights.config has been copied to $(OutputPath)" Importance="high" />
+  </Target>
+</Project>
