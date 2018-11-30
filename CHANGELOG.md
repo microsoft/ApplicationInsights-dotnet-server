@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 2.9.0-beta3
+- [When Activity has root id compatible with W3C trace Id, use it as trace id](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1107)
+
 ## Version 2.9.0-beta1
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
 - [Fix missing transactions Sql dependencies](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1031)
@@ -9,7 +12,6 @@
 - [Fix: Sql dependency tracking broken in 2.8.0+. Dependency operation is not stopped and becomes parent of subsequent operations](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1090)
 - [Fix: Wrong parentId reported on the SqlClient dependency on .NET Core](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/778)
 - [Perf Fix - Replace TelemetryClient.Initialize() with TelemetryClient.InitializeInstrumentationKey() to avoid calling initializers more than once. ](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1094)
-- [When Activity has root id compatible with W3C trace Id, use it as trace id](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1107)
 
 ## Version 2.8.0-beta2
 - [LiveMetrics (QuickPulse) TelemetryProcessor added automatically to the default ApplicationInsights.config are moved under the default telemetry sink.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/987)
