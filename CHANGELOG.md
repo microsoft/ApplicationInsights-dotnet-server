@@ -6,6 +6,7 @@
         <Add>localhost</Add>
         <Add>127.0.0.1</Add>
     ```
+- [When Activity has root id compatible with W3C trace Id, use it as trace id](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1107)
 
 ## Version 2.9.0-beta1
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
