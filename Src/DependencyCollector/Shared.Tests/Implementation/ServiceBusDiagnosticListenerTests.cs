@@ -265,6 +265,14 @@
             this.configuration.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
             var tc = new TelemetryClient(this.configuration);
             void TrackTraceDuringProcessing() => tc.TrackTrace("trace");
+
+            using (var listener = new DiagnosticListener("Microsoft.Azure.ServiceBus"))
+            using (var module = new DependencyTrackingTelemetryModule())
+            {
+                module.EnableW3CHeadersInjection = true;
+                module.IncludeDiagnosticSourceActivities.Add("Microsoft.Azure.ServiceBus");
+                module.Initialize(this.configuration);
+
                 Activity parentActivity = new Activity("parent").AddBaggage("k1", "v1").Start();
                 var requestTelemetry = this.TrackOperation<RequestTelemetry>(
                     listener,
