@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 2.9.0-beta3
+- [Fix: Non-default port is not included into the target ofor Http dependencies on .NEt Core](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1121)
+
 ## Version 2.9.0-beta1
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
 - [Fix missing transactions Sql dependencies](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1031)
