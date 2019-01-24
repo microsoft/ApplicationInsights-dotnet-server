@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿using Microsoft.ApplicationInsights.Extensibility.W3C;
+
+namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Data.SqlClient;
@@ -72,7 +74,7 @@
                 // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331 (TODO)
                 if (currentActivity == null)
                 {
-                    activity.SetParentId(StringUtilities.GenerateTraceId());
+                    activity.SetParentId(W3CUtilities.GenerateTraceId());
                 }
 
                 // end of workaround
@@ -82,9 +84,7 @@
 
             if (IsW3CEnabled)
             {
-#pragma warning disable 612, 618
-                W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(telemetry, activity, true);
-#pragma warning restore 612, 618
+                activity.UpdateTelemetry(telemetry, true);
             }
             else
             {

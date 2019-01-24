@@ -19,8 +19,9 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.ApplicationId;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.TestFramework;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -300,7 +301,6 @@
             this.TestCollectionResponseWithRedirects(false, LocalhostUrlEventSource);
         }
 
-#pragma warning disable 612, 618
         /// <summary>
         /// Tests that outgoing requests emit W3C headers and telemetry is initialized accordingly when configured so.
         /// </summary>
@@ -443,8 +443,6 @@
                 Assert.AreEqual(2, request.Headers[W3CConstants.TraceStateHeader].Split(',').Length);
             }
         }
-
-#pragma warning restore 612, 618
 
         private void TestCollectionPostRequests(bool enableDiagnosticSource, string url)
         {

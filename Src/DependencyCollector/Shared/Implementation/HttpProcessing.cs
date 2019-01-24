@@ -11,7 +11,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
 
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the callbacks
@@ -210,7 +211,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
                     }
 
-#pragma warning disable 612, 618
                     if (this.injectW3CHeaders && currentActivity != null)
                     {
                         string traceParent = currentActivity.GetTraceparent();
@@ -242,7 +242,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                             }
                         }
                     }
-#pragma warning restore 612, 618
                 }
             }
             catch (Exception exception)

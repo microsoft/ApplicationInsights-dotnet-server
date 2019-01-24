@@ -4,7 +4,7 @@
     using System.Linq;
     using System.Net;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
     using VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -163,7 +163,6 @@
             Assert.AreEqual("k1=v1,k2=v2,k1=v3", headers["Correlation-Context"]);
         }
 
-#pragma warning disable 612, 618
         [TestMethod]
         public void GetHeaderValueNoMax()
         {
@@ -210,7 +209,5 @@
             Assert.AreEqual("k1=v1", values.First());
             Assert.AreEqual("k2=v2", values.Last());
         }
-
-#pragma warning restore 612, 618
     }
 }

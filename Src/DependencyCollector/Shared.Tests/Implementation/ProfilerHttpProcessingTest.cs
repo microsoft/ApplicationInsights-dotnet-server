@@ -19,12 +19,11 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation.Operation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.TestFramework;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-#pragma warning disable 618
 
     [TestClass]
     public sealed class ProfilerHttpProcessingTest : IDisposable
@@ -268,7 +267,6 @@
             Assert.IsTrue(actualCorrelationContextHeader == "Key2=Value2,Key1=Value1" || actualCorrelationContextHeader == "Key1=Value1,Key2=Value2");
         }
 
-#pragma warning disable 612, 618
         /// <summary>
         /// Ensures that the source request header is added when request is sent.
         /// </summary>
@@ -323,7 +321,6 @@
             Assert.AreEqual($"{W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3CConstants.TraceFlagRecordedAndNotRequested}",
                 traceParent);
         }
-#pragma warning restore 612, 618
 
         /// <summary>
         /// Ensures that the source request header is not added, as per the config, when request is sent.

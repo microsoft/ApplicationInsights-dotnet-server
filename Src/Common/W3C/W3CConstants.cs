@@ -1,23 +1,9 @@
-﻿#if DEPENDENCY_COLLECTOR
-    namespace Microsoft.ApplicationInsights.W3C
-#else
-namespace Microsoft.ApplicationInsights.W3C.Internal
-#endif
+﻿namespace Microsoft.ApplicationInsights.W3C.Internal
 {
-    using System;
-    using System.ComponentModel;
-
     /// <summary>
     /// W3C constants.
     /// </summary>
-    [Obsolete("Not ready for public consumption.")]
-    [EditorBrowsable(EditorBrowsableState.Never)]
-#if DEPENDENCY_COLLECTOR
-    public 
-#else
-    internal
-#endif
-    static class W3CConstants
+    internal static class W3CConstants
     {
         /// <summary>
         /// W3C traceparent header name.

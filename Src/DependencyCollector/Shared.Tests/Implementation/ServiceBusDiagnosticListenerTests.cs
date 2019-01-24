@@ -11,7 +11,8 @@
     using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -258,7 +259,6 @@
             }
         }
 
-#pragma warning disable 612, 618
         [TestMethod]
         public void ServiceBusProcessHandingW3C()
         {
@@ -411,7 +411,6 @@
                 Assert.AreEqual("messageId", telemetry.Properties["MessageId"]);
             }
         }
-#pragma warning restore 612, 618
 
         [TestMethod]
         public void ServiceBusExceptionsAreIgnored()
