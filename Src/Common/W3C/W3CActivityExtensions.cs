@@ -5,7 +5,6 @@ namespace Microsoft.ApplicationInsights.W3C
     using System.ComponentModel;
     using System.Diagnostics;
 
-
     /// <summary>
     /// Extends Activity to support W3C distributed tracing standard.
     /// </summary>
@@ -20,10 +19,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>The same Activity for chaining.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GenerateW3CContext instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static Activity GenerateW3CContext(this Activity activity)
-        {
-            return activity.GenerateW3CContext();
-        }
+        public static Activity GenerateW3CContext(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GenerateW3CContext(activity);
 
         /// <summary>
         /// Checks if current Activity has W3C properties on it.
@@ -32,22 +28,19 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>True if Activity has W3C properties, false otherwise.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.IsW3CActivity instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static bool IsW3CActivity(this Activity activity)
-        {
-            return activity.IsW3CActivity();
-        }
+        public static bool IsW3CActivity(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.IsW3CActivity(activity);
 
         /// <summary>
         /// Updates context on the Activity based on the W3C Context in the parent Activity tree.
         /// </summary>
         /// <param name="activity">Activity to update W3C context on.</param>
         /// <returns>The same Activity for chaining.</returns>
-        [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.UpdateContextOnActivity instead.", true)]
+        [Obsolete(
+            "Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.UpdateContextOnActivity instead.",
+            true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static Activity UpdateContextOnActivity(this Activity activity)
-        {
-            return activity.UpdateContextOnActivity();
-        }
+        public static Activity UpdateContextOnActivity(this Activity activity) =>
+            Extensibility.W3C.W3CActivityExtensions.UpdateContextOnActivity(activity);
 
         /// <summary>
         /// Gets traceparent header value for the Activity or null if there is no W3C context on it.
@@ -57,7 +50,7 @@ namespace Microsoft.ApplicationInsights.W3C
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetTraceparent instead.",
             true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetTraceparent(this Activity activity) => activity.GetTraceparent();
+        public static string GetTraceparent(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetTraceparent(activity);
 
         /// <summary>
         /// Initializes W3C context on the Activity from traceparent header value.
@@ -67,7 +60,7 @@ namespace Microsoft.ApplicationInsights.W3C
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.SetTraceparent instead.",
             true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetTraceparent(this Activity activity, string value) => activity.SetTraceparent(value);
+        public static void SetTraceparent(this Activity activity, string value) => Extensibility.W3C.W3CActivityExtensions.SetTraceparent(activity, value);
 
         /// <summary>
         /// Gets tracestate header value from the Activity.
@@ -76,7 +69,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>tracestate header value.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetTracestate instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetTracestate(this Activity activity) => activity.GetTracestate();
+        public static string GetTracestate(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetTracestate(activity);
 
         /// <summary>
         /// Sets tracestate header value on the Activity.
@@ -85,7 +78,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <param name="value">tracestate header value.</param>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.SetTracestate instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetTracestate(this Activity activity, string value) => activity.SetTracestate(value);
+        public static void SetTracestate(this Activity activity, string value) => Extensibility.W3C.W3CActivityExtensions.SetTracestate(activity, value);
 
         /// <summary>
         /// Gets TraceId from the Activity.
@@ -95,7 +88,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>TraceId value or null if it does not exist.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetTraceId instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetTraceId(this Activity activity) => activity.GetTraceId();
+        public static string GetTraceId(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetTraceId(activity);
 
         /// <summary>
         /// Gets SpanId from the Activity.
@@ -105,7 +98,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>SpanId value or null if it does not exist.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetSpanId instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetSpanId(this Activity activity) => activity.GetSpanId();
+        public static string GetSpanId(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetSpanId(activity);
 
         /// <summary>
         /// Gets ParentSpanId from the Activity.
@@ -115,7 +108,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// <returns>ParentSpanId value or null if it does not exist.</returns>
         [Obsolete("Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetParentSpanId instead.", true)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static string GetParentSpanId(this Activity activity) => activity.GetParentSpanId();
+        public static string GetParentSpanId(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetParentSpanId(activity);
     }
 }
 #endif
