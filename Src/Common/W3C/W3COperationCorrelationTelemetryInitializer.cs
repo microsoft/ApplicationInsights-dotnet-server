@@ -17,13 +17,14 @@ namespace Microsoft.ApplicationInsights.W3C
     public class W3COperationCorrelationTelemetryInitializer : ITelemetryInitializer
     {
         private readonly Extensibility.W3C.W3COperationCorrelationTelemetryInitializer internalInitializer = new Extensibility.W3C.W3COperationCorrelationTelemetryInitializer();
+
         /// <summary>
         /// Initializes telemetry item.
         /// </summary>
         /// <param name="telemetry">Telemetry item.</param>
         public void Initialize(ITelemetry telemetry)
         {
-            internalInitializer.Initialize(telemetry);
+            this.internalInitializer.Initialize(telemetry);
         }
     }
 }
