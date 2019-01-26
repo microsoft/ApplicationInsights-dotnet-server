@@ -17,7 +17,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// </summary>
         /// <param name="activity">Activity to generate W3C context on.</param>
         /// <returns>The same Activity for chaining.</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GenerateW3CContext instead.", true)]
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GenerateW3CContext in Microsoft.ApplicationInsights package instead.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static Activity GenerateW3CContext(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GenerateW3CContext(activity);
 
@@ -83,7 +83,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// </summary>
         /// <param name="activity">Activity to get traceId from.</param>
         /// <returns>TraceId value or null if it does not exist.</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetTraceId instead.")]
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetTraceId in Microsoft.ApplicationInsights package instead.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetTraceId(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetTraceId(activity);
 
@@ -93,7 +93,7 @@ namespace Microsoft.ApplicationInsights.W3C
         /// </summary>
         /// <param name="activity">Activity to get spanId from.</param>
         /// <returns>SpanId value or null if it does not exist.</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetSpanId instead.")]
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CActivityExtensions.GetSpanId in Microsoft.ApplicationInsights package instead.")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static string GetSpanId(this Activity activity) => Extensibility.W3C.W3CActivityExtensions.GetSpanId(activity);
 

@@ -42,7 +42,7 @@
         /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#trace-id
         /// </summary>
         /// <returns>Random 16 bytes array encoded as hex string</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId instead.", true)]
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId in Microsoft.ApplicationInsights package instead.")]
         public static string GenerateTraceId()
         {
             return W3CUtilities.GenerateTraceId();
@@ -53,7 +53,7 @@
         /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#span-id
         /// </summary>
         /// <returns>Random 8 bytes array encoded as hex string</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId instead.", true)]
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId in Microsoft.ApplicationInsights package instead.")]
         public static string GenerateSpanId()
         {
             return W3CUtilities.GenerateTraceId().Substring(0, 16);
@@ -65,7 +65,7 @@
         /// <param name="traceId">Trace Id.</param>
         /// <param name="spanId">Span id.</param>
         /// <returns>valid Request-Id.</returns>
-        [Obsolete("Not supported, implement yourself with 'string.Concat(\"|\", traceId, \".\", spanId, \".\").'", true)]
+        [Obsolete("Obsolete, implement yourself with 'string.Concat(\"|\", traceId, \".\", spanId, \".\").'")]
         public static string FormatRequestId(string traceId, string spanId)
         {
             return string.Concat("|", traceId, ".", spanId, ".");
