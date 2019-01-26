@@ -1,33 +1,48 @@
-﻿namespace Microsoft.ApplicationInsights.W3C.Internal
+﻿namespace Microsoft.ApplicationInsights.W3C	
 {
+    using System;
+    using System.ComponentModel;
+
     /// <summary>
     /// W3C constants.
     /// </summary>
-    internal static class W3CConstants
+    [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants in Microsoft.ApplicationInsights package instead.")]
+    [EditorBrowsable(EditorBrowsableState.Never)]
+#if DEPENDENCY_COLLECTOR
+    public 	
+#else
+    internal
+#endif
+    static class W3CConstants
     {
         /// <summary>
         /// W3C traceparent header name.
         /// </summary>
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants.TraceParentHeader in Microsoft.ApplicationInsights package instead.")]
         public const string TraceParentHeader = "traceparent";
 
         /// <summary>
         /// W3C tracestate header name.
         /// </summary>
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants.TraceStateHeader in Microsoft.ApplicationInsights package instead.")]
         public const string TraceStateHeader = "tracestate";
 
         /// <summary>
         /// Name of the field that carry ApplicationInsights application Id in the tracestate header under az key.
         /// </summary>
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants.ApplicationIdTraceStateField in Microsoft.ApplicationInsights package instead.")]
         public const string ApplicationIdTraceStateField = "cid-v1";
 
         /// <summary>
         /// Name of the field that carry Azure-specific states in the tracestate header.
         /// </summary>
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants.AzureTracestateNamespace in Microsoft.ApplicationInsights package instead.")]
         public const string AzureTracestateNamespace = "az";
 
         /// <summary>
         /// Separator between Azure namespace values.
         /// </summary>
+        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CConstants.TracestateAzureSeparator in Microsoft.ApplicationInsights package instead.")]
         public const char TracestateAzureSeparator = ';';
 
         /// <summary>
