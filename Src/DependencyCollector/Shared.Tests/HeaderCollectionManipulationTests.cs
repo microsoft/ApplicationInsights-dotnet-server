@@ -4,7 +4,6 @@
     using System.Linq;
     using System.Net;
     using Microsoft.ApplicationInsights.Common;
-    using Microsoft.ApplicationInsights.W3C.Internal;
     using VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -166,8 +165,8 @@
         [TestMethod]
         public void GetHeaderValueNoMax()
         {
-            WebHeaderCollection headers = new WebHeaderCollection { [W3CConstants.TraceStateHeader] = "k1=v1,k2=v2" };
-            var values = headers.GetHeaderValue(W3CConstants.TraceStateHeader)?.ToList();
+            WebHeaderCollection headers = new WebHeaderCollection { [W3C.W3CConstants.TraceStateHeader] = "k1=v1,k2=v2" };
+            var values = headers.GetHeaderValue(W3C.W3CConstants.TraceStateHeader)?.ToList();
             Assert.IsNotNull(values);
             Assert.AreEqual(2, values.Count);
             Assert.AreEqual("k1=v1", values.First());
@@ -181,8 +180,8 @@
         [Xunit.InlineData(13)] // k1=v1,k2=v2,k".Length
         public void GetHeaderValueMaxLenTruncatesEnd(int maxLength)
         {
-            WebHeaderCollection headers = new WebHeaderCollection { [W3CConstants.TraceStateHeader] = "k1=v1,k2=v2,k3=v3,k4=v4" };
-            var values = headers.GetHeaderValue(W3CConstants.TraceStateHeader, maxLength)?.ToList();
+            WebHeaderCollection headers = new WebHeaderCollection { [W3C.W3CConstants.TraceStateHeader] = "k1=v1,k2=v2,k3=v3,k4=v4" };
+            var values = headers.GetHeaderValue(W3C.W3CConstants.TraceStateHeader, maxLength)?.ToList();
             Assert.IsNotNull(values);
             Assert.AreEqual(2, values.Count);
             Assert.AreEqual("k1=v1", values.First());
@@ -194,16 +193,16 @@
         [Xunit.InlineData(3)]
         public void GetHeaderValueMaxLenTruncatesEndInvalid(int maxLength)
         {
-            WebHeaderCollection headers = new WebHeaderCollection { [W3CConstants.TraceStateHeader] = "k1=v1,k2=v2" };
-            var values = headers.GetHeaderValue(W3CConstants.TraceStateHeader, maxLength)?.ToList();
+            WebHeaderCollection headers = new WebHeaderCollection { [W3C.W3CConstants.TraceStateHeader] = "k1=v1,k2=v2" };
+            var values = headers.GetHeaderValue(W3C.W3CConstants.TraceStateHeader, maxLength)?.ToList();
             Assert.IsNull(values);
         }
 
         [TestMethod]
         public void GetHeaderValueMaxItemsTruncatesEnd()
         {
-            WebHeaderCollection headers = new WebHeaderCollection { [W3CConstants.TraceStateHeader] = "k1=v1,k2=v2,k3=v3,k4=v4" };
-            var values = headers.GetHeaderValue(W3CConstants.TraceStateHeader, 100500, 2)?.ToList();
+            WebHeaderCollection headers = new WebHeaderCollection { [W3C.W3CConstants.TraceStateHeader] = "k1=v1,k2=v2,k3=v3,k4=v4" };
+            var values = headers.GetHeaderValue(W3C.W3CConstants.TraceStateHeader, 100500, 2)?.ToList();
             Assert.IsNotNull(values);
             Assert.AreEqual(2, values.Count);
             Assert.AreEqual("k1=v1", values.First());

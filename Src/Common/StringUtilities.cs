@@ -8,13 +8,17 @@
     using System.Diagnostics;
     using System.Globalization;
     using Microsoft.ApplicationInsights.Extensibility.W3C;
+#if DEPENDENCY_COLLECTOR
+    using Microsoft.ApplicationInsights.W3C;
+#else
     using Microsoft.ApplicationInsights.W3C.Internal;
+#endif
 
     /// <summary>
     /// Generic functions to perform common operations on a string.
     /// </summary>
 #if DEPENDENCY_COLLECTOR
-    public 
+    public
 #else
     internal
 #endif

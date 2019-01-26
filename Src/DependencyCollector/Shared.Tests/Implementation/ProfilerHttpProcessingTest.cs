@@ -21,7 +21,6 @@
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.TestFramework;
-    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -293,11 +292,11 @@
             using (var op = client.StartOperation<RequestTelemetry>("request"))
             {
                 Activity.Current.AddBaggage("k", "v");
-                Activity.Current.AddTag(W3CConstants.TracestateTag, "some=state");
+                Activity.Current.AddTag(W3C.W3CConstants.TracestateTag, "some=state");
                 httpProcessingW3C.OnBeginForGetResponse(request);
 
                 Assert.AreEqual("k=v", request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
-                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={TestApplicationId},some=state", request.Headers[W3CConstants.TraceStateHeader]);
+                Assert.AreEqual($"{W3C.W3CConstants.AzureTracestateNamespace}={TestApplicationId},some=state", request.Headers[W3C.W3CConstants.TraceStateHeader]);
 
                 requestTelemetry = op.Telemetry;
 
@@ -317,8 +316,8 @@
             var dependencyIdParts = dependency.Id.Split('.', '|');
             Assert.AreEqual(4, dependencyIdParts.Length);
 
-            var traceParent = request.Headers[W3CConstants.TraceParentHeader];
-            Assert.AreEqual($"{W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3CConstants.TraceFlagRecordedAndNotRequested}",
+            var traceParent = request.Headers[W3C.W3CConstants.TraceParentHeader];
+            Assert.AreEqual($"{W3C.W3CConstants.DefaultVersion}-{dependencyIdParts[1]}-{dependencyIdParts[2]}-{W3C.W3CConstants.TraceFlagRecordedAndNotRequested}",
                 traceParent);
         }
 

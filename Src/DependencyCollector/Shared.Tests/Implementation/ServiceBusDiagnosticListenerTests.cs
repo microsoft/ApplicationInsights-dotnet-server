@@ -12,7 +12,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.W3C;
-    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -330,7 +329,7 @@
                 Assert.IsTrue(requestTelemetry.Success.Value);
 
                 Assert.AreEqual("parent", requestTelemetry.Context.Operation.ParentId);
-                Assert.AreEqual("parent", requestTelemetry.Properties[W3CConstants.LegacyRootIdProperty]);
+                Assert.AreEqual("parent", requestTelemetry.Properties[W3C.W3CConstants.LegacyRootIdProperty]);
                 Assert.AreEqual("messageId", requestTelemetry.Properties["MessageId"]);
 
                 var traceTelemetry = this.sentItems.OfType<TraceTelemetry>();

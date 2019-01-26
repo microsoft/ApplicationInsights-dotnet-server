@@ -17,7 +17,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.W3C;
-    using Microsoft.ApplicationInsights.W3C.Internal;
 
     internal class HttpCoreDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
@@ -549,13 +548,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     {
                         currentActivity.UpdateContextOnActivity();
                         string traceParent = currentActivity.GetTraceparent();
-                        if (traceParent != null && !requestHeaders.Contains(W3CConstants.TraceParentHeader))
+                        if (traceParent != null && !requestHeaders.Contains(W3C.W3CConstants.TraceParentHeader))
                         {
-                            requestHeaders.Add(W3CConstants.TraceParentHeader, traceParent);
+                            requestHeaders.Add(W3C.W3CConstants.TraceParentHeader, traceParent);
                         }
 
                         string traceState = currentActivity.GetTracestate();
-                        if (!requestHeaders.Contains(W3CConstants.TraceStateHeader))
+                        if (!requestHeaders.Contains(W3C.W3CConstants.TraceStateHeader))
                         {
                             if (sourceApplicationId != null)
                             {
@@ -574,7 +573,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                             if (traceState != null)
                             {
-                                requestHeaders.Add(W3CConstants.TraceStateHeader, traceState);
+                                requestHeaders.Add(W3C.W3CConstants.TraceStateHeader, traceState);
                             }
                         }
                     }

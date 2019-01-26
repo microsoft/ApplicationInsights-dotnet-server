@@ -17,7 +17,6 @@ namespace Microsoft.ApplicationInsights.Tests
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.TestFramework;
-    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -103,8 +102,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 // Request-Id and Correlation-Context are injected by HttpClient
                 // check only W3C headers here
                 Assert.AreEqual(this.testApplicationId1, GetRequestContextKeyValue(requestMsg, RequestResponseHeaders.RequestContextCorrelationSourceKey));
-                Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-02", requestMsg.Headers.GetValues(W3CConstants.TraceParentHeader).Single());
-                Assert.AreEqual($"{W3CConstants.AzureTracestateNamespace}={this.testApplicationId1}", requestMsg.Headers.GetValues(W3CConstants.TraceStateHeader).Single());
+                Assert.AreEqual($"00-{activity.GetTraceId()}-{activity.GetSpanId()}-02", requestMsg.Headers.GetValues(W3C.W3CConstants.TraceParentHeader).Single());
+                Assert.AreEqual($"{W3C.W3CConstants.AzureTracestateNamespace}={this.testApplicationId1}", requestMsg.Headers.GetValues(W3C.W3CConstants.TraceStateHeader).Single());
             }
         }
 
@@ -136,11 +135,11 @@ namespace Microsoft.ApplicationInsights.Tests
 
                 var telemetry = this.sentTelemetry.Single() as DependencyTelemetry;
                 Assert.IsNotNull(telemetry);
-                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
-                Assert.AreEqual(activity.Id, telemetry.Properties[W3CConstants.LegacyRequestIdProperty]);
+                Assert.IsTrue(telemetry.Properties.ContainsKey(W3C.W3CConstants.LegacyRequestIdProperty));
+                Assert.AreEqual(activity.Id, telemetry.Properties[W3C.W3CConstants.LegacyRequestIdProperty]);
 
-                Assert.IsTrue(telemetry.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
-                Assert.AreEqual(activity.RootId, telemetry.Properties[W3CConstants.LegacyRootIdProperty]);
+                Assert.IsTrue(telemetry.Properties.ContainsKey(W3C.W3CConstants.LegacyRootIdProperty));
+                Assert.AreEqual(activity.RootId, telemetry.Properties[W3C.W3CConstants.LegacyRootIdProperty]);
             }
         }
 
