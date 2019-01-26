@@ -10,7 +10,7 @@ namespace Microsoft.ApplicationInsights.W3C
     /// <summary>
     /// Telemetry Initializer that sets correlation ids for W3C.
     /// </summary>
-    [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3COperationCorrelationTelemetryInitializer instead.", true)]
+    [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3COperationCorrelationTelemetryInitializer in Microsoft.ApplicationInsights package instead.")]
     [SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification =
         "TelemetryInitializers are intended to be instantiated by the framework when added to a config.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
