@@ -232,8 +232,12 @@
                 StreamId = this.streamId,
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
-                IsWebApp = this.isWebApp,
+                IsWebApp = this.isWebApp,                
+#if NETSTANDARD2_0
+                PerformanceCollectionSupported = true,
+#else
                 PerformanceCollectionSupported = this.isWebApp,
+#endif
                 ProcessorCount = this.processorCount
             };
 
@@ -271,7 +275,11 @@
                     MachineName = this.machineName,
                     Timestamp = sample.EndTimestamp.UtcDateTime,
                     IsWebApp = this.isWebApp,
+#if NETSTANDARD2_0
+                    PerformanceCollectionSupported = true,
+#else
                     PerformanceCollectionSupported = this.isWebApp,
+#endif
                     ProcessorCount = this.processorCount,
                     Metrics = metricPoints.ToArray(),
                     Documents = documents,
