@@ -223,7 +223,7 @@
         private static double Round(double value)
         {
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
-        }        
+        }
 
         private void WritePingData(DateTimeOffset timestamp, Stream stream)
         {
@@ -249,7 +249,7 @@
                 StreamId = this.streamId,
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
-                IsWebApp = this.isWebApp,                
+                IsWebApp = this.isWebApp,
                 PerformanceCollectionSupported = perfCollectionSupported,
                 ProcessorCount = this.processorCount
             };
