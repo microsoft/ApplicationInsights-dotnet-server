@@ -7,6 +7,9 @@
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+#if NETSTANDARD2_0
+    using System.Runtime.InteropServices;
+#endif
     using System.Runtime.Serialization.Json;
     using System.Threading;
 
@@ -48,7 +51,7 @@
         private readonly HttpClient httpClient = new HttpClient();
 
 #if NETSTANDARD2_0
-        private static bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
 
         public QuickPulseServiceClient(
@@ -225,21 +228,26 @@
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
         }
 
-        private void WritePingData(DateTimeOffset timestamp, Stream stream)
+        private bool IsPerfCounterSupported()
         {
             bool perfCollectionSupported = false;
 #if NETSTANDARD2_0
-                if (IsWindows)
-                {
-                    perfCollectionSupported = true;
-                }                
-                else
-                {
-                    perfCollectionSupported = this.isWebApp;
-                }
+            if (isWindows)
+            {
+                perfCollectionSupported = true;
+            }
+            else
+            {
+                perfCollectionSupported = this.isWebApp;
+            }
 #else
             perfCollectionSupported = this.isWebApp;
 #endif
+            return perfCollectionSupported;
+        }
+
+        private void WritePingData(DateTimeOffset timestamp, Stream stream)
+        {            
             var dataPoint = new MonitoringDataPoint
             {
                 Version = this.version,
@@ -250,7 +258,7 @@
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
                 IsWebApp = this.isWebApp,
-                PerformanceCollectionSupported = perfCollectionSupported,
+                PerformanceCollectionSupported = IsPerfCounterSupported(),
                 ProcessorCount = this.processorCount
             };
 
@@ -277,22 +285,7 @@
 
                 ProcessCpuData[] topCpuProcesses =
                     sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 }).ToArray();
-
-
-                bool perfCollectionSupported = false;
-#if NETSTANDARD2_0
-                if (IsWindows)
-                {
-                    perfCollectionSupported = true;
-                }                
-                else
-                {
-                    perfCollectionSupported = this.isWebApp;
-                }
-#else
-                perfCollectionSupported = this.isWebApp;
-#endif
-
+               
                 var dataPoint = new MonitoringDataPoint
                 {
                     Version = this.version,
@@ -303,7 +296,7 @@
                     MachineName = this.machineName,
                     Timestamp = sample.EndTimestamp.UtcDateTime,
                     IsWebApp = this.isWebApp,
-                    PerformanceCollectionSupported = perfCollectionSupported,
+                    PerformanceCollectionSupported = IsPerfCounterSupported(),
                     ProcessorCount = this.processorCount,
                     Metrics = metricPoints.ToArray(),
                     Documents = documents,
