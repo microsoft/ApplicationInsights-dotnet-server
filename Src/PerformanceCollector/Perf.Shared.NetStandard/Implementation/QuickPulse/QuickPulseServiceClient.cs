@@ -47,6 +47,10 @@
 
         private readonly HttpClient httpClient = new HttpClient();
 
+#if NETSTANDARD2_0
+        private static bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+
         public QuickPulseServiceClient(
             Uri serviceUri,
             string instanceName,
@@ -219,10 +223,23 @@
         private static double Round(double value)
         {
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
-        }
+        }        
 
         private void WritePingData(DateTimeOffset timestamp, Stream stream)
         {
+            bool perfCollectionSupported = false;
+#if NETSTANDARD2_0
+                if (IsWindows)
+                {
+                    perfCollectionSupported = true;
+                }                
+                else
+                {
+                    perfCollectionSupported = this.isWebApp;
+                }
+#else
+            perfCollectionSupported = this.isWebApp;
+#endif
             var dataPoint = new MonitoringDataPoint
             {
                 Version = this.version,
@@ -233,11 +250,7 @@
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
                 IsWebApp = this.isWebApp,                
-#if NETSTANDARD2_0
-                PerformanceCollectionSupported = true,
-#else
-                PerformanceCollectionSupported = this.isWebApp,
-#endif
+                PerformanceCollectionSupported = perfCollectionSupported,
                 ProcessorCount = this.processorCount
             };
 
@@ -265,6 +278,21 @@
                 ProcessCpuData[] topCpuProcesses =
                     sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 }).ToArray();
 
+
+                bool perfCollectionSupported = false;
+#if NETSTANDARD2_0
+                if (IsWindows)
+                {
+                    perfCollectionSupported = true;
+                }                
+                else
+                {
+                    perfCollectionSupported = this.isWebApp;
+                }
+#else
+                perfCollectionSupported = this.isWebApp;
+#endif
+
                 var dataPoint = new MonitoringDataPoint
                 {
                     Version = this.version,
@@ -275,11 +303,7 @@
                     MachineName = this.machineName,
                     Timestamp = sample.EndTimestamp.UtcDateTime,
                     IsWebApp = this.isWebApp,
-#if NETSTANDARD2_0
-                    PerformanceCollectionSupported = true,
-#else
-                    PerformanceCollectionSupported = this.isWebApp,
-#endif
+                    PerformanceCollectionSupported = perfCollectionSupported,
                     ProcessorCount = this.processorCount,
                     Metrics = metricPoints.ToArray(),
                     Documents = documents,
