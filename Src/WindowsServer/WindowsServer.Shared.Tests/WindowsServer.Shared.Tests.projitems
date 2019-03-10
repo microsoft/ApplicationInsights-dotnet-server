@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AppServicesHeartbeatTelemetryModuleTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IisApplicationPoolEnvironmentTelemetryInitializerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EnvironmentVariableMonitorTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureInstanceMetadataEndToEndTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AzureWebAppRoleEnvironmentTelemetryInitializerTest.cs" />
