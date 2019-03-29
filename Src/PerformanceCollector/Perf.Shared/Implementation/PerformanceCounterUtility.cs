@@ -33,6 +33,8 @@
         private const string AzureWebAppCoreSdkVersionPrefix = "azwapccore:";
 
         private const string WebSiteEnvironmentVariable = "WEBSITE_SITE_NAME";
+        private const string WebSiteSkuEnvironmentVariable = "WEBSITE_SKU";
+        private const string WebSiteSkuPremiumContainer = "PremiumContainer";
         private const string ProcessorsCountEnvironmentVariable = "NUMBER_OF_PROCESSORS";
 
         private static readonly ConcurrentDictionary<string, string> PlaceholderCache = new ConcurrentDictionary<string, string>();
@@ -77,7 +79,8 @@
             {
                 try
                 {
-                    isAzureWebApp = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WebSiteEnvironmentVariable));
+                    isAzureWebApp = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(WebSiteEnvironmentVariable)) &&
+                        Environment.GetEnvironmentVariable(WebSiteSkuEnvironmentVariable) != WebSiteSkuPremiumContainer;
                 }
                 catch (Exception ex)
                 {
