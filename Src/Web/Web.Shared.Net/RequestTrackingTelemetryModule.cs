@@ -31,6 +31,11 @@
         private HashSet<Type> includedTypes = new HashSet<Type>();
 
         /// <summary>
+        /// Handler types that are not TransferHandlers will be included in request tracking
+        /// </summary>
+        private HashSet<Type> requestHandlerTypesDoNotFilter = new HashSet<Type>();
+
+        /// <summary>
         /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
         /// True by default.
         /// This value is evaluated in Initialize().
@@ -390,7 +395,7 @@
             if (handler != null)
             {
                 var handlerType = handler.GetType();
-                if (!this.includedTypes.Contains(handlerType))
+                if (!this.requestHandlerTypesDoNotFilter.Contains(handlerType))
                 {
                     var handlerName = handlerType.FullName;
                     foreach (var h in this.Handlers)
@@ -402,7 +407,7 @@
                         }
                     }
 
-                    this.includedTypes.Add(handlerType);
+                    this.requestHandlerTypesDoNotFilter.Add(handlerType);
                 }
             }
 
