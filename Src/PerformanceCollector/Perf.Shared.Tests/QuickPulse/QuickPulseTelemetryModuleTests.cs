@@ -49,6 +49,19 @@
         }
 
         [TestMethod]
+        public void QuickPulseTelemetryModuleDisposeWithoutInitialize()
+        {
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            var configuration = new TelemetryConfiguration();
+            var builder = configuration.TelemetryProcessorChainBuilder;
+            builder = builder.Use(current => telemetryProcessor);
+            builder.Build();
+
+            var qp = new QuickPulseTelemetryModule();
+            qp.Dispose();
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void QuickPulseTelemetryModuleDoesNotRegisterNullProcessor()
         {
