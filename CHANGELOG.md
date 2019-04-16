@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 2.10.0-alpha4
+This build contains future changes being evaluated internally. Not recommended for end users.
+ - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
+
+
 ## Version 2.10.0-beta3
 - [Fix: QuickPulseTelemetryModule.Dispose should not throw if module was not initialized](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1170)
 - Added NetStandard2.0 Target for PerfCounter project.
