@@ -28,7 +28,6 @@
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
-        private HashSet<Type> includedTypes = new HashSet<Type>();
 
         /// <summary>
         /// Handler types that are not TransferHandlers will be included in request tracking
