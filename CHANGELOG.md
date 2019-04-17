@@ -1,7 +1,7 @@
 # Changelog
 
-## Version 2.10.0-alpha4
-This build contains future changes being evaluated internally. Not recommended for end users.
+## Version 2.10.0-alpha5
+This build was forked from 2.10.0-beta3 and contains future changes being evaluated internally. Not recommended for end users.
  - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
 
 
