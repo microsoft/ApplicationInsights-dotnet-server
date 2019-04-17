@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Web
+﻿namespace Microsoft.ApplicationInsights.Web.Extensibility.Implementation
 {
     using System;
 
@@ -10,8 +10,9 @@
     using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
-    /// PostSamplingTelemetry processor which ensures that the RequestTelemetry.Url is initialized
-    /// in the context of HttpContext.Current.Request
+    /// [This feature is still being evaluated and not recommended for end users.]
+    /// This class is intended to be used with <see cref="RequestTrackingTelemetryModule.DisableTrackingProperties"/> for deferring execution until after Sampling.
+    /// This processor RequestTelemetry.Url is initialized in the context of HttpContext.Current.Request
     /// </summary>
     public class PostSamplingTelemetryProcessor : ITelemetryProcessor
     {

@@ -8,12 +8,13 @@
     using System.Globalization;
     using System.Web;
 
-    using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Web.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
@@ -56,6 +57,7 @@
         /// <summary>
         /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
         /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
+        /// [This feature is still being evaluated and not recommended for end users.]
         /// </summary>
         /// <remarks>
         /// This setting is not browsable because we are not recommending it to customers at this time.

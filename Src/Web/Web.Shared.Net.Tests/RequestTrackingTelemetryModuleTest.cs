@@ -453,7 +453,7 @@
                 InstrumentationKey = TestInstrumentationKey1,
                 ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1)
             };
-            configuration.TelemetryInitializers.Add(new Extensibility.OperationCorrelationTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new OperationCorrelationTelemetryInitializer());
 
             var telemetryInitializer = new TestableOperationCorrelationTelemetryInitializer(fakeContext);
 
