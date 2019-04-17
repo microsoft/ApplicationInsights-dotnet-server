@@ -36,37 +36,40 @@
             if (item is RequestTelemetry requestTelemetry)
             {
                 var context = System.Web.HttpContext.Current;
-                if (requestTelemetry.Url == null)
+                if (context != null)
                 {
-                    requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
-                }
-
-                var headers = context.Request.UnvalidatedGetHeaders();
-                if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
-                {
-                    string sourceAppId = null;
-
-                    try
+                    if (requestTelemetry.Url == null)
                     {
-                        sourceAppId = headers.GetNameValueHeaderValue(
-                            RequestResponseHeaders.RequestContextHeader,
-                            RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                    }
-                    catch (Exception ex)
-                    {
-                        AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                        requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
                     }
 
-                    string currentComponentAppId = null;
-                    if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                        && (this.TelemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                    var headers = context.Request.UnvalidatedGetHeaders();
+                    if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
                     {
-                        // If the source header is present on the incoming request,
-                        // and it is an external component (not the same ikey as the one used by the current component),
-                        // then populate the source field.
-                        if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
+                        string sourceAppId = null;
+
+                        try
                         {
-                            requestTelemetry.Source = sourceAppId;
+                            sourceAppId = headers.GetNameValueHeaderValue(
+                                RequestResponseHeaders.RequestContextHeader,
+                                RequestResponseHeaders.RequestContextCorrelationSourceKey);
+                        }
+                        catch (Exception ex)
+                        {
+                            AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                        }
+
+                        string currentComponentAppId = null;
+                        if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
+                            && (this.TelemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                        {
+                            // If the source header is present on the incoming request,
+                            // and it is an external component (not the same ikey as the one used by the current component),
+                            // then populate the source field.
+                            if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
+                            {
+                                requestTelemetry.Source = sourceAppId;
+                            }
                         }
                     }
                 }
