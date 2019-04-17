@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.Globalization;
     using System.Web;
@@ -51,6 +52,16 @@
         /// True by default.
         /// </summary>
         public bool EnableAccessControlExposeHeader { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
+        /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
+        /// </summary>
+        /// <remarks>
+        /// This setting is not browsable because we are not recommending it to customers at this time.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool DisableTrackingProperties { get; set; } = false;
 
         /// <summary>
         /// Gets or sets a value indicating the size of internal tracking dictionary.
@@ -166,13 +177,6 @@
                 requestTelemetry.Success = success;
             }
 
-#if false
-            if (requestTelemetry.Url == null)
-            {
-                requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
-            }
-#endif
-
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
                 // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
@@ -180,37 +184,44 @@
                 this.telemetryClient.InitializeInstrumentationKey(requestTelemetry);
             }
 
-#if false
-            var headers = context.Request.UnvalidatedGetHeaders();
-            if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
+            // Setting requestTelemetry.Url and requestTelemetry.Source can be deferred until after sampling 
+            if (this.DisableTrackingProperties == false)
             {
-                string sourceAppId = null;
-
-                try
+                if (requestTelemetry.Url == null)
                 {
-                    sourceAppId = headers.GetNameValueHeaderValue(
-                        RequestResponseHeaders.RequestContextHeader, 
-                        RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                }
-                catch (Exception ex)
-                {
-                    AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                    requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
                 }
 
-                string currentComponentAppId = null;
-                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                    && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                var headers = context.Request.UnvalidatedGetHeaders();
+                if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
                 {
-                    // If the source header is present on the incoming request,
-                    // and it is an external component (not the same ikey as the one used by the current component),
-                    // then populate the source field.
-                    if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
+                    string sourceAppId = null;
+
+                    try
                     {
-                        requestTelemetry.Source = sourceAppId;
+                        sourceAppId = headers.GetNameValueHeaderValue(
+                            RequestResponseHeaders.RequestContextHeader,
+                            RequestResponseHeaders.RequestContextCorrelationSourceKey);
+                    }
+                    catch (Exception ex)
+                    {
+                        AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                    }
+
+                    string currentComponentAppId = null;
+                    if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
+                        && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
+                    {
+                        // If the source header is present on the incoming request,
+                        // and it is an external component (not the same ikey as the one used by the current component),
+                        // then populate the source field.
+                        if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
+                        {
+                            requestTelemetry.Source = sourceAppId;
+                        }
                     }
                 }
             }
-#endif
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
             {
