@@ -181,7 +181,7 @@
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
 #if NET45
-            if (requestTelemetry.Url == null)
+            if (requestTelemetry.Url == null && System.Web.HttpContext.Current != null)
             {
                 requestTelemetry.Url = System.Web.HttpContext.Current.Request.Unvalidated.Url;
             }
