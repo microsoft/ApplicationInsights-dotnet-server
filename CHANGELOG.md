@@ -1,9 +1,10 @@
 # Changelog
 
-## Version 2.10.0-alpha5
-This build was forked from 2.10.0-beta3 and contains future changes being evaluated internally. Not recommended for end users.
+## Version 2.10.0-beta5
  - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
 
+## Version 2.10.0-beta4
+- Updated Base SDK to 2.10.0-beta4
 
 ## Version 2.10.0-beta3
 - [Fix: QuickPulseTelemetryModule.Dispose should not throw if module was not initialized](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1170)
