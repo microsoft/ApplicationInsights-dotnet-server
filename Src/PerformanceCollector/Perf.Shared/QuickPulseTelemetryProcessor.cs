@@ -178,13 +178,11 @@
             }
         }
 
-        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, TelemetryConfiguration telemetryConfiguration)
+        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, IApplicationIdProvider applicationIdProvider)
         {
 #if NET45
             var request = System.Web.HttpContext.Current?.Request;
-            RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, telemetryConfiguration);
-#else
-            Console.WriteLine(telemetryConfiguration);
+            RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, applicationIdProvider);
 #endif
 
             ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
@@ -470,7 +468,7 @@
                             documentStreams,
                             documentStream => documentStream.RequestQuotaTracker,
                             documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                            requestTelemetry => ConvertRequestToTelemetryDocument(requestTelemetry, this.config));
+                            requestTelemetry => ConvertRequestToTelemetryDocument(requestTelemetry, this.config?.ApplicationIdProvider));
                     }
                     else if (telemetryAsDependency != null)
                     {

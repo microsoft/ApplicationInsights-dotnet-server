@@ -189,7 +189,7 @@
             // Setting requestTelemetry.Url and requestTelemetry.Source can be deferred until after sampling
             if (this.DisableTrackingProperties == false)
             {
-                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, context.Request, this.telemetryConfiguration);
+                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, context.Request, this.telemetryConfiguration?.ApplicationIdProvider);
             }
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)

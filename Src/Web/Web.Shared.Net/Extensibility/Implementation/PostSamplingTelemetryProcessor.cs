@@ -33,7 +33,7 @@
             if (item is RequestTelemetry requestTelemetry)
             {
                 var request = HttpContext.Current?.Request;
-                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, this.telemetryConfiguration);
+                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, this.telemetryConfiguration?.ApplicationIdProvider);
             }
 
             this.nextProcessorInPipeline?.Process(item);

@@ -12,13 +12,11 @@ namespace Microsoft.ApplicationInsights.Common
     /// </summary>
     internal static class RequestTrackingUtilities
     {
-        /// <summary>
-        /// s
-        /// </summary>
-        /// <param name="requestTelemetry">a</param>
-        /// <param name="request">b</param>
-        /// <param name="telemetryConfiguration">c</param>
-        public static void UpdateRequestTelemetryFromRequest(RequestTelemetry requestTelemetry, HttpRequest request, TelemetryConfiguration telemetryConfiguration)
+        /// <summary>Updates requestTelemetry from request with properties, which could be deffered till after sampling,</summary>
+        /// <param name="requestTelemetry">RequestTelemetry to be updated</param>
+        /// <param name="request">HttpRequest containing Url and headers</param>
+        /// <param name="applicationIdProvider">Provider for current applicationId</param>
+        internal static void UpdateRequestTelemetryFromRequest(RequestTelemetry requestTelemetry, HttpRequest request, IApplicationIdProvider applicationIdProvider)
         {
             if (requestTelemetry == null || request == null)
             {
@@ -33,7 +31,7 @@ namespace Microsoft.ApplicationInsights.Common
             if (string.IsNullOrEmpty(requestTelemetry.Source))
             {
                 var sourceAppId = GetSourceAppId(request.Unvalidated.Headers);
-                string currentComponentAppId = GetApplicationId(telemetryConfiguration, requestTelemetry.Context?.InstrumentationKey);
+                string currentComponentAppId = GetApplicationId(applicationIdProvider, requestTelemetry.Context?.InstrumentationKey);
                 // If the source header is present on the incoming request,
                 // and it is an external component (not the same ikey as the one used by the current component),
                 // then populate the source field.
@@ -64,10 +62,10 @@ namespace Microsoft.ApplicationInsights.Common
             return sourceAppId;
         }
 
-        private static string GetApplicationId(TelemetryConfiguration telemetryConfiguration, string instrumentationKey)
+        private static string GetApplicationId(IApplicationIdProvider applicationIdProvider, string instrumentationKey)
         {
             string currentComponentAppId = null;
-            telemetryConfiguration.ApplicationIdProvider?.TryGetApplicationId(instrumentationKey, out currentComponentAppId);
+            applicationIdProvider?.TryGetApplicationId(instrumentationKey, out currentComponentAppId);
             return currentComponentAppId;
         }
     }
