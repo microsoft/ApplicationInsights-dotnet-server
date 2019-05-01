@@ -178,13 +178,13 @@
             }
         }
 
-        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
+        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, TelemetryConfiguration telemetryConfiguration)
         {
 #if NET45
-            if (requestTelemetry.Url == null && System.Web.HttpContext.Current != null)
-            {
-                requestTelemetry.Url = System.Web.HttpContext.Current.Request.Unvalidated.Url;
-            }
+            var request = System.Web.HttpContext.Current?.Request;
+            RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, telemetryConfiguration);
+#else
+            Console.WriteLine(telemetryConfiguration);
 #endif
 
             ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
@@ -470,7 +470,7 @@
                             documentStreams,
                             documentStream => documentStream.RequestQuotaTracker,
                             documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                            ConvertRequestToTelemetryDocument);
+                            requestTelemetry => ConvertRequestToTelemetryDocument(requestTelemetry, this.config));
                     }
                     else if (telemetryAsDependency != null)
                     {

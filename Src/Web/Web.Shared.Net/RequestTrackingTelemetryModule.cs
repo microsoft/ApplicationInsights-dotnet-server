@@ -186,43 +186,10 @@
                 this.telemetryClient.InitializeInstrumentationKey(requestTelemetry);
             }
 
-            // Setting requestTelemetry.Url and requestTelemetry.Source can be deferred until after sampling 
+            // Setting requestTelemetry.Url and requestTelemetry.Source can be deferred until after sampling
             if (this.DisableTrackingProperties == false)
             {
-                if (requestTelemetry.Url == null)
-                {
-                    requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
-                }
-
-                var headers = context.Request.UnvalidatedGetHeaders();
-                if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
-                {
-                    string sourceAppId = null;
-
-                    try
-                    {
-                        sourceAppId = headers.GetNameValueHeaderValue(
-                            RequestResponseHeaders.RequestContextHeader,
-                            RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                    }
-                    catch (Exception ex)
-                    {
-                        AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
-                    }
-
-                    string currentComponentAppId = null;
-                    if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                        && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
-                    {
-                        // If the source header is present on the incoming request,
-                        // and it is an external component (not the same ikey as the one used by the current component),
-                        // then populate the source field.
-                        if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
-                        {
-                            requestTelemetry.Source = sourceAppId;
-                        }
-                    }
-                }
+                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, context.Request, this.telemetryConfiguration);
             }
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)

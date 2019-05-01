@@ -1,13 +1,10 @@
 ﻿namespace Microsoft.ApplicationInsights.Web.Extensibility.Implementation
 {
-    using System;
-
+    using System.Web;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
-    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-    using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
     /// [This feature is still being evaluated and not recommended for end users.]
@@ -35,44 +32,8 @@
         {
             if (item is RequestTelemetry requestTelemetry)
             {
-                var context = System.Web.HttpContext.Current;
-                if (context != null)
-                {
-                    if (requestTelemetry.Url == null)
-                    {
-                        requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
-                    }
-
-                    var headers = context.Request.UnvalidatedGetHeaders();
-                    if (string.IsNullOrEmpty(requestTelemetry.Source) && headers != null)
-                    {
-                        string sourceAppId = null;
-
-                        try
-                        {
-                            sourceAppId = headers.GetNameValueHeaderValue(
-                                RequestResponseHeaders.RequestContextHeader,
-                                RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                        }
-                        catch (Exception ex)
-                        {
-                            AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
-                        }
-
-                        string currentComponentAppId = null;
-                        if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                            && (this.TelemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
-                        {
-                            // If the source header is present on the incoming request,
-                            // and it is an external component (not the same ikey as the one used by the current component),
-                            // then populate the source field.
-                            if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
-                            {
-                                requestTelemetry.Source = sourceAppId;
-                            }
-                        }
-                    }
-                }
+                var request = HttpContext.Current?.Request;
+                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, this.telemetryConfiguration);
             }
 
             this.nextProcessorInPipeline?.Process(item);
