@@ -57,10 +57,10 @@
         /// <summary>
         /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
         /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
-        /// [This feature is still being evaluated and not recommended for end users.]
         /// </summary>
         /// <remarks>
-        /// This setting is not browsable because we are not recommending it to customers at this time.
+        /// This feature is still being evaluated and not recommended for end users.
+        /// This setting is not browsable at this time.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public bool DisableTrackingProperties { get; set; } = false;

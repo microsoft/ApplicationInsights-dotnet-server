@@ -181,6 +181,8 @@
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, IApplicationIdProvider applicationIdProvider)
         {
 #if NET45
+            // some of the requestTelemetry properties might be deffered by using RequestTrackingTelemetryModule.DisableTrackingProperties.
+            // evaluate them now:
             var request = System.Web.HttpContext.Current?.Request;
             RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, applicationIdProvider);
 #endif

@@ -7,10 +7,13 @@
     using Microsoft.ApplicationInsights.Extensibility;
 
     /// <summary>
-    /// [This feature is still being evaluated and not recommended for end users.]
-    /// This class is intended to be used with <see cref="RequestTrackingTelemetryModule.DisableTrackingProperties"/> for deferring execution until after Sampling.
-    /// This processor RequestTelemetry.Url is initialized in the context of HttpContext.Current.Request
+    /// PostSamplingTelemetryProcessor evaluates deferred properties.
+    /// It is intended to be used with <see cref="RequestTrackingTelemetryModule.DisableTrackingProperties"/> after Sampling.
     /// </summary>
+    /// <remarks>
+    /// This feature is still being evaluated and not recommended for end users.
+    /// This setting is not browsable at this time.
+    /// </remarks>
     public class PostSamplingTelemetryProcessor : ITelemetryProcessor
     {
         private readonly ITelemetryProcessor nextProcessorInPipeline;
