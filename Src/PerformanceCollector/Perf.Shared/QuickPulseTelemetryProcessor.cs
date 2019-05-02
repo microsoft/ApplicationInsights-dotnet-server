@@ -179,14 +179,25 @@
             }
         }
 
-        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "applicationIdProvider required in conditional compilation")]
-        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, IApplicationIdProvider applicationIdProvider)
+        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
+            var url = requestTelemetry.Url;
 #if NET45
-            // some of the requestTelemetry properties might be deffered by using RequestTrackingTelemetryModule.DisableTrackingProperties.
-            // evaluate them now:
-            var request = System.Web.HttpContext.Current?.Request;
-            RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, request, applicationIdProvider);
+            if (url == null)
+            {
+                try
+                {
+                    // some of the requestTelemetry properties might be deffered by using RequestTrackingTelemetryModule.DisableTrackingProperties.
+                    // evaluate them now
+                    // note: RequestTrackingUtilities.UpdateRequestTelemetryFromRequest is not used here, since not all fields need to be populated
+                    var request = System.Web.HttpContext.Current?.Request;
+                    url = request?.Unvalidated.Url;
+                }
+                catch (Exception e)
+                {
+                    QuickPulseEventSource.Log.UnknownErrorEvent(e.ToInvariantString());
+                }
+            }
 #endif
 
             ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
@@ -199,7 +210,7 @@
                 Success = requestTelemetry.Success,
                 Duration = requestTelemetry.Duration,
                 ResponseCode = requestTelemetry.ResponseCode,
-                Url = requestTelemetry.Url,
+                Url = url,
                 Properties = GetProperties(requestTelemetry)
             };
 
@@ -472,7 +483,7 @@
                             documentStreams,
                             documentStream => documentStream.RequestQuotaTracker,
                             documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                            requestTelemetry => ConvertRequestToTelemetryDocument(requestTelemetry, this.config?.ApplicationIdProvider));
+                            ConvertRequestToTelemetryDocument);
                     }
                     else if (telemetryAsDependency != null)
                     {
