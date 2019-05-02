@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
@@ -178,6 +179,7 @@
             }
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "applicationIdProvider required in conditional compilation")]
         private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry, IApplicationIdProvider applicationIdProvider)
         {
 #if NET45
