@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.10.0-beta5
+## Version vnext
  - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
 
 ## Version 2.10.0-beta4
