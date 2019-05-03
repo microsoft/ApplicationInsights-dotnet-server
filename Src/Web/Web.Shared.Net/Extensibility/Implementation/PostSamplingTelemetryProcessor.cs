@@ -12,7 +12,6 @@
     /// </summary>
     /// <remarks>
     /// This feature is still being evaluated and not recommended for end users.
-    /// This setting is not browsable at this time.
     /// </remarks>
     public class PostSamplingTelemetryProcessor : ITelemetryProcessor
     {
