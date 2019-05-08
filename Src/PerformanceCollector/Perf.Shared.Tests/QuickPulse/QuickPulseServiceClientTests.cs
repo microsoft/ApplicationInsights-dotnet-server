@@ -126,7 +126,7 @@
 
             Uri serviceEndpoint = new Uri(string.Format(CultureInfo.InvariantCulture, "http://localhost:{0}", port));
             this.TestContext.Properties[ServiceEndpointPropertyName] = serviceEndpoint;
-            
+
 #if NETCOREAPP1_0
             this.Listener = new HttpListener(IPAddress.Loopback, port);
 #else
@@ -136,7 +136,7 @@
 #endif
 
             this.Listener.Start();
-            
+
             this.AssertionSync = new SemaphoreSlim(0);
 
             var eventListenerReady = new AutoResetEvent(false);
