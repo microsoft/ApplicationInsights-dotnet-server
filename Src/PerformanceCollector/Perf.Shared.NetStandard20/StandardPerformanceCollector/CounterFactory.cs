@@ -21,6 +21,10 @@
             {
                 case @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized":
                     return new NormalizedProcessCPUPerformanceCounter(instanceName);
+                case @"\Processor(_Total)\% Processor Time":
+                    return new NormalizedXPlatProcessCPUPerformanceCounter();
+                case @"\Memory\Committed Bytes":
+                    return new XPlatProcessMemoryPerformanceCounter();
                 default:
                     return new StandardPerformanceCounter(categoryName, counterName, instanceName);
             }
