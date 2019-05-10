@@ -47,6 +47,9 @@
                 RegexOptions.Compiled);
 
         private static bool? isAzureWebApp = null;
+#if NETSTANDARD2_0
+        private static bool IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+#endif
 
 #if !NETSTANDARD1_6
         /// <summary>
@@ -57,6 +60,32 @@
             return FormatPerformanceCounter(pc.CategoryName, pc.CounterName, pc.InstanceName);
         }
 #endif
+
+        public static bool IsPerfCounterSupported()
+        {
+            if (IsWebAppRunningInAzure())
+            {
+                return true;
+            }
+            else
+            {
+#if NET45
+                return true;
+#elif NETSTANDARD1_6
+                return false;
+#elif NETSTANDARD2_0
+                if (IsWindows)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+#endif
+            }
+
+        }
 
         /// <summary>
         /// Formats a counter into a readable string.

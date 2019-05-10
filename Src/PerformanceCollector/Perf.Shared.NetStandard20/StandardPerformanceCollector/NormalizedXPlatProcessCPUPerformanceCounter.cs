@@ -16,7 +16,6 @@
         /// <summary>
         ///  Initializes a new instance of the <see cref="NormalizedProcessCPUPerformanceCounter" /> class.
         /// </summary>
-        /// <param name="instanceName">The instance name.</param>
         internal NormalizedXPlatProcessCPUPerformanceCounter()
         {
             this.lastCollectedValue = Process.GetCurrentProcess().TotalProcessorTime.Ticks;
@@ -55,7 +54,7 @@
                     }
                 }
 
-                return value / CoreCount;
+                return value;
             }
             catch (Exception e)
             {

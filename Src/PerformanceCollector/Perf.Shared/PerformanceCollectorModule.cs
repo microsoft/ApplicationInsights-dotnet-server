@@ -134,6 +134,13 @@
         /// </summary>
         public void Initialize(TelemetryConfiguration configuration)
         {
+//#if NETSTANDARD2_0
+//            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+//            {
+//                PerformanceCollectorEventSource.Log.PerfCounterNotSupportedNonWindows();
+//                return;
+//            }
+//#endif
             if (!this.isInitialized)
             {
                 lock (this.lockObject)
@@ -154,6 +161,7 @@
                         if (!this.defaultCountersInitialized)
                         {
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time", @"\Process(??APP_WIN32_PROC??)\% Processor Time"));
+                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor TimeNew", @"\Process(??APP_WIN32_PROC??)\% Processor TimeNew"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized", @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
 #if !NETSTANDARD2_0 // Exclude those counters which don't exist for .netcore
@@ -163,6 +171,7 @@
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue"));
 #endif
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\Private Bytes", @"\Process(??APP_WIN32_PROC??)\Private Bytes"));
+                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\Private BytesNew", @"\Process(??APP_WIN32_PROC??)\Private BytesNew"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));                            
                             if (!PerformanceCounterUtility.IsWebAppRunningInAzure())
                             {
