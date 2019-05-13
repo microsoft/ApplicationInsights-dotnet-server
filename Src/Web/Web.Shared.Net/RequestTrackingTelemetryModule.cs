@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Diagnostics;
     using System.Globalization;
     using System.Web;
@@ -13,7 +12,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-    using Microsoft.ApplicationInsights.W3C;
     using Microsoft.ApplicationInsights.Web.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
@@ -55,17 +53,6 @@
         public bool EnableAccessControlExposeHeader { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
-        /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
-        /// </summary>
-        /// <remarks>
-        /// This feature is still being evaluated and not recommended for end users.
-        /// This setting is not browsable at this time.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool DisableTrackingProperties { get; set; } = false;
-
-        /// <summary>
         /// Gets or sets a value indicating the size of internal tracking dictionary.
         /// Must be a positive integer.
         /// </summary>
@@ -95,6 +82,16 @@
         /// </summary>
         [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.Active.ApplicationIdProvider = new ApplicationInsightsApplicationIdProvider() and customize ApplicationInsightsApplicationIdProvider.ProfileQueryEndpoint.")]
         public string ProfileQueryEndpoint { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
+        /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
+        /// </summary>
+        /// <remarks>
+        /// This feature is still being evaluated and not recommended for end users.
+        /// This setting is not browsable at this time.
+        /// </remarks>
+        internal bool DisableTrackingProperties { get; set; } = false;
 
         /// <summary>
         /// Implements on begin callback of http module.

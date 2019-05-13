@@ -13,7 +13,7 @@
     /// <remarks>
     /// This feature is still being evaluated and not recommended for end users.
     /// </remarks>
-    public class PostSamplingTelemetryProcessor : ITelemetryProcessor
+    internal class PostSamplingTelemetryProcessor : ITelemetryProcessor
     {
         private readonly ITelemetryProcessor nextProcessorInPipeline;
         private TelemetryConfiguration telemetryConfiguration;

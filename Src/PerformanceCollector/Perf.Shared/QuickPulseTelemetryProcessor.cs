@@ -94,6 +94,13 @@
                 initialGlobalTelemetryQuota ?? InitialGlobalTelemetryQuota);
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether request properties
+        /// which were disabled via "RequestTrackingTelemetryModule.DisableTrackingProperties" should be evaluated.
+        /// </summary>
+        /// <remarks>This feature is still being evaluated and not recommended for end users.</remarks>
+        internal bool EvaluateDisabledTrackingProperties { get; set; }
+
         private ITelemetryProcessor Next { get; }
 
         /// <summary>
@@ -179,11 +186,11 @@
             }
         }
 
-        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
+        private ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
             var url = requestTelemetry.Url;
 #if NET45
-            if (url == null)
+            if (this.EvaluateDisabledTrackingProperties && url == null)
             {
                 try
                 {
@@ -483,7 +490,7 @@
                             documentStreams,
                             documentStream => documentStream.RequestQuotaTracker,
                             documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                            ConvertRequestToTelemetryDocument);
+                            this.ConvertRequestToTelemetryDocument);
                     }
                     else if (telemetryAsDependency != null)
                     {
