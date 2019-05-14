@@ -5,18 +5,17 @@
     using System.Globalization;
 
     /// <summary>
-    /// Represents normalized value of CPU Utilization by Process counter value (divided by the processors count).
+    /// Represents value of CPU Utilization by Process counter value.
     /// </summary>
-    internal class NormalizedXPlatProcessCPUPerformanceCounter : ICounterValue
+    internal class XPlatProcessCPUPerformanceCounter : ICounterValue
     {
         private double lastCollectedValue = 0;
         private DateTimeOffset lastCollectedTime = DateTimeOffset.MinValue;
-        private readonly int CoreCount = Environment.ProcessorCount;
 
         /// <summary>
-        ///  Initializes a new instance of the <see cref="NormalizedProcessCPUPerformanceCounter" /> class.
+        ///  Initializes a new instance of the <see cref="XPlatProcessCPUPerformanceCounter" /> class.
         /// </summary>
-        internal NormalizedXPlatProcessCPUPerformanceCounter()
+        internal XPlatProcessCPUPerformanceCounter()
         {
             this.lastCollectedValue = Process.GetCurrentProcess().TotalProcessorTime.Ticks;
             this.lastCollectedTime = DateTimeOffset.UtcNow;
@@ -26,7 +25,7 @@
         /// Returns the current value of the counter as a <c ref="MetricTelemetry"/>.
         /// </summary>
         /// <returns>Value of the counter.</returns>
-        public double Collect()
+        public virtual double Collect()
         {
             try
             {

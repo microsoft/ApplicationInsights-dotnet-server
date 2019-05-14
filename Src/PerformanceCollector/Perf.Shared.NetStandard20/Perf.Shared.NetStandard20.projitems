@@ -10,11 +10,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\CounterFactory.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\ICounterValue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\XPlatProcessCPUPerformanceCounterNormalized.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\XPlatProcessMemoryPerformanceCounter.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\NormalizedXPlatProcessCPUPerformanceCounter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\XPlatProcessCPUPerformanceCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\NormalizedProcessCPUPerformanceCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\StandardPerformanceCollector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\StandardPerformanceCounter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PerformanceCollectorXPlatform.cs" />
   </ItemGroup>
 </Project>

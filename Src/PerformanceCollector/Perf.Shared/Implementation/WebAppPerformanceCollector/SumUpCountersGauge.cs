@@ -35,9 +35,9 @@
         /// Returns the current value of the sum of all different gauges attached to this one and resets their values.
         /// </summary>
         /// <returns>The value of the target metric.</returns>
-        public double GetValueAndReset()
+        public double Collect()
         {
-            return this.gaugesToSum.Sum((g) => { return g.GetValueAndReset(); });
+            return this.gaugesToSum.Sum((g) => { return g.Collect(); });
         }
     }
 }

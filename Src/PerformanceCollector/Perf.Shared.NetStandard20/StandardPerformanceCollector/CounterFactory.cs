@@ -20,11 +20,11 @@
             switch (originalString)
             {
                 case @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized":
-                    return new NormalizedProcessCPUPerformanceCounter(instanceName);
-                case @"\Process(??APP_WIN32_PROC??)\% Processor TimeNew":
-                    return new NormalizedXPlatProcessCPUPerformanceCounter();
-                case @"\Process(??APP_WIN32_PROC??)\Private BytesNew":
-                    return new XPlatProcessMemoryPerformanceCounter();
+                    return new XPlatProcessCPUPerformanceCounterNormalized();
+                case @"\Process(??APP_WIN32_PROC??)\% Processor Time":
+                    return new XPlatProcessCPUPerformanceCounter();
+                case @"\Process(??APP_WIN32_PROC??)\Private Bytes":
+                    return new XPlatProcessMemoryPerformanceCounter(); 
                 default:
                     return new StandardPerformanceCounter(categoryName, counterName, instanceName);
             }

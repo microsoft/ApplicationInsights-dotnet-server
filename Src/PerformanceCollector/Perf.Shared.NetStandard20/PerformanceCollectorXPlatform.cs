@@ -6,7 +6,7 @@
     using System.Linq;
     using Microsoft.ApplicationInsights.Common;
 
-    internal class WebAppPerformanceCollector : IPerformanceCollector
+    internal class PerformanceCollectorXPlatform : IPerformanceCollector
     {
         private readonly List<Tuple<PerformanceCounterData, ICounterValue>> performanceCounters = new List<Tuple<PerformanceCounterData, ICounterValue>>();
 
@@ -178,7 +178,7 @@
 
             try
             {
-                counter = CounterFactory.GetCounter(originalString, reportAs);
+                counter = Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector.CounterFactory.GetCounter(originalString, reportAs, counterName, instanceName);
             }
             catch
             {

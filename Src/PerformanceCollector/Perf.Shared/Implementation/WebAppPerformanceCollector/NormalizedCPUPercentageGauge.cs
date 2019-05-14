@@ -31,7 +31,7 @@
         /// Returns the normalized percentage of the CPU process utilization time divided by the number of processors with respect to the total duration.
         /// </summary>
         /// <returns>The value of the target metric.</returns>
-        protected override double Collect()
+        protected override double CollectPercentage()
         {
             if (!this.isInitialized)
             {
@@ -41,7 +41,7 @@
             double result = 0;
             if (this.processorsCount >= 1)
             {
-                double value = base.Collect();
+                double value = base.CollectPercentage();
                 result = value / this.processorsCount;
             }
 
