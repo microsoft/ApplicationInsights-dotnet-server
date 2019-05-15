@@ -54,7 +54,8 @@
                 @"^\\(?<categoryName>[^(]+)(\((?<instanceName>[^)]+)\)){0,1}\\(?<counterName>[\s\S]+)$",
                 RegexOptions.Compiled);
 
-        private static bool? isAzureWebApp = null;
+        // Internal for testing
+        internal static bool? isAzureWebApp = null;
 
 #if !NETSTANDARD1_6
         /// <summary>
@@ -115,10 +116,11 @@
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
 #if NET45
-                collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+                collector = (IPerformanceCollector)new WebAppPerformanceCollector();
 #elif NETSTANDARD2_0
                 if (PerformanceCounterUtility.IsWindows)
                 {
+                    // WebApp For winows
                     collector = (IPerformanceCollector)new WebAppPerformanceCollector();
                 }
                 else
@@ -126,7 +128,8 @@
                     // We are in WebApp, but not Windows. Use XPlatformPerfCollector.
                     collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
                 }
-#endif                
+#endif       
+                return collector;
             }
 
             // At this stage, we know we are not running in Azure Web Apps.
