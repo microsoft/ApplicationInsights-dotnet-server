@@ -7,8 +7,6 @@
 
     internal static class QuickPulseServiceClientHelpers
     {
-        private static readonly string[] emptyResult = ArrayExtensions.Empty<string>();
-
         public static string GetValueSafe(this HttpHeaders headers, string name)
         {
             string value = default(string);
