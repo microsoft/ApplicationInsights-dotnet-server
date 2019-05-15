@@ -4,7 +4,7 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Threading;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
     using Microsoft.VisualStudio.TestTools.UnitTesting;    
 
     [TestClass]

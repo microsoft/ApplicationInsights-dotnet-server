@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    internal class StandardPerformanceCollector : IPerformanceCollector
+    internal class StandardPerformanceCollectorStub : IPerformanceCollector
     {
         private static readonly Tuple<PerformanceCounterData, double>[] emptyCollectResult = Array.Empty<Tuple<PerformanceCounterData, double>>();
 
@@ -15,7 +15,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="StandardPerformanceCollector"/> class.
         /// </summary>
-        public StandardPerformanceCollector()
+        public StandardPerformanceCollectorStub()
         {
             PerformanceCollectorEventSource.Log.PerfCounterNetCoreOnlyOnAzureWebApp();
         }
@@ -26,7 +26,7 @@
         /// <param name="onReadingFailure">Invoked when an individual counter fails to be read.</param>
         public IEnumerable<Tuple<PerformanceCounterData, double>> Collect(Action<string, Exception> onReadingFailure = null)
         {
-            return StandardPerformanceCollector.emptyCollectResult;
+            return StandardPerformanceCollectorStub.emptyCollectResult;
         }
 
         /// <summary>

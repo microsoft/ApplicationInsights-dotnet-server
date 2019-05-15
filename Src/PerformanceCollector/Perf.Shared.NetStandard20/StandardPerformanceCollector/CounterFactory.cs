@@ -24,9 +24,9 @@
                 case @"\Process(??APP_WIN32_PROC??)\% Processor Time":
                     return new XPlatProcessCPUPerformanceCounter();
                 case @"\Process(??APP_WIN32_PROC??)\Private Bytes":
-                    return new XPlatProcessMemoryPerformanceCounter(); 
+                    return new XPlatProcessMemoryPerformanceCounter();
                 default:
-                    return new StandardPerformanceCounter(categoryName, counterName, instanceName);
+                    throw new ArgumentException("Performance counter not supported in XPlatform.", counterName);
             }
         }
     }

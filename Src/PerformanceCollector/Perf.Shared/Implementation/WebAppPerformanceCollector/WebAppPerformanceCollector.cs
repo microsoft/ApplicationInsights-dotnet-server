@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector
+﻿using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
+
+namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation
 {
     using System;
     using System.Collections.Generic;

@@ -8,7 +8,11 @@
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;          
 
     /// <summary>
     /// Utility functionality for performance counter collection.
@@ -16,6 +20,10 @@
     [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields", Justification = "This class has different code for Net45/NetCore")]
     internal static class PerformanceCounterUtility
     {
+#if NETSTANDARD2_0
+        public static bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+
         private const string Win32ProcessInstancePlaceholder = @"APP_WIN32_PROC";
         private const string ClrProcessInstancePlaceholder = @"APP_CLR_PROC";
         private const string W3SvcProcessInstancePlaceholder = @"APP_W3SVC_PROC";
@@ -47,9 +55,6 @@
                 RegexOptions.Compiled);
 
         private static bool? isAzureWebApp = null;
-#if NETSTANDARD2_0
-        private static bool IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
-#endif
 
 #if !NETSTANDARD1_6
         /// <summary>
@@ -86,6 +91,62 @@
 #endif
             }
 
+        }
+
+        public static IPerformanceCollector GetPerformanceCollector()
+        {
+            IPerformanceCollector collector;
+
+            // NetStandard1.6 has perf counter only on web apps.
+#if NETSTANDARD1_6
+            if (PerformanceCounterUtility.IsWebAppRunningInAzure())
+            {
+                collector = (IPerformanceCollector)new WebAppPerformanceCollector();
+            }
+            else
+            {
+                // This will be the Stub collector which won't do anything.
+                collector = (IPerformanceCollector)new StandardPerformanceCollectorStub();
+            }
+            return collector;
+#endif
+            // For NetStandard2.0 and Net45, WebApps for Windows collect perf counter using the special env variable exposed
+            // by App Service.
+            if (PerformanceCounterUtility.IsWebAppRunningInAzure())
+            {
+#if NET45
+                collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+#elif NETSTANDARD2_0
+                if (PerformanceCounterUtility.IsWindows)
+                {
+                    collector = (IPerformanceCollector)new WebAppPerformanceCollector();
+                }
+                else
+                {
+                    // We are in WebApp, but not Windows. Use XPlatformPerfCollector.
+                    collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
+                }
+#endif                
+            }
+
+            // At this stage, we know we are not running in Azure Web Apps.
+#if NET45
+            // The original Windows PerformanceCounter collector for .NET Framework.
+            collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+#elif NETSTANDARD2_0
+            if (PerformanceCounterUtility.IsWindows)
+            {
+                // The original Windows PerformanceCounter collector which is also
+                // supported in NetStandard2.0 in Windows.
+                collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+            }
+            else
+            {
+                // This is NetStandard2.0 and non-windows. Use XPlatformPerfCollector
+                collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
+            }
+#endif
+            return collector;
         }
 
         /// <summary>
@@ -380,6 +441,14 @@
             {
                 return instanceName;
             }
+
+#if NETSTANDARD2_0
+            if (!IsWindows)
+            {
+                // We are using XPlatPerfCounter which don't need instance name as only capability is to collect counter from self-proc.
+                return instanceName;
+            }
+#endif
 
             var placeholder = match.Groups["placeholder"].Value;
 

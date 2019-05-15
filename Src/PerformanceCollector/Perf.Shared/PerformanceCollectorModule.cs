@@ -11,9 +11,7 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;    
     using Timer = Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.Timer.Timer;
 
     /// <summary>
@@ -71,10 +69,6 @@
 
         private bool isInitialized = false;
 
-#if NETSTANDARD2_0
-        private static bool IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
-#endif
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceCollectorModule"/> class.
         /// </summary>
@@ -82,27 +76,7 @@
         {
             this.Counters = new List<PerformanceCounterCollectionRequest>();
 
-            this.collector = this.collector ?? (PerformanceCounterUtility.IsWebAppRunningInAzure() ? 
-                (IPerformanceCollector)new WebAppPerformanceCollector() : (IPerformanceCollector)new StandardPerformanceCollector());
-
-            if(PerformanceCounterUtility.IsWebAppRunningInAzure())
-            {
-                this.collector = (IPerformanceCollector)new WebAppPerformanceCollector();
-            }
-#if NET45
-                this.collector = (IPerformanceCollector)new StandardPerformanceCollector();
-#elif NETSTANDARD1_6
-                this.collector = (IPerformanceCollector)new StandardPerformanceCollector();
-#elif NETSTANDARD2_0
-            if (IsWindows)
-            {
-                this.collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
-            }
-            else
-            {
-                this.collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
-            }
-#endif
+            this.collector = PerformanceCounterUtility.GetPerformanceCollector();
         }
 
         /// <summary>
@@ -157,13 +131,6 @@
         /// </summary>
         public void Initialize(TelemetryConfiguration configuration)
         {
-//#if NETSTANDARD2_0
-//            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-//            {
-//                PerformanceCollectorEventSource.Log.PerfCounterNotSupportedNonWindows();
-//                return;
-//            }
-//#endif
             if (!this.isInitialized)
             {
                 lock (this.lockObject)
@@ -193,7 +160,7 @@
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec", @"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue"));
-#endif                            
+#endif
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));                            
                             if (!PerformanceCounterUtility.IsWebAppRunningInAzure())
                             {

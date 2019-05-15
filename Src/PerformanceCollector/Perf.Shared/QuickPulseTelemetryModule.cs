@@ -18,7 +18,7 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
 
     /// <summary>
     /// Telemetry module for collecting QuickPulse data.
@@ -72,6 +72,10 @@
         private IQuickPulseTopCpuCollector topCpuCollector = null;
 
         private CollectionConfiguration collectionConfiguration;
+
+#if NETSTANDARD2_0
+        private static bool IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
+#endif
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryModule"/> class.
@@ -165,8 +169,9 @@
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Initializing members...");
                         this.collectionTimeSlotManager = this.collectionTimeSlotManager ?? new QuickPulseCollectionTimeSlotManager();
-                        this.performanceCollector = this.performanceCollector ?? 
-                            (PerformanceCounterUtility.IsWebAppRunningInAzure() ? new WebAppPerformanceCollector() : (IPerformanceCollector)new StandardPerformanceCollector());
+                        
+                        this.performanceCollector = PerformanceCounterUtility.GetPerformanceCollector();
+
                         this.timeProvider = this.timeProvider ?? new Clock();
                         this.topCpuCollector = this.topCpuCollector
                                                ?? new QuickPulseTopCpuCollector(this.timeProvider, new QuickPulseProcessProvider(PerfLib.GetPerfLib()));
