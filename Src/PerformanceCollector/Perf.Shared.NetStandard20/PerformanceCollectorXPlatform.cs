@@ -178,7 +178,7 @@
 
             try
             {
-                counter = Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector.CounterFactory.GetCounter(originalString, reportAs, counterName, instanceName);
+                counter = Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector.CounterFactory.GetCounter(originalString, reportAs, counterName, instanceName);
             }
             catch
             {

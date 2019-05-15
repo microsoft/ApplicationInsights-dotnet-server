@@ -1,12 +1,10 @@
-﻿using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
-
-namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector
 {
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common;    
 
     internal class WebAppPerformanceCollector : IPerformanceCollector
     {

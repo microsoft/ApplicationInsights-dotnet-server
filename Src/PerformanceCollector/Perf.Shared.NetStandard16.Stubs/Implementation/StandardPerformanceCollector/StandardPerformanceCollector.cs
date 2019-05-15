@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector
 {
     using System;
     using System.Collections.Generic;
@@ -13,7 +13,7 @@
         public IEnumerable<PerformanceCounterData> PerformanceCounters { get; } = Array.Empty<PerformanceCounterData>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StandardPerformanceCollector"/> class.
+        /// Initializes a new instance of the <see cref="StandardPerfCollector"/> class.
         /// </summary>
         public StandardPerformanceCollectorStub()
         {

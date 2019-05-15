@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Tests
 {
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]

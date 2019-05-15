@@ -10,9 +10,11 @@
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;          
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector;    
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
+#if !NETSTANDARD1_6
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
+#endif
 
     /// <summary>
     /// Utility functionality for performance counter collection.
@@ -116,7 +118,7 @@
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
 #if NET45
-                collector = (IPerformanceCollector)new WebAppPerformanceCollector();
+                collector = (IPerformanceCollector)new WebAppPerfCollector.WebAppPerformanceCollector();
 #elif NETSTANDARD2_0
                 if (PerformanceCounterUtility.IsWindows)
                 {
@@ -135,13 +137,13 @@
             // At this stage, we know we are not running in Azure Web Apps.
 #if NET45
             // The original Windows PerformanceCounter collector for .NET Framework.
-            collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+            collector = (IPerformanceCollector)new StandardPerformanceCollector();
 #elif NETSTANDARD2_0
             if (PerformanceCounterUtility.IsWindows)
             {
                 // The original Windows PerformanceCounter collector which is also
                 // supported in NetStandard2.0 in Windows.
-                collector = (IPerformanceCollector)new StandardPerformanceCollector.StandardPerformanceCollector();
+                collector = (IPerformanceCollector)new StandardPerformanceCollector();
             }
             else
             {

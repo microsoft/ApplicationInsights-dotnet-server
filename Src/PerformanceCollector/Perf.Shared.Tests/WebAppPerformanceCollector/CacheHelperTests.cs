@@ -1,7 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.Tests
 {
     using System.IO;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
 
     internal class CacheHelperTests : ICachedEnvironmentVariableAccess
     {
