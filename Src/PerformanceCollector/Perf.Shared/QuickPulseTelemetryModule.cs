@@ -16,8 +16,8 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib;    
-#if !NETSTANDARD1_6
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.PerfLib;
+#if NETSTANDARD2_0
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
 #endif
 

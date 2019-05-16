@@ -12,7 +12,7 @@
     using System.Text.RegularExpressions;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector;    
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
-#if !NETSTANDARD1_6
+#if NETSTANDARD2_0
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform;
 #endif
 
