@@ -2,7 +2,6 @@
 {
     using System.Linq;
     using System.Net.Http.Headers;
-    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.Common.Internal;
 
     internal static class QuickPulseServiceClientHelpers
