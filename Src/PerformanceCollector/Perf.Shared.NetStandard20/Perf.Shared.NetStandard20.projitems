@@ -9,6 +9,7 @@
     <Import_RootNamespace>Perf.Shared.NetStandard20</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CounterFactoryXPlatform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StandardPerformanceCollector\CounterFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XPlatProcessCPUPerformanceCounterNormalized.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XPlatProcessMemoryPerformanceCounter.cs" />

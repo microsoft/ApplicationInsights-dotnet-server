@@ -1,9 +1,11 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.XPlatform
 {
+    using System;
+
     /// <summary>
     /// Factory to create different counters.
     /// </summary>
-    internal static class CounterFactory
+    internal static class CounterFactoryXPlatform
     {
         /// <summary>
         /// Gets a counter.
@@ -18,9 +20,13 @@
             switch (originalString)
             {
                 case @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized":
-                    return new NormalizedProcessCPUPerformanceCounter(instanceName);                
+                    return new XPlatProcessCPUPerformanceCounterNormalized();
+                case @"\Process(??APP_WIN32_PROC??)\% Processor Time":
+                    return new XPlatProcessCPUPerformanceCounter();
+                case @"\Process(??APP_WIN32_PROC??)\Private Bytes":
+                    return new XPlatProcessMemoryPerformanceCounter();
                 default:
-                    return new StandardPerformanceCounter(categoryName, counterName, instanceName);
+                    throw new ArgumentException("Performance counter not supported in XPlatform.", counterName);
             }
         }
     }
