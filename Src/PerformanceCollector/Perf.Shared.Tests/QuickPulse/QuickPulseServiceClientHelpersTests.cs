@@ -1,13 +1,14 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Tests.QuickPulse
 {
     using System.Net.Http.Headers;
+    using Microsoft.ApplicationInsights.Common.Internal;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class QuickPulseServiceClientHelpersTests
     {
-        private const int QuickPulseResponseHeaderHeaderMaxLength = Microsoft.ApplicationInsights.Common.Internal.InjectionGuardConstants.QuickPulseResponseHeaderHeaderMaxLength;
+        private const int QuickPulseResponseHeaderHeaderMaxLength = InjectionGuardConstants.QuickPulseResponseHeaderHeaderMaxLength;
         private const string SecretString = "12345abcd";
         private const string HeaderName = "myheader";
         private const string FakeHeaderName = "fake";
