@@ -25,6 +25,8 @@
 #if NETSTANDARD2_0
         public static bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
+        // Internal for testing
+        internal static bool? isAzureWebApp = null;
 
         private const string Win32ProcessInstancePlaceholder = @"APP_WIN32_PROC";
         private const string ClrProcessInstancePlaceholder = @"APP_CLR_PROC";
@@ -55,10 +57,7 @@
             new Regex(
                 @"^\\(?<categoryName>[^(]+)(\((?<instanceName>[^)]+)\)){0,1}\\(?<counterName>[\s\S]+)$",
                 RegexOptions.Compiled);
-
-        // Internal for testing
-        internal static bool? isAzureWebApp = null;
-
+        
 #if !NETSTANDARD1_6
         /// <summary>
         /// Formats a counter into a readable string.
@@ -93,15 +92,15 @@
                 }
 #endif
             }
-
         }
 
+#if NETSTANDARD1_6
         public static IPerformanceCollector GetPerformanceCollector()
         {
             IPerformanceCollector collector;
 
             // NetStandard1.6 has perf counter only on web apps.
-#if NETSTANDARD1_6
+
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
                 collector = (IPerformanceCollector)new WebAppPerformanceCollector();
@@ -111,8 +110,16 @@
                 // This will be the Stub collector which won't do anything.
                 collector = (IPerformanceCollector)new StandardPerformanceCollectorStub();
             }
+
             return collector;
+            }
 #endif
+
+#if !NETSTANDARD1_6
+        public static IPerformanceCollector GetPerformanceCollector()
+        {
+            IPerformanceCollector collector;
+
             // For NetStandard2.0 and Net45, WebApps for Windows collect perf counter using the special env variable exposed
             // by App Service.
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
@@ -153,6 +160,7 @@
 #endif
             return collector;
         }
+#endif
 
         /// <summary>
         /// Formats a counter into a readable string.

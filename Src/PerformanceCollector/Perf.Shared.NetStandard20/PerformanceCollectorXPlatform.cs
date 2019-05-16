@@ -178,7 +178,7 @@
 
             try
             {
-                counter = CounterFactoryXPlatform.GetCounter(originalString, reportAs, counterName, instanceName);
+                counter = CounterFactoryXPlatform.GetCounter(counterName);
             }
             catch
             {

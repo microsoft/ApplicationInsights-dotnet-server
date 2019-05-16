@@ -43,11 +43,7 @@
 
                     var diff = this.lastCollectedValue - previouslyCollectedValue;
 
-                    if (diff < 0)
-                    {
-                        
-                    }
-                    else
+                    if (diff >= 0)                    
                     {
                         value = (double)(diff * 100.0 / baseValue);
                     }

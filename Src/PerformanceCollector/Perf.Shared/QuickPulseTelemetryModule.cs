@@ -74,10 +74,6 @@
 
         private CollectionConfiguration collectionConfiguration;
 
-#if NETSTANDARD2_0
-        private static bool IsWindows = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows);
-#endif
-
         /// <summary>
         /// Initializes a new instance of the <see cref="QuickPulseTelemetryModule"/> class.
         /// </summary>
