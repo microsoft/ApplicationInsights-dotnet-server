@@ -77,7 +77,7 @@
             try
             {
                 bool useInstancePlaceHolder = false;                
-                var pc = PerformanceCounterUtility.CreateAndValidateCounter(perfCounter, null, null, out useInstancePlaceHolder, out error);
+                var pc = PerformanceCounterUtility.CreateAndValidateCounter(perfCounter, null, null, false, out useInstancePlaceHolder, out error);
                 
                 if (pc != null)
                 {

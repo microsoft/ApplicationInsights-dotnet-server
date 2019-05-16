@@ -94,6 +94,7 @@
                 perfCounterName,
                 this.win32Instances,
                 this.clrInstances,
+                true,
                 out usesInstanceNamePlaceholder,
                 out error);
 
@@ -175,6 +176,7 @@
                 pcd.OriginalString,
                 this.win32Instances,
                 this.clrInstances,
+                true,
                 out usesInstanceNamePlaceholder,
                 out dummy);
 

@@ -79,13 +79,14 @@
         public void RegisterCounter(
             string perfCounterName,
             string reportAs,
-            bool isCustomCounter,
+            bool isCustomCounter,            
             out string error,
             bool blockCounterWithInstancePlaceHolder)
         {
             bool usesInstanceNamePlaceholder;
             var pc = this.CreateCounter(
                 perfCounterName,
+                false,
                 out usesInstanceNamePlaceholder,
                 out error);
 
@@ -105,6 +106,7 @@
 
         public PerformanceCounterStructure CreateCounter(
             string perfCounterName,
+            bool supportInstanceNames,
             out bool usesInstanceNamePlaceholder,
             out string error)
         {
@@ -116,6 +118,7 @@
                     perfCounterName,
                     new string[] { },
                     new string[] { },
+                    supportInstanceNames,
                     out usesInstanceNamePlaceholder);
             }
             catch (Exception e)

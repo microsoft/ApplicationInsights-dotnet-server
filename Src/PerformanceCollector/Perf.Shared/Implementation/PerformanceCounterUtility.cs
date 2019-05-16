@@ -271,6 +271,7 @@
         /// <param name="perfCounterName">Performance counter name to validate.</param>
         /// <param name="win32Instances">Windows 32 instances.</param>
         /// <param name="clrInstances">CLR instances.</param>
+        /// <param name="supportInstanceNames">Boolean indicating if InstanceNames are supported. For WebApp and XPlatform counters, counters are always read from own process instance.</param>
         /// <param name="usesInstanceNamePlaceholder">Boolean to check if it is using an instance name place holder.</param>
         /// <param name="error">Error message.</param>
         /// <returns>Performance counter.</returns>
@@ -278,6 +279,7 @@
             string perfCounterName,
             IEnumerable<string> win32Instances,
             IEnumerable<string> clrInstances,
+            bool supportInstanceNames,
             out bool usesInstanceNamePlaceholder,
             out string error)
         {
@@ -289,6 +291,7 @@
                     perfCounterName,
                     win32Instances,
                     clrInstances,
+                    supportInstanceNames,
                     out usesInstanceNamePlaceholder);
             }
             catch (Exception e)
@@ -309,6 +312,7 @@
             string performanceCounter,
             IEnumerable<string> win32Instances,
             IEnumerable<string> clrInstances,
+            bool supportInstanceNames,
             out bool usesInstanceNamePlaceholder)
         {
             var match = PerformanceCounterRegex.Match(performanceCounter);
@@ -331,6 +335,7 @@
                         match.Groups["instanceName"].Value,
                         win32Instances,
                         clrInstances,
+                        supportInstanceNames,
                         out usesInstanceNamePlaceholder),
                 CounterName = match.Groups["counterName"].Value
             };
@@ -430,6 +435,7 @@
             string instanceName,
             IEnumerable<string> win32Instances,
             IEnumerable<string> clrInstances,
+            bool supportInstanceNames,
             out bool usesPlaceholder)
         {
             var match = MatchInstancePlaceholder(instanceName);
@@ -442,18 +448,10 @@
 
             usesPlaceholder = true;
 
-            if (IsWebAppRunningInAzure())
+            if (!supportInstanceNames)
             {
                 return instanceName;
             }
-
-#if NETSTANDARD2_0
-            if (!IsWindows)
-            {
-                // We are using XPlatPerfCounter which don't need instance name as only capability is to collect counter from self-proc.
-                return instanceName;
-            }
-#endif
 
             var placeholder = match.Groups["placeholder"].Value;
 
