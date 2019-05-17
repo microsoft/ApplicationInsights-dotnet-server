@@ -178,11 +178,11 @@
 
             try
             {
-                counter = CounterFactoryXPlatform.GetCounter(counterName);
+                counter = CounterFactoryXPlatform.GetCounter(originalString);
             }
             catch
             {
-                PerformanceCollectorEventSource.Log.CounterNotWebAppSupported(originalString);
+                PerformanceCollectorEventSource.Log.CounterNotXPlatformSupported(originalString);
                 return;
             }
 
