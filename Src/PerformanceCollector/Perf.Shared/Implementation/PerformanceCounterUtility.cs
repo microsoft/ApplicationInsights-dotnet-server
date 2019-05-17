@@ -129,7 +129,7 @@
 #elif NETSTANDARD2_0
                 if (PerformanceCounterUtility.IsWindows)
                 {
-                    // WebApp For winows
+                    // WebApp For windows
                     collector = (IPerformanceCollector)new WebAppPerformanceCollector();
                 }
                 else

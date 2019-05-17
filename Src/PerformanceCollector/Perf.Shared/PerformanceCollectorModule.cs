@@ -150,20 +150,29 @@
 
                         if (!this.defaultCountersInitialized)
                         {
+                            // The following are the counters support in all cases.
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time", @"\Process(??APP_WIN32_PROC??)\% Processor Time"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized", @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\Private Bytes", @"\Process(??APP_WIN32_PROC??)\Private Bytes"));
 
-                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
-#if !NETSTANDARD2_0 // Exclude those counters which don't exist for .netcore
+#if NET45                   // The following are Asp.Net specific counters.
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests/Sec", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests/Sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec", @"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue"));
 #endif
-                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));                            
-                            if (!PerformanceCounterUtility.IsWebAppRunningInAzure())
+
+                            if (this.collector.GetType().Name.Equals("WebAppPerformanceCollector") || this.collector.GetType().Name.Equals("StandardPerformanceCollector"))
                             {
+                                // The systemwide Memory counter is enabled in WebApps.
+                                this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
+                                this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));
+                            }                            
+                            
+                                                        
+                            if (this.collector.GetType().Name.Equals("StandardPerformanceCollector"))
+                            {
+                                // Only time total CPU counter is available is if we are using StandardPerformanceCollector.
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Processor(_Total)\% Processor Time", @"\Processor(_Total)\% Processor Time"));
                             }
                         }

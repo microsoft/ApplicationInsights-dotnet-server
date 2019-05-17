@@ -55,5 +55,46 @@
                 Task.Delay(1000).Wait();
             }
         }
+
+        [TestMethod]
+        public void GetCollectorReturnsXPlatformCollectorForWebAppForLinux()
+        {
+#if NETCOREAPP2_0
+            var original = PerformanceCounterUtility.IsWindows;
+            try
+            {
+                Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "something");                
+                PerformanceCounterUtility.IsWindows = false;
+                var actual = PerformanceCounterUtility.GetPerformanceCollector();
+                Assert.AreEqual("PerformanceCollectorXPlatform", actual.GetType().Name);
+            }
+            finally
+            {
+                PerformanceCounterUtility.IsWindows = original;
+                PerformanceCounterUtility.isAzureWebApp = null;
+                Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", string.Empty);
+                Task.Delay(1000).Wait();                
+            }
+#endif
+        }
+
+        [TestMethod]
+        public void GetCollectorReturnsXPlatformCollectorForNonWindows()
+        {
+#if NETCOREAPP2_0
+            var original = PerformanceCounterUtility.IsWindows;
+            try
+            {                
+                PerformanceCounterUtility.IsWindows = false;
+                var actual = PerformanceCounterUtility.GetPerformanceCollector();
+                Assert.AreEqual("PerformanceCollectorXPlatform", actual.GetType().Name);
+            }
+            finally
+            {
+                PerformanceCounterUtility.IsWindows = original;
+                PerformanceCounterUtility.isAzureWebApp = null;
+            }
+#endif
+        }
     }
 }
