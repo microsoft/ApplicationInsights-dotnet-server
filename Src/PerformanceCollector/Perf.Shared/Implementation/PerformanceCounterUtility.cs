@@ -201,29 +201,14 @@
         public static int? GetProcessorCount(bool isWebApp)
         {
             int count;
-
-            if (!isWebApp)
+            try
             {
                 count = Environment.ProcessorCount;
             }
-            else
+            catch (Exception ex)
             {
-                string countString;
-                try
-                {
-                    countString = Environment.GetEnvironmentVariable(ProcessorsCountEnvironmentVariable);
-                }
-                catch (Exception ex)
-                {
-                    PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(ex.ToString());
-                    return null;
-                }
-
-                if (!int.TryParse(countString, out count))
-                {
-                    PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(countString);
-                    return null;
-                }
+                PerformanceCollectorEventSource.Log.ProcessorsCountIncorrectValueError(ex.ToString());
+                return null;
             }
 
             if (count < 1 || count > 1000)
