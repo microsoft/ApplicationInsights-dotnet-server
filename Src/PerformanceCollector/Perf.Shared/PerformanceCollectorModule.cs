@@ -162,7 +162,7 @@
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue"));
 #endif
 
-                            if (this.collector.GetType().Name.Equals("WebAppPerformanceCollector") || this.collector.GetType().Name.Equals("StandardPerformanceCollector"))
+                            if (this.collector.GetType().Name.Equals("WebAppPerformanceCollector", StringComparison.OrdinalIgnoreCase) || this.collector.GetType().Name.Equals("StandardPerformanceCollector", StringComparison.OrdinalIgnoreCase))
                             {
                                 // The systemwide Memory counter is enabled in WebApps.
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
