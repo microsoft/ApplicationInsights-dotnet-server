@@ -13,7 +13,7 @@
             if (headers?.Contains(name) ?? false)
             {
                 value = headers.GetValues(name).First();
-                value = StringUtilities.EnforceMaxLength(value, InjectionGuardConstants.QuickPulseResponseHeaderHeaderMaxLength);
+                value = StringUtilities.EnforceMaxLength(value, InjectionGuardConstants.QuickPulseResponseHeaderMaxLength);
             }
             
             return value;

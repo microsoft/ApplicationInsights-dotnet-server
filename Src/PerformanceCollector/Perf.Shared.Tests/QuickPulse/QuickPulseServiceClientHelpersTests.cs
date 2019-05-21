@@ -8,7 +8,7 @@
     [TestClass]
     public class QuickPulseServiceClientHelpersTests
     {
-        private const int QuickPulseResponseHeaderHeaderMaxLength = InjectionGuardConstants.QuickPulseResponseHeaderHeaderMaxLength;
+        private const int QuickPulseResponseHeaderHeaderMaxLength = InjectionGuardConstants.QuickPulseResponseHeaderMaxLength;
         private const string SecretString = "12345abcd";
         private const string HeaderName = "myheader";
         private const string FakeHeaderName = "fake";
@@ -72,6 +72,9 @@
             Assert.AreEqual(QuickPulseResponseHeaderHeaderMaxLength, result.Length);
         }
 
+        /// <summary>
+        /// HttpHeaders is an abstract class. I need to initialize my own class for tests. The class I'm testing is built on HttpHeaders so this is fine.
+        /// </summary>
         private class TestHttpHeaders : HttpHeaders
         {
         }

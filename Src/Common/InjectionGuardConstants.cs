@@ -54,6 +54,6 @@ namespace Microsoft.ApplicationInsights.Common.Internal
         /// <summary>
         /// Max length of incoming Response Header value allowed.
         /// </summary>
-        public const int QuickPulseResponseHeaderHeaderMaxLength = 1024;
+        public const int QuickPulseResponseHeaderMaxLength = 1024;
     }
 }
