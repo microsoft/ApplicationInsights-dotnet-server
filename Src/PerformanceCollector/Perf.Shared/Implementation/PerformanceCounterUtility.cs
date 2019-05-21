@@ -106,11 +106,13 @@
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
                 collector = (IPerformanceCollector)new WebAppPerformanceCollector();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
             else
             {
                 // This will be the Stub collector which won't do anything.
                 collector = (IPerformanceCollector)new StandardPerformanceCollectorStub();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
 
             return collector;
@@ -122,10 +124,12 @@
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
                 collector = (IPerformanceCollector) new WebAppPerfCollector.WebAppPerformanceCollector();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
             else
             {
                 collector = (IPerformanceCollector) new StandardPerformanceCollector();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
 
             return collector;
@@ -140,11 +144,13 @@
                 {
                     // WebApp For windows
                     collector = (IPerformanceCollector) new WebAppPerformanceCollector();
+                    PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
                 }
                 else
                 {
                     // We are in WebApp, but not Windows. Use XPlatformPerfCollector.
                     collector = (IPerformanceCollector) new PerformanceCollectorXPlatform();
+                    PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
                 }
             }
             else if (PerformanceCounterUtility.IsWindows)
@@ -152,11 +158,13 @@
                 // The original Windows PerformanceCounter collector which is also
                 // supported in NetStandard2.0 in Windows.
                 collector = (IPerformanceCollector)new StandardPerformanceCollector();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
             else
             {
                 // This is NetStandard2.0 and non-windows. Use XPlatformPerfCollector
                 collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
+                PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
             return collector;
         }

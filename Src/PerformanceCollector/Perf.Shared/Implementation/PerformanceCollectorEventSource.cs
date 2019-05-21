@@ -194,6 +194,14 @@
             this.WriteEvent(23, counterName, this.applicationNameProvider.Name);
         }
 
+        [Event(24, Level = EventLevel.Informational, Message = @"PerformanceCollector is: {0}.")]
+        public void InitializedWithCollector(
+            string collectorName,
+            string applicationName = "dummy")
+        {
+            this.WriteEvent(24, collectorName, this.applicationNameProvider.Name);
+        }
+
         #endregion
 
         public class Keywords
