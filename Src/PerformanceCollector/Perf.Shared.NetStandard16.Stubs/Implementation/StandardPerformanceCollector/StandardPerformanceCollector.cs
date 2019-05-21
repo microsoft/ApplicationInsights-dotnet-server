@@ -41,13 +41,11 @@
         /// </summary>
         /// <param name="perfCounterName">Name of the performance counter.</param>
         /// <param name="reportAs">Report as name for the performance counter.</param>
-        /// <param name="isCustomCounter">Boolean to check if the performance counter is custom defined.</param>
         /// <param name="error">Captures the error logged.</param>
         /// <param name="blockCounterWithInstancePlaceHolder">Boolean that controls the registry of the counter based on the availability of instance place holder.</param>
         public void RegisterCounter(
             string perfCounterName,
             string reportAs,
-            bool isCustomCounter,
             out string error,
             bool blockCounterWithInstancePlaceHolder = false)
         {

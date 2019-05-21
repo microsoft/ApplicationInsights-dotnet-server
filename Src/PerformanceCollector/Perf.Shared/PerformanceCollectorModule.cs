@@ -331,7 +331,6 @@
                     this.collector.RegisterCounter(
                         req.PerformanceCounter,
                         req.ReportAs,
-                        true,
                         out error,
                         false);
 

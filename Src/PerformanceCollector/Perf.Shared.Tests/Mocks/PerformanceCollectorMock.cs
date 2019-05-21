@@ -54,7 +54,6 @@
                                 counter.Item1.OriginalString,
                                 counter.Item1.ReportAs,
                                 counter.Item1.UsesInstanceNamePlaceholder,
-                                counter.Item1.IsCustomCounter,
                                 counter.Item1.IsInBadState,
                                 counter.Item1.PerformanceCounter.CategoryName,
                                 counter.Item1.PerformanceCounter.CounterName,
@@ -79,7 +78,6 @@
         public void RegisterCounter(
             string perfCounterName,
             string reportAs,
-            bool isCustomCounter,            
             out string error,
             bool blockCounterWithInstancePlaceHolder)
         {
@@ -92,7 +90,7 @@
 
             if (pc != null)
             {
-                this.RegisterCounter(perfCounterName, reportAs, pc, isCustomCounter, usesInstanceNamePlaceholder, out error);
+                this.RegisterCounter(perfCounterName, reportAs, pc, usesInstanceNamePlaceholder, out error);
             }
         }
 
@@ -135,7 +133,6 @@
             string originalString,
             string reportAs,
             PerformanceCounterStructure pc,
-            bool isCustomCounter,
             bool usesInstanceNamePlaceholder,
             out string error)
         {
@@ -149,8 +146,7 @@
                     pc.CategoryName,
                     pc.CounterName,
                     pc.InstanceName,
-                    usesInstanceNamePlaceholder,
-                    isCustomCounter);
+                    usesInstanceNamePlaceholder);
 
                 PerformanceCollectorEventSource.Log.CounterRegisteredEvent(
                     PerformanceCounterUtility.FormatPerformanceCounter(pc));
@@ -170,8 +166,7 @@
             string categoryName,
             string counterName,
             string instanceName,
-            bool usesInstanceNamePlaceholder,
-            bool isCustomCounter)
+            bool usesInstanceNamePlaceholder)
         {
             lock (this.Sync)
             {
@@ -181,7 +176,6 @@
                             originalString,
                             reportAs,
                             usesInstanceNamePlaceholder,
-                            isCustomCounter,
                             false,
                             categoryName,
                             counterName,

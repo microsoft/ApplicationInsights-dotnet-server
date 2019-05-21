@@ -282,7 +282,7 @@
                     try
                     {
                         string error;
-                        this.performanceCollector.RegisterCounter(counter.Item2, counter.Item1, true, out error, true);
+                        this.performanceCollector.RegisterCounter(counter.Item2, counter.Item1, out error, true);
 
                         if (!string.IsNullOrWhiteSpace(error))
                         {

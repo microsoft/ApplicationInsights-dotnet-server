@@ -24,7 +24,6 @@
                 collector.RegisterCounter(
                     counter,
                     null,
-                    true,
                     out error,
                     false);
             }
@@ -63,7 +62,6 @@
                 collector.RegisterCounter(
                     counterRequest.PerformanceCounter,
                     counterRequest.ReportAs,
-                    true,
                     out error,
                     false);
             }

@@ -23,8 +23,7 @@
                 string error;
                 collector.RegisterCounter(
                     counter,
-                    null,
-                    true,
+                    null,                    
                     out error,
                     false);
             }
@@ -63,7 +62,6 @@
                 collector.RegisterCounter(
                     counterRequest.PerformanceCounter,
                     counterRequest.ReportAs,
-                    true,
                     out error,
                     false);
             }
