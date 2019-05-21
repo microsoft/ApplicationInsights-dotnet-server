@@ -19,7 +19,8 @@
     /// <summary>
     /// Utility functionality for performance counter collection.
     /// </summary>
-    [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields", Justification = "This class has different code for Net45/NetCore")]
+    [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields", Justification =
+        "This class has different code for Net45/NetCore")]
     internal static class PerformanceCounterUtility
     {
 #if NETSTANDARD2_0
@@ -35,7 +36,7 @@
         private const string Win32ProcessCategoryName = "Process";
         private const string ClrProcessCategoryName = ".NET CLR Memory";
         private const string Win32ProcessCounterName = "ID Process";
-        private const string ClrProcessCounterName = "Process ID";        
+        private const string ClrProcessCounterName = "Process ID";
 #if NETSTANDARD2_0
         private const string StandardSdkVersionPrefix = "pccore:";
 #else
@@ -47,7 +48,8 @@
         private const string WebSiteEnvironmentVariable = "WEBSITE_SITE_NAME";
         private const string ProcessorsCountEnvironmentVariable = "NUMBER_OF_PROCESSORS";
 
-        private static readonly ConcurrentDictionary<string, string> PlaceholderCache = new ConcurrentDictionary<string, string>();
+        private static readonly ConcurrentDictionary<string, string> PlaceholderCache =
+            new ConcurrentDictionary<string, string>();
 
         private static readonly Regex InstancePlaceholderRegex = new Regex(
             @"^\?\?(?<placeholder>[a-zA-Z0-9_]+)\?\?$",
@@ -57,7 +59,7 @@
             new Regex(
                 @"^\\(?<categoryName>[^(]+)(\((?<instanceName>[^)]+)\)){0,1}\\(?<counterName>[\s\S]+)$",
                 RegexOptions.Compiled);
-        
+
 #if !NETSTANDARD1_6
         /// <summary>
         /// Formats a counter into a readable string.
@@ -113,40 +115,39 @@
 
             return collector;
             }
-#endif
-
-#if !NETSTANDARD1_6
+#elif NET45
         public static IPerformanceCollector GetPerformanceCollector()
         {
             IPerformanceCollector collector;
-
-            // For NetStandard2.0 and Net45, WebApps for Windows collect perf counter using the special env variable exposed
-            // by App Service.
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
-#if NET45
-                collector = (IPerformanceCollector)new WebAppPerfCollector.WebAppPerformanceCollector();
+                collector = (IPerformanceCollector) new WebAppPerfCollector.WebAppPerformanceCollector();
+            }
+            else
+            {
+                collector = (IPerformanceCollector) new StandardPerformanceCollector();
+            }
+
+            return collector;
+        }        
 #elif NETSTANDARD2_0
+        public static IPerformanceCollector GetPerformanceCollector()
+        {
+            IPerformanceCollector collector;
+            if (PerformanceCounterUtility.IsWebAppRunningInAzure())
+            {
                 if (PerformanceCounterUtility.IsWindows)
                 {
                     // WebApp For windows
-                    collector = (IPerformanceCollector)new WebAppPerformanceCollector();
+                    collector = (IPerformanceCollector) new WebAppPerformanceCollector();
                 }
                 else
                 {
                     // We are in WebApp, but not Windows. Use XPlatformPerfCollector.
-                    collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
+                    collector = (IPerformanceCollector) new PerformanceCollectorXPlatform();
                 }
-#endif       
-                return collector;
             }
-
-            // At this stage, we know we are not running in Azure Web Apps.
-#if NET45
-            // The original Windows PerformanceCounter collector for .NET Framework.
-            collector = (IPerformanceCollector)new StandardPerformanceCollector();
-#elif NETSTANDARD2_0
-            if (PerformanceCounterUtility.IsWindows)
+            else if (PerformanceCounterUtility.IsWindows)
             {
                 // The original Windows PerformanceCounter collector which is also
                 // supported in NetStandard2.0 in Windows.
@@ -157,7 +158,6 @@
                 // This is NetStandard2.0 and non-windows. Use XPlatformPerfCollector
                 collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
             }
-#endif
             return collector;
         }
 #endif
