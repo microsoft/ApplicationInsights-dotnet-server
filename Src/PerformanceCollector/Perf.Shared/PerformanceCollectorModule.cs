@@ -170,7 +170,7 @@
                             }                            
                             
                                                         
-                            if (this.collector.GetType().Name.Equals("StandardPerformanceCollector"))
+                            if (this.collector.GetType().Name.Equals("StandardPerformanceCollector", StringComparison.OrdinalIgnoreCase)))
                             {
                                 // Only time total CPU counter is available is if we are using StandardPerformanceCollector.
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Processor(_Total)\% Processor Time", @"\Processor(_Total)\% Processor Time"));
