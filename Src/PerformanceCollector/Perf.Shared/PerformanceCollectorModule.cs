@@ -167,8 +167,7 @@
                                 // The systemwide Memory counter is enabled in WebApps.
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));
-                            }                            
-                            
+                            }                                                      
                                                         
                             if (this.collector.GetType().Name.Equals("StandardPerformanceCollector", StringComparison.OrdinalIgnoreCase))
                             {

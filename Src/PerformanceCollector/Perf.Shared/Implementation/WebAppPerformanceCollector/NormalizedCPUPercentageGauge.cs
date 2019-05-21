@@ -18,7 +18,7 @@
         /// <param name="value"> Gauges to sum.</param>
         public NormalizedCPUPercentageGauge(string name, ICounterValue value) : base(name, value)
         {
-            int? count = PerformanceCounterUtility.GetProcessorCount(true);
+            int? count = PerformanceCounterUtility.GetProcessorCount();
 
             if (count.HasValue)
             {

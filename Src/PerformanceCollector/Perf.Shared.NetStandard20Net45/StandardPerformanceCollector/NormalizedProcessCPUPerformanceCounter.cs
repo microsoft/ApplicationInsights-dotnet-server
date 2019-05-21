@@ -19,7 +19,7 @@
         /// <param name="instanceName">The instance name.</param>
         internal NormalizedProcessCPUPerformanceCounter(string instanceName)
         {
-            int? count = PerformanceCounterUtility.GetProcessorCount(false);
+            int? count = PerformanceCounterUtility.GetProcessorCount();
 
             if (count.HasValue)
             {

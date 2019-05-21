@@ -196,9 +196,8 @@
         /// <summary>
         /// Gets the processor count from the appropriate environment variable depending on whether the app is a WebApp or not.
         /// </summary>
-        /// <param name="isWebApp">Indicates whether the application is a WebApp or not.</param>
         /// <returns>The number of processors in the system or null if failed to determine.</returns>
-        public static int? GetProcessorCount(bool isWebApp)
+        public static int? GetProcessorCount()
         {
             int count;
             try
