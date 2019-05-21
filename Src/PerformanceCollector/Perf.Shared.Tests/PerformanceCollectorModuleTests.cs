@@ -15,10 +15,11 @@
     /// </summary>
     [TestClass]
     public class PerformanceCollectorModuleTests
-    {
+    {        
         [TestMethod]
         public void PerformanceCollectorModuleDefaultContainsExpectedCountersNonWindows()
         {
+            PerformanceCounterUtility.isAzureWebApp = null;
 #if NETCOREAPP2_0
             var original = PerformanceCounterUtility.IsWindows;
             try
@@ -44,6 +45,7 @@
         {            
             try
             {
+                PerformanceCounterUtility.isAzureWebApp = null;
                 Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "something");
                 var module = new PerformanceCollectorModule();
                 module.Initialize(new TelemetryConfiguration());
@@ -76,6 +78,7 @@
         [TestMethod]
         public void PerformanceCollectorModuleDefaultContainsExpectedCountersWindows()
         {
+            PerformanceCounterUtility.isAzureWebApp = null;
 #if NETCOREAPP2_0
             var original = PerformanceCounterUtility.IsWindows;
             PerformanceCounterUtility.IsWindows = true;
