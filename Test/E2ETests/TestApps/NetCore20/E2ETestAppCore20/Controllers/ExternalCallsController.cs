@@ -12,8 +12,6 @@ namespace E2ETestAppCore20.Controllers
     [Route("external/calls")]
     public class ExternalCallsController : Controller
     {
-        // TODO flush
-
         private const string UrlWithNonexistentHostName = "http://abcdefzzzzeeeeadadad.com";
         private const string UrlTestWebApiGetCallTemplate = "http://{0}:80/api/values";
         public const string UrlWhichReturns500Format = "http://{0}:80/api/values/999";
