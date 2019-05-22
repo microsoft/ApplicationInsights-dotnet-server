@@ -12,6 +12,7 @@ namespace E2ETestAppCore20.Controllers
     [Route("external/calls")]
     public class ExternalCallsController : Controller
     {
+        // TODO flush
 
         private const string UrlWithNonexistentHostName = "http://abcdefzzzzeeeeadadad.com";
         private const string UrlTestWebApiGetCallTemplate = "http://{0}:80/api/values";
@@ -49,12 +50,14 @@ namespace E2ETestAppCore20.Controllers
         /// </summary> 
         private const string QueryToExecuteLabel = "Query Executed:";
 
+        private readonly TelemetryConfiguration telemetryConfiguration;
+
         private string GetQueryValue(string valueKey)
         {
             return Request.Query[valueKey].ToString();
         }
 
-        public ExternalCallsController(IOptions<AppInsightsOptions> options)
+        public ExternalCallsController(IOptions<AppInsightsOptions> options, TelemetryConfiguration telemetryConfiguration)
         {
             if (string.IsNullOrEmpty(ConnectionString))
             {
@@ -64,6 +67,7 @@ namespace E2ETestAppCore20.Controllers
             var webApiHostName = options.Value.Webapihostname;
             UrlTestWebApiGetCall = string.Format(UrlTestWebApiGetCallTemplate, webApiHostName);
             UrlWhichReturns500 = string.Format(UrlWhichReturns500Format, webApiHostName);
+            this.telemetryConfiguration = telemetryConfiguration;
         }
 
         // GET external/calls
@@ -89,7 +93,7 @@ namespace E2ETestAppCore20.Controllers
             {
                 case "flush":
                     title = response = "Flushed telemetry channel";
-                    TelemetryConfiguration.Active.TelemetryChannel.Flush();                    
+                    telemetryConfiguration.TelemetryChannel.Flush();                    
                     break;
                 case "setsqlserverinstance":
                     string sqlServerInstance = GetQueryValue("server");
@@ -108,8 +112,8 @@ namespace E2ETestAppCore20.Controllers
                     string endPoint = GetQueryValue("endpoint");
                     if (!string.IsNullOrEmpty(endPoint))
                     {
-                        TelemetryConfiguration.Active.TelemetryChannel.EndpointAddress = string.Format(Program.EndPointAddressFormat, endPoint);
-                        title = response = "Update Endpoint to: " + TelemetryConfiguration.Active.TelemetryChannel.EndpointAddress;
+                        telemetryConfiguration.TelemetryChannel.EndpointAddress = string.Format(Program.EndPointAddressFormat, endPoint);
+                        title = response = "Update Endpoint to: " + telemetryConfiguration.TelemetryChannel.EndpointAddress;
                     }
                     else
                     {
