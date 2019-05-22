@@ -8,14 +8,15 @@ namespace Microsoft.ApplicationInsights.Common
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     /// <summary>
-    /// RequestTrackingUtilities class.
+    /// This class encapsulates setting tracking properties on RequestTelemetry.
+    /// This is used by both PostSamplingTelemetryProcessor and RequestTrackingTelemetryModule.
     /// </summary>
     internal static class RequestTrackingUtilities
     {
-        /// <summary>Updates requestTelemetry from request with properties, which could be deffered till after sampling,</summary>
-        /// <param name="requestTelemetry">RequestTelemetry to be updated</param>
-        /// <param name="request">HttpRequest containing Url and headers</param>
-        /// <param name="applicationIdProvider">Provider for current applicationId</param>
+        /// <summary>Updates requestTelemetry from request with properties, which could be deferred till after sampling.</summary>
+        /// <param name="requestTelemetry">RequestTelemetry to be updated.</param>
+        /// <param name="request">HttpRequest containing Url and headers.</param>
+        /// <param name="applicationIdProvider">Provider for current applicationId.</param>
         internal static void UpdateRequestTelemetryFromRequest(RequestTelemetry requestTelemetry, HttpRequest request, IApplicationIdProvider applicationIdProvider)
         {
             if (requestTelemetry == null || request == null)
