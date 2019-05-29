@@ -28,7 +28,9 @@
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
-        private HashSet<Type> includedTypes = new HashSet<Type>();
+        
+        /// <summary>Tracks if given type should be included in telemetry. ConcurrentDictionary is used as a concurrent hashset.</summary>
+        private ConcurrentDictionary<Type, bool> includedTypes = new ConcurrentDictionary<Type, bool>();
 
         /// <summary>
         /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
@@ -390,7 +392,7 @@
             if (handler != null)
             {
                 var handlerType = handler.GetType();
-                if (!this.includedTypes.Contains(handlerType))
+                if (!this.includedTypes.ContainsKey(handlerType))
                 {
                     var handlerName = handlerType.FullName;
                     foreach (var h in this.Handlers)
@@ -402,7 +404,7 @@
                         }
                     }
 
-                    this.includedTypes.Add(handlerType);
+                    this.includedTypes.TryAdd(handlerType, true);
                 }
             }
 
