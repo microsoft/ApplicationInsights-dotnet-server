@@ -234,7 +234,7 @@
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
                 IsWebApp = this.isWebApp,
-                PerformanceCollectionSupported = IsPerfCounterSupported(),
+                PerformanceCollectionSupported = PerformanceCounterUtility.IsPerfCounterSupported(),
                 ProcessorCount = this.processorCount,
             };
 
