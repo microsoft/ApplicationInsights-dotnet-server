@@ -123,12 +123,12 @@
             IPerformanceCollector collector;
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
-                collector = (IPerformanceCollector) new WebAppPerfCollector.WebAppPerformanceCollector();
+                collector = (IPerformanceCollector)new WebAppPerfCollector.WebAppPerformanceCollector();
                 PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
             else
             {
-                collector = (IPerformanceCollector) new StandardPerformanceCollector();
+                collector = (IPerformanceCollector)new StandardPerformanceCollector();
                 PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
 
@@ -143,13 +143,13 @@
                 if (PerformanceCounterUtility.IsWindows)
                 {
                     // WebApp For windows
-                    collector = (IPerformanceCollector) new WebAppPerformanceCollector();
+                    collector = (IPerformanceCollector)new WebAppPerformanceCollector();
                     PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
                 }
                 else
                 {
                     // We are in WebApp, but not Windows. Use XPlatformPerfCollector.
-                    collector = (IPerformanceCollector) new PerformanceCollectorXPlatform();
+                    collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
                     PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
                 }
             }
@@ -166,6 +166,7 @@
                 collector = (IPerformanceCollector)new PerformanceCollectorXPlatform();
                 PerformanceCollectorEventSource.Log.InitializedWithCollector(collector.GetType().Name);
             }
+
             return collector;
         }
 #endif
