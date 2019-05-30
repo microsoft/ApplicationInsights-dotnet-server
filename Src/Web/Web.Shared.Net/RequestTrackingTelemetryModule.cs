@@ -7,12 +7,12 @@
     using System.Globalization;
     using System.Web;
 
-    using Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.Web.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
@@ -30,7 +30,7 @@
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
 
         /// <summary>
-        /// Handler types that are not TransferHandlers will be included in request tracking
+        /// Handler types that are not TransferHandlers will be included in request tracking.
         /// </summary>
         private HashSet<Type> requestHandlerTypesDoNotFilter = new HashSet<Type>();
 
@@ -82,6 +82,16 @@
         /// </summary>
         [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.Active.ApplicationIdProvider = new ApplicationInsightsApplicationIdProvider() and customize ApplicationInsightsApplicationIdProvider.ProfileQueryEndpoint.")]
         public string ProfileQueryEndpoint { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether requestTelemetry.Url and requestTelemetry.Source are disabled.
+        /// Customers would need to use the <see cref="PostSamplingTelemetryProcessor" /> to defer setting these properties.
+        /// </summary>
+        /// <remarks>
+        /// This feature is still being evaluated and not recommended for end users.
+        /// This setting is not browsable at this time.
+        /// </remarks>
+        internal bool DisableTrackingProperties { get; set; } = false;
 
         /// <summary>
         /// Implements on begin callback of http module.
@@ -166,11 +176,6 @@
                 requestTelemetry.Success = success;
             }
 
-            if (requestTelemetry.Url == null)
-            {
-                requestTelemetry.Url = context.Request.UnvalidatedGetUrl();
-            }
-
             if (string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey))
             {
                 // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
@@ -178,33 +183,10 @@
                 this.telemetryClient.InitializeInstrumentationKey(requestTelemetry);
             }
 
-            if (string.IsNullOrEmpty(requestTelemetry.Source) && context.Request.Headers != null)
+            // Setting requestTelemetry.Url and requestTelemetry.Source can be deferred until after sampling
+            if (this.DisableTrackingProperties == false)
             {
-                string sourceAppId = null;
-
-                try
-                {
-                    sourceAppId = context.Request.UnvalidatedGetHeaders().GetNameValueHeaderValue(
-                        RequestResponseHeaders.RequestContextHeader, 
-                        RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                }
-                catch (Exception ex)
-                {
-                    AppMapCorrelationEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
-                }
-
-                string currentComponentAppId = null;
-                if (!string.IsNullOrEmpty(requestTelemetry.Context.InstrumentationKey)
-                    && (this.telemetryConfiguration?.ApplicationIdProvider?.TryGetApplicationId(requestTelemetry.Context.InstrumentationKey, out currentComponentAppId) ?? false))
-                {
-                    // If the source header is present on the incoming request,
-                    // and it is an external component (not the same ikey as the one used by the current component),
-                    // then populate the source field.
-                    if (!string.IsNullOrEmpty(sourceAppId) && sourceAppId != currentComponentAppId)
-                    {
-                        requestTelemetry.Source = sourceAppId;
-                    }
-                }
+                RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, context.Request, this.telemetryConfiguration?.ApplicationIdProvider);
             }
 
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
@@ -345,7 +327,7 @@
                 Name = string.Format(CultureInfo.InvariantCulture, "Execute request handler ({0})", context.CreateRequestNamePrivate()),
                 Id = activity.Id,
                 Timestamp = activity.StartTimeUtc,
-                Duration = activity.Duration
+                Duration = activity.Duration,
             };
 
             intermediateRequest.Context.Operation.Id = activity.RootId;

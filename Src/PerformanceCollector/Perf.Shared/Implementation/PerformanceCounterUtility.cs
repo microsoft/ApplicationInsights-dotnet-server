@@ -337,7 +337,7 @@
                         clrInstances,
                         supportInstanceNames,
                         out usesInstanceNamePlaceholder),
-                CounterName = match.Groups["counterName"].Value
+                CounterName = match.Groups["counterName"].Value,
             };
         }
 

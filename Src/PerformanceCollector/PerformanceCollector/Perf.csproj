@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" /> <!--manual workaround: needed for net45 dll-->
   <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.props" /> <!--manual workaround: needed for nupkg-->
 
@@ -24,10 +24,10 @@
     <PackageReference Include="Desktop.Analyzers" Version="1.1.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.1">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.2" >
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="MicroBuild.Core" Version="0.3.0">
@@ -37,13 +37,14 @@
   
   <ItemGroup>
     <!--Common Dependencies-->
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0-beta4" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
     <!--Framework References-->
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6' OR '$(TargetFramework)' == 'netstandard2.0'">
@@ -65,7 +66,7 @@
     <Content Include="ApplicationInsights.config.uninstall.xdt" />
     <Content Include="Microsoft.ApplicationInsights.PerfCounterCollector.targets" PackagePath="build" />
   </ItemGroup>
-  
+
   <Import Project="..\Filtering.Shared\Filtering.Shared.projitems" Label="Shared" />
   <Import Project="..\Perf.Shared\Perf.Shared.projitems" Label="Shared" />
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />
