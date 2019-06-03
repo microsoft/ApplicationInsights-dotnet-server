@@ -24,14 +24,14 @@
         // if HttpApplicaiton.OnRequestExecute is available, we don't attempt to detect any correlation issues
         private static bool correlationIssuesDetectionComplete = typeof(HttpApplication).GetMethod("OnExecuteRequestStep") != null;
 
+        /// <summary>Tracks if given type should be included in telemetry. ConcurrentDictionary is used as a concurrent hashset.</summary>
+        private readonly ConcurrentDictionary<Type, bool> includedHttpHandlerTypes = new ConcurrentDictionary<Type, bool>();
+
         private TelemetryClient telemetryClient;
         private TelemetryConfiguration telemetryConfiguration;
         private bool initializationErrorReported;
         private ChildRequestTrackingSuppressionModule childRequestTrackingSuppressionModule = null;
         
-        /// <summary>Tracks if given type should be included in telemetry. ConcurrentDictionary is used as a concurrent hashset.</summary>
-        private ConcurrentDictionary<Type, bool> includedHttpHandlerTypes = new ConcurrentDictionary<Type, bool>();
-
         /// <summary>
         /// Gets or sets a value indicating whether child request suppression is enabled or disabled. 
         /// True by default.
