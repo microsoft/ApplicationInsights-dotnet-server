@@ -133,10 +133,10 @@
             }
 
             return collector;
-        }        
+        }
 #elif NETSTANDARD2_0
         public static IPerformanceCollector GetPerformanceCollector()
-        {
+        {   
             IPerformanceCollector collector;
             if (PerformanceCounterUtility.IsWebAppRunningInAzure())
             {
@@ -439,6 +439,12 @@
             bool supportInstanceNames,
             out bool usesPlaceholder)
         {
+            if (!supportInstanceNames)
+            {
+                usesPlaceholder = false;
+                return instanceName;
+            }
+
             var match = MatchInstancePlaceholder(instanceName);
             if (match == null)
             {
@@ -448,11 +454,6 @@
             }
 
             usesPlaceholder = true;
-
-            if (!supportInstanceNames)
-            {
-                return instanceName;
-            }
 
             var placeholder = match.Groups["placeholder"].Value;
 
