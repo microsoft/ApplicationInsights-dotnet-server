@@ -72,28 +72,12 @@
 
         public static bool IsPerfCounterSupported()
         {
-            if (IsWebAppRunningInAzure())
-            {
-                return true;
-            }
-            else
-            {
-#if NET45
-                return true;
-#elif NETSTANDARD1_6
-                return false;
-#elif NETSTANDARD2_0
-                if (IsWindows)
-                {
-                    return true;
-                }
-                else
-                {
-                    // return false;
-                    return true;
-                }
+#if NETSTANDARD1_6
+            // PerfCounter is limited to only when running in WebApp
+            return IsWebAppRunningInAzure();
+#else
+            return true;
 #endif
-            }
         }
 
 #if NETSTANDARD1_6
@@ -240,7 +224,7 @@
                 return AzureWebAppCoreSdkVersionPrefix;
 #else
                 return AzureWebAppSdkVersionPrefix;
-#endif                                
+#endif
             }
             else
             {

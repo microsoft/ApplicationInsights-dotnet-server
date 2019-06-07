@@ -180,12 +180,6 @@
             this.WriteEvent(21, this.applicationNameProvider.Name);
         }
 
-        [Event(22, Level = EventLevel.Error, Message = @"Performance counter is not available in Non-Windows operating systems.")]
-        public void PerfCounterNotSupportedNonWindows(string applicationName = "dummy")
-        {
-            this.WriteEvent(22, this.applicationNameProvider.Name);
-        }
-
         [Event(23, Keywords = Keywords.UserActionable, Level = EventLevel.Error, Message = @"Performance counter is not available in the supported list of XPlatform counters. Counter is {0}.")]
         public void CounterNotXPlatformSupported(
     string counterName,

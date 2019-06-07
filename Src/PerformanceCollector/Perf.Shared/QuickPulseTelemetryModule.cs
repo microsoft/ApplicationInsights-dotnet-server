@@ -307,10 +307,7 @@
                                 string.Format(CultureInfo.InvariantCulture, "Unexpected error processing counter '{0}': {1}", counter, e.Message),
                                 e,
                                 Tuple.Create("MetricId", counter.Item1)));
-                        if (!(e is NotSupportedException))
-                        {
-                            QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter.Item2);
-                        }
+                        QuickPulseEventSource.Log.CounterRegistrationFailedEvent(e.Message, counter.Item2);                        
                     }
                 }
 

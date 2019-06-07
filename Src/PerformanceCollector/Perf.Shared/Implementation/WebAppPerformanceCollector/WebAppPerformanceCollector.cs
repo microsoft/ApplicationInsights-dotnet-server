@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using Microsoft.ApplicationInsights.Common;    
+    using Microsoft.ApplicationInsights.Common;
 
     internal class WebAppPerformanceCollector : IPerformanceCollector
     {
@@ -75,8 +75,8 @@
             try
             {
                 bool useInstancePlaceHolder = false;                
-                var pc = PerformanceCounterUtility.CreateAndValidateCounter(perfCounter, null, null, false, out useInstancePlaceHolder, out error);
-                
+                var pc = PerformanceCounterUtility.CreateAndValidateCounter(perfCounter, null, null, false, out useInstancePlaceHolder, out error);                
+
                 if (pc != null)
                 {
                     this.RegisterPerformanceCounter(perfCounter, GetCounterReportAsName(perfCounter, reportAs), pc.CategoryName, pc.CounterName, pc.InstanceName, useInstancePlaceHolder);

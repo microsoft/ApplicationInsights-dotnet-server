@@ -40,13 +40,6 @@
                 Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "something");
                 var actual = PerformanceCounterUtility.GetPerformanceCollector();
                 Assert.AreEqual("WebAppPerformanceCollector", actual.GetType().Name);
-#if NETCOREAPP1_0
-                Assert.AreEqual("WebAppPerformanceCollector", actual.GetType().Name);
-#elif NETCOREAPP2_0
-            Assert.AreEqual("WebAppPerformanceCollector", actual.GetType().Name);
-#else // NET45
-            Assert.AreEqual("WebAppPerformanceCollector", actual.GetType().Name);
-#endif
             }
             finally
             {
