@@ -166,8 +166,11 @@
 
                         QuickPulseEventSource.Log.TroubleshootingMessageEvent("Initializing members...");
                         this.collectionTimeSlotManager = this.collectionTimeSlotManager ?? new QuickPulseCollectionTimeSlotManager();
-                        
-                        this.performanceCollector = PerformanceCounterUtility.GetPerformanceCollector();
+
+                        if (this.performanceCollector == null)
+                        {
+                            this.performanceCollector = PerformanceCounterUtility.GetPerformanceCollector();
+                        }
 
                         this.timeProvider = this.timeProvider ?? new Clock();
                         this.topCpuCollector = this.topCpuCollector
