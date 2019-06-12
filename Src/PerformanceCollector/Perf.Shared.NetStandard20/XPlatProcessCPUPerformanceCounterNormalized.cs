@@ -16,9 +16,14 @@
         ///  Initializes a new instance of the <see cref="XPlatProcessCPUPerformanceCounterNormalized" /> class.
         /// </summary>
         internal XPlatProcessCPUPerformanceCounterNormalized() : base()
-        {            
-            this.processorsCount = Environment.ProcessorCount;
-            this.isInitialized = true;            
+        {
+            int? count = PerformanceCounterUtility.GetProcessorCount();
+
+            if (count.HasValue)
+            {
+                this.processorsCount = count.Value;
+                this.isInitialized = true;
+            }
         }
 
         /// <summary>
