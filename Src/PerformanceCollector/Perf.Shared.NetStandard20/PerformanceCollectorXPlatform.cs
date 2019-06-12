@@ -138,7 +138,7 @@
         /// <summary>
         /// Collects a value for a single counter.
         /// </summary>
-        private static double CollectCounter(string coutnerOriginalString, ICounterValue counter)
+        private static double CollectCounter(string counterOriginalString, ICounterValue counter)
         {
             try
             {
@@ -150,7 +150,7 @@
                     string.Format(
                         CultureInfo.CurrentCulture,
                         "Failed to perform a read for web app performance counter {0}",
-                        coutnerOriginalString),
+                        counterOriginalString),
                     e);
             }
         }

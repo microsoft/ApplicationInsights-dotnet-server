@@ -22,7 +22,7 @@
         }
 
         /// <summary>
-        /// Returns the current value of the counter as a <c ref="MetricTelemetry"/>.
+        /// Returns the current value of the counter.
         /// </summary>
         /// <returns>Value of the counter.</returns>
         public virtual double Collect()
@@ -39,6 +39,16 @@
                 if (previouslyCollectedTime != DateTimeOffset.MinValue)
                 {
                     var baseValue = this.lastCollectedTime.Ticks - previouslyCollectedTime.Ticks;
+                    if (baseValue < 0)
+                    {
+                        // Not likely to happen but being safe here incase of clock issues in multi-core.
+                        PerformanceCollectorEventSource.Log.WebAppCounterNegativeValue(
+                            this.lastCollectedTime.Ticks,
+                            previouslyCollectedTime.Ticks,
+                            "XPlatProcessCPUPerformanceCounter.BaseValue");
+                        return 0;
+                    }
+
                     baseValue = baseValue != 0 ? baseValue : 1;
 
                     var diff = this.lastCollectedValue - previouslyCollectedValue;
