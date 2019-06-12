@@ -7,8 +7,7 @@
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
     using Microsoft.VisualStudio.TestTools.UnitTesting;    
 
-    [TestClass]
-    [Ignore]
+    [TestClass]    
     public class CPUPercenageGaugeTests
     {
         [TestMethod]

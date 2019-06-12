@@ -35,7 +35,7 @@
         /// <returns>The value of the target metric.</returns>
         public double Collect()
         {
-            return this.Collect();
+            return this.CollectPercentage();
         }
 
         /// <summary>
