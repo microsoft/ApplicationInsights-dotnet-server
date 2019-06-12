@@ -6,7 +6,7 @@
 
     /// <summary>
     /// Represents Private Bytes performance counter equivalent for the current process.
-    /// <see cref="https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.privatememorysize64"/>
+    /// <see cref="Http://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.privatememorysize64"/>
     /// </summary>
     internal class XPlatProcessMemoryPerformanceCounter : ICounterValue
     {        
