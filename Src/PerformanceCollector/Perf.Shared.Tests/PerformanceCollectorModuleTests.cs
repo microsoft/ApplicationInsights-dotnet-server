@@ -19,13 +19,14 @@
         [TestMethod]
         public void PerformanceCollectorModuleDefaultContainsExpectedCountersNonWindows()
         {
-            PerformanceCounterUtility.isAzureWebApp = null;
-            var module = new PerformanceCollectorModule();
 #if NETCOREAPP2_0
+            PerformanceCounterUtility.isAzureWebApp = null;
             var original = PerformanceCounterUtility.IsWindows;
+            PerformanceCounterUtility.IsWindows = false;
+            var module = new PerformanceCollectorModule();
+            
             try
-            {                
-                PerformanceCounterUtility.IsWindows = false;                
+            {                                          
                 module.Initialize(new TelemetryConfiguration());
 
                 Assert.IsTrue(ContainsPerfCounter(module.DefaultCounters, @"\Process(??APP_WIN32_PROC??)\% Processor Time"));
@@ -44,11 +45,11 @@
         [TestMethod]
         public void PerformanceCollectorModuleDefaultContainsExpectedCountersWebApps()
         {
+            PerformanceCounterUtility.isAzureWebApp = null;
+            Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "something");
             var module = new PerformanceCollectorModule();
             try
-            {
-                PerformanceCounterUtility.isAzureWebApp = null;
-                Environment.SetEnvironmentVariable("WEBSITE_SITE_NAME", "something");                
+            {                                      
                 module.Initialize(new TelemetryConfiguration());
 
                 Assert.IsTrue(ContainsPerfCounter(module.DefaultCounters, @"\Process(??APP_WIN32_PROC??)\% Processor Time"));

@@ -8,6 +8,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;    
 
     [TestClass]
+    [Ignore]
     public class CPUPercenageGaugeTests
     {
         [TestMethod]

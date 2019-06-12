@@ -25,7 +25,7 @@
                     counter,
                     null,
                     out error,
-                    false);
+                    false);                
             }
 
             var results = collector.Collect().ToList();            
@@ -44,7 +44,7 @@
                     Assert.AreEqual(instanceName, result.Item1.PerformanceCounter.InstanceName);
                 }
 
-                Assert.IsTrue(value >= 0 && value <= 100);
+                Assert.IsTrue(value >= 0 && value <= 100, "actual value:" + value + ". Should be 0-100");
             }
         }
 
