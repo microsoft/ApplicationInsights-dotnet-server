@@ -2102,7 +2102,7 @@
                 }
                 finally
                 {
-                    this.AssertionSync.Release();
+                    this.AssertionSync?.Release();
                 }
             }
         }
