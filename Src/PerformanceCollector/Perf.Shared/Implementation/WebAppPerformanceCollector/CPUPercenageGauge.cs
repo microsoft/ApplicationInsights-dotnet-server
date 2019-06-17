@@ -1,8 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector
 {
     using System;
-    using System.Globalization;
-    using DataContracts;    
 
     /// <summary>
     /// Gauge that computes the CPU percentage utilized by a process by utilizing the last computed time.
@@ -35,19 +33,19 @@
         /// Returns the percentage of the CPU process utilization time with respect to the total duration.
         /// </summary>
         /// <returns>The value of the target metric.</returns>
-        public double GetValueAndReset()
+        public double Collect()
         {
-            return this.Collect();
+            return this.CollectPercentage();
         }
 
         /// <summary>
         /// Returns the percentage of the CPU process utilization time with respect to the total duration.
         /// </summary>
         /// <returns>The value of the target metric.</returns>
-        protected virtual double Collect()
+        protected virtual double CollectPercentage()
         {
             double previouslyCollectedValue = this.lastCollectedValue;
-            this.lastCollectedValue = this.valueProvider.GetValueAndReset();
+            this.lastCollectedValue = this.valueProvider.Collect();
 
             var previouslyCollectedTime = this.lastCollectedTime;
             this.lastCollectedTime = DateTimeOffset.UtcNow;

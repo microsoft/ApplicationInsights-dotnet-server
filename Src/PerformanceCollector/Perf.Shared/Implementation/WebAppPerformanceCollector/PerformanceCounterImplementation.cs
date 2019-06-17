@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector
 {
     using System;
     using System.Collections.Generic;
@@ -13,7 +13,7 @@
             { AzureWebApEnvironmentVariables.AspDotNet, "WEBSITE_COUNTERS_ASPNET" },
             { AzureWebApEnvironmentVariables.App, "WEBSITE_COUNTERS_APP" },
             { AzureWebApEnvironmentVariables.CLR, "WEBSITE_COUNTERS_CLR" },
-            { AzureWebApEnvironmentVariables.All, "WEBSITE_COUNTERS_ALL" }
+            { AzureWebApEnvironmentVariables.All, "WEBSITE_COUNTERS_ALL" },
         };
 
         /// <summary>

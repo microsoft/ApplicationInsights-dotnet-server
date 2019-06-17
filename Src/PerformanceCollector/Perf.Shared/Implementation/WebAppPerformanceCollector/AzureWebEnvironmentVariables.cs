@@ -1,4 +1,4 @@
-﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector
+﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector
 {
     using System;
 
@@ -26,6 +26,6 @@
         /// <summary>
         /// All of the above.
         /// </summary>
-        All = 3
+        All = 3,
     }
 }

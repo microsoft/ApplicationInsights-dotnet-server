@@ -5,7 +5,6 @@
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
 #if NETSTANDARD2_0
     using System.Runtime.InteropServices;
@@ -13,10 +12,9 @@
     using System.Runtime.Serialization.Json;
     using System.Threading;
 
-    using Helpers;
-
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
 
     /// <summary>
@@ -49,10 +47,6 @@
         private readonly Dictionary<string, string> authOpaqueHeaderValues = new Dictionary<string, string>(StringComparer.Ordinal);
 
         private readonly HttpClient httpClient = new HttpClient();
-
-#if NETSTANDARD2_0
-        private static bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#endif
 
         public QuickPulseServiceClient(
             Uri serviceUri,
@@ -227,24 +221,6 @@
             return Math.Round(value, 4, MidpointRounding.AwayFromZero);
         }
 
-        private bool IsPerfCounterSupported()
-        {
-            bool perfCollectionSupported = false;
-#if NETSTANDARD2_0
-            if (isWindows)
-            {
-                perfCollectionSupported = true;
-            }
-            else
-            {
-                perfCollectionSupported = this.isWebApp;
-            }
-#else
-            perfCollectionSupported = this.isWebApp;
-#endif
-            return perfCollectionSupported;
-        }
-
         private void WritePingData(DateTimeOffset timestamp, Stream stream)
         {            
             var dataPoint = new MonitoringDataPoint
@@ -257,8 +233,8 @@
                 MachineName = this.machineName,
                 Timestamp = timestamp.UtcDateTime,
                 IsWebApp = this.isWebApp,
-                PerformanceCollectionSupported = IsPerfCounterSupported(),
-                ProcessorCount = this.processorCount
+                PerformanceCollectionSupported = PerformanceCounterUtility.IsPerfCounterSupported(),
+                ProcessorCount = this.processorCount,
             };
 
             this.serializerDataPoint.WriteObject(stream, dataPoint);
@@ -275,7 +251,7 @@
                 metricPoints.AddRange(CreateDefaultMetrics(sample));
 
                 metricPoints.AddRange(
-                    sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1 }));
+                    sample.PerfCountersLookup.Select(counter => new MetricPoint { Name = counter.Key, Value = Round(counter.Value), Weight = 1, }));
 
                 metricPoints.AddRange(CreateCalculatedMetrics(sample));
 
@@ -283,7 +259,7 @@
                 Array.Reverse(documents);
 
                 ProcessCpuData[] topCpuProcesses =
-                    sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2 }).ToArray();
+                    sample.TopCpuData.Select(p => new ProcessCpuData() { ProcessName = p.Item1, CpuPercentage = p.Item2, }).ToArray();
                
                 var dataPoint = new MonitoringDataPoint
                 {
@@ -295,14 +271,14 @@
                     MachineName = this.machineName,
                     Timestamp = sample.EndTimestamp.UtcDateTime,
                     IsWebApp = this.isWebApp,
-                    PerformanceCollectionSupported = IsPerfCounterSupported(),
+                    PerformanceCollectionSupported = PerformanceCounterUtility.IsPerfCounterSupported(),
                     ProcessorCount = this.processorCount,
                     Metrics = metricPoints.ToArray(),
                     Documents = documents,
                     GlobalDocumentQuotaReached = sample.GlobalDocumentQuotaReached,
                     TopCpuProcesses = topCpuProcesses.Length > 0 ? topCpuProcesses : null,
                     TopCpuDataAccessDenied = sample.TopCpuDataAccessDenied,
-                    CollectionConfigurationErrors = errors
+                    CollectionConfigurationErrors = errors,
                 };
 
                 monitoringPoints.Add(dataPoint);
@@ -323,7 +299,7 @@
                     {
                         Name = metricAccumulatedValues.MetricId,
                         Value = metricAccumulatedValues.CalculateAggregation(out long count),
-                        Weight = (int)count
+                        Weight = (int)count,
                     };
 
                     metrics.Add(metricPoint);
@@ -342,40 +318,40 @@
         {
             return new[]
             {
-                new MetricPoint { Name = @"\ApplicationInsights\Requests/Sec", Value = Round(sample.AIRequestsPerSecond), Weight = 1 },
+                new MetricPoint { Name = @"\ApplicationInsights\Requests/Sec", Value = Round(sample.AIRequestsPerSecond), Weight = 1, },
                 new MetricPoint
                 {
                     Name = @"\ApplicationInsights\Request Duration",
                     Value = Round(sample.AIRequestDurationAveInMs),
-                    Weight = sample.AIRequests
+                    Weight = sample.AIRequests,
                 },
-                new MetricPoint { Name = @"\ApplicationInsights\Requests Failed/Sec", Value = Round(sample.AIRequestsFailedPerSecond), Weight = 1 },
+                new MetricPoint { Name = @"\ApplicationInsights\Requests Failed/Sec", Value = Round(sample.AIRequestsFailedPerSecond), Weight = 1, },
                 new MetricPoint
                 {
                     Name = @"\ApplicationInsights\Requests Succeeded/Sec",
                     Value = Round(sample.AIRequestsSucceededPerSecond),
-                    Weight = 1
+                    Weight = 1,
                 },
-                new MetricPoint { Name = @"\ApplicationInsights\Dependency Calls/Sec", Value = Round(sample.AIDependencyCallsPerSecond), Weight = 1 },
+                new MetricPoint { Name = @"\ApplicationInsights\Dependency Calls/Sec", Value = Round(sample.AIDependencyCallsPerSecond), Weight = 1, },
                 new MetricPoint
                 {
                     Name = @"\ApplicationInsights\Dependency Call Duration",
                     Value = Round(sample.AIDependencyCallDurationAveInMs),
-                    Weight = sample.AIDependencyCalls
+                    Weight = sample.AIDependencyCalls,
                 },
                 new MetricPoint
                 {
                     Name = @"\ApplicationInsights\Dependency Calls Failed/Sec",
                     Value = Round(sample.AIDependencyCallsFailedPerSecond),
-                    Weight = 1
+                    Weight = 1,
                 },
                 new MetricPoint
                 {
                     Name = @"\ApplicationInsights\Dependency Calls Succeeded/Sec",
                     Value = Round(sample.AIDependencyCallsSucceededPerSecond),
-                    Weight = 1
+                    Weight = 1,
                 },
-                new MetricPoint { Name = @"\ApplicationInsights\Exceptions/Sec", Value = Round(sample.AIExceptionsPerSecond), Weight = 1 }
+                new MetricPoint { Name = @"\ApplicationInsights\Exceptions/Sec", Value = Round(sample.AIExceptionsPerSecond), Weight = 1, },
             };
         }
 
