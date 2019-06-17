@@ -1,12 +1,14 @@
-﻿namespace Microsoft.ApplicationInsights.W3C
+﻿#if DEPENDENCY_COLLECTOR
+    namespace Microsoft.ApplicationInsights.W3C
+#else
+    namespace Microsoft.ApplicationInsights.W3C.Internal
+#endif
 {
-    using System;
     using System.ComponentModel;
 
     /// <summary>
     /// W3C constants.
     /// </summary>
-    [Obsolete("Not ready for public consumption.")]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #if DEPENDENCY_COLLECTOR
     public
@@ -76,17 +78,17 @@
         internal const string DefaultVersion = "00";
 
         /// <summary>
-        /// Default sampled flag value: may be recorded, not requested
+        /// Default sampled flag value: may be recorded, not requested.
         /// </summary>
         internal const string TraceFlagRecordedAndNotRequested = "02";
 
         /// <summary>
-        /// Recorded and requested sampled flag value
+        /// Recorded and requested sampled flag value.
         /// </summary>
         internal const string TraceFlagRecordedAndRequested = "03";
 
         /// <summary>
-        /// Requested trace flag
+        /// Requested trace flag.
         /// </summary>
         internal const byte RequestedTraceFlag = 1;
 

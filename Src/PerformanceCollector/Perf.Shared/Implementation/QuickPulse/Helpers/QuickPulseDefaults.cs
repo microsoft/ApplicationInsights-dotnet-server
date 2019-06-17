@@ -13,7 +13,7 @@
         private static readonly Dictionary<QuickPulseCounter, string> DefaultPerformanceCountersToCollect = new Dictionary<QuickPulseCounter, string>
         {
             [QuickPulseCounter.Bytes] = @"\Memory\Committed Bytes",
-            [QuickPulseCounter.ProcessorTime] = @"\Processor(_Total)\% Processor Time"
+            [QuickPulseCounter.ProcessorTime] = @"\Processor(_Total)\% Processor Time",
         };
 
         /// <summary>
@@ -22,7 +22,7 @@
         private static readonly Dictionary<QuickPulseCounter, string> WebAppDefaultPerformanceCountersToCollect = new Dictionary<QuickPulseCounter, string>
         {
             [QuickPulseCounter.Bytes] = @"\Process(??APP_WIN32_PROC??)\Private Bytes",
-            [QuickPulseCounter.ProcessorTime] = @"\Process(??APP_WIN32_PROC??)\% Processor Time"
+            [QuickPulseCounter.ProcessorTime] = @"\Process(??APP_WIN32_PROC??)\% Processor Time",
         };
 
         /// <summary>
@@ -38,7 +38,26 @@
         {
             get
             {
-                return PerformanceCounterUtility.IsWebAppRunningInAzure() ? WebAppDefaultPerformanceCountersToCollect : DefaultPerformanceCountersToCollect;
+                if (PerformanceCounterUtility.IsWebAppRunningInAzure())
+                {
+                    return WebAppDefaultPerformanceCountersToCollect;
+                }
+                else
+                {
+#if NETSTANDARD2_0
+                    if (PerformanceCounterUtility.IsWindows)
+                    {
+                        return DefaultPerformanceCountersToCollect;
+                    }
+                    else
+                    {
+                        return WebAppDefaultPerformanceCountersToCollect;
+                    }
+#else
+                    return DefaultPerformanceCountersToCollect;
+#endif
+
+                }
             }
         }
 

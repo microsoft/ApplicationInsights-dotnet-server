@@ -4,13 +4,12 @@
     using System.Data.SqlClient;
     using System.Diagnostics;
     using System.Net;
-    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
 
     internal static class ClientServerDependencyTracker
     {
-        internal const string DependencyActivityName = "Microsoft.ApplivationInsights.Web.Dependency";
+        internal const string DependencyActivityName = "Microsoft.ApplicationInsights.Web.Dependency";
 
         internal static bool IsW3CEnabled { get; set; } = false;
 
@@ -59,7 +58,7 @@
 
                 // Every operation must have its own Activity
                 // if dependency is tracked with profiler of event source, we need to generate a proper Id for it
-                // in case of HTTP it will be propagated into the requert header.
+                // in case of HTTP it will be propagated into the request header.
                 // So, we will create a new Activity for the dependency, just to generate an Id.
                 activity = new Activity(DependencyActivityName);
 
@@ -72,7 +71,7 @@
                 // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331 (TODO)
                 if (currentActivity == null)
                 {
-                    activity.SetParentId(StringUtilities.GenerateTraceId());
+                    activity.SetParentId(W3CUtilities.GenerateTraceId());
                 }
 
                 // end of workaround
@@ -80,21 +79,21 @@
                 activity.Start();
             }
 
-            // telemetry is initialized from current Activity (root and parent Id, but not the Id)
-            telemetry.Id = activity.Id;
-
-            // set operation root Id in case there was no parent activity (e.g. HttpRequest in background thread)
-            if (string.IsNullOrEmpty(telemetry.Context.Operation.Id))
-            {
-                telemetry.Context.Operation.Id = activity.RootId;
-            }
-
-#pragma warning disable 612, 618
             if (IsW3CEnabled)
             {
-                W3COperationCorrelationTelemetryInitializer.UpdateTelemetry(telemetry, activity, true);
+                activity.UpdateTelemetry(telemetry, true);
             }
-#pragma warning restore 612, 618
+            else
+            {
+                // telemetry is initialized from current Activity (root and parent Id, but not the Id)
+                telemetry.Id = activity.Id;
+
+                // set operation root Id in case there was no parent activity (e.g. HttpRequest in background thread)
+                if (string.IsNullOrEmpty(telemetry.Context.Operation.Id))
+                {
+                    telemetry.Context.Operation.Id = activity.RootId;
+                }
+            }
 
             PretendProfilerIsAttached = false;
             return telemetry;

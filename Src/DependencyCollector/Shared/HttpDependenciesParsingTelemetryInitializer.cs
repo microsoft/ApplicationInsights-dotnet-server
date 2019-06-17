@@ -1,11 +1,11 @@
 ﻿namespace Microsoft.ApplicationInsights.DependencyCollector
 {
     using System;
-    using Channel;
-    using DataContracts;
-    using Extensibility;
-    using Implementation;
-    using Implementation.HttpParsers;
+    using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation;
+    using Microsoft.ApplicationInsights.DependencyCollector.Implementation.HttpParsers;
+    using Microsoft.ApplicationInsights.Extensibility;
 
     /// <summary>
     /// Telemetry Initializer that parses http dependencies into well-known types like Azure Storage.
@@ -29,7 +29,8 @@
                     || DocumentDbHttpParser.TryParse(ref httpDependency)
                     || AzureServiceBusHttpParser.TryParse(ref httpDependency)
                     || GenericServiceHttpParser.TryParse(ref httpDependency)
-                    || AzureIotHubHttpParser.TryParse(ref httpDependency);
+                    || AzureIotHubHttpParser.TryParse(ref httpDependency)
+                    || AzureSearchHttpParser.TryParse(ref httpDependency);
             }
         }
     }

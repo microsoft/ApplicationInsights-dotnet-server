@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\Common.props" />
-  <Import Project="..\..\..\Nupkg.props" />
+  <Import Project="..\..\Product.props" />
 
   <PropertyGroup>
     <RootNamespace>Microsoft.ApplicationInsights.WindowsServer</RootNamespace>
     <AssemblyName>Microsoft.AI.WindowsServer</AssemblyName>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-    <!--<Prefer32Bit>false</Prefer32Bit>-->  <!--net45 ?-->
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,42 +16,15 @@
     <PackageTags>Azure Monitoring Analytics ApplicationInsights Telemetry AppInsights</PackageTags>
   </PropertyGroup>
 
-<!--   
-  <PropertyGroup>
-    <DelaySign>true</DelaySign>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-  </PropertyGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Signing.props'))\Signing.props" Condition="'$(DoNotSign)' == ''" />
--->
-  
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net45'">
-    <DefineConstants>$(DefineConstants);NET45;</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
-    <!--There is a bug affecting Code Analysis and NetStandard 1.6.
-        https://github.com/dotnet/core/issues/758
-        https://github.com/dotnet/roslyn-analyzers/issues/1313
-        Workaround is to disable Code Analysis.
-    -->
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-    <DefineConstants>$(DefineConstants);NETSTANDARD1_6;NETSTANDARD;</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup Condition=" '$(Configuration)' == 'Release' And $(OS) == 'Windows_NT'">
     <!--Analyzers and Build Infrastructure-->
     <PackageReference Include="Desktop.Analyzers" Version="1.1.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.0.2">
+    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.1">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.2">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="MicroBuild.Core" Version="0.3.0">
@@ -63,7 +34,8 @@
   
   <ItemGroup>
     <!--Common Dependencies-->
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.8.0-beta2" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.10.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel" Version="2.10.0" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.5.0" />
   </ItemGroup>
 
@@ -78,15 +50,20 @@
     <Content Include="ApplicationInsights.config.transform" />
     <Content Include="ApplicationInsights.config.install.xdt" />
     <Content Include="ApplicationInsights.config.uninstall.xdt" />
+    <Content Include="Microsoft.ApplicationInsights.WindowsServer.targets" PackagePath="build" />
   </ItemGroup>
   
-  <ItemGroup  Condition="'$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
     <!--Framework References-->    
     <Reference Include="System.Management" />
   </ItemGroup>
   
+  <ItemGroup>
+    <ProjectReference Include="..\..\DependencyCollector\DependencyCollector\DependencyCollector.csproj" />
+    <ProjectReference Include="..\..\PerformanceCollector\PerformanceCollector\Perf.csproj" />
+  </ItemGroup>
+  
   <Import Project="..\WindowsServer.Shared\WindowsServer.Shared.projitems" Label="Shared" />
   <Import Project="..\..\Common\Common.projitems" Label="Shared" />
-
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
 </Project>

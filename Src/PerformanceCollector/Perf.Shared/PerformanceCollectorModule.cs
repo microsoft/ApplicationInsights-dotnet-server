@@ -5,15 +5,17 @@
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
-    using System.Threading; 
-    using Extensibility.Implementation;
+    using System.Threading;
+
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerformanceCollector;
-    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerformanceCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.StandardPerfCollector;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.WebAppPerfCollector;
+
     using Timer = Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.Timer.Timer;
 
     /// <summary>
@@ -78,8 +80,7 @@
         {
             this.Counters = new List<PerformanceCounterCollectionRequest>();
 
-            this.collector = this.collector ?? (PerformanceCounterUtility.IsWebAppRunningInAzure() ? 
-                (IPerformanceCollector)new WebAppPerformanceCollector() : (IPerformanceCollector)new StandardPerformanceCollector());
+            this.collector = PerformanceCounterUtility.GetPerformanceCollector();
         }
 
         /// <summary>
@@ -144,7 +145,7 @@
                             string.Format(
                                 CultureInfo.InvariantCulture,
                                 "Custom counters count: '{0}'",
-                                this.Counters != null ? this.Counters.Count : 0));
+                                Counters?.Count ?? 0));
 
                         if (configuration == null)
                         {
@@ -153,17 +154,28 @@
 
                         if (!this.defaultCountersInitialized)
                         {
+                            // The following are the counters support in all cases.
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time", @"\Process(??APP_WIN32_PROC??)\% Processor Time"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized", @"\Process(??APP_WIN32_PROC??)\% Processor Time Normalized"));
-                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
+                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\Private Bytes", @"\Process(??APP_WIN32_PROC??)\Private Bytes"));
+
+#if NET45                   // The following are Asp.Net specific counters.
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests/Sec", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests/Sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec", @"\.NET CLR Exceptions(??APP_CLR_PROC??)\# of Exceps Thrown / sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Request Execution Time"));
-                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\Private Bytes", @"\Process(??APP_WIN32_PROC??)\Private Bytes"));
-                            this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));
                             this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue", @"\ASP.NET Applications(??APP_W3SVC_PROC??)\Requests In Application Queue"));
-                            if (!PerformanceCounterUtility.IsWebAppRunningInAzure())
+#endif
+
+                            if (this.collector.GetType().Name.Equals("WebAppPerformanceCollector", StringComparison.OrdinalIgnoreCase) || this.collector.GetType().Name.Equals("StandardPerformanceCollector", StringComparison.OrdinalIgnoreCase))
                             {
+                                // The systemwide Memory counter is enabled in WebApps.
+                                this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Memory\Available Bytes", @"\Memory\Available Bytes"));
+                                this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec", @"\Process(??APP_WIN32_PROC??)\IO Data Bytes/sec"));
+                            }                                                      
+                                                        
+                            if (this.collector.GetType().Name.Equals("StandardPerformanceCollector", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // Only time total CPU counter is available is if we are using StandardPerformanceCollector.
                                 this.DefaultCounters.Add(new PerformanceCounterCollectionRequest(@"\Processor(_Total)\% Processor Time", @"\Processor(_Total)\% Processor Time"));
                             }
                         }
@@ -202,7 +214,7 @@
         private static bool IsRunningUnderIisExpress()
         {
 #if NETSTANDARD1_6
-            // For netstandard target, only time perfcounter is active is if running as Azure WebApp
+            // For netstandard1.6 target, only time perfcounter is active is if running as Azure WebApp
             return false;
 #else
             var iisExpressProcessName = "iisexpress";
@@ -269,7 +281,7 @@
 
                 foreach (var result in results)
                 {
-                    var telemetry = this.CreateTelemetry(result.Item1, result.Item2);
+                    var telemetry = CreateTelemetry(result.Item1, result.Item2);
                     try
                     {
                         this.client.Track(telemetry);
@@ -323,7 +335,6 @@
                     this.collector.RegisterCounter(
                         req.PerformanceCounter,
                         req.ReportAs,
-                        true,
                         out error,
                         false);
 
@@ -379,7 +390,7 @@
         /// <param name="pc">PerformanceCounterData for which we are generating the telemetry.</param>
         /// <param name="value">The metric value for the respective performance counter data.</param>
         /// <returns>Metric telemetry object associated with the specific counter.</returns>
-        private MetricTelemetry CreateTelemetry(PerformanceCounterData pc, double value)
+        private static MetricTelemetry CreateTelemetry(PerformanceCounterData pc, double value)
         {
             var metricName = !string.IsNullOrWhiteSpace(pc.ReportAs)
                                  ? pc.ReportAs
@@ -396,7 +407,7 @@
                 Sum = value,
                 Min = value,
                 Max = value,
-                StandardDeviation = 0
+                StandardDeviation = 0,
             };
 
             metricTelemetry.Properties.Add("CounterInstanceName", pc.PerformanceCounter.InstanceName);

@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.Linq;
     using System.Web;
 
     using Microsoft.ApplicationInsights.Channel;
@@ -12,6 +13,7 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.TestFramework;
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.ApplicationInsights.Web.Implementation;
@@ -30,7 +32,7 @@
         private const string TestInstrumentationKey2 = nameof(TestInstrumentationKey2);
         private const string TestApplicationId1 = nameof(TestApplicationId1);
         private const string TestApplicationId2 = nameof(TestApplicationId2);
-        private readonly ConcurrentQueue<RequestTelemetry> sentTelemetry = new ConcurrentQueue<RequestTelemetry>();
+        private readonly ConcurrentQueue<ITelemetry> sentTelemetry = new ConcurrentQueue<ITelemetry>();
 
         [TestCleanup]
         public void Cleanup()
@@ -39,14 +41,10 @@
             {
             }
 
-#if NET45
             while (Activity.Current != null)
             {
                 Activity.Current.Stop();
             }
-#else
-            ActivityHelpers.CleanOperationContext();
-#endif
         }
 
         [TestMethod]
@@ -219,6 +217,19 @@
         }
 
         [TestMethod]
+        public void OnEndDoesNotSetUrlIfDisableTrackingPropertiesIsSet()
+        {
+            var context = HttpModuleHelper.GetFakeHttpContext();
+
+            var module = this.RequestTrackingTelemetryModuleFactory();
+            module.DisableTrackingProperties = true;
+            module.OnBeginRequest(context);
+            module.OnEndRequest(context);
+
+            Assert.Null(context.GetRequestTelemetry().Url); // "RequestTrackingTelemetryModule should not set Url if DisableTrackingProperties=true"
+        }
+
+        [TestMethod]
         public void OnEndTracksRequest()
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
@@ -370,6 +381,32 @@
         }
 
         [TestMethod]
+        public void OnEndDoesNotAddSourceFieldIfDisableTrackingPropertiesIsSet()
+        {
+            // ARRANGE  
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers.Add(RequestResponseHeaders.RequestContextHeader, this.GetCorrelationIdHeaderValue(TestApplicationId2));
+
+            var context = HttpModuleHelper.GetFakeHttpContext(headers);
+
+            // My instrumentation key and hence app id is random / newly generated. The appId header is different - hence a different component.
+            var config = TelemetryConfiguration.CreateDefault();
+            config.InstrumentationKey = TestInstrumentationKey1;
+            config.ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1);
+            
+            var module = this.RequestTrackingTelemetryModuleFactory(null /*use default*/);
+            module.DisableTrackingProperties = true;
+            
+            // ACT
+            module.Initialize(config);
+            module.OnBeginRequest(context);
+            module.OnEndRequest(context);
+
+            // VALIDATE
+            Assert.True(string.IsNullOrEmpty(context.GetRequestTelemetry().Source), "RequestTrackingTelemetryModule should not set source if DisableTrackingProperties=true");
+        }
+
+        [TestMethod]
         public void OnEndDoesNotAddSourceFieldForRequestWithOutSourceIkeyHeader()
         {
             // ARRANGE                                   
@@ -431,7 +468,8 @@
             module.TrackIntermediateRequest(context, restoredActivity);
             module.OnEndRequest(context);
             Assert.Equal(2, this.sentTelemetry.Count);
-            Assert.True(this.sentTelemetry.TryDequeue(out RequestTelemetry intermediateRequest));
+
+            var intermediateRequest = this.sentTelemetry.OfType<RequestTelemetry>().First();
 
             Assert.Equal(originalRequest.Id, intermediateRequest.Context.Operation.ParentId);
             Assert.Equal(originalRequest.Context.Operation.Id, intermediateRequest.Context.Operation.Id);
@@ -445,13 +483,7 @@
             var telemetryChannel = new StubTelemetryChannel()
             {
                 EndpointAddress = "https://endpointaddress",
-                OnSend = item =>
-                {
-                    if (item is RequestTelemetry request)
-                    {
-                        this.sentTelemetry.Enqueue(request);
-                    }
-                }
+                OnSend = item => this.sentTelemetry.Enqueue(item)
             };
 
             var configuration = new TelemetryConfiguration
@@ -460,7 +492,7 @@
                 InstrumentationKey = TestInstrumentationKey1,
                 ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1)
             };
-            configuration.TelemetryInitializers.Add(new Extensibility.OperationCorrelationTelemetryInitializer());
+            configuration.TelemetryInitializers.Add(new Microsoft.ApplicationInsights.Extensibility.OperationCorrelationTelemetryInitializer());
 
             var telemetryInitializer = new TestableOperationCorrelationTelemetryInitializer(fakeContext);
 
@@ -492,7 +524,18 @@
                 EnableW3CHeadersExtraction = enableW3CTracing
             };
 
-            module.Initialize(config ?? this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext()));
+            if (config == null)
+            {
+                config = this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext());
+            }
+
+            if (enableW3CTracing)
+            {
+                config.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+            }
+
+            module.Initialize(config);
+
             return module;
         }
 

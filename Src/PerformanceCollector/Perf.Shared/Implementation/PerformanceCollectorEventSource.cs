@@ -8,27 +8,19 @@
     [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "appDomainName is required")]
     internal sealed class PerformanceCollectorEventSource : EventSource
     {
-        private static readonly PerformanceCollectorEventSource Logger = new PerformanceCollectorEventSource();
         private readonly ApplicationNameProvider applicationNameProvider = new ApplicationNameProvider();
 
         private PerformanceCollectorEventSource()
         {
         }
 
-        public static PerformanceCollectorEventSource Log
-        {
-            get
-            {
-                return Logger;
-            }
-        }
+        public static PerformanceCollectorEventSource Log { get; } = new PerformanceCollectorEventSource();
 
-#region Infra init - success
+        #region Infra init - success
 
         [Event(1, Level = EventLevel.Informational, Message = @"Performance counter infrastructure is being initialized. {0}")]
         public void ModuleIsBeingInitializedEvent(
             string message,
-            string dummy = "dummy",
             string applicationName = "dummy")
         {
             this.WriteEvent(1, message, this.applicationNameProvider.Name);
@@ -188,8 +180,24 @@
             this.WriteEvent(21, this.applicationNameProvider.Name);
         }
 
+        [Event(22, Keywords = Keywords.UserActionable, Level = EventLevel.Error, Message = @"Performance counter is not available in the supported list of XPlatform counters. Counter is {0}.")]
+        public void CounterNotXPlatformSupported(
+    string counterName,
+    string applicationName = "dummy")
+        {
+            this.WriteEvent(22, counterName, this.applicationNameProvider.Name);
+        }
+
+        [Event(23, Level = EventLevel.Informational, Message = @"PerformanceCollector is: {0}.")]
+        public void InitializedWithCollector(
+            string collectorName,
+            string applicationName = "dummy")
+        {
+            this.WriteEvent(23, collectorName, this.applicationNameProvider.Name);
+        }
+
         #endregion
-        
+
         public class Keywords
         {
             public const EventKeywords UserActionable = (EventKeywords)0x1;

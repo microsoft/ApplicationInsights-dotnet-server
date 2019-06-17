@@ -1,19 +1,14 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'Test.props'))\Test.props" />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), NetCore.props))\NetCore.props" />  
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
-    <!--<DelaySign>true</DelaySign>-->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Microsoft.ApplicationInsights.DependencyCollector.NetCore.Tests</AssemblyName>
-    <!--<AssemblyOriginatorKeyFile>../../../Keys/35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>-->
-    <!--<SignAssembly>true</SignAssembly>-->
-    <!--<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>-->
     <PackageId>Microsoft.AI.DependencyCollector.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
-    <!--<DoNotSign>true</DoNotSign>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,9 +25,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.2" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.1.8-rc" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.0.8-rc" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.0.2" />
     <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
   </ItemGroup>

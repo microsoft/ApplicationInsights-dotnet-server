@@ -1,7 +1,55 @@
 # Changelog
 
+
+## vNext
+- [Fix: Replaced non-threadsafe HashSet with ConcurrentDictionary in RequestTrackingTelemetryModule.IsHandlerToFilter](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1211)
+
+## Version 2.11.0-beta1
+ - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
+ - [Azure Web App for Windows Containers to use regular PerfCounter mechanism.](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1167)
+ - [Support for Process CPU and Process Memory perf counters in all platforms including Linux.](https://github.com/microsoft/ApplicationInsights-dotnet-server/issues/1189)
+
+## Version 2.10.0
+- Updated Base SDK to 2.10.0
+
+## Version 2.10.0-beta4
+- Updated Base SDK to 2.10.0-beta4
+
+## Version 2.10.0-beta3
+- [Fix: QuickPulseTelemetryModule.Dispose should not throw if module was not initialized](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1170)
+- Added NetStandard2.0 Target for PerfCounter project.
+- Added support for PerfCounters for .Net Core Apps in Windows.
+- Updated Base SDK to 2.10.0-beta3
+
+## Version 2.10.0-beta2
+- Updated Base SDK to 2.10.0-beta2
+
+## Version 2.9.1
+- Updates Base SDK to version 2.9.1
+
+## Version 2.9.0
+- [Fix: remove unused reference to Microsoft.AspNet.TelemetryCorrelation package from DependencyCollector](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1136)
+- [Move W3C support from DependencyCollector package to base SDK, deprecate W3C support in DependencyCollector](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1138)
+
+## Version 2.9.0-beta3
+- Update Base SDK to version 2.9.0-beta3
+- [Fix: Correlation doesn't work for localhost](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1120). If you are upgrading and have previously opted into legacy header injection via `DependencyTrackingTelemetryModule.EnableLegacyCorrelationHeadersInjection` and run app locally with Azure Storage Emulator, make sure you manually exclude localhost from correlation headers injection in the `ExcludeComponentCorrelationHttpHeadersOnDomains` under `DependencyCollector`
+    ```xml
+        <Add>localhost</Add>
+        <Add>127.0.0.1</Add>
+    ```
+- [Fix: Non-default port is not included into the target for Http dependencies on .NET Core](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1121)
+- [When Activity has root id compatible with W3C trace Id, use it as trace id](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1107)
+
 ## Version 2.9.0-beta1
 - [Prevent duplicate dependency collection in multi-host apps](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/621)
+- [Fix missing transactions Sql dependencies](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/1031)
+- [Fix: Do not stop Activity in the Stop events, set end time instead](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1038)
+- [Fix: Add appSrv_ResourceGroup field to heartbeat properties from App Service](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1046)
+- [Add Azure Search dependency telemetry](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1048)
+- [Fix: Sql dependency tracking broken in 2.8.0+. Dependency operation is not stopped and becomes parent of subsequent operations](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1090)
+- [Fix: Wrong parentId reported on the SqlClient dependency on .NET Core](https://github.com/Microsoft/ApplicationInsights-aspnetcore/issues/778)
+- [Perf Fix - Replace TelemetryClient.Initialize() with TelemetryClient.InitializeInstrumentationKey() to avoid calling initializers more than once. ](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1094)
 
 ## Version 2.8.0-beta2
 - [LiveMetrics (QuickPulse) TelemetryProcessor added automatically to the default ApplicationInsights.config are moved under the default telemetry sink.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/987)

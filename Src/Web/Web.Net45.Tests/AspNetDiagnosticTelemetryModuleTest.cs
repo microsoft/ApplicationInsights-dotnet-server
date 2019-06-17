@@ -5,19 +5,20 @@
     using System.Diagnostics;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using System.Web;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
     using Microsoft.ApplicationInsights.Web;
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.ApplicationInsights.Web.TestFramework;
     using Microsoft.AspNet.TelemetryCorrelation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable 612, 618
     [TestClass]
     public class AspNetDiagnosticTelemetryModuleTest : IDisposable
     {
@@ -97,6 +98,46 @@
 
             Assert.AreEqual(requestTelemetry.Id, trace.Context.Operation.ParentId);
             Assert.AreEqual(requestTelemetry.Context.Operation.Id, trace.Context.Operation.Id);
+        }
+
+        // When telemetry is reported before AspNetDiagnosticsSource gets Start event
+        // we create an activity in App Insights.
+        // If this activity is lost on the way to BeginRequest on TelemteryCorrelation module
+        // there is no way to correlate before/after telemetry -
+        // TelemetryCorrelation module must be first in the pipeline, otherwise correlation is not guaranteed
+        // see https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1049
+        [Ignore]
+        [TestMethod]
+        public async Task TelemetryReportedBeforeAndAfterOnBeginAndLostActivity()
+        {
+            this.module = this.CreateModule();
+            var client = new TelemetryClient(this.configuration);
+
+            var trace1 = new TraceTelemetry("test1");
+            await Task.Run(() =>
+            {
+                HttpContext.Current = this.aspNetDiagnosticsSource.FakeContext;
+                client.TrackTrace(trace1);
+            });
+
+            HttpContext.Current = this.aspNetDiagnosticsSource.FakeContext;
+
+            this.aspNetDiagnosticsSource.StartActivity();
+
+            var trace2 = new TraceTelemetry("test2");
+            client.TrackTrace(trace2);
+
+            this.aspNetDiagnosticsSource.StopActivity();
+            Assert.AreEqual(3, this.sendItems.Count);
+
+            var requestTelemetry = this.sendItems.OfType<RequestTelemetry>().SingleOrDefault();
+            Assert.IsNotNull(requestTelemetry);
+
+            Assert.AreEqual(requestTelemetry.Context.Operation.Id, trace1.Context.Operation.Id);
+            Assert.AreEqual(requestTelemetry.Context.Operation.Id, trace2.Context.Operation.Id);
+
+            Assert.AreEqual(requestTelemetry.Id, trace1.Context.Operation.ParentId);
+            Assert.AreEqual(requestTelemetry.Id, trace2.Context.Operation.ParentId);
         }
 
         [TestMethod]
@@ -187,7 +228,7 @@
         [TestMethod]
         public void RequestTelemetryIsNotSetWithLegacyHeaders()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["x-ms-request-id"] = "guid1",
@@ -212,7 +253,7 @@
         [TestMethod]
         public void RequestTelemetryIsSetWithLegacyHeaders()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["x-ms-request-id"] = "guid1",
@@ -241,7 +282,7 @@
         public void RequestTelemetryIsSetWithCustomHeaders()
         {
             this.module = this.CreateModule("rootHeaderName", "parentHeaderName");
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["parentHeaderName"] = "ParentId",
@@ -267,7 +308,7 @@
         [TestMethod]
         public void StandardHeadersWinOverLegacyHeaders()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["x-ms-request-id"] = "legacy-id",
@@ -342,6 +383,7 @@
             Assert.AreEqual(32, request.Context.Operation.Id.Length);
             Assert.IsTrue(Regex.Match(request.Context.Operation.Id, @"[a-z][0-9]").Success);
 
+            Assert.AreEqual(request.Context.Operation.Id, activity.GetTraceId());
             Assert.AreEqual(request.Context.Operation.Id, activity.RootId);
             Assert.AreEqual(request.Context.Operation.ParentId, activity.GetParentSpanId());
             Assert.AreEqual(request.Id, $"|{activity.GetTraceId()}.{activity.GetSpanId()}.");
@@ -352,7 +394,7 @@
         [TestMethod]
         public void W3CHeadersWinOverLegacyWhenEnabled()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -385,7 +427,7 @@
         [TestMethod]
         public void W3CHeadersWinOverRequestIdWhenEnabled()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["traceparent"] = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
@@ -420,7 +462,7 @@
         [TestMethod]
         public void RequestIdBecomesParentWhenThereAreNoW3CHeaders()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["Request-Id"] = "|requestId."
@@ -455,9 +497,45 @@
         }
 
         [TestMethod]
+        public void RequestIdBecomesParentAndRootIfCompatibleWhenThereAreNoW3CHeaders()
+        {
+            this.aspNetDiagnosticsSource.FakeContext =
+                HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
+                {
+                    ["Request-Id"] = "|4bf92f3577b34da6a3ce929d0e0e4736."
+                });
+            this.module = this.CreateModule(enableW3cSupport: true);
+
+            var activity = new Activity(FakeAspNetDiagnosticSource.IncomingRequestEventName);
+
+            activity.Extract(HttpContext.Current.Request.Headers);
+
+            Assert.IsTrue(this.aspNetDiagnosticsSource.IsEnabled(FakeAspNetDiagnosticSource.IncomingRequestEventName, activity));
+            this.aspNetDiagnosticsSource.StartActivityWithoutChecks(activity);
+            this.aspNetDiagnosticsSource.StopActivity();
+
+            Assert.AreEqual("4bf92f3577b34da6a3ce929d0e0e4736", activity.GetTraceId());
+            Assert.AreEqual(16, activity.GetSpanId().Length);
+            Assert.IsNull(activity.GetParentSpanId());
+
+            Assert.AreEqual(1, this.sendItems.Count);
+
+            var requestTelemetry = this.sendItems[0] as RequestTelemetry;
+            Assert.IsNotNull(requestTelemetry);
+            Assert.AreEqual(activity.GetTraceId(), requestTelemetry.Context.Operation.Id);
+            Assert.AreEqual("|4bf92f3577b34da6a3ce929d0e0e4736.", requestTelemetry.Context.Operation.ParentId);
+            Assert.AreEqual($"|{activity.GetTraceId()}.{activity.GetSpanId()}.", requestTelemetry.Id);
+
+            Assert.IsFalse(requestTelemetry.Properties.ContainsKey(W3CConstants.LegacyRootIdProperty));
+
+            Assert.IsTrue(requestTelemetry.Properties.ContainsKey(W3CConstants.LegacyRequestIdProperty));
+            Assert.IsTrue(requestTelemetry.Properties[W3CConstants.LegacyRequestIdProperty].StartsWith("|4bf92f3577b34da6a3ce929d0e0e4736."));
+        }
+
+        [TestMethod]
         public void CustomHeadersBecomeParentWhenThereAreNoW3CHeaders()
         {
-            FakeAspNetDiagnosticSource.FakeContext =
+            this.aspNetDiagnosticsSource.FakeContext =
                 HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
                 {
                     ["rootHeaderName"] = "root",
@@ -513,6 +591,11 @@
 
             this.configuration.TelemetryInitializers.Add(new Extensibility.OperationCorrelationTelemetryInitializer());
 
+            if (enableW3cSupport)
+            {
+                this.configuration.TelemetryInitializers.Add(new W3COperationCorrelationTelemetryInitializer());
+            }
+
             AspNetDiagnosticTelemetryModule result = new AspNetDiagnosticTelemetryModule();
 
             var requestModule = new RequestTrackingTelemetryModule()
@@ -551,17 +634,22 @@
             private const string IncomingRequestStopRestoredActivity = "Microsoft.AspNet.HttpReqIn.ActivityRestored.Stop";
 
             private readonly DiagnosticListener listener;
+            private HttpContext fakeContext;
 
             public FakeAspNetDiagnosticSource()
             {
                 this.listener = new DiagnosticListener(AspNetListenerName);
-                HttpContext.Current = HttpModuleHelper.GetFakeHttpContext();
+                this.fakeContext = HttpModuleHelper.GetFakeHttpContext();
+                HttpContext.Current = this.fakeContext;
             }
 
-            public static HttpContext FakeContext
+            public HttpContext FakeContext
             {
+                get => this.fakeContext;
+
                 set
                 {
+                    this.fakeContext = value;
                     HttpContext.Current = value;
                 }
             }
@@ -659,5 +747,4 @@
             }
         }
     }
-#pragma warning restore 612, 618
 }

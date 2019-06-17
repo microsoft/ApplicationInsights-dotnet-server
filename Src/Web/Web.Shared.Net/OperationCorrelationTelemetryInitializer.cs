@@ -3,8 +3,9 @@
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Web;
-    using Common;
+
     using Microsoft.ApplicationInsights.Channel;
+    using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
@@ -82,16 +83,17 @@
             // - AND when the execution context is lost
             if (telemetry != requestTelemetry)
             {
-                if (!string.IsNullOrEmpty(telemetry.Context.Operation.Id))
+                var operation = telemetry.Context.Operation;
+                if (!string.IsNullOrEmpty(operation.Id))
                 {
                     // telemetry is already initialized
                     return;
                 }
 
-                telemetry.Context.Operation.Id = requestTelemetry.Context.Operation.Id;
-                if (string.IsNullOrEmpty(telemetry.Context.Operation.ParentId))
+                operation.Id = requestTelemetry.Context.Operation.Id;
+                if (string.IsNullOrEmpty(operation.ParentId))
                 {
-                    telemetry.Context.Operation.ParentId = requestTelemetry.Id;
+                    operation.ParentId = requestTelemetry.Id;
                 }
 
                 var activity = platformContext.Items[ActivityHelpers.RequestActivityItemName] as Activity;

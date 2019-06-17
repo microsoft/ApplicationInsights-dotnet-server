@@ -6,12 +6,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Globalization;
     using System.Linq;
     using System.Net;
-    using Extensibility.Implementation.Tracing;
+
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
-    using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
 
     /// <summary>
     /// Concrete class with all processing logic to generate RDD data from the callbacks
@@ -139,7 +140,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     {
                         // Instrumentation key is probably empty, because the context has not yet had a chance to associate the requestTelemetry to the telemetry client yet.
                         // and get they instrumentation key from all possible sources in the process. Let's do that now.
-                        this.telemetryClient.Initialize(telemetry);
+                        this.telemetryClient.InitializeInstrumentationKey(telemetry);
                     }
                 }
 
@@ -210,17 +211,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
                     }
 
-#pragma warning disable 612, 618
                     if (this.injectW3CHeaders && currentActivity != null)
                     {
                         string traceParent = currentActivity.GetTraceparent();
-                        if (traceParent != null && webRequest.Headers[W3CConstants.TraceParentHeader] == null)
+                        if (traceParent != null && webRequest.Headers[W3C.W3CConstants.TraceParentHeader] == null)
                         {
-                            webRequest.Headers.Add(W3CConstants.TraceParentHeader, traceParent);
+                            webRequest.Headers.Add(W3C.W3CConstants.TraceParentHeader, traceParent);
                         }
 
                         string traceState = currentActivity.GetTracestate();
-                        if (webRequest.Headers[W3CConstants.TraceStateHeader] == null)
+                        if (webRequest.Headers[W3C.W3CConstants.TraceStateHeader] == null)
                         {
                             if (applicationId != null)
                             {
@@ -238,11 +238,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                             if (traceState != null)
                             {
-                                webRequest.Headers.Add(W3CConstants.TraceStateHeader, traceState);
+                                webRequest.Headers.Add(W3C.W3CConstants.TraceStateHeader, traceState);
                             }
                         }
                     }
-#pragma warning restore 612, 618
                 }
             }
             catch (Exception exception)
@@ -281,10 +280,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         {
                             statusCode = (int)responseObj.StatusCode;
                             this.SetTarget(telemetry, responseObj.Headers);
-                            if (this.injectW3CHeaders && request is HttpWebRequest httpRequest)
-                            {
-                                // this.SetLegacyId(telemetry, httpRequest.Headers);
-                            }
 
                             // Set the operation details for the response
                             telemetry.SetOperationDetail(RemoteDependencyConstants.HttpResponseOperationDetailName, responseObj);

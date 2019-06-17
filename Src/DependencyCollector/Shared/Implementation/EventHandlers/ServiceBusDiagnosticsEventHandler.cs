@@ -7,6 +7,7 @@
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.Extensibility.W3C;
 
     /// <summary>
     /// Implements ServiceBus DiagnosticSource events handling.
@@ -34,10 +35,11 @@
             {
                 case "Microsoft.Azure.ServiceBus.ProcessSession.Stop":
                 case "Microsoft.Azure.ServiceBus.Process.Stop":
-                    // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
+                    // If we started auxiliary Activity before to override the Id with W3C compatible one,
+                    // now it's time to set end time on it
                     if (currentActivity.Duration == TimeSpan.Zero)
                     {
-                        currentActivity.Stop();
+                        currentActivity.SetEndTime(DateTime.UtcNow);
                     }
 
                     this.OnRequest(evnt.Key, evnt.Value, currentActivity);
@@ -56,15 +58,16 @@
                         // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331 (TODO)
                         if (currentActivity.Parent == null && currentActivity.ParentId == null)
                         {
-                            currentActivity.UpdateParent(StringUtilities.GenerateTraceId());
+                            currentActivity.UpdateParent(W3CUtilities.GenerateTraceId());
                         }
                     }
                     else if (evnt.Key.EndsWith(TelemetryDiagnosticSourceListener.ActivityStopNameSuffix, StringComparison.Ordinal))
                     {
-                        // If we started auxiliary Activity before to override the Id with W3C compatible one, now it's time to stop it
+                        // If we started auxiliary Activity before to override the Id with W3C compatible one,
+                        // now it's time to set end time on it
                         if (currentActivity.Duration == TimeSpan.Zero)
                         {
-                            currentActivity.Stop();
+                            currentActivity.SetEndTime(DateTime.UtcNow);
                         }
 
                         this.OnDependency(evnt.Key, evnt.Value, currentActivity);

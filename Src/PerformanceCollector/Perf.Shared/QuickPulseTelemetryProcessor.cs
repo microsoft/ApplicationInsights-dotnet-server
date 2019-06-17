@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
@@ -22,13 +23,13 @@
     public class QuickPulseTelemetryProcessor : ITelemetryProcessor, ITelemetryModule, IQuickPulseTelemetryProcessor
     {
         /// <summary>
-        /// An overall, cross-stream quota tracker
+        /// An overall, cross-stream quota tracker.
         /// </summary>
         private readonly QuickPulseQuotaTracker globalQuotaTracker;
 
         /// <summary>
-        /// 1.0 - initial release
-        /// 1.1 - added DocumentStreamId, EventTelemetryDocument, TraceTelemetryDocument
+        /// 1.0 - initial release.
+        /// 1.1 - added DocumentStreamId, EventTelemetryDocument, TraceTelemetryDocument.
         /// </summary>
         private const string TelemetryDocumentContractVersion = "1.1";
 
@@ -92,6 +93,13 @@
                 maxGlobalTelemetryQuota ?? MaxGlobalTelemetryQuota,
                 initialGlobalTelemetryQuota ?? InitialGlobalTelemetryQuota);
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether request properties
+        /// which were disabled via "RequestTrackingTelemetryModule.DisableTrackingProperties" should be evaluated.
+        /// </summary>
+        /// <remarks>This feature is still being evaluated and not recommended for end users.</remarks>
+        internal bool EvaluateDisabledTrackingProperties { get; set; }
 
         private ITelemetryProcessor Next { get; }
 
@@ -178,8 +186,27 @@
             }
         }
 
-        private static ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
+        private ITelemetryDocument ConvertRequestToTelemetryDocument(RequestTelemetry requestTelemetry)
         {
+            var url = requestTelemetry.Url;
+#if NET45
+            if (this.EvaluateDisabledTrackingProperties && url == null)
+            {
+                try
+                {
+                    // some of the requestTelemetry properties might be deffered by using RequestTrackingTelemetryModule.DisableTrackingProperties.
+                    // evaluate them now
+                    // note: RequestTrackingUtilities.UpdateRequestTelemetryFromRequest is not used here, since not all fields need to be populated
+                    var request = System.Web.HttpContext.Current?.Request;
+                    url = request?.Unvalidated.Url;
+                }
+                catch (Exception e)
+                {
+                    QuickPulseEventSource.Log.UnknownErrorEvent(e.ToInvariantString());
+                }
+            }
+#endif
+
             ITelemetryDocument telemetryDocument = new RequestTelemetryDocument()
             {
                 Id = Guid.NewGuid(),
@@ -191,7 +218,7 @@
                 Duration = requestTelemetry.Duration,
                 ResponseCode = requestTelemetry.ResponseCode,
                 Url = requestTelemetry.Url,
-                Properties = GetProperties(requestTelemetry)
+                Properties = GetProperties(requestTelemetry),
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, requestTelemetry);
@@ -214,7 +241,7 @@
                 ResultCode = dependencyTelemetry.ResultCode,
                 CommandName = TruncateValue(dependencyTelemetry.Data),
                 DependencyTypeName = dependencyTelemetry.Type,
-                Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName)
+                Properties = GetProperties(dependencyTelemetry, SpecialDependencyPropertyName),
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, dependencyTelemetry);
@@ -233,7 +260,7 @@
                 ExceptionType = exceptionTelemetry.Exception != null ? TruncateValue(exceptionTelemetry.Exception.GetType().FullName) : null,
                 ExceptionMessage = TruncateValue(ExpandExceptionMessage(exceptionTelemetry)),
                 OperationId = TruncateValue(exceptionTelemetry.Context?.Operation?.Id),
-                Properties = GetProperties(exceptionTelemetry)
+                Properties = GetProperties(exceptionTelemetry),
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, exceptionTelemetry);
@@ -250,7 +277,7 @@
                 Timestamp = eventTelemetry.Timestamp,
                 OperationId = TruncateValue(eventTelemetry.Context?.Operation?.Id),
                 Name = TruncateValue(eventTelemetry.Name),
-                Properties = GetProperties(eventTelemetry)
+                Properties = GetProperties(eventTelemetry),
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, eventTelemetry);
@@ -267,7 +294,7 @@
                 Timestamp = traceTelemetry.Timestamp,
                 Message = TruncateValue(traceTelemetry.Message),
                 SeverityLevel = traceTelemetry.SeverityLevel.ToString(),
-                Properties = GetProperties(traceTelemetry)
+                Properties = GetProperties(traceTelemetry),
             };
 
             SetCommonTelemetryDocumentData(telemetryDocument, traceTelemetry);
@@ -463,7 +490,7 @@
                             documentStreams,
                             documentStream => documentStream.RequestQuotaTracker,
                             documentStream => documentStream.CheckFilters(telemetryAsRequest, out groupErrors),
-                            ConvertRequestToTelemetryDocument);
+                            this.ConvertRequestToTelemetryDocument);
                     }
                     else if (telemetryAsDependency != null)
                     {
