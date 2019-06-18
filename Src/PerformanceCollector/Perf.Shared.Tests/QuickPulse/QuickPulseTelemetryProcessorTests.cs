@@ -3114,6 +3114,7 @@
                 DocumentFilterGroups =
                     new[]
                     {
+                        // TODO: SHOULD GET THESE FILTERS FROM THE PARAMATER SO OTHER TESTS CAN SHARE THIS METHOD
                         new DocumentFilterConjunctionGroupInfo()
                         {
                             TelemetryType = TelemetryType.Request,
