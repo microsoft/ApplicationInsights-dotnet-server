@@ -3015,35 +3015,9 @@
         }
 
         [TestMethod]
-        public void VerifyDeferredBehavior()
+        public void VerifyBehaviorWhenDeferredIsTrue()
         {
-            // ARRANGE
-            var requestsDocumentStreamInfo = new DocumentStreamInfo()
-            {
-                Id = "StreamRequests",
-                DocumentFilterGroups =
-                    new[]
-                    {
-                        new DocumentFilterConjunctionGroupInfo()
-                        {
-                            TelemetryType = TelemetryType.Request,
-                            Filters =
-                                new FilterConjunctionGroupInfo
-                                {
-                                    Filters = new[] { new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" } }
-                                }
-                        },
-                    }
-            };
-
-            var collectionConfigurationInfo = new CollectionConfigurationInfo()
-            {
-                DocumentStreams = new[] { requestsDocumentStreamInfo },
-            };
-            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
-            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
-
-            // SETUP QuickPulseTelemetryProcessor
+            // SETUP CONFIG
             var instrumentationKey = "some ikey";
             var config = new TelemetryConfiguration()
             {
@@ -3051,17 +3025,12 @@
             };
             config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
 
-            var spy = new SimpleTelemetryProcessorSpy();
-            var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
-            telemetryProcessor.Initialize(config);
+            // ARRANGE
+            var accumulatorManager = GetAccumulationManager();
+            var telemetryProcessor = GetQuickPulseTelemetryProcessor(accumulatorManager, config);
 
             // ASSERT QuickPulseTelemetryProcessor was Initialized
             Assert.IsTrue(telemetryProcessor.EvaluateDisabledTrackingProperties);
-
-            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
-                accumulatorManager,
-                new Uri("http://microsoft.com"),
-                config);
 
             // ACT
             var request = new RequestTelemetry()
@@ -3089,19 +3058,96 @@
 
             // this is what we care about
             Assert.IsNotNull(requestTelemetryDocument.Url, "request url was not set");
-            Assert.AreEqual(context.Request.Url, requestTelemetryDocument.Url); 
         }
 
-        //private static QuickPulseDataAccumulatorManager GetAccumulationManager()
-        //{
+        [TestMethod]
+        public void VerifyBehaviorWhenDeferredIsFalse()
+        {
+            // SETUP CONFIG
+            var instrumentationKey = "some ikey";
+            var config = new TelemetryConfiguration()
+            {
+                InstrumentationKey = instrumentationKey
+            };
 
-        //}
+            // ARRANGE
+            var accumulatorManager = GetAccumulationManager();
+            var telemetryProcessor = GetQuickPulseTelemetryProcessor(accumulatorManager, config);
 
-        //private static QuickPulseTelemetryProcessor GetQuickPulseTelemetryProcessor(QuickPulseDataAccumulatorManager accumulatorManager, TelemetryConfiguration configuration)
-        //{
+            // ASSERT QuickPulseTelemetryProcessor was Initialized
+            Assert.IsFalse(telemetryProcessor.EvaluateDisabledTrackingProperties);
 
-        //}
+            // ACT
+            var request = new RequestTelemetry()
+            {
+                Name = Guid.NewGuid().ToString(),
+                Success = true,
+                ResponseCode = "500",
+                Context = { InstrumentationKey = instrumentationKey },
+                Url = null, // THIS IS WHAT WE'RE TESTING
+            };
 
+            var context = GetFakeHttpContext();
+
+            telemetryProcessor.Process(request);
+
+            // ASSERT
+            Assert.IsFalse(accumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached);
+            Assert.AreEqual(1, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
+            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray();
+
+            Assert.AreEqual(TelemetryDocumentType.Request, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[0].DocumentType));
+            var requestTelemetryDocument = (RequestTelemetryDocument)collectedTelemetry[0];
+
+            Assert.AreEqual(request.Name, requestTelemetryDocument.Name);
+
+            // this is what we care about
+            Assert.IsNull(requestTelemetryDocument.Url, "request url was not set");
+        }
+
+        private static QuickPulseDataAccumulatorManager GetAccumulationManager()
+        {
+            var requestsDocumentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "StreamRequests",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters = new[] { new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" } }
+                                }
+                        },
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { requestsDocumentStreamInfo },
+            };
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+
+            return accumulatorManager;
+        }
+
+        private static QuickPulseTelemetryProcessor GetQuickPulseTelemetryProcessor(QuickPulseDataAccumulatorManager accumulatorManager, TelemetryConfiguration configuration)
+        {
+            var spy = new SimpleTelemetryProcessorSpy();
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
+            telemetryProcessor.Initialize(configuration);
+
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                configuration);
+
+            return telemetryProcessor;
+        }
 
         private static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null)
         {
