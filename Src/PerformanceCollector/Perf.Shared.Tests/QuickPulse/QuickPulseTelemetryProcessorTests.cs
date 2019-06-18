@@ -3042,7 +3042,7 @@
                 Url = null, // THIS IS WHAT WE'RE TESTING
             };
 
-            var context = GetFakeHttpContext();
+            var httpContext = GetFakeHttpContext(); // QuickPulseTelemetryProcessor should use the Url from the Current HttpContext.
 
             telemetryProcessor.Process(request);
 
@@ -3058,6 +3058,7 @@
 
             // this is what we care about
             Assert.IsNotNull(requestTelemetryDocument.Url, "request url was not set");
+            Assert.AreEqual(httpContext.Request.Url, requestTelemetryDocument.Url, "RequestTelemetryDocument should use the URL of the httpcontext");
         }
 
         [TestMethod]
@@ -3086,8 +3087,6 @@
                 Context = { InstrumentationKey = instrumentationKey },
                 Url = null, // THIS IS WHAT WE'RE TESTING
             };
-
-            var context = GetFakeHttpContext();
 
             telemetryProcessor.Process(request);
 
