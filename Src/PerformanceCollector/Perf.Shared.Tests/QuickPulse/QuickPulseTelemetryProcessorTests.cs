@@ -2990,7 +2990,7 @@
             Assert.AreEqual(taskCount - 1, allBadSlowMaxValue);
         }
 
-#if NETFULL
+#if NET45
         [TestMethod]
         public void VerifyInitializationWhenDeferredIsTrue()
         {
