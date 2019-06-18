@@ -3015,12 +3015,12 @@
         }
 
         [TestMethod]
-        public void TestDeferredBehavior()
+        public void VerifyDeferredBehavior()
         {
             // ARRANGE
-            var requestsAndDependenciesDocumentStreamInfo = new DocumentStreamInfo()
+            var requestsDocumentStreamInfo = new DocumentStreamInfo()
             {
-                Id = "StreamRequestsAndDependenciesAndExceptions",
+                Id = "StreamRequests",
                 DocumentFilterGroups =
                     new[]
                     {
@@ -3030,35 +3030,7 @@
                             Filters =
                                 new FilterConjunctionGroupInfo
                                 {
-                                    Filters =
-                                        new[]
-                                        {
-                                            new FilterInfo { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "500" },
-                                            new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" }
-                                        }
-                                }
-                        },
-                        new DocumentFilterConjunctionGroupInfo()
-                        {
-                            TelemetryType = TelemetryType.Dependency,
-                            Filters =
-                                new FilterConjunctionGroupInfo
-                                {
-                                    Filters = new[] { new FilterInfo { FieldName = "Duration", Predicate = Predicate.Equal, Comparand = "0.00:00:01" } }
-                                }
-                        },
-                         new DocumentFilterConjunctionGroupInfo()
-                        {
-                            TelemetryType = TelemetryType.Exception,
-                            Filters =
-                                new FilterConjunctionGroupInfo
-                                {
-                                    Filters =
-                                        new[]
-                                        {
-                                            new FilterInfo { FieldName = "CustomDimensions.Prop1", Predicate = Predicate.Equal, Comparand = "Val1" },
-                                            new FilterInfo { FieldName = "CustomDimensions.Prop2", Predicate = Predicate.Equal, Comparand = "Val2" }
-                                        }
+                                    Filters = new[] { new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" } }
                                 }
                         },
                     }
@@ -3066,26 +3038,30 @@
 
             var collectionConfigurationInfo = new CollectionConfigurationInfo()
             {
-                DocumentStreams = new[] { requestsAndDependenciesDocumentStreamInfo },
-                ETag = "ETag1"
+                DocumentStreams = new[] { requestsDocumentStreamInfo },
             };
-
             var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
-
             var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
 
-            var config = new TelemetryConfiguration();
+            // SETUP QuickPulseTelemetryProcessor
+            var instrumentationKey = "some ikey";
+            var config = new TelemetryConfiguration()
+            {
+                InstrumentationKey = instrumentationKey
+            };
             config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
 
             var spy = new SimpleTelemetryProcessorSpy();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
             telemetryProcessor.Initialize(config);
 
-            var instrumentationKey = "some ikey";
+            // ASSERT QuickPulseTelemetryProcessor was Initialized
+            Assert.IsTrue(telemetryProcessor.EvaluateDisabledTrackingProperties);
+
             ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
                 accumulatorManager,
                 new Uri("http://microsoft.com"),
-                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+                config);
 
             // ACT
             var request = new RequestTelemetry()
@@ -3093,8 +3069,6 @@
                 Name = Guid.NewGuid().ToString(),
                 Success = true,
                 ResponseCode = "500",
-                Duration = TimeSpan.FromSeconds(1),
-                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
                 Context = { InstrumentationKey = instrumentationKey },
                 Url = null, // THIS IS WHAT WE'RE TESTING
             };
@@ -3117,6 +3091,17 @@
             Assert.IsNotNull(requestTelemetryDocument.Url, "request url was not set");
             Assert.AreEqual(context.Request.Url, requestTelemetryDocument.Url); 
         }
+
+        //private static QuickPulseDataAccumulatorManager GetAccumulationManager()
+        //{
+
+        //}
+
+        //private static QuickPulseTelemetryProcessor GetQuickPulseTelemetryProcessor(QuickPulseDataAccumulatorManager accumulatorManager, TelemetryConfiguration configuration)
+        //{
+
+        //}
+
 
         private static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null)
         {
