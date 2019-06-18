@@ -12,6 +12,7 @@
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Experimental;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers;
@@ -114,6 +115,8 @@
             this telemetry processor will only collect for whichever instrumentation key is specified by the module in StartCollection call.
             */
 
+            this.EvaluateDisabledTrackingProperties = configuration.EvaluateExperimentalFeature("deferRequestTrackingProperties");
+
             this.Register();
         }
 
@@ -194,7 +197,7 @@
             {
                 try
                 {
-                    // some of the requestTelemetry properties might be deffered by using RequestTrackingTelemetryModule.DisableTrackingProperties.
+                    // some of the requestTelemetry properties might be deferred by using RequestTrackingTelemetryModule.DisableTrackingProperties.
                     // evaluate them now
                     // note: RequestTrackingUtilities.UpdateRequestTelemetryFromRequest is not used here, since not all fields need to be populated
                     var request = System.Web.HttpContext.Current?.Request;
@@ -217,7 +220,7 @@
                 Success = requestTelemetry.Success,
                 Duration = requestTelemetry.Duration,
                 ResponseCode = requestTelemetry.ResponseCode,
-                Url = requestTelemetry.Url,
+                Url = url,
                 Properties = GetProperties(requestTelemetry),
             };
 

@@ -3,9 +3,12 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
-
+    using System.Web;
+    using System.Web.Hosting;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -2986,5 +2989,223 @@
             Assert.AreEqual((taskCount / 2) + 1, allBadSlowMinValue);
             Assert.AreEqual(taskCount - 1, allBadSlowMaxValue);
         }
+
+#if NETFULL
+        [TestMethod]
+        public void VerifyInitializationWhenDeferredIsTrue()
+        {
+            var config = new TelemetryConfiguration();
+            config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
+
+            var spy = new SimpleTelemetryProcessorSpy();
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
+            telemetryProcessor.Initialize(config);
+
+            Assert.IsTrue(telemetryProcessor.EvaluateDisabledTrackingProperties);
+        }
+
+        [TestMethod]
+        public void VerifyInitializationWhenDeferredIsFalse()
+        {
+            var spy = new SimpleTelemetryProcessorSpy();
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
+            telemetryProcessor.Initialize(new TelemetryConfiguration());
+
+            Assert.IsFalse(telemetryProcessor.EvaluateDisabledTrackingProperties);
+        }
+
+        [TestMethod]
+        public void TestDeferredBehavior()
+        {
+            // ARRANGE
+            var requestsAndDependenciesDocumentStreamInfo = new DocumentStreamInfo()
+            {
+                Id = "StreamRequestsAndDependenciesAndExceptions",
+                DocumentFilterGroups =
+                    new[]
+                    {
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Request,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "ResponseCode", Predicate = Predicate.Equal, Comparand = "500" },
+                                            new FilterInfo { FieldName = "Success", Predicate = Predicate.Equal, Comparand = "0" }
+                                        }
+                                }
+                        },
+                        new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Dependency,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters = new[] { new FilterInfo { FieldName = "Duration", Predicate = Predicate.Equal, Comparand = "0.00:00:01" } }
+                                }
+                        },
+                         new DocumentFilterConjunctionGroupInfo()
+                        {
+                            TelemetryType = TelemetryType.Exception,
+                            Filters =
+                                new FilterConjunctionGroupInfo
+                                {
+                                    Filters =
+                                        new[]
+                                        {
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop1", Predicate = Predicate.Equal, Comparand = "Val1" },
+                                            new FilterInfo { FieldName = "CustomDimensions.Prop2", Predicate = Predicate.Equal, Comparand = "Val2" }
+                                        }
+                                }
+                        },
+                    }
+            };
+
+            var collectionConfigurationInfo = new CollectionConfigurationInfo()
+            {
+                DocumentStreams = new[] { requestsAndDependenciesDocumentStreamInfo },
+                ETag = "ETag1"
+            };
+
+            var collectionConfiguration = new CollectionConfiguration(collectionConfigurationInfo, out errors, new ClockMock());
+
+            var accumulatorManager = new QuickPulseDataAccumulatorManager(collectionConfiguration);
+
+            var config = new TelemetryConfiguration();
+            config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
+
+            var spy = new SimpleTelemetryProcessorSpy();
+            var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
+            telemetryProcessor.Initialize(config);
+
+            var instrumentationKey = "some ikey";
+            ((IQuickPulseTelemetryProcessor)telemetryProcessor).StartCollection(
+                accumulatorManager,
+                new Uri("http://microsoft.com"),
+                new TelemetryConfiguration() { InstrumentationKey = instrumentationKey });
+
+            // ACT
+            var request = new RequestTelemetry()
+            {
+                Name = Guid.NewGuid().ToString(),
+                Success = true,
+                ResponseCode = "500",
+                Duration = TimeSpan.FromSeconds(1),
+                Properties = { { "Prop1", "Val1" }, { "Prop2", "Val2" }, { "Prop3", "Val3" }, { "Prop4", "Val4" } },
+                Context = { InstrumentationKey = instrumentationKey },
+                Url = null, // THIS IS WHAT WE'RE TESTING
+            };
+
+            var context = GetFakeHttpContext();
+
+            telemetryProcessor.Process(request);
+
+            // ASSERT
+            Assert.IsFalse(accumulatorManager.CurrentDataAccumulator.GlobalDocumentQuotaReached);
+            Assert.AreEqual(1, accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.Count);
+            var collectedTelemetry = accumulatorManager.CurrentDataAccumulator.TelemetryDocuments.ToArray().Reverse().ToArray();
+
+            Assert.AreEqual(TelemetryDocumentType.Request, Enum.Parse(typeof(TelemetryDocumentType), collectedTelemetry[0].DocumentType));
+            var requestTelemetryDocument = (RequestTelemetryDocument)collectedTelemetry[0];
+
+            Assert.AreEqual(request.Name, requestTelemetryDocument.Name);
+
+            // this is what we care about
+            Assert.IsNotNull(requestTelemetryDocument.Url, "request url was not set");
+            Assert.AreEqual(context.Request.Url, requestTelemetryDocument.Url); 
+        }
+
+        private static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null)
+        {
+            string urlPath = "/SeLog.svc/EventData";
+            string urlQueryString = "eventDetail=2";
+
+            Thread.GetDomain().SetData(".appPath", string.Empty);
+            Thread.GetDomain().SetData(".appVPath", string.Empty);
+
+            var workerRequest = new SimpleWorkerRequestWithHeaders(urlPath, urlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers, remoteAddr);
+
+            var context = new HttpContext(workerRequest);
+            HttpContext.Current = context;
+
+            return context;
+        }
+
+        private class SimpleWorkerRequestWithHeaders : SimpleWorkerRequest
+        {
+            private readonly IDictionary<string, string> headers;
+
+            private readonly Func<string> getRemoteAddress;
+
+            public SimpleWorkerRequestWithHeaders(string page, string query, TextWriter output, IDictionary<string, string> headers, Func<string> getRemoteAddress = null)
+                : base(page, query, output)
+            {
+                if (headers != null)
+                {
+                    this.headers = headers;
+                }
+                else
+                {
+                    this.headers = new Dictionary<string, string>();
+                }
+
+                this.getRemoteAddress = getRemoteAddress;
+            }
+
+            public override string[][] GetUnknownRequestHeaders()
+            {
+                List<string[]> result = new List<string[]>();
+
+                foreach (var header in this.headers)
+                {
+                    result.Add(new string[] { header.Key, header.Value });
+                }
+
+                var baseResult = base.GetUnknownRequestHeaders();
+                if (baseResult != null)
+                {
+                    result.AddRange(baseResult);
+                }
+
+                return result.ToArray();
+            }
+
+            public override string GetUnknownRequestHeader(string name)
+            {
+                if (this.headers.ContainsKey(name))
+                {
+                    return this.headers[name];
+                }
+
+                return base.GetUnknownRequestHeader(name);
+            }
+
+            public override string GetKnownRequestHeader(int index)
+            {
+                var name = HttpWorkerRequest.GetKnownRequestHeaderName(index);
+
+                if (this.headers.ContainsKey(name))
+                {
+                    return this.headers[name];
+                }
+
+                return base.GetKnownRequestHeader(index);
+            }
+
+            public override string GetRemoteAddress()
+            {
+                if (this.getRemoteAddress != null)
+                {
+                    return this.getRemoteAddress();
+                }
+
+                return base.GetRemoteAddress();
+            }
+        }
+
+#endif
     }
 }

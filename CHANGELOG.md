@@ -5,7 +5,7 @@
 - [Fix: Replaced non-threadsafe HashSet with ConcurrentDictionary in RequestTrackingTelemetryModule.IsHandlerToFilter](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1211)
 
 ## Version 2.11.0-beta1
- - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
+ - Experimental: [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
  - [Azure Web App for Windows Containers to use regular PerfCounter mechanism.](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1167)
  - [Support for Process CPU and Process Memory perf counters in all platforms including Linux.](https://github.com/microsoft/ApplicationInsights-dotnet-server/issues/1189)
 
