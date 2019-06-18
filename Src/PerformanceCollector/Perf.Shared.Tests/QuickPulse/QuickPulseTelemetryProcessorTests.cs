@@ -15,6 +15,7 @@
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse;
     using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse;
+    using Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Tests.Helpers;
     using Microsoft.ApplicationInsights.Web.Helpers;
     using Microsoft.ManagementServices.RealTimeDataProcessing.QuickPulseService;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -3042,7 +3043,7 @@
                 Url = null, // THIS IS WHAT WE'RE TESTING
             };
 
-            var httpContext = GetFakeHttpContext(); // QuickPulseTelemetryProcessor should use the Url from the Current HttpContext.
+            var httpContext = HttpContextHelper.SetFakeHttpContext(); // QuickPulseTelemetryProcessor should use the Url from the Current HttpContext.
 
             telemetryProcessor.Process(request);
 
@@ -3103,6 +3104,7 @@
             // this is what we care about
             Assert.IsNull(requestTelemetryDocument.Url, "request url was not set");
         }
+#endif
 
         private static QuickPulseDataAccumulatorManager GetAccumulationManager()
         {
@@ -3147,95 +3149,5 @@
 
             return telemetryProcessor;
         }
-
-        private static HttpContext GetFakeHttpContext(IDictionary<string, string> headers = null, Func<string> remoteAddr = null)
-        {
-            string urlPath = "/SeLog.svc/EventData";
-            string urlQueryString = "eventDetail=2";
-
-            Thread.GetDomain().SetData(".appPath", string.Empty);
-            Thread.GetDomain().SetData(".appVPath", string.Empty);
-
-            var workerRequest = new SimpleWorkerRequestWithHeaders(urlPath, urlQueryString, new StringWriter(CultureInfo.InvariantCulture), headers, remoteAddr);
-
-            var context = new HttpContext(workerRequest);
-            HttpContext.Current = context;
-
-            return context;
-        }
-
-        private class SimpleWorkerRequestWithHeaders : SimpleWorkerRequest
-        {
-            private readonly IDictionary<string, string> headers;
-
-            private readonly Func<string> getRemoteAddress;
-
-            public SimpleWorkerRequestWithHeaders(string page, string query, TextWriter output, IDictionary<string, string> headers, Func<string> getRemoteAddress = null)
-                : base(page, query, output)
-            {
-                if (headers != null)
-                {
-                    this.headers = headers;
-                }
-                else
-                {
-                    this.headers = new Dictionary<string, string>();
-                }
-
-                this.getRemoteAddress = getRemoteAddress;
-            }
-
-            public override string[][] GetUnknownRequestHeaders()
-            {
-                List<string[]> result = new List<string[]>();
-
-                foreach (var header in this.headers)
-                {
-                    result.Add(new string[] { header.Key, header.Value });
-                }
-
-                var baseResult = base.GetUnknownRequestHeaders();
-                if (baseResult != null)
-                {
-                    result.AddRange(baseResult);
-                }
-
-                return result.ToArray();
-            }
-
-            public override string GetUnknownRequestHeader(string name)
-            {
-                if (this.headers.ContainsKey(name))
-                {
-                    return this.headers[name];
-                }
-
-                return base.GetUnknownRequestHeader(name);
-            }
-
-            public override string GetKnownRequestHeader(int index)
-            {
-                var name = HttpWorkerRequest.GetKnownRequestHeaderName(index);
-
-                if (this.headers.ContainsKey(name))
-                {
-                    return this.headers[name];
-                }
-
-                return base.GetKnownRequestHeader(index);
-            }
-
-            public override string GetRemoteAddress()
-            {
-                if (this.getRemoteAddress != null)
-                {
-                    return this.getRemoteAddress();
-                }
-
-                return base.GetRemoteAddress();
-            }
-        }
-
-#endif
     }
 }
