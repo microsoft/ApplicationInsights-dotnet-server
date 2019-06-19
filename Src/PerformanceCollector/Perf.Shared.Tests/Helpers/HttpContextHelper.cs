@@ -1,5 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Tests.Helpers
 {
+#if NET45
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -7,6 +8,7 @@
     using System.Threading;
     using System.Web;
     using System.Web.Hosting;
+#endif
 
     public static class HttpContextHelper
     {
