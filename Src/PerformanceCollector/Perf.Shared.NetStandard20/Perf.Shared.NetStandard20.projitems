@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)CounterFactoryXPlatform.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EventCounterCollectionModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EventCounterCollectionRequest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EventCounterListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PerformanceCollectorXPlatform.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XPlatProcessCPUPerformanceCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)XPlatProcessCPUPerformanceCounterNormalized.cs" />
