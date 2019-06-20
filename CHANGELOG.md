@@ -8,6 +8,7 @@
  - [Defer populating RequestTelemetry properties.](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1173)
  - [Azure Web App for Windows Containers to use regular PerfCounter mechanism.](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1167)
  - [Support for Process CPU and Process Memory perf counters in all platforms including Linux.](https://github.com/microsoft/ApplicationInsights-dotnet-server/issues/1189)
+ - SDL: [Guard against malicious headers in quickpulse](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1191)
 
 ## Version 2.10.0
 - Updated Base SDK to 2.10.0
@@ -56,6 +57,7 @@
 	If you are upgrading, and have added/modified TelemetryProcessors, make sure to copy them to the default sink section.
 - [Microsoft.AspNet.TelemetryCorrelaiton package update to 1.0.4](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/991)
 - Add vmScaleSetName field to heartbeat properties collected by AzureInstanceMetadataTelemetryModule to allow navigation to right Azure VM Scale Set
+- [Allow users to ignore specific UnobservedTaskExceptions](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1026)
 
 ## Version 2.8.0-beta1
 - [Adds opt-in support for W3C distributed tracing standard](https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945)
