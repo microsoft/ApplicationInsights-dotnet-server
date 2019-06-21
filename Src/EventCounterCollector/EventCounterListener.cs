@@ -13,14 +13,16 @@
     /// Implementation to listen to EventCounters.
     /// </summary>
     internal class EventCounterListener : EventListener
-    {
+    {        
+        private const string RefreshIntervalInSecs = "60";
+        private const double RefreshInternalInSecDouble = 60;
         private readonly EventLevel level = EventLevel.Critical;
+        private bool isInitialized = false;
+        private TelemetryClient telemetryClient;
 
         // Thread-safe variable to hold the list of all EventSourcesCreated.
         // This class may not be instantiated at the time of EventSource creation, so the list of EventSources should be stored to be enabled after initialization.
-        private ConcurrentQueue<EventSource> allEventSourcesCreated;
-        private bool isInitialized = false;
-        private TelemetryClient telemetryClient;
+        private ConcurrentQueue<EventSource> allEventSourcesCreated;        
 
         // EventSourceNames from which counters are to be collected are the keys for this IDictionary.
         // The value will be the corresponding ICollection of counter names.
@@ -28,27 +30,35 @@
 
         public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests)
         {
-            this.telemetryClient = telemetryClient;
-
-            foreach (var collectionRequest in eventCounterCollectionRequests)
+            try
             {
-                if (!this.countersToCollect.ContainsKey(collectionRequest.EventSourceName))
+                this.telemetryClient = telemetryClient;
+
+                foreach (var collectionRequest in eventCounterCollectionRequests)
                 {
-                    this.countersToCollect.Add(collectionRequest.EventSourceName, new HashSet<string>() { collectionRequest.EventCounterName });
+                    if (!this.countersToCollect.ContainsKey(collectionRequest.EventSourceName))
+                    {
+                        this.countersToCollect.Add(collectionRequest.EventSourceName, new HashSet<string>() { collectionRequest.EventCounterName });
+                    }
+                    else
+                    {
+                        this.countersToCollect[collectionRequest.EventSourceName].Add(collectionRequest.EventCounterName);
+                    }
                 }
-                else
+
+                EventCounterCollectorEventSource.Log.EventCounterInitializeSuccess();
+                this.isInitialized = true;
+
+                // Go over every EventSource created before we finished initialization, and enable if required.
+                // This will take care of all EventSources created before initialization was done.
+                foreach (var eventSource in this.allEventSourcesCreated)
                 {
-                    this.countersToCollect[collectionRequest.EventSourceName].Add(collectionRequest.EventCounterName);
+                    this.EnableIfRequired(eventSource);
                 }
             }
-
-            this.isInitialized = true;
-
-            // Go over every EventSource created before we finished initialization, and enable if required.
-            // This will take care of all EventSources created before initialization was done.
-            foreach (var eventSource in this.allEventSourcesCreated)
+            catch (Exception ex)
             {
-                this.EnableIfRequired(eventSource);
+                EventCounterCollectorEventSource.Log.EventCounterCollectorError("EventCounterListener Constructor", ex.Message);
             }
         }
 
@@ -92,76 +102,117 @@
                     {
                         this.ExtractAndPostMetric(eventData.EventSource.Name, eventPayload);
                     }
+                    else
+                    {
+                        EventCounterCollectorEventSource.Log.IgnoreEventWrittenAsEventPayloadNotParseable(eventData.EventSource.Name);
+                    }
                 }
+                else
+                {
+                    EventCounterCollectorEventSource.Log.IgnoreEventWrittenAsEventSourceNotInConfiguredList(eventData.EventSource.Name);
+                }
+            }
+            else
+            {
+                EventCounterCollectorEventSource.Log.IgnoreEventWrittenAsNotInitialized(eventData.EventSource.Name);
             }
         }
 
         private void EnableIfRequired(EventSource eventSource)
         {
-            // The EventSourceName is in the list we want to collect some counters from.
-            if (this.countersToCollect.ContainsKey(eventSource.Name))
+            try
             {
-                Dictionary<string, string> refreshInterval = new Dictionary<string, string>();
-                // 60 sec is hardcoded and not allowed for user customization as backend expects 1 min aggregation.
-                // TODO: Need to revisit if this should be changed.               
-                refreshInterval.Add("EventCounterIntervalSec", "60");
+                // The EventSourceName is in the list we want to collect some counters from.
+                if (this.countersToCollect.ContainsKey(eventSource.Name))
+                {
+                    Dictionary<string, string> refreshInterval = new Dictionary<string, string>();
+                    // 60 sec is hardcoded and not allowed for user customization as backend expects 1 min aggregation.
+                    // TODO: Need to revisit if this should be changed.               
+                    refreshInterval.Add("EventCounterIntervalSec", RefreshIntervalInSecs);
 
-                // Unlike regular Events, the only relevant parameter here for EventCounter is the dictionary containing EventCounterIntervalSec.
-                this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshInterval);
+                    // Unlike regular Events, the only relevant parameter here for EventCounter is the dictionary containing EventCounterIntervalSec.
+                    this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshInterval);
+
+                    EventCounterCollectorEventSource.Log.EnabledEventSource(eventSource.Name);
+                }
+                else
+                {
+                    EventCounterCollectorEventSource.Log.NotEnabledEventSource(eventSource.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                EventCounterCollectorEventSource.Log.EventCounterCollectorError("EventCounterListener EnableEventSource", ex.Message);
             }
         }
 
         private void ExtractAndPostMetric(string eventSourceName, IDictionary<string, object> eventPayload)
         {
-            MetricTelemetry metricTelemetry = new MetricTelemetry();
-            bool calculateRate = false;
-            double actualValue = 0.0;
-            double actualInterval = 0.0;
-            foreach (KeyValuePair<string, object> payload in eventPayload)
+            try
             {
-                var key = payload.Key;
-                if (key.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                MetricTelemetry metricTelemetry = new MetricTelemetry();
+                bool calculateRate = false;
+                double actualValue = 0.0;
+                double actualInterval = 0.0;
+                foreach (KeyValuePair<string, object> payload in eventPayload)
                 {
-                    var counterName = payload.Value.ToString();
-                    if (this.countersToCollect[eventSourceName].Contains(counterName))
+                    var key = payload.Key;
+                    if (key.Equals("Name", StringComparison.OrdinalIgnoreCase))
                     {
-                        metricTelemetry.Name = counterName;
+                        var counterName = payload.Value.ToString();
+                        if (this.countersToCollect[eventSourceName].Contains(counterName))
+                        {
+                            metricTelemetry.Name = counterName;
+                        }
+                        else
+                        {
+                            // log that ignoring as key not found.
+                            return;
+                        }
+                    }
+                    else if (key.Equals("Mean", StringComparison.OrdinalIgnoreCase))
+                    {
+                        actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                    }
+                    else if (key.Equals("Increment", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Increment indicates we have to calculate rate.
+                        actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                        calculateRate = true;
+                    }
+                    else if (key.Equals("IntervalSec", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Even though we configure 60 sec, we parse the actual duration from here. It'll be very close to the configured interval of 60.
+                        // If for some reason this value is 0, then we default to 60 sec.
+                        actualInterval = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                    }
+                }
+
+                if (calculateRate)
+                {
+                    if (actualInterval > 0)
+                    {
+                        metricTelemetry.Sum = actualValue / actualInterval;
                     }
                     else
                     {
-                        // log that ignoring as key not found.
-                        return;
+                        metricTelemetry.Sum = actualValue / RefreshInternalInSecDouble;
+                        EventCounterCollectorEventSource.Log.EventCounterIntervalZero(metricTelemetry.Name);
                     }
                 }
-                else if (key.Equals("Mean", StringComparison.OrdinalIgnoreCase))
+                else
                 {
-                    actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                    metricTelemetry.Sum = actualValue;
                 }
-                else if (key.Equals("Increment", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Increment indicates we have to calculate rate.
-                    actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
-                    calculateRate = true;
-                }
-                else if (key.Equals("IntervalSec", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Even though we configure 60 sec, we parse the actual duration from here. It'll be very close to the configured interval of 60.
-                    actualInterval = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
-                }
-            }
 
-            if (calculateRate)
-            {
-                metricTelemetry.Sum = actualValue / actualInterval;
+                // This will make the counter appear under PerformanceCounter as opposed to CustomMetrics in Application Insights Analytics(Kusto) tables.
+                metricTelemetry.Properties.Add("CustomPerfCounter", "true");
+                this.telemetryClient.TrackMetric(metricTelemetry);
             }
-            else
+            catch (Exception ex)
             {
-                metricTelemetry.Sum = actualValue;
+                EventCounterCollectorEventSource.Log.EventCounterCollectorWarning("ExtractMetric", ex.Message);
             }
-
-            // This will make the counter appear under PerformanceCounter as opposed to CustomMetrics in Application Insights Analytics(Kusto) tables.
-            metricTelemetry.Properties.Add("CustomPerfCounter", "true");
-            this.telemetryClient.TrackMetric(metricTelemetry);
         }
     }
 }

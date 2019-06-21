@@ -19,14 +19,7 @@
         /// <summary>
         /// TelemetryClient used to send data.
         /// </summary>        
-        private TelemetryClient client = null;
-
-        /// <summary>
-        /// Determines how often collection takes place. 
-        /// This is not customizable for users as the backend expects 60 sec interval for performance counters.
-        /// </summary>
-        private TimeSpan collectionPeriod = TimeSpan.FromSeconds(60);
-
+        private TelemetryClient client = null;        
         private EventCounterListener eventCounterListener;
         private bool disposed = false;
         private bool isInitialized = false;      
@@ -75,7 +68,7 @@
             }
             catch (Exception ex)
             {
-                EventCounterCollectorEventSource.Log.ModuleException("Initialization", ex.Message);
+                EventCounterCollectorEventSource.Log.EventCounterCollectorError("Initialization", ex.Message);
             }                        
         }
 
