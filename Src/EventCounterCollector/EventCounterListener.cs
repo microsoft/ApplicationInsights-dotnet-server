@@ -1,25 +1,24 @@
-﻿using Microsoft.ApplicationInsights.DataContracts;
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Globalization;
-using System.Text;
-
-namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Implementation
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Diagnostics.Tracing;
+    using System.Globalization;
+    using System.Text;
+    using Microsoft.ApplicationInsights.DataContracts;
+
     /// <summary>
     /// Implementation to listen to EventCounters.
     /// </summary>
     internal class EventCounterListener : EventListener
     {
+        private readonly EventLevel level = EventLevel.Critical;
 
         // Thread-safe variable to hold the list of all EventSourcesCreated.
         // This class may not be instantiated at the time of EventSource creation, so the list of EventSources should be stored to be enabled after initialization.
         private ConcurrentQueue<EventSource> allEventSourcesCreated;
-
-        private readonly EventLevel level = EventLevel.Critical;
         private bool isInitialized = false;
         private TelemetryClient telemetryClient;
 
@@ -27,20 +26,19 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
         // The value will be the corresponding ICollection of counter names.
         private IDictionary<string, ICollection<string>> countersToCollect = new Dictionary<string, ICollection<string>>();
 
-
         public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests)
         {
             this.telemetryClient = telemetryClient;
 
             foreach (var collectionRequest in eventCounterCollectionRequests)
             {
-                if (!countersToCollect.ContainsKey(collectionRequest.EventSourceName))
+                if (!this.countersToCollect.ContainsKey(collectionRequest.EventSourceName))
                 {
-                    countersToCollect.Add(collectionRequest.EventSourceName, new HashSet<string>() { collectionRequest.EventCounterName });
+                    this.countersToCollect.Add(collectionRequest.EventSourceName, new HashSet<string>() { collectionRequest.EventCounterName });
                 }
                 else
                 {
-                    countersToCollect[collectionRequest.EventSourceName].Add(collectionRequest.EventCounterName);
+                    this.countersToCollect[collectionRequest.EventSourceName].Add(collectionRequest.EventCounterName);
                 }
             }
 
@@ -50,7 +48,7 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
             // This will take care of all EventSources created before initialization was done.
             foreach (var eventSource in this.allEventSourcesCreated)
             {
-                EnableIfRequired(eventSource);
+                this.EnableIfRequired(eventSource);
             }
         }
 
@@ -77,7 +75,7 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
             // This will take care of all EventSources created after initialization is done.
             if (this.isInitialized)
             {
-                EnableIfRequired(eventSource);
+                this.EnableIfRequired(eventSource);
             }
         }
 
@@ -92,7 +90,7 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
                     IDictionary<string, object> eventPayload = eventData.Payload[0] as IDictionary<string, object>;
                     if (eventPayload != null)
                     {
-                        extractAndPostMetric(eventData.EventSource.Name, eventPayload);
+                        this.ExtractAndPostMetric(eventData.EventSource.Name, eventPayload);
                     }
                 }
             }
@@ -104,14 +102,16 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
             if (this.countersToCollect.ContainsKey(eventSource.Name))
             {
                 Dictionary<string, string> refreshInterval = new Dictionary<string, string>();
+                // 60 sec is hardcoded and not allowed for user customization as backend expects 1 min aggregation.
+                // TODO: Need to revisit if this should be changed.               
                 refreshInterval.Add("EventCounterIntervalSec", "60");
 
                 // Unlike regular Events, the only relevant parameter here for EventCounter is the dictionary containing EventCounterIntervalSec.
-                EnableEvents(eventSource, level, (EventKeywords)(-1), refreshInterval);
+                this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshInterval);
             }
         }
 
-        private void extractAndPostMetric(string eventSourceName, IDictionary<string, object> eventPayload)
+        private void ExtractAndPostMetric(string eventSourceName, IDictionary<string, object> eventPayload)
         {
             MetricTelemetry metricTelemetry = new MetricTelemetry();
             bool calculateRate = false;
@@ -120,7 +120,7 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
             foreach (KeyValuePair<string, object> payload in eventPayload)
             {
                 var key = payload.Key;
-                if (key.Equals("Name"))
+                if (key.Equals("Name", StringComparison.OrdinalIgnoreCase))
                 {
                     var counterName = payload.Value.ToString();
                     if (this.countersToCollect[eventSourceName].Contains(counterName))
@@ -133,17 +133,17 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Impl
                         return;
                     }
                 }
-                else if (key.Equals("Mean"))
+                else if (key.Equals("Mean", StringComparison.OrdinalIgnoreCase))
                 {
                     actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
                 }
-                else if (key.Equals("Increment"))
+                else if (key.Equals("Increment", StringComparison.OrdinalIgnoreCase))
                 {
                     // Increment indicates we have to calculate rate.
                     actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
                     calculateRate = true;
                 }
-                else if (key.Equals("IntervalSec"))
+                else if (key.Equals("IntervalSec", StringComparison.OrdinalIgnoreCase))
                 {
                     // Even though we configure 60 sec, we parse the actual duration from here. It'll be very close to the configured interval of 60.
                     actualInterval = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);

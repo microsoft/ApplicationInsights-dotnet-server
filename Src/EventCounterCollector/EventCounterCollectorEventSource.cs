@@ -15,7 +15,6 @@
         }
 
         public static EventCounterCollectorEventSource Log { get; } = new EventCounterCollectorEventSource();
-        
 
         [Event(1, Level = EventLevel.Informational, Message = @"EventCounterCollectionModule is being initialized. {0}")]
         public void ModuleIsBeingInitializedEvent(
@@ -44,7 +43,6 @@
         {
             this.WriteEvent(4, countersRefreshedCount, this.applicationNameProvider.Name);
         }
-
 
         public class Keywords
         {
