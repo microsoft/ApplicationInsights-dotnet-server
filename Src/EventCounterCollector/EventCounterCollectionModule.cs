@@ -5,6 +5,7 @@ using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector
@@ -76,13 +77,25 @@ namespace Microsoft.ApplicationInsights.Extensibility.EventCounterCollector
         /// </summary>
         public void Initialize(TelemetryConfiguration configuration)
         {
-            if (!this.isInitialized)
+            try
             {
-                this.client = new TelemetryClient(configuration);
-                this.eventCounterListener = new EventCounterListener(client, Counters);
-                this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("evtc:");
-                this.isInitialized = true;
+                EventCounterCollectorEventSource.Log.ModuleIsBeingInitializedEvent(string.Format(
+                                CultureInfo.InvariantCulture,
+                                "EventCounters count: '{0}'",
+                                Counters?.Count ?? 0));
+                if (!this.isInitialized)
+                {
+                    this.client = new TelemetryClient(configuration);
+                    this.eventCounterListener = new EventCounterListener(client, Counters);
+                    this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("evtc:");
+                    this.isInitialized = true;
+                    EventCounterCollectorEventSource.Log.ModuleInitializedSuccess();
+                }
             }
+            catch(Exception ex)
+            {
+                EventCounterCollectorEventSource.Log.ModuleException("Initialization", ex.g);
+            }                        
         }
     }
 }
