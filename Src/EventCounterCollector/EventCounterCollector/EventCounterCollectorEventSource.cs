@@ -4,7 +4,7 @@
     using System.Diagnostics.Tracing;
     using Microsoft.ApplicationInsights.Common;
 
-    [EventSource(Name = "Microsoft-ApplicationInsights-Extensibility-PerformanceCollector")]
+    [EventSource(Name = "Microsoft-ApplicationInsights-Extensibility-EventCounterCollector")]
     [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Justification = "appDomainName is required")]
     internal sealed class EventCounterCollectorEventSource : EventSource
     {
@@ -85,6 +85,12 @@
         public void EventCounterCollectorWarning(string stage, string exceptionMessage, string applicationName = "dummy")
         {
             this.WriteEvent(11, stage, exceptionMessage, this.applicationNameProvider.Name);
+        }
+
+        [Event(12, Level = EventLevel.Warning, Message = @"No counters are configured to be collected.")]
+        public void EventCounterCollectorNoCounterConfigured(string applicationName = "dummy")
+        {
+            this.WriteEvent(12, this.applicationNameProvider.Name);
         }
 
         public class Keywords

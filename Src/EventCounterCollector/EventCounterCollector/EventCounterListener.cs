@@ -14,8 +14,8 @@
     /// </summary>
     internal class EventCounterListener : EventListener
     {        
-        private const string RefreshIntervalInSecs = "60";
-        private const double RefreshInternalInSecDouble = 60;
+        private readonly string RefreshIntervalInSecs;
+        private readonly double RefreshInternalInSecDouble;
         private readonly EventLevel level = EventLevel.Critical;
         private bool isInitialized = false;
         private TelemetryClient telemetryClient;
@@ -28,10 +28,13 @@
         // The value will be the corresponding ICollection of counter names.
         private IDictionary<string, ICollection<string>> countersToCollect = new Dictionary<string, ICollection<string>>();
 
-        public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests)
+        public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests, double refreshIntervalSecs)
         {
             try
             {
+                this.RefreshInternalInSecDouble = refreshIntervalSecs;
+                this.RefreshIntervalInSecs = refreshIntervalSecs.ToString();
+
                 this.telemetryClient = telemetryClient;
 
                 foreach (var collectionRequest in eventCounterCollectionRequests)
@@ -154,6 +157,7 @@
                 bool calculateRate = false;
                 double actualValue = 0.0;
                 double actualInterval = 0.0;
+                int actualCount = 0;
                 foreach (KeyValuePair<string, object> payload in eventPayload)
                 {
                     var key = payload.Key;
@@ -162,7 +166,7 @@
                         var counterName = payload.Value.ToString();
                         if (this.countersToCollect[eventSourceName].Contains(counterName))
                         {
-                            metricTelemetry.Name = counterName;
+                            metricTelemetry.Name = string.Format("{0}|{1}", eventSourceName, counterName);
                         }
                         else
                         {
@@ -172,7 +176,7 @@
                     }
                     else if (key.Equals("Mean", StringComparison.OrdinalIgnoreCase))
                     {
-                        actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                        actualValue = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);                        
                     }
                     else if (key.Equals("Increment", StringComparison.OrdinalIgnoreCase))
                     {
@@ -185,6 +189,14 @@
                         // Even though we configure 60 sec, we parse the actual duration from here. It'll be very close to the configured interval of 60.
                         // If for some reason this value is 0, then we default to 60 sec.
                         actualInterval = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
+                        if(actualInterval < RefreshInternalInSecDouble)
+                        {
+                            // Warning ?
+                        }
+                    }
+                    else if (key.Equals("Count", StringComparison.OrdinalIgnoreCase))
+                    {
+                        actualCount = Convert.ToInt32(payload.Value, CultureInfo.InvariantCulture);
                     }
                 }
 
@@ -207,6 +219,8 @@
 
                 // This will make the counter appear under PerformanceCounter as opposed to CustomMetrics in Application Insights Analytics(Kusto) tables.
                 metricTelemetry.Properties.Add("CustomPerfCounter", "true");
+                metricTelemetry.Properties.Add("AggregationInterval", actualInterval.ToString());
+                metricTelemetry.Count = actualCount;
                 this.telemetryClient.TrackMetric(metricTelemetry);
             }
             catch (Exception ex)

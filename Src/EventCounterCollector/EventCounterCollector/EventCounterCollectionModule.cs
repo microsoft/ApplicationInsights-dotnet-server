@@ -22,7 +22,8 @@
         private TelemetryClient client = null;        
         private EventCounterListener eventCounterListener;
         private bool disposed = false;
-        private bool isInitialized = false;      
+        private bool isInitialized = false;
+        private readonly double RefreshInternalInSecs = 60;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventCounterCollectionModule"/> class.
@@ -30,6 +31,14 @@
         public EventCounterCollectionModule()
         {
             this.Counters = new List<EventCounterCollectionRequest>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EventCounterCollectionModule"/> class.
+        /// </summary>
+        internal EventCounterCollectionModule(double refreshIntervalInSecs) : this()
+        {
+            this.RefreshInternalInSecs = refreshIntervalInSecs;
         }
 
         /// <summary>
@@ -59,9 +68,14 @@
                                 this.Counters?.Count ?? 0));
                 if (!this.isInitialized)
                 {
-                    this.client = new TelemetryClient(configuration);
-                    this.eventCounterListener = new EventCounterListener(this.client, this.Counters);
+                    if (this.Counters.Count <= 0)
+                    {
+                        EventCounterCollectorEventSource.Log.EventCounterCollectorNoCounterConfigured();
+                    }
+
+                    this.client = new TelemetryClient(configuration);                    
                     this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("evtc:");
+                    this.eventCounterListener = new EventCounterListener(this.client, this.Counters, this.RefreshInternalInSecs);
                     this.isInitialized = true;
                     EventCounterCollectorEventSource.Log.ModuleInitializedSuccess();
                 }
