@@ -18,18 +18,10 @@ namespace EventCounterCollector.Tests
     {
         private string TestEventCounterSourceName = "Microsoft-ApplicationInsights-Extensibility-EventCounterCollector.Tests.TestEventCounter";
         private string TestEventCounterName1 = "mycountername1";
-        private string TestEventCounterName2 = "mycountername2";
 
         [TestMethod]
         [TestCategory("EventCounter")]
-        public void EventCounterListener1()
-        {
-            EventCounterListener eventCounterListener = new EventCounterListener();
-        }
-
-        [TestMethod]
-        [TestCategory("EventCounter")]
-        public void WarnsIfNoSourcesConfigured()
+        public void WarnsIfNoCountersConfigured()
         {
             using (var eventListener = new EventCounterCollectorDiagnoticListener())
             using (var module = new EventCounterCollectionModule())
@@ -64,53 +56,26 @@ namespace EventCounterCollector.Tests
 
                 // Wait atleast for refresh time.
                 Task.Delay(((int) refreshTimeInSecs * 1000) + 500).Wait();
+
+                PrintTelemetryItems(itemsReceived);
+
+                // VALIDATE
+                MetricTelemetry telemetry = itemsReceived[0] as MetricTelemetry;
+                ValidateTelemetry(telemetry, expectedName, expectedMetricValue);
+
+                // Clear the items.
+                itemsReceived.Clear();
+
+                // Wait another refreshinterval to receive more events, but with zero as counter values.
+                // as nobody is publishing events.
+                Task.Delay(((int)refreshTimeInSecs * 2000)).Wait();                
+                Assert.IsTrue(itemsReceived.Count >= 1);
+                PrintTelemetryItems(itemsReceived);
+                telemetry = itemsReceived[0] as MetricTelemetry;
+                ValidateTelemetry(telemetry, expectedName, 0.0);
             }
             
-            PrintTelemetryItems(itemsReceived);
-
-            // VALIDATE
-            MetricTelemetry telemetry = itemsReceived[0] as MetricTelemetry;
-            ValidateTelemetry(telemetry, expectedName, expectedMetricValue);
-        }
-
-        [TestMethod]
-        [TestCategory("EventCounter")]
-        public void ValidateMultipleEventCounterFromSameEventSourceCollection()
-        {
-            // ARRANGE
-            const double refreshTimeInSecs = 1;
-            List<ITelemetry> itemsReceived = new List<ITelemetry>();
-            // string expectedName = this.TestEventCounterSourceName + "|" + this.TestEventCounterName;
-            double expectedMetricValue = 0;
-            using (var module = new EventCounterCollectionModule(refreshTimeInSecs))
-            {                
-                module.Counters.Add(new EventCounterCollectionRequest() { EventSourceName = this.TestEventCounterSourceName, EventCounterName = this.TestEventCounterName1 });
-                module.Counters.Add(new EventCounterCollectionRequest() { EventSourceName = this.TestEventCounterSourceName, EventCounterName = this.TestEventCounterName2 });
-                module.Initialize(GetTestTelemetryConfiguration(itemsReceived));
-
-                // ACT
-                // Making 3 calls with 1000, 1200, 1400 value, leading to an avge of 1200.
-                TestEventCounter.Log.SampleCounter1(1000);
-                TestEventCounter.Log.SampleCounter1(1500);
-                TestEventCounter.Log.SampleCounter1(1500);
-                TestEventCounter.Log.SampleCounter1(400);
-
-                TestEventCounter.Log.SampleCounter2(2000);
-                TestEventCounter.Log.SampleCounter2(1500);
-                TestEventCounter.Log.SampleCounter2(500);
-                TestEventCounter.Log.SampleCounter2(4000);
-
-                // Wait atleast for refresh time.
-                Task.Delay(((int)refreshTimeInSecs * 1000) + 1000).Wait();
-            }
-
-            PrintTelemetryItems(itemsReceived);
-
-            // VALIDATE
-            // The counters will still be sent for refreshinterval, but values will be zero.
-            MetricTelemetry telemetry1 = itemsReceived[0] as MetricTelemetry;
-            MetricTelemetry telemetry2 = itemsReceived[1] as MetricTelemetry;
-            // ValidateTelemetry(telemetry, expectedName, expectedMetricValue);
+            
         }
 
         private void ValidateTelemetry(MetricTelemetry metricTelemetry, string expectedName, double expectedSum)
@@ -129,7 +94,7 @@ namespace EventCounterCollector.Tests
                 Trace.WriteLine("Metric.Name:" + metric.Name);
                 Trace.WriteLine("Metric.Sum:" + metric.Sum);
                 Trace.WriteLine("Metric.Count:" + metric.Count);
-                Trace.WriteLine("Metric.Timestamp:" + metric.Timestamp);
+                Trace.WriteLine("Metric.Timestamp:" + metric.Timestamp.ToString());
                 Trace.WriteLine("Metric.Sdk:" + metric.Context.GetInternalContext().SdkVersion);
                 foreach (var prop in metric.Properties)
                 {
