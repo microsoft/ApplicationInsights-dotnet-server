@@ -16,14 +16,15 @@
     /// </summary>
     public class EventCounterCollectionModule : ITelemetryModule, IDisposable
     {
+        private readonly double refreshInternalInSecs = 60;
+
         /// <summary>
         /// TelemetryClient used to send data.
         /// </summary>        
         private TelemetryClient client = null;        
         private EventCounterListener eventCounterListener;
         private bool disposed = false;
-        private bool isInitialized = false;
-        private readonly double RefreshInternalInSecs = 60;
+        private bool isInitialized = false;        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EventCounterCollectionModule"/> class.
@@ -38,7 +39,7 @@
         /// </summary>
         internal EventCounterCollectionModule(double refreshIntervalInSecs) : this()
         {
-            this.RefreshInternalInSecs = refreshIntervalInSecs;
+            this.refreshInternalInSecs = refreshIntervalInSecs;
         }
 
         /// <summary>
@@ -75,7 +76,7 @@
 
                     this.client = new TelemetryClient(configuration);                    
                     this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("evtc:");
-                    this.eventCounterListener = new EventCounterListener(this.client, this.Counters, this.RefreshInternalInSecs);
+                    this.eventCounterListener = new EventCounterListener(this.client, this.Counters, this.refreshInternalInSecs);
                     this.isInitialized = true;
                     EventCounterCollectorEventSource.Log.ModuleInitializedSuccess();
                 }

@@ -93,6 +93,21 @@
             this.WriteEvent(12, this.applicationNameProvider.Name);
         }
 
+        [Event(13, Level = EventLevel.Informational, Message = @"Ignoring event written from EventSource: {0} Counter: {1} as this counter is not configured to be collected.")]
+        public void IgnoreEventWrittenAsCounterNotInConfiguredList(string eventSourceName, string counterName, string applicationName = "dummy")
+        {
+            this.WriteEvent(13, eventSourceName, counterName, this.applicationNameProvider.Name);
+        }
+
+        [Event(14, Level = EventLevel.Warning, Message = @"EventCounter actual interval of {0} secs is less than configured interval of {1} secs.")]
+        public void EventCounterRefreshIntervalLessThanConfigured(
+            double actualInterval,
+            double configuredInterval,
+            string applicationName = "dummy")
+        {
+            this.WriteEvent(14, actualInterval, configuredInterval, this.applicationNameProvider.Name);
+        }
+
         public class Keywords
         {
             public const EventKeywords UserActionable = (EventKeywords)0x1;
