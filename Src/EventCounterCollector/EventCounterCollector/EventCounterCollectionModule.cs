@@ -62,13 +62,14 @@
         public void Initialize(TelemetryConfiguration configuration)
         {
             try
-            {
-                EventCounterCollectorEventSource.Log.ModuleIsBeingInitializedEvent(string.Format(
+            {                
+                if (!this.isInitialized)
+                {
+                    EventCounterCollectorEventSource.Log.ModuleIsBeingInitializedEvent(string.Format(
                                 CultureInfo.InvariantCulture,
                                 "EventCounters count: '{0}'",
                                 this.Counters?.Count ?? 0));
-                if (!this.isInitialized)
-                {
+
                     if (this.Counters.Count <= 0)
                     {
                         EventCounterCollectorEventSource.Log.EventCounterCollectorNoCounterConfigured();

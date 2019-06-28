@@ -34,6 +34,33 @@ namespace EventCounterCollector.Tests
 
         [TestMethod]
         [TestCategory("EventCounter")]
+        public void IgnoresUnconfiguredEventCounter()
+        {
+            // ARRANGE
+            const double refreshTimeInSecs = 1;
+            List<ITelemetry> itemsReceived = new List<ITelemetry>();
+
+            using (var eventListener = new EventCounterCollectorDiagnoticListener())
+            using (var module = new EventCounterCollectionModule(refreshTimeInSecs))
+            {
+                module.Counters.Add(new EventCounterCollectionRequest() { EventSourceName = this.TestEventCounterSourceName, EventCounterName = this.TestEventCounterName1 });
+                module.Initialize(GetTestTelemetryConfiguration(itemsReceived));
+
+                // ACT                
+                // These will fire counters 'mycountername2' which is not in the configured list.
+                TestEventCounter.Log.SampleCounter2(1500);
+                TestEventCounter.Log.SampleCounter2(400);
+
+                // Wait at least for refresh time.
+                Task.Delay(((int)refreshTimeInSecs * 1000) + 500).Wait();
+
+                // VALIDATE
+                Assert.IsTrue(CheckEventReceived(eventListener.EventsReceived, nameof(EventCounterCollectorEventSource.IgnoreEventWrittenAsCounterNotInConfiguredList)));
+            }
+        }
+
+        [TestMethod]
+        [TestCategory("EventCounter")]
         public void ValidateSingleEventCounterCollection()
         {
             // ARRANGE
