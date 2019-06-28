@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29001.49
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.705
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{1A75535C-B8E5-4C31-BC6E-50456C8C4052}"
 EndProject
@@ -94,7 +94,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventCounterCollector", "Ev
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventCounterCollector.Tests", "EventCounterCollector\EventCounterCollector.Tests\EventCounterCollector.Tests\EventCounterCollector.Tests.csproj", "{6ABC0D66-F577-44A7-8F61-B23882B7A1FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoEventCounterPerfCounter", "DemoEventCounterPerfCounter\DemoEventCounterPerfCounter.csproj", "{E9D8C14F-C6E5-4203-B182-6F636A1FF687}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoEventCounterPerfCounter", "DemoEventCounterPerfCounter\DemoEventCounterPerfCounter.csproj", "{E9D8C14F-C6E5-4203-B182-6F636A1FF687}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoLinuxWebApp", "DemoLinuxWebApp\DemoLinuxWebApp.csproj", "{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -275,6 +277,14 @@ Global
 		{E9D8C14F-C6E5-4203-B182-6F636A1FF687}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9D8C14F-C6E5-4203-B182-6F636A1FF687}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{E9D8C14F-C6E5-4203-B182-6F636A1FF687}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A1275C82-BB76-4BF2-A0C4-E4374CB349E4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
