@@ -68,6 +68,7 @@ namespace EventCounterCollector.Tests
             List<ITelemetry> itemsReceived = new List<ITelemetry>();
             string expectedName = this.TestEventCounterSourceName + "|" + this.TestEventCounterName1;
             double expectedMetricValue = (1000 + 1500 + 1500 + 400) / 4;
+            int expectedMetricCount = 4;
 
             using (var module = new EventCounterCollectionModule(refreshTimeInSecs))
             {
@@ -75,7 +76,7 @@ namespace EventCounterCollector.Tests
                 module.Initialize(GetTestTelemetryConfiguration(itemsReceived));
 
                 // ACT
-                // Making 3 calls with 1000, 1500, 1500, 400 value, leading to an average of 1100.
+                // Making 4 calls with 1000, 1500, 1500, 400 value, leading to an average of 1100.
                 TestEventCounter.Log.SampleCounter1(1000);
                 TestEventCounter.Log.SampleCounter1(1500);
                 TestEventCounter.Log.SampleCounter1(1500);
@@ -88,26 +89,38 @@ namespace EventCounterCollector.Tests
 
                 // VALIDATE
                 MetricTelemetry telemetry = itemsReceived[0] as MetricTelemetry;
-                ValidateTelemetry(telemetry, expectedName, expectedMetricValue);
+                ValidateTelemetry(itemsReceived, expectedName, expectedMetricValue, expectedMetricCount);
 
                 // Clear the items.
+                Trace.WriteLine("Clearing items received.");
                 itemsReceived.Clear();
 
                 // Wait another refresh interval to receive more events, but with zero as counter values.
                 // as nobody is publishing events.
                 Task.Delay(((int)refreshTimeInSecs * 2000)).Wait();                
                 Assert.IsTrue(itemsReceived.Count >= 1);
-                PrintTelemetryItems(itemsReceived);
-                telemetry = itemsReceived[0] as MetricTelemetry;
-                ValidateTelemetry(telemetry, expectedName, 0.0);
+                PrintTelemetryItems(itemsReceived);                
+                ValidateTelemetry(itemsReceived, expectedName, 0.0, 0);
             }
         }
 
-        private void ValidateTelemetry(MetricTelemetry metricTelemetry, string expectedName, double expectedSum)
+        private void ValidateTelemetry(List<ITelemetry> metricTelemetries, string expectedName, double expectedSum, double expectedCount)
         {
-            Assert.IsTrue(metricTelemetry.Context.GetInternalContext().SdkVersion.StartsWith("evtc"));
-            Assert.AreEqual(expectedSum, metricTelemetry.Sum);
-            Assert.AreEqual(expectedName, metricTelemetry.Name);
+            double sum = 0.0;
+            int count = 0;
+
+            foreach(var telemetry in metricTelemetries)
+            {
+                var metricTelemetry = telemetry as MetricTelemetry;
+                count = count + metricTelemetry.Count.Value;
+                sum = sum + metricTelemetry.Sum;
+
+                Assert.IsTrue(metricTelemetry.Context.GetInternalContext().SdkVersion.StartsWith("evtc"));
+                Assert.AreEqual(expectedName, metricTelemetry.Name);
+            }
+
+            Assert.AreEqual(expectedSum, sum);
+            Assert.AreEqual(expectedCount, count);
         }
 
         private void PrintTelemetryItems(IList<ITelemetry> telemetry)
