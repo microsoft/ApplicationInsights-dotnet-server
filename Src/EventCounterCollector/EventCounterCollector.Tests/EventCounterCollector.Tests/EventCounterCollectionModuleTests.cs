@@ -97,7 +97,7 @@ namespace EventCounterCollector.Tests
 
                 // Wait another refresh interval to receive more events, but with zero as counter values.
                 // as nobody is publishing events.
-                Task.Delay(((int)refreshTimeInSecs * 2000)).Wait();                
+                Task.Delay(((int)refreshTimeInSecs * 1000)).Wait();                
                 Assert.IsTrue(itemsReceived.Count >= 1);
                 PrintTelemetryItems(itemsReceived);                
                 ValidateTelemetry(itemsReceived, expectedName, 0.0, 0);
