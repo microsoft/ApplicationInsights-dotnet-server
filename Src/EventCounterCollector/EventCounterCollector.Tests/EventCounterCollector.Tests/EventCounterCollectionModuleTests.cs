@@ -24,7 +24,7 @@ namespace EventCounterCollector.Tests
         [TestCategory("EventCounter")]
         public void WarnsIfNoCountersConfigured()
         {
-            using (var eventListener = new EventCounterCollectorDiagnoticListener())
+            using (var eventListener = new EventCounterCollectorDiagnosticListener())
             using (var module = new EventCounterCollectionModule())
             {
                 ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
@@ -39,10 +39,10 @@ namespace EventCounterCollector.Tests
         public void IgnoresUnconfiguredEventCounter()
         {
             // ARRANGE
-            const double refreshTimeInSecs = 1;
+            const int refreshTimeInSecs = 1;
             ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
 
-            using (var eventListener = new EventCounterCollectorDiagnoticListener())
+            using (var eventListener = new EventCounterCollectorDiagnosticListener())
             using (var module = new EventCounterCollectionModule(refreshTimeInSecs))
             {
                 module.Counters.Add(new EventCounterCollectionRequest() { EventSourceName = this.TestEventCounterSourceName, EventCounterName = this.TestEventCounterName1 });
@@ -66,7 +66,7 @@ namespace EventCounterCollector.Tests
         public void ValidateSingleEventCounterCollection()
         {
             // ARRANGE
-            const double refreshTimeInSecs = 1;
+            const int refreshTimeInSecs = 1;
             ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
             string expectedName = this.TestEventCounterSourceName + "|" + this.TestEventCounterName1;
             double expectedMetricValue = (1000 + 1500 + 1500 + 400) / 4;

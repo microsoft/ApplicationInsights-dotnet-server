@@ -15,7 +15,7 @@
     internal class EventCounterListener : EventListener
     {        
         private readonly string refreshIntervalInSecs;
-        private readonly double refreshInternalInSecDouble;
+        private readonly int refreshInternalInSecInt;
         private readonly EventLevel level = EventLevel.Critical;
         private bool isInitialized = false;
         private TelemetryClient telemetryClient;
@@ -29,14 +29,14 @@
         // The value will be the corresponding ICollection of counter names.
         private IDictionary<string, ICollection<string>> countersToCollect = new Dictionary<string, ICollection<string>>();
 
-        public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests, double refreshIntervalSecs)
+        public EventCounterListener(TelemetryClient telemetryClient, IList<EventCounterCollectionRequest> eventCounterCollectionRequests, int refreshIntervalSecs)
         {
             try
             {
-                this.refreshInternalInSecDouble = refreshIntervalSecs;
+                this.refreshInternalInSecInt = refreshIntervalSecs;
                 this.refreshIntervalInSecs = refreshIntervalSecs.ToString(CultureInfo.InvariantCulture);
-                refreshIntervalDictionary = new Dictionary<string, string>();                
-                refreshIntervalDictionary.Add("EventCounterIntervalSec", this.refreshIntervalInSecs);
+                this.refreshIntervalDictionary = new Dictionary<string, string>();                
+                this.refreshIntervalDictionary.Add("EventCounterIntervalSec", this.refreshIntervalInSecs);
 
                 this.telemetryClient = telemetryClient;
 
@@ -132,7 +132,7 @@
                 if (this.countersToCollect.ContainsKey(eventSource.Name))
                 {                    
                     // Unlike regular Events, the only relevant parameter here for EventCounter is the dictionary containing EventCounterIntervalSec.
-                    this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshIntervalDictionary);
+                    this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), this.refreshIntervalDictionary);
 
                     EventCounterCollectorEventSource.Log.EnabledEventSource(eventSource.Name);
                 }
@@ -187,9 +187,9 @@
                         // Even though we configure 60 sec, we parse the actual duration from here. It'll be very close to the configured interval of 60.
                         // If for some reason this value is 0, then we default to 60 sec.
                         actualInterval = Convert.ToDouble(payload.Value, CultureInfo.InvariantCulture);
-                        if (actualInterval < this.refreshInternalInSecDouble)
+                        if (actualInterval < this.refreshInternalInSecInt)
                         {
-                            EventCounterCollectorEventSource.Log.EventCounterRefreshIntervalLessThanConfigured(actualInterval, this.refreshInternalInSecDouble);
+                            EventCounterCollectorEventSource.Log.EventCounterRefreshIntervalLessThanConfigured(actualInterval, this.refreshInternalInSecInt);
                         }
                     }
                     else if (key.Equals("Count", StringComparison.OrdinalIgnoreCase))
@@ -206,7 +206,7 @@
                     }
                     else
                     {
-                        metricTelemetry.Sum = actualValue / this.refreshInternalInSecDouble;
+                        metricTelemetry.Sum = actualValue / this.refreshInternalInSecInt;
                         EventCounterCollectorEventSource.Log.EventCounterIntervalZero(metricTelemetry.Name);
                     }
                 }

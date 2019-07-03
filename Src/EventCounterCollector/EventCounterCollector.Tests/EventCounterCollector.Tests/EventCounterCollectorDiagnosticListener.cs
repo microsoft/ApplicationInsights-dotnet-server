@@ -6,10 +6,10 @@ using System.Text;
 
 namespace EventCounterCollector.Tests
 {
-    internal class EventCounterCollectorDiagnoticListener : EventListener
+    internal class EventCounterCollectorDiagnosticListener : EventListener
     {
         public ConcurrentQueue <string> EventsReceived { get; private set; }
-        public EventCounterCollectorDiagnoticListener()
+        public EventCounterCollectorDiagnosticListener()
         {
             this.EventsReceived = new ConcurrentQueue<string>();
         }

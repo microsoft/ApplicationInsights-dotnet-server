@@ -102,7 +102,7 @@
         [Event(14, Level = EventLevel.Warning, Message = @"EventCounter actual interval of {0} secs is less than configured interval of {1} secs.")]
         public void EventCounterRefreshIntervalLessThanConfigured(
             double actualInterval,
-            double configuredInterval,
+            int configuredInterval,
             string applicationName = "dummy")
         {
             this.WriteEvent(14, actualInterval, configuredInterval, this.applicationNameProvider.Name);

@@ -18,7 +18,7 @@
     {
         // 60 sec is hardcoded and not allowed for user customization except unit tests as backend expects 1 min aggregation.
         // TODO: Need to revisit if this should be changed.               
-        private readonly double refreshInternalInSecs = 60;
+        private readonly int refreshInternalInSecs = 60;
 
         /// <summary>
         /// TelemetryClient used to send data.
@@ -39,7 +39,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="EventCounterCollectionModule"/> class.
         /// </summary>
-        internal EventCounterCollectionModule(double refreshIntervalInSecs) : this()
+        internal EventCounterCollectionModule(int refreshIntervalInSecs) : this()
         {
             this.refreshInternalInSecs = refreshIntervalInSecs;
         }
