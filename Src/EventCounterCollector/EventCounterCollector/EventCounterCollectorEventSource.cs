@@ -16,12 +16,12 @@
 
         public static EventCounterCollectorEventSource Log { get; } = new EventCounterCollectorEventSource();
 
-        [Event(1, Level = EventLevel.Informational, Message = @"EventCounterCollectionModule is being initialized. {0}")]
+        [Event(1, Level = EventLevel.Informational, Message = @"EventCounterCollectionModule is being initialized with {0} counters configured.")]
         public void ModuleIsBeingInitializedEvent(
-            string message,
+            int count,
             string applicationName = "dummy")
         {
-            this.WriteEvent(1, message, this.applicationNameProvider.Name);
+            this.WriteEvent(1, count, this.applicationNameProvider.Name);
         }
 
         [Event(2, Level = EventLevel.Informational, Message = @"EventCounterCollectionModule has been successfully initialized.")]

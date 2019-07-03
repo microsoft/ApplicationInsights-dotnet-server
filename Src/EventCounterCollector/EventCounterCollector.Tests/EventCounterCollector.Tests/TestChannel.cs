@@ -1,4 +1,5 @@
 ﻿using Microsoft.ApplicationInsights.Channel;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace EventCounterCollector.Tests
@@ -8,9 +9,9 @@ namespace EventCounterCollector.Tests
         public bool? DeveloperMode { get; set; }
         public string EndpointAddress { get; set; }
 
-        public List<ITelemetry> receivedItems;
+        public ConcurrentQueue<ITelemetry> receivedItems;
 
-        public TestChannel(List<ITelemetry> items)
+        public TestChannel(ConcurrentQueue<ITelemetry> items)
         {
             this.receivedItems = items;
         }
@@ -22,7 +23,7 @@ namespace EventCounterCollector.Tests
 
         public void Send(ITelemetry item)
         {
-            receivedItems.Add(item);
+            receivedItems.Enqueue(item);
         }
 
         #region IDisposable Support

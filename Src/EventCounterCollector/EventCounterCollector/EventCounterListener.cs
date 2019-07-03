@@ -19,6 +19,7 @@
         private readonly EventLevel level = EventLevel.Critical;
         private bool isInitialized = false;
         private TelemetryClient telemetryClient;
+        private Dictionary<string, string> refreshIntervalDictionary;
 
         // Thread-safe variable to hold the list of all EventSourcesCreated.
         // This class may not be instantiated at the time of EventSource creation, so the list of EventSources should be stored to be enabled after initialization.
@@ -34,6 +35,8 @@
             {
                 this.refreshInternalInSecDouble = refreshIntervalSecs;
                 this.refreshIntervalInSecs = refreshIntervalSecs.ToString(CultureInfo.InvariantCulture);
+                refreshIntervalDictionary = new Dictionary<string, string>();                
+                refreshIntervalDictionary.Add("EventCounterIntervalSec", this.refreshIntervalInSecs);
 
                 this.telemetryClient = telemetryClient;
 
@@ -127,14 +130,9 @@
             {
                 // The EventSourceName is in the list we want to collect some counters from.
                 if (this.countersToCollect.ContainsKey(eventSource.Name))
-                {
-                    Dictionary<string, string> refreshInterval = new Dictionary<string, string>();
-                    // 60 sec is hardcoded and not allowed for user customization as backend expects 1 min aggregation.
-                    // TODO: Need to revisit if this should be changed.               
-                    refreshInterval.Add("EventCounterIntervalSec", this.refreshIntervalInSecs);
-
+                {                    
                     // Unlike regular Events, the only relevant parameter here for EventCounter is the dictionary containing EventCounterIntervalSec.
-                    this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshInterval);
+                    this.EnableEvents(eventSource, this.level, (EventKeywords)(-1), refreshIntervalDictionary);
 
                     EventCounterCollectorEventSource.Log.EnabledEventSource(eventSource.Name);
                 }
@@ -166,7 +164,7 @@
                         var counterName = payload.Value.ToString();
                         if (this.countersToCollect[eventSourceName].Contains(counterName))
                         {
-                            metricTelemetry.Name = string.Format(CultureInfo.InvariantCulture, "{0}|{1}", eventSourceName, counterName);
+                            metricTelemetry.Name = eventSourceName + "|" + counterName;
                         }
                         else
                         {

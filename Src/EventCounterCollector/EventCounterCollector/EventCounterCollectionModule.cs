@@ -16,6 +16,8 @@
     /// </summary>
     public class EventCounterCollectionModule : ITelemetryModule, IDisposable
     {
+        // 60 sec is hardcoded and not allowed for user customization except unit tests as backend expects 1 min aggregation.
+        // TODO: Need to revisit if this should be changed.               
         private readonly double refreshInternalInSecs = 60;
 
         /// <summary>
@@ -65,10 +67,7 @@
             {                
                 if (!this.isInitialized)
                 {
-                    EventCounterCollectorEventSource.Log.ModuleIsBeingInitializedEvent(string.Format(
-                                CultureInfo.InvariantCulture,
-                                "EventCounters count: '{0}'",
-                                this.Counters?.Count ?? 0));
+                    EventCounterCollectorEventSource.Log.ModuleIsBeingInitializedEvent(this.Counters?.Count ?? 0);
 
                     if (this.Counters.Count <= 0)
                     {

@@ -7,6 +7,7 @@ using Microsoft.ApplicationInsights.Extensibility.EventCounterCollector;
 using Microsoft.ApplicationInsights.Extensibility.EventCounterCollector.Implementation;
 using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
@@ -26,8 +27,9 @@ namespace EventCounterCollector.Tests
             using (var eventListener = new EventCounterCollectorDiagnoticListener())
             using (var module = new EventCounterCollectionModule())
             {
-                List<ITelemetry> itemsReceived = new List<ITelemetry>();
+                ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
                 module.Initialize(GetTestTelemetryConfiguration(itemsReceived));
+                Assert.IsTrue(CheckEventReceived(eventListener.EventsReceived, nameof(EventCounterCollectorEventSource.ModuleIsBeingInitializedEvent))); 
                 Assert.IsTrue(CheckEventReceived(eventListener.EventsReceived, nameof(EventCounterCollectorEventSource.EventCounterCollectorNoCounterConfigured)));
             }
         }
@@ -38,7 +40,7 @@ namespace EventCounterCollector.Tests
         {
             // ARRANGE
             const double refreshTimeInSecs = 1;
-            List<ITelemetry> itemsReceived = new List<ITelemetry>();
+            ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
 
             using (var eventListener = new EventCounterCollectorDiagnoticListener())
             using (var module = new EventCounterCollectionModule(refreshTimeInSecs))
@@ -50,7 +52,7 @@ namespace EventCounterCollector.Tests
                 // These will fire counters 'mycountername2' which is not in the configured list.
                 TestEventCounter.Log.SampleCounter2(1500);
                 TestEventCounter.Log.SampleCounter2(400);
-
+                
                 // Wait at least for refresh time.
                 Task.Delay(((int)refreshTimeInSecs * 1000) + 500).Wait();
 
@@ -65,7 +67,7 @@ namespace EventCounterCollector.Tests
         {
             // ARRANGE
             const double refreshTimeInSecs = 1;
-            List<ITelemetry> itemsReceived = new List<ITelemetry>();
+            ConcurrentQueue<ITelemetry> itemsReceived = new ConcurrentQueue<ITelemetry>();
             string expectedName = this.TestEventCounterSourceName + "|" + this.TestEventCounterName1;
             double expectedMetricValue = (1000 + 1500 + 1500 + 400) / 4;
             int expectedMetricCount = 4;
@@ -88,7 +90,6 @@ namespace EventCounterCollector.Tests
                 PrintTelemetryItems(itemsReceived);
 
                 // VALIDATE
-                MetricTelemetry telemetry = itemsReceived[0] as MetricTelemetry;
                 ValidateTelemetry(itemsReceived, expectedName, expectedMetricValue, expectedMetricCount);
 
                 // Clear the items.
@@ -104,7 +105,7 @@ namespace EventCounterCollector.Tests
             }
         }
 
-        private void ValidateTelemetry(List<ITelemetry> metricTelemetries, string expectedName, double expectedSum, double expectedCount)
+        private void ValidateTelemetry(ConcurrentQueue<ITelemetry> metricTelemetries, string expectedName, double expectedSum, double expectedCount)
         {
             double sum = 0.0;
             int count = 0;
@@ -123,7 +124,7 @@ namespace EventCounterCollector.Tests
             Assert.AreEqual(expectedCount, count);
         }
 
-        private void PrintTelemetryItems(IList<ITelemetry> telemetry)
+        private void PrintTelemetryItems(ConcurrentQueue<ITelemetry> telemetry)
         {
             Trace.WriteLine("Received count:" + telemetry.Count);
             foreach (var item in telemetry)
@@ -144,7 +145,7 @@ namespace EventCounterCollector.Tests
             }
         }
 
-        private bool CheckEventReceived(IList<string> allEvents, string expectedEvent)
+        private bool CheckEventReceived(ConcurrentQueue<string> allEvents, string expectedEvent)
         {
             bool found = false;
             foreach(var evt in allEvents)
@@ -159,7 +160,7 @@ namespace EventCounterCollector.Tests
             return found;
         }
 
-        private TelemetryConfiguration GetTestTelemetryConfiguration(List<ITelemetry> itemsReceived)
+        private TelemetryConfiguration GetTestTelemetryConfiguration(ConcurrentQueue<ITelemetry> itemsReceived)
         {
             var configuration = new TelemetryConfiguration();
             configuration.InstrumentationKey = "testkey";

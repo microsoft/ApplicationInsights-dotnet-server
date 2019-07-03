@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
 using System.Text;
@@ -7,15 +8,15 @@ namespace EventCounterCollector.Tests
 {
     internal class EventCounterCollectorDiagnoticListener : EventListener
     {
-        public IList<string> EventsReceived { get; private set; }
+        public ConcurrentQueue <string> EventsReceived { get; private set; }
         public EventCounterCollectorDiagnoticListener()
         {
-            this.EventsReceived = new List<string>();
+            this.EventsReceived = new ConcurrentQueue<string>();
         }
 
         protected override void OnEventWritten(EventWrittenEventArgs eventData)
         {
-            this.EventsReceived.Add(eventData.EventName);
+            this.EventsReceived.Enqueue(eventData.EventName);
         }
 
         protected override void OnEventSourceCreated(EventSource eventSource)
