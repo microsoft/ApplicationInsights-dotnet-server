@@ -170,7 +170,7 @@
                             return;
                         }
                     }
-                    else if (key.Equals("DisplayName ", StringComparison.OrdinalIgnoreCase))
+                    else if (key.Equals("DisplayName", StringComparison.OrdinalIgnoreCase))
                     {
                         counterDisplayName = payload.Value.ToString();
                     }
