@@ -5,6 +5,7 @@
     using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
+    using Microsoft.ApplicationInsights.Common.Internal;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
@@ -2992,7 +2993,7 @@
         public void VerifyInitializationWhenDeferredIsTrue()
         {
             var config = new TelemetryConfiguration();
-            config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
+            config.ExperimentalFeatures.Add(ExperimentalConstants.DeferRequestTrackingProperties);
 
             var spy = new SimpleTelemetryProcessorSpy();
             var telemetryProcessor = new QuickPulseTelemetryProcessor(spy);
@@ -3020,7 +3021,7 @@
             {
                 InstrumentationKey = instrumentationKey
             };
-            config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
+            config.ExperimentalFeatures.Add(ExperimentalConstants.DeferRequestTrackingProperties);
 
             // ARRANGE
             var accumulatorManager = GetAccumulationManager();

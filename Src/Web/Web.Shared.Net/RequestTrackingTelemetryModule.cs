@@ -266,7 +266,7 @@
             this.telemetryClient = new TelemetryClient(configuration);
             this.telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
 
-            this.DisableTrackingProperties = configuration.EvaluateExperimentalFeature("deferRequestTrackingProperties");
+            this.DisableTrackingProperties = configuration.EvaluateExperimentalFeature(Microsoft.ApplicationInsights.Common.Internal.ExperimentalConstants.DeferRequestTrackingProperties);
             if (this.DisableTrackingProperties)
             {
                 configuration.DefaultTelemetrySink.TelemetryProcessorChainBuilder.Use(next => new PostSamplingTelemetryProcessor(next));

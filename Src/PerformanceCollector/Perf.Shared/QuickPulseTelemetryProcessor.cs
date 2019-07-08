@@ -9,6 +9,7 @@
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.Internal;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility.Filtering;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -115,7 +116,7 @@
             this telemetry processor will only collect for whichever instrumentation key is specified by the module in StartCollection call.
             */
 
-            this.EvaluateDisabledTrackingProperties = configuration.EvaluateExperimentalFeature("deferRequestTrackingProperties");
+            this.EvaluateDisabledTrackingProperties = configuration.EvaluateExperimentalFeature(ExperimentalConstants.DeferRequestTrackingProperties);
 
             this.Register();
         }

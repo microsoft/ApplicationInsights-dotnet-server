@@ -10,6 +10,7 @@
 
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
+    using Microsoft.ApplicationInsights.Common.Internal;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
@@ -486,7 +487,7 @@
             var config = this.CreateDefaultConfig(HttpModuleHelper.GetFakeHttpContext());
             var context = HttpModuleHelper.GetFakeHttpContext();
 
-            // Create and Validate RequestTrackingTelemetryModule
+            // Create, Initialize, and Validate RequestTrackingTelemetryModule
             var module = this.RequestTrackingTelemetryModuleFactory(config);
             MsAssert.IsFalse(module.DisableTrackingProperties, $"{nameof(module.DisableTrackingProperties)} should be False by default.");
 
@@ -508,7 +509,7 @@
         {
             var context = HttpModuleHelper.GetFakeHttpContext();
             var config = new TelemetryConfiguration();
-            config.ExperimentalFeatures.Add("deferRequestTrackingProperties");
+            config.ExperimentalFeatures.Add(ExperimentalConstants.DeferRequestTrackingProperties);
 
             // Create and Validate RequestTrackingTelemetryModule
             var module = this.RequestTrackingTelemetryModuleFactory(config);
