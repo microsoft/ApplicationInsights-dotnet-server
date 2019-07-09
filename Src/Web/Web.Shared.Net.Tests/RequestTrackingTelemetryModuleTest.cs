@@ -396,9 +396,9 @@
             var config = TelemetryConfiguration.CreateDefault();
             config.InstrumentationKey = TestInstrumentationKey1;
             config.ApplicationIdProvider = new MockApplicationIdProvider(TestInstrumentationKey1, TestApplicationId1);
+            config.ExperimentalFeatures.Add("DeferRequestTrackingProperties");
             
             var module = this.RequestTrackingTelemetryModuleFactory(null /*use default*/);
-            module.DisableTrackingProperties = true;
             
             // ACT
             module.Initialize(config);
