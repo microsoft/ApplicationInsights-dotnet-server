@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" /> <!--manual workaround: needed for net45 dll-->
-  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.props" /> <!--manual workaround: needed for nupkg-->
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!--<Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" /> --><!--manual workaround: needed for net45 dll--><!--
+  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.props" /> --><!--manual workaround: needed for nupkg-->
 
   <Import Project="..\..\Product.props" />
 
@@ -78,6 +78,6 @@
   <Import Project="..\Perf.Shared.NetStandard20\Perf.Shared.NetStandard20.projitems" Label="Shared" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
 
-  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.targets" /> <!--manual workaround: needed for net45 dll-->
-  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.targets" /> <!--manual workaround: needed for nupkg-->
+  <!--<Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.targets" /> --><!--manual workaround: needed for net45 dll--><!--
+  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.targets" /> --><!--manual workaround: needed for nupkg-->
 </Project>
