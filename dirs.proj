@@ -3,8 +3,8 @@
   <Import Project=".\GlobalStaticVersion.props" />
 
   <ItemGroup>
-    <!--<Solution Include="Src\Microsoft.ApplicationInsights.Web.sln" />-->
-    <Solution Include="Src\PerformanceCollector\PerformanceCollector\Perf.csproj" />
+    <Solution Include="Src\Microsoft.ApplicationInsights.Web.sln" />
+    <!--<Solution Include="Src\PerformanceCollector\PerformanceCollector\Perf.csproj" />-->
   </ItemGroup>
   
   <ItemGroup Condition="$(ExcludeTests) != 'true'" >
