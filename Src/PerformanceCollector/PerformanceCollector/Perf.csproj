@@ -1,7 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <!--<Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\build\MicroBuild.Core.props" /> --><!--manual workaround: needed for net45 dll--><!--
-  <Import Project="..\..\..\..\packages\MicroBuild.Core.0.3.0\buildCrossTargeting\MicroBuild.Core.props" /> --><!--manual workaround: needed for nupkg-->
-
   <Import Project="..\..\Product.props" />
 
   <PropertyGroup>
@@ -20,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(Configuration)' == 'Release' And $(OS) == 'Windows_NT'">
-    <!--Analyzers and Build Infrastructure-->
+    <!--Analyzers-->
     <PackageReference Include="Desktop.Analyzers" Version="1.1.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
@@ -31,13 +28,17 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-  
+
   <ItemGroup>
-    <!--Common Dependencies-->
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0-beta1" />
+    <!--Build Infrastructure-->
     <PackageReference Include="MicroBuild.Core" Version="0.3.0">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--Common Dependencies-->
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0-beta1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
