@@ -30,14 +30,14 @@
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.2">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0-beta1" />
+    <PackageReference Include="MicroBuild.Core" Version="0.3.0">
+      <PrivateAssets>All</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
