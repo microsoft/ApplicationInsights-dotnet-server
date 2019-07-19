@@ -23,7 +23,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseDefaults.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseQuotaTracker.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseTaskModuleScheduler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseThreadModuleScheduler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseThreadState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\Helpers\QuickPulseTimings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Implementation\QuickPulse\IQuickPulseDataAccumulatorManager.cs" />
