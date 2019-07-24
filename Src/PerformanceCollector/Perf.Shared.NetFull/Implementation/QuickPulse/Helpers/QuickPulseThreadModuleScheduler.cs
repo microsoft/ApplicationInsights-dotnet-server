@@ -1,8 +1,8 @@
 ﻿namespace Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.Implementation.QuickPulse.Helpers
 {
-    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using System;
     using System.Threading;
+    using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 
     internal class QuickPulseThreadModuleScheduler : IQuickPulseModuleScheduler
     {
@@ -52,7 +52,7 @@
                 {
                     (state as Action<CancellationToken>)?.Invoke(this.cancellationTokenSource.Token);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     // This is a Thread, and we don't want any exception thrown ever from this part as this would cause application crash.
                     try
