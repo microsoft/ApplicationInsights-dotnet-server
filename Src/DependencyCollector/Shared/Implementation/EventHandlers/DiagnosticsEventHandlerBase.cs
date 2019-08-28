@@ -41,11 +41,42 @@
             telemetry.Name = this.GetOperationName(eventName, eventPayload, activity);
             telemetry.Duration = activity.Duration;
             telemetry.Timestamp = activity.StartTimeUtc;
-            telemetry.Id = activity.Id;
-            telemetry.Context.Operation.Id = activity.RootId;
-            telemetry.Context.Operation.ParentId = activity.ParentId;
 
-            foreach (var item in activity.Baggage)
+            if (activity.IdFormat == ActivityIdFormat.W3C)
+            {
+                var traceId = activity.TraceId.ToHexString();
+                telemetry.Context.Operation.Id = traceId;
+
+                if (string.IsNullOrEmpty(telemetry.Context.Operation.ParentId))
+                {
+                    if (activity.ParentSpanId != default)
+                    {
+                        telemetry.Context.Operation.ParentId = string.Concat('|', traceId, '.',
+                            activity.ParentSpanId.ToHexString(), '.');
+                    }
+                    else if (!string.IsNullOrEmpty(activity.ParentId))
+                    {
+                        // W3C activity with non-W3C parent must keep parentId
+                        telemetry.Context.Operation.ParentId = activity.ParentId;
+                    }
+                }
+
+                telemetry.Id = string.Concat('|', traceId, '.', activity.SpanId.ToHexString(), '.');
+
+                // TODO move to base SDK?
+                if (!string.IsNullOrEmpty(activity.TraceStateString) && !telemetry.Properties.ContainsKey("tracestate"))
+                {
+                    telemetry.Properties.Add("tracestate", activity.TraceStateString);
+                }
+            }
+            else
+            {
+                telemetry.Id = activity.Id;
+                telemetry.Context.Operation.Id = activity.RootId;
+                telemetry.Context.Operation.ParentId = activity.ParentId;
+            }
+
+            foreach (var item in activity.Tags)
             {
                 if (!telemetry.Properties.ContainsKey(item.Key))
                 {
@@ -53,7 +84,7 @@
                 }
             }
 
-            foreach (var item in activity.Tags)
+            foreach (var item in activity.Baggage)
             {
                 if (!telemetry.Properties.ContainsKey(item.Key))
                 {
@@ -120,6 +151,45 @@
             {
                 return this.eventName.GetHashCode() ^ this.PropertyName.GetHashCode();
             }
+        }
+
+
+        protected static string GetRootId(string diagnosticId)
+        {
+            Debug.Assert(diagnosticId != null);
+            Debug.Assert(diagnosticId.Length > 0);
+
+            if (diagnosticId[0] == '|')
+            {
+                var dot = diagnosticId.IndexOf('.');
+
+                return diagnosticId.Substring(1, dot - 1);
+            }
+
+            return diagnosticId;
+        }
+
+        protected static bool TryGetTraceId(string diagnosticId, out ReadOnlySpan<char> traceId)
+        {
+            Debug.Assert(diagnosticId != null);
+            Debug.Assert(diagnosticId.Length > 0);
+
+            traceId = default;
+            if (diagnosticId[0] == '|' && diagnosticId.Length >= 33 && diagnosticId[33] == '.')
+            {
+                for (int i = 1; i < 33; i++)
+                {
+                    if (!((diagnosticId[i] >= '0' && diagnosticId[i] <= '9') || (diagnosticId[i] >= 'a' && diagnosticId[i] <= 'f')))
+                    {
+                        return false;
+                    }
+                }
+
+                traceId = diagnosticId.AsSpan().Slice(1, 32);
+                return true;
+            }
+
+            return false;
         }
     }
 }

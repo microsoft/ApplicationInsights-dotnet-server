@@ -99,18 +99,7 @@ namespace Microsoft.ApplicationInsights.Common
                 var pairsExceptAz = new StringBuilder();
                 for (int i = 0; i < tracestate.Count; i++)
                 {
-                    if (tracestate[i].StartsWith(W3CConstants.AzureTracestateNamespace + "=", StringComparison.Ordinal))
-                    {
-                        // start after 'az='
-                        if (TryExtractAppIdFromAzureTracestate(tracestate[i].Substring(3), out var appId))
-                        {
-                            requestTelemetry.Source = appId;
-                        }
-                    }
-                    else
-                    {
-                        pairsExceptAz.Append(tracestate[i]).Append(',');
-                    }
+                     pairsExceptAz.Append(tracestate[i]).Append(',');
                 }
 
                 if (pairsExceptAz.Length > 0)
@@ -120,22 +109,6 @@ namespace Microsoft.ApplicationInsights.Common
                     activity.SetTracestate(StringUtilities.EnforceMaxLength(tracestateStr, InjectionGuardConstants.TraceStateHeaderMaxLength));
                 }
             }
-        }
-
-        private static bool TryExtractAppIdFromAzureTracestate(string azTracestate, out string appId)
-        {
-            appId = null;
-            var parts = azTracestate.Split(W3CConstants.TracestateAzureSeparator);
-
-            var appIds = parts.Where(p => p.StartsWith(W3CConstants.ApplicationIdTraceStateField, StringComparison.Ordinal)).ToArray();
-
-            if (appIds.Length != 1)
-            {
-                return false;
-            }
-
-            appId = appIds[0];
-            return true;
         }
     }
 }

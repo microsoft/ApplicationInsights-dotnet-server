@@ -9,7 +9,6 @@
     <Import_RootNamespace>Microsoft.ApplicationInsights.Common</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)ActivityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ApplicationNameProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AppMapCorrelationEventSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ArrayExtensions.cs" />
