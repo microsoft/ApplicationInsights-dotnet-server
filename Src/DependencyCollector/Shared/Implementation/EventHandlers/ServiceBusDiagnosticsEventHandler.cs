@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.EventHandlers
+﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.EventHandlers
 {
     using System;
     using System.Collections.Generic;
@@ -57,7 +55,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.Event
                         }
                         else
                         {
-                            currentActivity.AddTag("ai_legacyRootId", GetRootId(currentActivity.ParentId));
+                            currentActivity.AddTag(W3C.W3CConstants.LegacyRootPropertyIdKey, GetRootId(currentActivity.ParentId));
                         }
                     }
 

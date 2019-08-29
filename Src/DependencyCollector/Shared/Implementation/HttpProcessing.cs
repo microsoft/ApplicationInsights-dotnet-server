@@ -212,8 +212,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                                         currentActivity.TraceStateString);
                                 }
                             }
-                            else // Request-Id format
+                            else
                             {
+                                // Request-Id format
                                 if (webRequest.Headers[RequestResponseHeaders.RequestIdHeader] == null)
                                 {
                                     webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);

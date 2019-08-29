@@ -26,5 +26,8 @@
         /// W3C tracestate header name.
         /// </summary>
         public const string TraceStateHeader = "tracestate";
+
+        internal const string LegacyRootPropertyIdKey = "ai_legacyRootId";
+        internal const string TracestatePropertyKey = "tracestate";
     }
 }

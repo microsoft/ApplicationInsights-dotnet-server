@@ -23,7 +23,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V3))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V3))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -52,7 +52,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: false,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V3))
+                HttpInstrumentationVersion.V3))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut");
                 activity.AddBaggage("k", "v");
@@ -78,7 +78,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: true,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V3);
+                HttpInstrumentationVersion.V3);
 
             using (listenerWithLegacyHeaders)
             {
@@ -106,7 +106,7 @@ namespace Microsoft.ApplicationInsights.Tests
         {
             this.configuration.EnableW3CCorrelation = false;
 
-            using (var listenerWithoutW3CHeaders = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V3))
+            using (var listenerWithoutW3CHeaders = this.CreateHttpListener(HttpInstrumentationVersion.V3))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut");
                 activity.AddBaggage("k", "v");
@@ -136,7 +136,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V3))
+                HttpInstrumentationVersion.V3))
             {
                 listener.OnActivityStart(requestMsg);
                 Assert.IsFalse(requestMsg.Headers.Contains(RequestResponseHeaders.RequestContextHeader));
@@ -160,7 +160,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+                HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
                 Assert.IsFalse(requestMsg.Headers.Contains(RequestResponseHeaders.RequestContextHeader));

@@ -130,7 +130,7 @@
                                 this.ExcludeComponentCorrelationHttpHeadersOnDomains,
                                 this.EnableLegacyCorrelationHeadersInjection,
                                 this.EnableRequestIdHeaderInjectionInW3CMode,
-                                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.Unknown);
+                                HttpInstrumentationVersion.Unknown);
 
                             if (this.IncludeDiagnosticSourceActivities != null && this.IncludeDiagnosticSourceActivities.Count > 0)
                             {

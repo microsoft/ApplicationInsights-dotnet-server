@@ -8,7 +8,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-    using Microsoft.ApplicationInsights.Extensibility.W3C;
     using Microsoft.ApplicationInsights.Web.Implementation;
 
     /// <summary>
@@ -20,8 +19,6 @@
         private const string IncomingRequestEventName = "Microsoft.AspNet.HttpReqIn";
         private const string IncomingRequestStartEventName = "Microsoft.AspNet.HttpReqIn.Start";
         private const string IncomingRequestStopEventName = "Microsoft.AspNet.HttpReqIn.Stop";
-        private const string IncomingRequestStopLostActivity = "Microsoft.AspNet.HttpReqIn.ActivityLost.Stop";
-        private const string IncomingRequestStopRestoredActivity = "Microsoft.AspNet.HttpReqIn.ActivityRestored.Stop";
 
         private IDisposable allListenerSubscription;
         private RequestTrackingTelemetryModule requestModule;
@@ -72,7 +69,7 @@
             if (this.isEnabled && value.Name == AspNetListenerName)
             {
                 var eventListener = new AspNetEventObserver(this.requestModule, this.exceptionModule);
-                this.aspNetSubscription = value.Subscribe(eventListener, AspNetEventObserver.IsEnabled);
+                this.aspNetSubscription = value.Subscribe(eventListener, AspNetEventObserver.IsEnabled, AspNetEventObserver.OnActivityImport);
             }
         }
 
@@ -121,7 +118,6 @@
             private const string FirstRequestFlag = "Microsoft.ApplicationInsights.FirstRequestFlag";
             private readonly RequestTrackingTelemetryModule requestModule;
             private readonly ExceptionTrackingTelemetryModule exceptionModule;
-            private readonly PropertyFetcher activityFetcher = new PropertyFetcher(nameof(Activity));
 
             public AspNetEventObserver(RequestTrackingTelemetryModule requestModule, ExceptionTrackingTelemetryModule exceptionModule)
             {
@@ -129,95 +125,92 @@
                 this.exceptionModule = exceptionModule;
             }
 
-            public static Func<string, object, object, bool> IsEnabled => (name, activityObj, _) =>
+            public static Func<string, object, object, bool> IsEnabled => (name, activityObj, _) => 
             {
-                if (name == IncomingRequestEventName)
+                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {name} !!! New = '{(activityObj as Activity)?.OperationName}', Parent = '{(activityObj as Activity)?.ParentId}' Cur = '{Activity.Current?.Id}'");
+
+                if (HttpContext.Current == null)
                 {
-                    var activity = activityObj as Activity;
-                    if (activity == null)
-                    {
-                        // this is a first IsEnabled call without context that ensures that Activity instrumentation is on
-                        return true;
-                    }
+                    // should not happen
+                    WebEventSource.Log.NoHttpContextWarning();
+                    return false;
+                }
 
-                    if (HttpContext.Current == null) 
-                    {
-                        // should not happen
-                        WebEventSource.Log.NoHttpContextWarning();
-                        return false;
-                    }
-
-                    // ParentId is null, means that there was no Request-Id header, which means we have to look for AppInsights/custom headers
-                    if (Activity.Current == null && activity.ParentId == null)
-                    {
-                        var context = HttpContext.Current;
-                        var request = context.Request;
-
-                        if (ActivityHelpers.IsW3CTracingEnabled)
-                        {
-                            ActivityHelpers.ExtractW3CContext(request, activity);
-                        }
-                        
-                        if (activity.ParentId == null)
-                        {
-                            string rootId = null;
-                            if (ActivityHelpers.RootOperationIdHeaderName != null)
-                            {
-                                rootId = request.UnvalidatedGetHeader(ActivityHelpers.RootOperationIdHeaderName);
-                            }
-
-                            string traceId = ActivityHelpers.IsW3CTracingEnabled
-                                ? activity.GetTraceId()
-                                : W3CUtilities.GenerateTraceId();
-
-                            // As a first step in supporting W3C protocol in ApplicationInsights,
-                            // we want to generate Activity Ids in the W3C compatible format.
-                            // While .NET changes to Activity are pending, we want to ensure trace starts with W3C compatible Id
-                            // as early as possible, so that everyone has a chance to upgrade and have compatibility with W3C systems once they arrive.
-                            // So if there is no current Activity (i.e. there were no Request-Id header in the incoming request), we'll override ParentId on 
-                            // the current Activity by the properly formatted one. This workaround should go away
-                            // with W3C support on .NET https://github.com/dotnet/corefx/issues/30331
-                            // So, if there were no headers we generate W3C compatible Id,
-                            // otherwise use legacy/custom headers that were provided
-                            activity.SetParentId(!string.IsNullOrEmpty(rootId)
-                                ? rootId // legacy or custom headers
-                                : traceId);
-                        }
-                    }
+                Activity currentActivity = Activity.Current;
+                // TODO comment and test
+                if (name == IncomingRequestEventName && activityObj is Activity && currentActivity != null && currentActivity.OperationName == IncomingRequestEventName)
+                {
+                    var contextExists = HttpContext.Current.GetRequestTelemetry() != null;
+                    Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED RESULT {contextExists}");
+                    // this is a first IsEnabled call without context that ensures that Activity instrumentation is on
+                    return !contextExists;
                 }
 
                 return true;
             };
 
+            public static Action<Activity, object> OnActivityImport => (activity, _) =>
+            {
+                // ParentId is null, means that there were no W3C/Request-Id header, which means we have to look for AppInsights/custom headers
+                if (activity.ParentId == null)
+                {
+                    var context = HttpContext.Current;
+                    if (context == null)
+                    {
+                        WebEventSource.Log.NoHttpContextWarning();
+                        return;
+                    }
+
+                    HttpRequest request = null;
+                    try
+                    {
+                        request = context.Request;
+                    }
+                    catch (Exception ex)
+                    {
+                        WebEventSource.Log.HttpRequestNotAvailable(ex.Message, ex.StackTrace);
+                    }
+
+                    if (request != null && ActivityHelpers.RootOperationIdHeaderName != null)
+                    {
+                        var rootId = StringUtilities.EnforceMaxLength(
+                            request.UnvalidatedGetHeader(ActivityHelpers.RootOperationIdHeaderName), 
+                            InjectionGuardConstants.RequestHeaderMaxLength);
+                        if (rootId != null)
+                        {
+                            activity.SetParentId(rootId);
+                        }
+                    }
+                }
+            };
+
             public void OnNext(KeyValuePair<string, object> value)
             {
+                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {value.Key} !!! Cur = '{Activity.Current?.Id}' Parent = '{Activity.Current?.ParentId}'");
                 var context = HttpContext.Current;
+
+                var allitems = string.Empty;
+                foreach (var key in context.Items.Keys)
+                {
+                    allitems += $"{key},";
+                }
+
+                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {allitems}");
 
                 if (value.Key == IncomingRequestStartEventName)
                 {
                     this.requestModule?.OnBeginRequest(context);
                 }
-                else if (value.Key == IncomingRequestStopEventName || value.Key == IncomingRequestStopLostActivity)
+                else if (value.Key == IncomingRequestStopEventName)
                 {
                     if (IsFirstRequest(context))
                     {
                         // Asp.Net Http Module detected that activity was lost, it notifies about it with this event
                         // It means that Activity was previously reported in BeginRequest and we saved it in HttpContext.Current
-                        // we will use it in Web.OperationCorrealtionTelemetryInitializer to init exceptions and request
+                        // we will use it in Web.OperationCorrelationTelemetryInitializer to init exceptions and request
                         this.exceptionModule?.OnError(context);
                         this.requestModule?.OnEndRequest(context);
                     }
-                }
-                else if (value.Key == IncomingRequestStopRestoredActivity)
-                {
-                    var activity = (Activity)this.activityFetcher.Fetch(value.Value);
-                    if (activity == null)
-                    {
-                        WebEventSource.Log.ActivityIsNull(IncomingRequestStopRestoredActivity);
-                        return;
-                    }
-
-                    this.requestModule.TrackIntermediateRequest(context, activity);
                 }
             }
 

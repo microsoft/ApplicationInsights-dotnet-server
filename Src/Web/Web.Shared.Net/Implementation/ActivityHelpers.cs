@@ -2,24 +2,20 @@ namespace Microsoft.ApplicationInsights.Common
 {
     using System;
     using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Web;
-
-    using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility.W3C;
-    using Microsoft.ApplicationInsights.W3C.Internal;
-    using Microsoft.ApplicationInsights.Web.Implementation;
 
     internal class ActivityHelpers
     {
-        internal const string RequestActivityItemName = "Microsoft.ApplicationInsights.Web.Activity";
+        /// <summary>
+        /// Name of the item under which Activity created by request tracking (if any) will be stored
+        /// It's exactly the same as one Microsoft.AspNet.TelemetryCorrelation uses
+        /// https://github.com/aspnet/Microsoft.AspNet.TelemetryCorrelation/blob/6ccf0729050be4fac6797fa85af0200883db1c83/src/Microsoft.AspNet.TelemetryCorrelation/ActivityHelper.cs#L33
+        /// so that TelemetryCorrelation will restore and treat 'our' Activity as it's own.
+        /// </summary>
+        internal const string RequestActivityItemName = "__AspnetActivity__";
 
         internal static string RootOperationIdHeaderName { get; set; }
 
         internal static string ParentOperationIdHeaderName { get; set; }
-
-        internal static bool IsW3CTracingEnabled { get; set; } = false;
 
         /// <summary> 
         /// Checks if given RequestId is hierarchical.
@@ -31,84 +27,45 @@ namespace Microsoft.ApplicationInsights.Common
             return !string.IsNullOrEmpty(requestId) && requestId[0] == '|';
         }
 
-        internal static bool TryParseCustomHeaders(HttpRequest request, out string rootId, out string parentId)
+        internal static string GetRootId(string legacyId)
         {
-            rootId = parentId = null;
-            if (ParentOperationIdHeaderName != null && RootOperationIdHeaderName != null)
+            Debug.Assert(!string.IsNullOrEmpty(legacyId), "diagnosticId must not be null or empty");
+
+            if (legacyId[0] == '|')
             {
-                parentId = request.UnvalidatedGetHeader(ParentOperationIdHeaderName);
-                rootId = request.UnvalidatedGetHeader(RootOperationIdHeaderName);
+                var dot = legacyId.IndexOf('.');
 
-                if (rootId?.Length == 0)
-                {
-                    rootId = null;
-                }
-
-                if (parentId?.Length == 0)
-                {
-                    parentId = null;
-                }
+                return legacyId.Substring(1, dot - 1);
             }
 
-            return rootId != null || parentId != null;
+            return StringUtilities.EnforceMaxLength(legacyId, InjectionGuardConstants.RequestHeaderMaxLength);
         }
 
-        internal static void ExtractW3CContext(HttpRequest request, Activity activity)
+        internal static bool TryGetTraceId(string legacyId, out ReadOnlySpan<char> traceId)
         {
-            var traceParent = request.UnvalidatedGetHeader(W3CConstants.TraceParentHeader);
-            if (traceParent != null)
-            {
-                var traceParentStr = StringUtilities.EnforceMaxLength(traceParent, InjectionGuardConstants.TraceParentHeaderMaxLength);
-                activity.SetTraceparent(traceParentStr);
+            Debug.Assert(!string.IsNullOrEmpty(legacyId), "diagnosticId must not be null or empty");
 
-                if (activity.ParentId == null)
+            traceId = default;
+            if (legacyId[0] == '|' && legacyId.Length >= 33 && legacyId[33] == '.')
+            {
+                for (int i = 1; i < 33; i++)
                 {
-                    activity.SetParentId(activity.GetTraceId());
-                }
-            }
-            else
-            {
-                activity.GenerateW3CContext();
-            }
-
-            if (!activity.Baggage.Any())
-            {
-                var baggage = request.Headers.GetNameValueCollectionFromHeader(RequestResponseHeaders.CorrelationContextHeader);
-
-                if (baggage != null && baggage.Any())
-                {
-                    foreach (var item in baggage)
+                    if (!((legacyId[i] >= '0' && legacyId[i] <= '9') || (legacyId[i] >= 'a' && legacyId[i] <= 'f')))
                     {
-                        var itemName = StringUtilities.EnforceMaxLength(item.Key, InjectionGuardConstants.ContextHeaderKeyMaxLength);
-                        var itemValue = StringUtilities.EnforceMaxLength(item.Value, InjectionGuardConstants.ContextHeaderValueMaxLength);
-                        activity.AddBaggage(itemName, itemValue);
+                        return false;
                     }
                 }
+
+                traceId = legacyId.AsSpan().Slice(1, 32);
+                return true;
             }
+
+            return false;
         }
 
-        internal static void ExtractTracestate(HttpRequest request, Activity activity, RequestTelemetry requestTelemetry)
+        internal static string FormatTelemetryId(string traceId, string spanId)
         {
-            var tracestate = request.UnvalidatedGetHeaders().GetHeaderValue(
-                W3CConstants.TraceStateHeader,
-                InjectionGuardConstants.TraceStateHeaderMaxLength,
-                InjectionGuardConstants.TraceStateMaxPairs)?.ToList();
-            if (tracestate != null && tracestate.Any())
-            {
-                // it's likely there are a few and string builder is not beneficial in this case
-                var pairsExceptAz = new StringBuilder();
-                for (int i = 0; i < tracestate.Count; i++)
-                {
-                     pairsExceptAz.Append(tracestate[i]).Append(',');
-                }
-
-                if (pairsExceptAz.Length > 0)
-                {
-                    // remove last comma
-                    var tracestateStr = pairsExceptAz.ToString(0, pairsExceptAz.Length - 1);
-                    activity.SetTracestate(StringUtilities.EnforceMaxLength(tracestateStr, InjectionGuardConstants.TraceStateHeaderMaxLength));
-                }
-            }
+            return string.Concat('|', traceId, '.', spanId, '.');
         }
     }
 }

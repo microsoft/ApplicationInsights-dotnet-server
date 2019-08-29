@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.Web
 {
     using System;
+    using System.Diagnostics;
     using System.Web;
 
     using Microsoft.ApplicationInsights.Common;
@@ -58,6 +59,7 @@
             {
                 foreach (Exception exp in errors)
                 {
+                    Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED ERROR {exp.Message} {Activity.Current?.Id}");
                     var exceptionTelemetry = new ExceptionTelemetry(exp);
 
                     if (context.Response.StatusCode >= 500)

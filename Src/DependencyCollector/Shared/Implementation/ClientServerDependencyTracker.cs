@@ -5,6 +5,8 @@
     using System.Diagnostics;
     using System.Net;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.W3C;
+
     internal static class ClientServerDependencyTracker
     {
         internal const string DependencyActivityName = "Microsoft.ApplicationInsights.Web.Dependency";
@@ -21,7 +23,7 @@
         internal static DependencyTelemetry BeginTracking(TelemetryClient telemetryClient)
         {
             var telemetry = new DependencyTelemetry();
-            Debug.WriteLine("BeginTracking" + Stopwatch.GetTimestamp());
+            Trace.WriteLine("BeginTracking" + Stopwatch.GetTimestamp());
             telemetry.Start();
             Activity activity;
             Activity currentActivity = Activity.Current;
@@ -58,9 +60,9 @@
 
                 telemetry.Id = string.Concat('|', context.Operation.Id, '.', activity.SpanId.ToHexString(), '.');
 
-                if (activity.TraceStateString != null && !telemetry.Properties.ContainsKey("tracestate"))
+                if (activity.TraceStateString != null && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {
-                    telemetry.Properties.Add("tracestate", activity.TraceStateString);
+                    telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, activity.TraceStateString);
                 }
             }
             else
@@ -92,7 +94,7 @@
         /// <param name="telemetry">Telemetry item to compute the duration and track.</param>
         internal static void EndTracking(TelemetryClient telemetryClient, DependencyTelemetry telemetry)
         {
-            Debug.WriteLine("EndTracking" + Stopwatch.GetTimestamp());
+            Trace.WriteLine("EndTracking" + Stopwatch.GetTimestamp());
             telemetry.Stop();
             telemetryClient.TrackDependency(telemetry);
         }

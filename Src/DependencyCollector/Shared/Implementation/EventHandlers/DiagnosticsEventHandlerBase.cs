@@ -8,6 +8,7 @@
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
+    using Microsoft.ApplicationInsights.W3C;
 
     /// <summary>
     /// Base implementation of diagnostic event handler.
@@ -35,6 +36,42 @@
         }
 
         public abstract void OnEvent(KeyValuePair<string, object> evnt, DiagnosticListener ignored);
+
+        protected static string GetRootId(string diagnosticId)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(diagnosticId), "diagnosticId must not be null or empty");
+
+            if (diagnosticId[0] == '|')
+            {
+                var dot = diagnosticId.IndexOf('.');
+
+                return diagnosticId.Substring(1, dot - 1);
+            }
+
+            return diagnosticId;
+        }
+
+        protected static bool TryGetTraceId(string diagnosticId, out ReadOnlySpan<char> traceId)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(diagnosticId), "diagnosticId must not be null or empty");
+
+            traceId = default;
+            if (diagnosticId[0] == '|' && diagnosticId.Length >= 33 && diagnosticId[33] == '.')
+            {
+                for (int i = 1; i < 33; i++)
+                {
+                    if (!((diagnosticId[i] >= '0' && diagnosticId[i] <= '9') || (diagnosticId[i] >= 'a' && diagnosticId[i] <= 'f')))
+                    {
+                        return false;
+                    }
+                }
+
+                traceId = diagnosticId.AsSpan().Slice(1, 32);
+                return true;
+            }
+
+            return false;
+        }
 
         protected void SetCommonProperties(string eventName, object eventPayload, Activity activity, OperationTelemetry telemetry)
         {
@@ -64,9 +101,9 @@
                 telemetry.Id = string.Concat('|', traceId, '.', activity.SpanId.ToHexString(), '.');
 
                 // TODO move to base SDK?
-                if (!string.IsNullOrEmpty(activity.TraceStateString) && !telemetry.Properties.ContainsKey("tracestate"))
+                if (!string.IsNullOrEmpty(activity.TraceStateString) && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {
-                    telemetry.Properties.Add("tracestate", activity.TraceStateString);
+                    telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, activity.TraceStateString);
                 }
             }
             else
@@ -151,45 +188,6 @@
             {
                 return this.eventName.GetHashCode() ^ this.PropertyName.GetHashCode();
             }
-        }
-
-
-        protected static string GetRootId(string diagnosticId)
-        {
-            Debug.Assert(diagnosticId != null);
-            Debug.Assert(diagnosticId.Length > 0);
-
-            if (diagnosticId[0] == '|')
-            {
-                var dot = diagnosticId.IndexOf('.');
-
-                return diagnosticId.Substring(1, dot - 1);
-            }
-
-            return diagnosticId;
-        }
-
-        protected static bool TryGetTraceId(string diagnosticId, out ReadOnlySpan<char> traceId)
-        {
-            Debug.Assert(diagnosticId != null);
-            Debug.Assert(diagnosticId.Length > 0);
-
-            traceId = default;
-            if (diagnosticId[0] == '|' && diagnosticId.Length >= 33 && diagnosticId[33] == '.')
-            {
-                for (int i = 1; i < 33; i++)
-                {
-                    if (!((diagnosticId[i] >= '0' && diagnosticId[i] <= '9') || (diagnosticId[i] >= 'a' && diagnosticId[i] <= 'f')))
-                    {
-                        return false;
-                    }
-                }
-
-                traceId = diagnosticId.AsSpan().Slice(1, 32);
-                return true;
-            }
-
-            return false;
         }
     }
 }

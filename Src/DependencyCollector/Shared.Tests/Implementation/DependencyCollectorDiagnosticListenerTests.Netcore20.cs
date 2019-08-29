@@ -36,7 +36,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -73,7 +73,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: false,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+                HttpInstrumentationVersion.V2))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut");
                 activity.Start();
@@ -101,7 +101,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: true,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2);
+                HttpInstrumentationVersion.V2);
 
             using (listenerWithLegacyHeaders)
             {
@@ -131,7 +131,7 @@ namespace Microsoft.ApplicationInsights.Tests
         {
             this.configuration.EnableW3CCorrelation = false;
 
-            using (var listenerWithoutW3CHeaders = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listenerWithoutW3CHeaders = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut").SetParentId("|guid.").Start();
 
@@ -159,7 +159,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
                 var approxStartTime = DateTime.UtcNow;
@@ -218,7 +218,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -271,7 +271,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -298,7 +298,7 @@ namespace Microsoft.ApplicationInsights.Tests
  
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -328,7 +328,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -365,7 +365,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -393,7 +393,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -421,7 +421,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -461,7 +461,7 @@ namespace Microsoft.ApplicationInsights.Tests
             var appInsightsUrl = TelemetryConfiguration.CreateDefault().TelemetryChannel.EndpointAddress;
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Get, appInsightsUrl);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
                 Assert.IsNull(HttpHeadersUtilities.GetRequestContextKeyValue(requestMsg.Headers,
@@ -495,7 +495,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+                HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
                 Assert.IsFalse(requestMsg.Headers.Contains(RequestResponseHeaders.RequestContextHeader));
@@ -519,7 +519,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+                HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
                 Assert.IsFalse(requestMsg.Headers.Contains(RequestResponseHeaders.RequestContextHeader));
@@ -544,7 +544,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             HttpRequestMessage requestMsg = new HttpRequestMessage(HttpMethod.Post, RequestUrlWithScheme);
 
-            using (var listener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var listener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 listener.OnActivityStart(requestMsg);
 
@@ -575,8 +575,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop",
                     new { Request = request, Response = response, RequestTaskStatus = TaskStatus.RanToCompletion });
 
-            using (var firstListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
-            using (var secondListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var firstListener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
+            using (var secondListener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut").Start();
 
@@ -603,8 +603,8 @@ namespace Microsoft.ApplicationInsights.Tests
                 new KeyValuePair<string, object>("System.Net.Http.HttpRequestOut.Stop",
                     new { Request = request, Response = response, RequestTaskStatus = TaskStatus.RanToCompletion });
 
-            var firstListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2);
-            using (var secondListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            var firstListener = this.CreateHttpListener(HttpInstrumentationVersion.V2);
+            using (var secondListener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 var activity = new Activity("System.Net.Http.HttpRequestOut").Start();
                 firstListener.OnNext(startEvent);
@@ -640,7 +640,7 @@ namespace Microsoft.ApplicationInsights.Tests
 
             var activity = new Activity("System.Net.Http.HttpRequestOut").Start();
 
-            using (var firstListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var firstListener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 firstListener.OnNext(startEvent);
                 firstListener.OnNext(stopEvent);
@@ -650,7 +650,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 firstListener.Dispose();
             }
 
-            using (var secondListener = this.CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V2))
+            using (var secondListener = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
                 activity = new Activity("System.Net.Http.HttpRequestOut").Start();
                 secondListener.OnNext(startEvent);
@@ -660,7 +660,7 @@ namespace Microsoft.ApplicationInsights.Tests
             }
         }
 
-        private HttpCoreDiagnosticSourceListener CreateHttpListener(HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion instrumentationVersion)
+        private HttpCoreDiagnosticSourceListener CreateHttpListener(HttpInstrumentationVersion instrumentationVersion)
         {
             return new HttpCoreDiagnosticSourceListener(
                 this.configuration,

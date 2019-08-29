@@ -16,7 +16,34 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
-    
+    using Microsoft.ApplicationInsights.W3C;
+
+    /// <summary>
+    /// Version of the HttpClient instrumentation.
+    /// </summary>
+    internal enum HttpInstrumentationVersion
+    {
+        /// <summary>
+        /// Version is not identified.
+        /// </summary>
+        Unknown = 0,
+
+        /// <summary>
+        /// NET Core 1.* - deprecated events
+        /// </summary>
+        V1 = 1,
+
+        /// <summary>
+        /// .NET Core 2.* - Activity and new events
+        /// </summary>
+        V2 = 2,
+
+        /// <summary>
+        /// .NET Core 3.* - W3C
+        /// </summary>
+        V3 = 3,
+    }
+
     internal class HttpCoreDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
         private const string DependencyErrorPropertyKey = "Error";
@@ -54,30 +81,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
         private readonly ConcurrentDictionary<string, Exception> pendingExceptions =
             new ConcurrentDictionary<string, Exception>();
 
-        /// <summary>
-        /// Version of the HttpClient instrumentation:
-        /// </summary>
-        internal enum HttpInstrumentationVersion
-        {
-            Unknown = 0,
-
-            /// <summary>
-            /// NET Core 1.* - deprecated events
-            /// </summary>
-            V1 = 1,
-
-            /// <summary>
-            /// .NET Core 2.* - Activity and new events
-            /// </summary>
-            V2 = 2,
-
-            /// <summary>
-            /// .NET Core 3.* - W3C
-            /// </summary>
-            V3 = 3
-        }
-
-        private readonly HttpInstrumentationVersion httpInstrumentationVersion;
+        private readonly HttpInstrumentationVersion httpInstrumentationVersion = HttpInstrumentationVersion.Unknown;
         private readonly bool injectLegacyHeaders = false;
         private readonly bool injectRequestIdInW3CMode = true;
 
@@ -97,51 +101,14 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
             this.injectLegacyHeaders = injectLegacyHeaders;
-            this.httpInstrumentationVersion = instrumentationVersion != HttpInstrumentationVersion.Unknown ? instrumentationVersion: GetInstrumentationVersion();
+            this.httpInstrumentationVersion = instrumentationVersion != HttpInstrumentationVersion.Unknown ? 
+                instrumentationVersion :
+                this.GetInstrumentationVersion();
             this.injectRequestIdInW3CMode = injectRequestIdInW3CMode;
             this.subscriber = new HttpCoreDiagnosticSourceSubscriber(
                 this,
                 this.applicationInsightsUrlFilter,
                 this.httpInstrumentationVersion);
-        }
-
-        private HttpInstrumentationVersion GetInstrumentationVersion()
-        {
-            HttpInstrumentationVersion version = HttpInstrumentationVersion.Unknown;
-
-            var httpClientAssembly = typeof(HttpClient).GetTypeInfo().Assembly;
-            var httpClientVersion = httpClientAssembly.GetName().Version;
-            string httpClientInformationalVersion =
-                httpClientAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ??
-                string.Empty;
-
-            if (httpClientInformationalVersion.StartsWith("3."))
-            {
-                version = HttpInstrumentationVersion.V3;
-            }
-            else if (httpClientVersion.Major == 4 && httpClientVersion.Minor == 2)
-            {
-                // .NET Core 3.0 has the same version of http client lib as 2.*
-                // but AssemblyInformationalVersionAttribute is different.
-                version = HttpInstrumentationVersion.V2;
-            }
-            else if (httpClientVersion.Major == 4 && httpClientVersion.Minor < 2)
-            {
-                version = HttpInstrumentationVersion.V1;
-            }
-            else
-            {
-                // fallback to V3 assuming unknown SDKs are from future versions
-                version = HttpInstrumentationVersion.V3;
-            }
-
-            DependencyCollectorEventSource.Log.HttpCoreDiagnosticListenerInstrumentationVersion(
-                (int)version, 
-                httpClientVersion.Major, 
-                httpClientVersion.Minor,
-                httpClientInformationalVersion);
-
-            return version;
         }
 
         /// <summary>
@@ -436,9 +403,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
 
             // TODO move to base SDK?
-            if (!string.IsNullOrEmpty(currentActivity.TraceStateString) && !telemetry.Properties.ContainsKey("tracestate"))
+            if (!string.IsNullOrEmpty(currentActivity.TraceStateString) && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
             {
-                telemetry.Properties.Add("tracestate", currentActivity.TraceStateString);
+                telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, currentActivity.TraceStateString);
             }
 
             this.client.Initialize(telemetry);
@@ -494,9 +461,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                 // TODO move to base SDK?
                 var tracestate = Activity.Current?.TraceStateString;
-                if (!string.IsNullOrEmpty(tracestate) && !dependency.Telemetry.Properties.ContainsKey("tracestate"))
+                if (!string.IsNullOrEmpty(tracestate) && !dependency.Telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {
-                    dependency.Telemetry.Properties.Add("tracestate", tracestate);
+                    dependency.Telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, tracestate);
                 }
 
                 dependency.Telemetry.Target = DependencyTargetNameHelper.GetDependencyTargetName(requestUri);
@@ -558,6 +525,30 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
         }
 
+        private static void InjectW3CHeaders(Activity currentActivity, HttpRequestHeaders requestHeaders)
+        {
+            if (!requestHeaders.Contains(W3C.W3CConstants.TraceParentHeader))
+            {
+                requestHeaders.Add(W3C.W3CConstants.TraceParentHeader, currentActivity.Id);
+            }
+
+            if (!requestHeaders.Contains(W3C.W3CConstants.TraceStateHeader) &&
+                currentActivity.TraceStateString != null)
+            {
+                requestHeaders.Add(W3C.W3CConstants.TraceStateHeader,
+                    currentActivity.TraceStateString);
+            }
+        }
+
+        private static void InjectBackCompatibleRequestId(Activity currentActivity, HttpRequestHeaders requestHeaders)
+        {
+            if (!requestHeaders.Contains(RequestResponseHeaders.RequestIdHeader))
+            {
+                requestHeaders.Add(RequestResponseHeaders.RequestIdHeader,
+                    string.Concat('|', currentActivity.TraceId.ToHexString(), '.', currentActivity.SpanId.ToHexString(), '.'));
+            }
+        }
+
         private void InjectRequestHeaders(HttpRequestMessage request, string instrumentationKey)
         {
             try
@@ -582,7 +573,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                     var currentActivity = Activity.Current;
 
-                    switch (httpInstrumentationVersion)
+                    switch (this.httpInstrumentationVersion)
                     {
                         case HttpInstrumentationVersion.V1:
                             // HttpClient does not add any headers
@@ -662,30 +653,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             }
         }
 
-        private void InjectW3CHeaders(Activity currentActivity, HttpRequestHeaders requestHeaders)
-        {
-            if (!requestHeaders.Contains(W3C.W3CConstants.TraceParentHeader))
-            {
-                requestHeaders.Add(W3C.W3CConstants.TraceParentHeader, currentActivity.Id);
-            }
-
-            if (!requestHeaders.Contains(W3C.W3CConstants.TraceStateHeader) &&
-                currentActivity.TraceStateString != null)
-            {
-                requestHeaders.Add(W3C.W3CConstants.TraceStateHeader,
-                    currentActivity.TraceStateString);
-            }
-        }
-
-        private void InjectBackCompatibleRequestId(Activity currentActivity, HttpRequestHeaders requestHeaders)
-        {
-            if (!requestHeaders.Contains(RequestResponseHeaders.RequestIdHeader))
-            {
-                requestHeaders.Add(RequestResponseHeaders.RequestIdHeader,
-                    string.Concat('|', currentActivity.TraceId.ToHexString(), '.', currentActivity.SpanId.ToHexString(), '.'));
-            }
-        }
-
         private void ParseResponse(HttpResponseMessage response, DependencyTelemetry telemetry)
         {
             try
@@ -724,6 +691,45 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                     this.subscriber.Dispose();
                 }
             }
+        }
+
+        private HttpInstrumentationVersion GetInstrumentationVersion()
+        {
+            HttpInstrumentationVersion version = HttpInstrumentationVersion.Unknown;
+
+            var httpClientAssembly = typeof(HttpClient).GetTypeInfo().Assembly;
+            var httpClientVersion = httpClientAssembly.GetName().Version;
+            string httpClientInformationalVersion =
+                httpClientAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ??
+                string.Empty;
+
+            if (httpClientInformationalVersion.StartsWith("3.", StringComparison.Ordinal))
+            {
+                version = HttpInstrumentationVersion.V3;
+            }
+            else if (httpClientVersion.Major == 4 && httpClientVersion.Minor == 2)
+            {
+                // .NET Core 3.0 has the same version of http client lib as 2.*
+                // but AssemblyInformationalVersionAttribute is different.
+                version = HttpInstrumentationVersion.V2;
+            }
+            else if (httpClientVersion.Major == 4 && httpClientVersion.Minor < 2)
+            {
+                version = HttpInstrumentationVersion.V1;
+            }
+            else
+            {
+                // fallback to V3 assuming unknown SDKs are from future versions
+                version = HttpInstrumentationVersion.V3;
+            }
+
+            DependencyCollectorEventSource.Log.HttpCoreDiagnosticListenerInstrumentationVersion(
+                (int)version,
+                httpClientVersion.Major,
+                httpClientVersion.Minor,
+                httpClientInformationalVersion);
+
+            return version;
         }
 
         /// <summary>

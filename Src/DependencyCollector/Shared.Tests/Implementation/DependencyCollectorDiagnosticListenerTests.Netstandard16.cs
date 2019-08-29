@@ -90,7 +90,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, Guid.NewGuid());
 
@@ -115,7 +115,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 listener.OnRequest(requestMsg, loggingRequestId);
@@ -146,7 +146,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 // first request, expected to fail
                 listener.OnRequest(requestMsg, loggingRequestId);
@@ -200,7 +200,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 Guid loggingRequestId = Guid.NewGuid();
                 HttpRequestMessage requestMsg =
@@ -233,7 +233,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: true,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1);
+                HttpInstrumentationVersion.V1);
 
             using (listenerWithLegacyHeaders)
             {
@@ -270,7 +270,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new[] { "excluded.host.com" },
                 injectLegacyHeaders: true,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1);
+                HttpInstrumentationVersion.V1);
 
             using (listenerWithLegacyHeaders)
             {
@@ -308,7 +308,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
 
@@ -338,7 +338,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
 
@@ -379,7 +379,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnResponse(responseMsg, Guid.NewGuid());
                 Assert.AreEqual(0, this.sentTelemetry.Count);
@@ -401,7 +401,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
 
@@ -453,7 +453,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
 
@@ -500,7 +500,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 Assert.IsTrue(listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
@@ -549,7 +549,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 Assert.IsTrue(listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
@@ -597,7 +597,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 Assert.IsTrue(listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
@@ -646,7 +646,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 Assert.IsTrue(listener.PendingDependencyTelemetry.TryGetValue(requestMsg, out var dependency));
@@ -701,7 +701,7 @@ namespace Microsoft.ApplicationInsights.Tests
                 correlationDomainExclusionList: new string[] { "excluded.host.com" },
                 injectLegacyHeaders: false,
                 injectRequestIdInW3CMode: true,
-                HttpCoreDiagnosticSourceListener.HttpInstrumentationVersion.V1))
+                HttpInstrumentationVersion.V1))
             {
                 listener.OnRequest(requestMsg, loggingRequestId);
                 Assert.IsNotNull(Activity.Current);
