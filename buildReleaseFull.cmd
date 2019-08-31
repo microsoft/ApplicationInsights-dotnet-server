@@ -2,7 +2,7 @@
 
 IF NOT DEFINED MSBUILD CALL findMsBuild.cmd
 
-SET ToolsVersion=15.0
+SET ToolsVersion=Current
 SET ProjectName=Msbuild.All
 SET Configuration=Release
 SET Platform="Mixed Platforms"

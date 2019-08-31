@@ -31,7 +31,7 @@
     <!-- Generate the BuildInfo.config file -->
     <GenerateBuildInfoConfigFile>true</GenerateBuildInfoConfigFile>
     <IncludeServerNameInBuildInfo>true</IncludeServerNameInBuildInfo>
-    <VisualStudioVersion>15.0</VisualStudioVersion>
+    <VisualStudioVersion>16.0</VisualStudioVersion>
   </PropertyGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="$(TargetDir)$(TargetName).BuildInfo.config" DestinationFiles="$(ProjectDir)BuildInfo.config" />
