@@ -151,8 +151,6 @@
                 return;
             }
 
-            Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED ONEND 1 {Activity.Current?.Id}");
-
             var requestTelemetry = context.ReadOrCreateRequestTelemetryPrivate();
             requestTelemetry.Stop();
 
@@ -186,11 +184,8 @@
                 RequestTrackingUtilities.UpdateRequestTelemetryFromRequest(requestTelemetry, context.Request, this.telemetryConfiguration?.ApplicationIdProvider);
             }
 
-            Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED ONEND 2 {Activity.Current?.Id}");
-
             if (this.childRequestTrackingSuppressionModule?.OnEndRequest_ShouldLog(context) ?? true)
             {
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED ONEND 3 {Activity.Current?.Id}");
                 this.telemetryClient.TrackRequest(requestTelemetry);
             }
             else

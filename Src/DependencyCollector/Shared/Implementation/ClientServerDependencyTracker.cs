@@ -23,7 +23,6 @@
         internal static DependencyTelemetry BeginTracking(TelemetryClient telemetryClient)
         {
             var telemetry = new DependencyTelemetry();
-            Trace.WriteLine("BeginTracking" + Stopwatch.GetTimestamp());
             telemetry.Start();
             Activity activity;
             Activity currentActivity = Activity.Current;
@@ -94,7 +93,6 @@
         /// <param name="telemetry">Telemetry item to compute the duration and track.</param>
         internal static void EndTracking(TelemetryClient telemetryClient, DependencyTelemetry telemetry)
         {
-            Trace.WriteLine("EndTracking" + Stopwatch.GetTimestamp());
             telemetry.Stop();
             telemetryClient.TrackDependency(telemetry);
         }

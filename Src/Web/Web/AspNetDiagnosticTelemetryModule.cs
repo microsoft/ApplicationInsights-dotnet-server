@@ -41,13 +41,13 @@
             {
                 foreach (var module in TelemetryModules.Instance.Modules)
                 {
-                    if (module is RequestTrackingTelemetryModule)
+                    if (module is RequestTrackingTelemetryModule requestTrackingModule)
                     {
-                        this.requestModule = (RequestTrackingTelemetryModule)module;
+                        this.requestModule = requestTrackingModule;
                     }
-                    else if (module is ExceptionTrackingTelemetryModule)
+                    else if (module is ExceptionTrackingTelemetryModule exceptionTracingModule)
                     {
-                        this.exceptionModule = (ExceptionTrackingTelemetryModule)module;
+                        this.exceptionModule = exceptionTracingModule;
                     }
                 }
             }
@@ -127,8 +127,6 @@
 
             public static Func<string, object, object, bool> IsEnabled => (name, activityObj, _) => 
             {
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {name} !!! New = '{(activityObj as Activity)?.OperationName}', Parent = '{(activityObj as Activity)?.ParentId}' Cur = '{Activity.Current?.Id}'");
-
                 if (HttpContext.Current == null)
                 {
                     // should not happen
@@ -137,13 +135,17 @@
                 }
 
                 Activity currentActivity = Activity.Current;
-                // TODO comment and test
-                if (name == IncomingRequestEventName && activityObj is Activity && currentActivity != null && currentActivity.OperationName == IncomingRequestEventName)
+
+                if (name == IncomingRequestEventName && 
+                    activityObj is Activity && 
+                    currentActivity != null && 
+                    currentActivity.OperationName == IncomingRequestEventName)
                 {
-                    var contextExists = HttpContext.Current.GetRequestTelemetry() != null;
-                    Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED RESULT {contextExists}");
                     // this is a first IsEnabled call without context that ensures that Activity instrumentation is on
-                    return !contextExists;
+                    // and Activity was created by TelemetryCorrelation module
+                    // If module is added twice or we get multiple BeginRequest, we already have Activity and RequestTelemetry
+                    // and don't want second Activity to be created so we return false here.
+                    return HttpContext.Current.GetRequestTelemetry() == null;
                 }
 
                 return true;
@@ -171,6 +173,7 @@
                         WebEventSource.Log.HttpRequestNotAvailable(ex.Message, ex.StackTrace);
                     }
 
+                    // parse custom headers if enabled
                     if (request != null && ActivityHelpers.RootOperationIdHeaderName != null)
                     {
                         var rootId = StringUtilities.EnforceMaxLength(
@@ -186,16 +189,7 @@
 
             public void OnNext(KeyValuePair<string, object> value)
             {
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {value.Key} !!! Cur = '{Activity.Current?.Id}' Parent = '{Activity.Current?.ParentId}'");
                 var context = HttpContext.Current;
-
-                var allitems = string.Empty;
-                foreach (var key in context.Items.Keys)
-                {
-                    allitems += $"{key},";
-                }
-
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED {allitems}");
 
                 if (value.Key == IncomingRequestStartEventName)
                 {

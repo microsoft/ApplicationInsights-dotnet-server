@@ -28,7 +28,6 @@
 
             if (currentActivity == null)
             {
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED CURRENT NULL");
                 // if there was no BeginRequest, ASP.NET HttpModule did not have a chance to set current activity yet
                 // this could happen if ASP.NET TelemetryCorrelation module is not the first in the pipeline
                 // and some module before it tracks telemetry.
@@ -49,7 +48,6 @@
                 }
 
                 currentActivity.Start();
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED STARTED {currentActivity.Id}");
             }
 
             if (currentActivity.IdFormat == ActivityIdFormat.W3C && 
@@ -119,9 +117,7 @@
             // save current activity in case it will be lost (under the same name TelemetryCorrelation stores it)
             // TelemetryCorrelation will restore it when possible.
             platformContext.Items[ActivityHelpers.RequestActivityItemName] = currentActivity;
-
-            Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED ADDED {result.Id}");
-            platformContext.Items.Add(RequestTrackingConstants.RequestTelemetryItemName, result);
+            platformContext.Items[RequestTrackingConstants.RequestTelemetryItemName] = result;
             WebEventSource.Log.WebTelemetryModuleRequestTelemetryCreated();
 
             return result;
@@ -135,14 +131,8 @@
                 throw new ArgumentNullException(nameof(platformContext));
             }
 
-            var result = platformContext.GetRequestTelemetry();
-            if (result == null)
-            {
-                Trace.WriteLine($"[{DateTime.UtcNow:o}] ISENABLED NULL");
-                result = CreateRequestTelemetryPrivate(platformContext);
-            }
-
-            return result;
+            return platformContext.GetRequestTelemetry() ?? 
+                   CreateRequestTelemetryPrivate(platformContext);
         }
 
         /// <summary>
