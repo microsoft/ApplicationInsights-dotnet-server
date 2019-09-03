@@ -146,6 +146,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 telemetry.Data = url.OriginalString;
                 telemetry.SetOperationDetail(RemoteDependencyConstants.HttpRequestOperationDetailName, webRequest);
 
+                Activity currentActivity = Activity.Current;
                 // Add the source instrumentation key header if collection is enabled, the request host is not in the excluded list and the same header doesn't already exist
                 if (this.setCorrelationHeaders && !this.correlationDomainExclusionList.Contains(url.Host))
                 {
@@ -189,7 +190,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                         }
                     }
 
-                    Activity currentActivity = Activity.Current;
                     if (currentActivity != null)
                     {
                         // ApplicationInsights only needs to inject W3C, potentially Request-Id and Correlation-Context
@@ -223,17 +223,18 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                             InjectCorrelationContext(webRequest.Headers, currentActivity);
                         }
+                    }
+                }
 
-                        if (currentActivity.IdFormat == ActivityIdFormat.W3C)
+                // Active bug in .NET Fx diagnostics hook: https://github.com/dotnet/corefx/pull/40777
+                // Application Insights has to inject Request-Id to work it around
+                if (currentActivity?.IdFormat == ActivityIdFormat.W3C)
+                {
+                    // if (this.injectRequestIdInW3CMode)
+                    {
+                        if (webRequest.Headers[RequestResponseHeaders.RequestIdHeader] == null)
                         {
-                            // TODO explanation bug in .net http desktop
-                            // if (this.injectRequestIdInW3CMode)
-                            {
-                                if (webRequest.Headers[RequestResponseHeaders.RequestIdHeader] == null)
-                                {
-                                    webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);
-                                }
-                            }
+                            webRequest.Headers.Add(RequestResponseHeaders.RequestIdHeader, telemetry.Id);
                         }
                     }
                 }

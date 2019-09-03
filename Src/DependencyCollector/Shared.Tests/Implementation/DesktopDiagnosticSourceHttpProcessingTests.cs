@@ -115,8 +115,9 @@
              Assert.IsNull(request.Headers[RequestResponseHeaders.StandardRootIdHeader]);
              Assert.IsNull(request.Headers[RequestResponseHeaders.StandardParentIdHeader]);
 
-             // TODO explanation
-             Assert.IsNotNull(request.Headers[RequestResponseHeaders.RequestIdHeader]);
+            // Active bug in .NET Fx diagnostics hook: https://github.com/dotnet/corefx/pull/40777
+            // Application Insights has to inject Request-Id to work it around
+            Assert.IsNotNull(request.Headers[RequestResponseHeaders.RequestIdHeader]);
              activity.Stop();
          }
 
@@ -324,7 +325,8 @@
                 Assert.IsNull(request.Headers[W3C.W3CConstants.TraceStateHeader]);
                 Assert.IsNull(request.Headers[RequestResponseHeaders.CorrelationContextHeader]);
 
-                // TODO explanation
+                // Active bug in .NET Fx diagnostics hook: https://github.com/dotnet/corefx/pull/40777
+                // Application Insights has to inject Request-Id to work it around
                 var parentActivity = Activity.Current;
                 Assert.IsTrue(actualTraceparentHeader.StartsWith($"00-{parentActivity.TraceId.ToHexString()}-", StringComparison.Ordinal));
                 var spanId = actualTraceparentHeader.Split('-')[2];

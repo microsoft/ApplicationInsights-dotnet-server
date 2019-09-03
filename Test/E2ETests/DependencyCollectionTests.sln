@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.88
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyCollectionTests", "E2ETests\DependencyCollectionTests.csproj", "{DB992B10-D3D8-4DA1-815A-A2F5B7F3C18C}"
 EndProject
@@ -21,9 +21,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestApps", "TestApps", "{E5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestUtils", "TestUtils", "{75D4A1E1-5500-4BA2-8405-CF25297F7B89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2ETestAppCore20", "TestApps\NetCore20\E2ETestAppCore20\E2ETestAppCore20.csproj", "{F838D8E1-FFCF-4C6B-901D-4D8DC98EC05C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "E2ETestAppCore20", "TestApps\NetCore20\E2ETestAppCore20\E2ETestAppCore20.csproj", "{F838D8E1-FFCF-4C6B-901D-4D8DC98EC05C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConstants", "TestConstants\TestConstants.csproj", "{C46726F5-105A-46D8-A92B-0A62A64C2430}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "E2ETestAppCore30", "TestApps\NetCore30\E2ETestAppCore30\E2ETestAppCore30.csproj", "{F149A472-9379-4855-ABF3-602E23B4DFA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,6 +99,14 @@ Global
 		{C46726F5-105A-46D8-A92B-0A62A64C2430}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C46726F5-105A-46D8-A92B-0A62A64C2430}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{C46726F5-105A-46D8-A92B-0A62A64C2430}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F149A472-9379-4855-ABF3-602E23B4DFA5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -109,6 +119,7 @@ Global
 		{4B0BC3B7-C7FC-4333-9E28-5790D9153F07} = {75D4A1E1-5500-4BA2-8405-CF25297F7B89}
 		{F838D8E1-FFCF-4C6B-901D-4D8DC98EC05C} = {E51D85A0-9962-416B-8314-9C58BC170D89}
 		{C46726F5-105A-46D8-A92B-0A62A64C2430} = {75D4A1E1-5500-4BA2-8405-CF25297F7B89}
+		{F149A472-9379-4855-ABF3-602E23B4DFA5} = {E51D85A0-9962-416B-8314-9C58BC170D89}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D0646BA3-97C4-49E1-927B-40B983BC3434}

@@ -96,6 +96,7 @@
     <Compile Include="net462SM\Test452OnNet462SM.cs" />
     <Compile Include="net462\Test452OnNet462.cs" />
     <Compile Include="net471\Test452OnNet471.cs" />
+    <Compile Include="netcore30\TestCore30OnNetCore30.cs" />
     <Compile Include="netcore20\TestCore20OnNetCore20.cs" />
     <Compile Include="Test452Base.cs" />
   </ItemGroup>
@@ -108,6 +109,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="AzureEmulator\nginx.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="docker-composeNet30AppOn30.yml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="docker-composeNet20AppOn20.yml">

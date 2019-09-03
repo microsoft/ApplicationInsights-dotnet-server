@@ -109,7 +109,9 @@
         }
 
         [TestMethod]
-        [Ignore] // Active bug TODO in corefx
+        [Ignore]
+        // Active bug in .NET Fx diagnostics hook: https://github.com/dotnet/corefx/pull/40777
+        // Application Insights has to inject Request-Id to work it around
         [Timeout(5000)]
         public void TestBasicDependencyCollectionW3COnRequestIdOffDiagnosticSource()
         {

@@ -272,7 +272,7 @@ namespace E2ETests
         /// <returns></returns>
         public async Task TestHttpDependencyCorrelationInPostRequest()
         {
-            var operationId = ActivityTraceId.CreateRandom();
+            var operationId = ActivityTraceId.CreateRandom().ToHexString();
             bool supportsOnRequestExecute = false;
             string restoredActivityId = null;
             using (var httpClient = new HttpClient())
@@ -316,8 +316,9 @@ namespace E2ETests
             // dependency should be correlated to the request, false otherwise
             if (supportsOnRequestExecute)
             {
+                var spanId = restoredActivityId.Split('-')[2];
                 Assert.AreEqual(operationId, dependency.tags["ai.operation.id"]);
-                Assert.AreEqual(restoredActivityId, dependency.tags["ai.operation.parentId"]);
+                Assert.AreEqual($"|{operationId}.{spanId}.", dependency.tags["ai.operation.parentId"]);
                 Assert.AreEqual(requests[0].data.baseData.id, dependency.tags["ai.operation.parentId"]);
             }
             else
