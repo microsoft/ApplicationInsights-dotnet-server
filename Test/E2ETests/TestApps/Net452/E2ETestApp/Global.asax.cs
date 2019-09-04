@@ -1,7 +1,6 @@
 ﻿using Microsoft.ApplicationInsights.Extensibility;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Optimization;
@@ -15,7 +14,6 @@ namespace E2ETestApp
     {
         void Application_Start(object sender, EventArgs e)
         {
-            Debug.WriteLine("~~~~~~~~~~~~~~~~~");
             // Code that runs on application startup
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
