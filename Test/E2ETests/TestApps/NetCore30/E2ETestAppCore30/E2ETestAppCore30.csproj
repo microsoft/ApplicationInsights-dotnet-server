@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <!--Cange target framework when build infra is ready for 3.0-->
+    <!--TargetFramework>netcoreapp3.0</TargetFramework-->
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <AssemblyName>E2ETestAppCore30</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>E2ETestAppCore30</PackageId>
-    <!--RuntimeFrameworkVersion>3.0.100-preview8-013656</RuntimeFrameworkVersion-->
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
