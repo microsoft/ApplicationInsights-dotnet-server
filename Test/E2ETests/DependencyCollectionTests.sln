@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestApps", "TestApps", "{E5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestUtils", "TestUtils", "{75D4A1E1-5500-4BA2-8405-CF25297F7B89}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "E2ETestAppCore20", "TestApps\NetCore20\E2ETestAppCore20\E2ETestAppCore20.csproj", "{F838D8E1-FFCF-4C6B-901D-4D8DC98EC05C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2ETestAppCore20", "TestApps\NetCore20\E2ETestAppCore20\E2ETestAppCore20.csproj", "{F838D8E1-FFCF-4C6B-901D-4D8DC98EC05C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConstants", "TestConstants\TestConstants.csproj", "{C46726F5-105A-46D8-A92B-0A62A64C2430}"
 EndProject
