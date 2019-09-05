@@ -511,7 +511,7 @@
                 catch (OperationCanceledException)
                 {
                 }
-           }
+            }
         }
         
         private void InitializeCollectionThread()
