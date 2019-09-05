@@ -4,9 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
-    using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Threading;
 
     using Microsoft.ApplicationInsights.DataContracts;
@@ -48,6 +46,25 @@
             var qp = new QuickPulseTelemetryModule();
             qp.Initialize(configuration);
             qp.Dispose();
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryModuleServerIdDefaultsToMachineName()
+        {
+            using (var qp = new QuickPulseTelemetryModule())
+            {
+                Assert.AreEqual(Environment.MachineName, qp.ServerId);
+            }
+        }
+
+        [TestMethod]
+        public void QuickPulseTelemetryModuleServerIdCanBeChanged()
+        {
+            using (var qp = new QuickPulseTelemetryModule())
+            {
+                qp.ServerId = "my-server-name";
+                Assert.AreEqual("my-server-name", qp.ServerId);
+            }
         }
 
         [TestMethod]
