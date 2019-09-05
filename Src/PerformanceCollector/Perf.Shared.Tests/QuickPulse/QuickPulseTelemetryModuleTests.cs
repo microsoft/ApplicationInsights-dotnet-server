@@ -63,6 +63,7 @@
             using (var qp = new QuickPulseTelemetryModule())
             {
                 qp.ServerId = "my-server-name";
+                qp.Initialize(new TelemetryConfiguration("foo"));
                 Assert.AreEqual("my-server-name", qp.ServerId);
             }
         }
