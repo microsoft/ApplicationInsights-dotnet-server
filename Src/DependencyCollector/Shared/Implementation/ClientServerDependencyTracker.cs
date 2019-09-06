@@ -1,6 +1,4 @@
-﻿using Microsoft.ApplicationInsights.W3C.Internal;
-
-namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Data.SqlClient;
@@ -8,6 +6,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using System.Net;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
 
     internal static class ClientServerDependencyTracker
     {

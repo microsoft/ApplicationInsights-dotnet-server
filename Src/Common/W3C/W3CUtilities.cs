@@ -10,7 +10,6 @@
 
     internal static class W3CUtilities
     {
-
         internal static string GetRootId(string legacyId)
         {
             Debug.Assert(!string.IsNullOrEmpty(legacyId), "diagnosticId must not be null or empty");

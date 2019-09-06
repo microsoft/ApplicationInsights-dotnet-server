@@ -1,5 +1,3 @@
-using Microsoft.ApplicationInsights.W3C.Internal;
-
 namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
@@ -19,6 +17,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
     using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
     using Microsoft.ApplicationInsights.W3C;
+    using Microsoft.ApplicationInsights.W3C.Internal;
 
     /// <summary>
     /// Version of the HttpClient instrumentation.

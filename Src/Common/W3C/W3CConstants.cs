@@ -1,11 +1,10 @@
-﻿using System;
-
-#if DEPENDENCY_COLLECTOR
+﻿#if DEPENDENCY_COLLECTOR
     namespace Microsoft.ApplicationInsights.W3C
 #else
     namespace Microsoft.ApplicationInsights.W3C.Internal
 #endif
 {
+    using System;
     using System.ComponentModel;
 
     /// <summary>
@@ -32,19 +31,19 @@
         /// <summary>
         /// Name of the field that carry ApplicationInsights application Id in the tracestate header under az key.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Dot not use.")]
         public const string ApplicationIdTraceStateField = "cid-v1";
 
         /// <summary>
         /// Name of the field that carry Azure-specific states in the tracestate header.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Dot not use.")]
         public const string AzureTracestateNamespace = "az";
 
         /// <summary>
         /// Separator between Azure namespace values.
         /// </summary>
-        [Obsolete]
+        [Obsolete("Dot not use.")]
         public const char TracestateAzureSeparator = ';';
 
         internal const string LegacyRootPropertyIdKey = "ai_legacyRootId";
