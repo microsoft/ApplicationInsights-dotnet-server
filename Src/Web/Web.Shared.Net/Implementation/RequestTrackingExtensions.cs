@@ -54,7 +54,7 @@
                 currentActivity.ParentId != null 
                 && !currentActivity.ParentId.StartsWith("00-", StringComparison.Ordinal))
             {
-                if (ActivityHelpers.TryGetTraceId(currentActivity.ParentId, out var traceId))
+                if (W3CUtilities.TryGetTraceId(currentActivity.ParentId, out var traceId))
                 {
                     legacyParentId = currentActivity.ParentId;
                     
@@ -62,7 +62,7 @@
                 }
                 else
                 {
-                    legacyRootId = ActivityHelpers.GetRootId(currentActivity.ParentId);
+                    legacyRootId = W3CUtilities.GetRootId(currentActivity.ParentId);
                     legacyParentId = legacyParentId ?? GetLegacyParentId(currentActivity.ParentId, platformContext.Request);
                 }
             }
@@ -79,7 +79,7 @@
 
                 if (currentActivity.ParentSpanId != default && legacyParentId == null)
                 {
-                    requestContext.ParentId = ActivityHelpers.FormatTelemetryId(requestContext.Id, currentActivity.ParentSpanId.ToHexString());
+                    requestContext.ParentId = W3CUtilities.FormatTelemetryId(requestContext.Id, currentActivity.ParentSpanId.ToHexString());
                 }
                 else
                 {
@@ -95,7 +95,7 @@
                     result.Properties[W3CConstants.TracestatePropertyKey] = currentActivity.TraceStateString;
                 }
 
-                result.Id = ActivityHelpers.FormatTelemetryId(requestContext.Id, currentActivity.SpanId.ToHexString());
+                result.Id = W3CUtilities.FormatTelemetryId(requestContext.Id, currentActivity.SpanId.ToHexString());
             }
             else
             {

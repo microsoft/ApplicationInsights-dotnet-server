@@ -6,6 +6,7 @@
     using System.Globalization;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.W3C.Internal;
 
     /// <summary>
     /// Implements ServiceBus DiagnosticSource events handling.
@@ -37,7 +38,7 @@
                     if (currentActivity.IdFormat == ActivityIdFormat.W3C && !string.IsNullOrEmpty(currentActivity.ParentId) && currentActivity.ParentSpanId == default)
                     {
                         // if hierarchical parent has compatible rootId, reuse it and keep legacy parentId
-                        if (TryGetTraceId(currentActivity.ParentId, out var traceId))
+                        if (W3CUtilities.TryGetTraceId(currentActivity.ParentId, out var traceId))
                         {
                             var backCompatActivity = new Activity(currentActivity.OperationName);
                             backCompatActivity.SetParentId(ActivityTraceId.CreateFromString(traceId), default, currentActivity.ActivityTraceFlags);
@@ -55,7 +56,7 @@
                         }
                         else
                         {
-                            currentActivity.AddTag(W3C.W3CConstants.LegacyRootPropertyIdKey, GetRootId(currentActivity.ParentId));
+                            currentActivity.AddTag(W3C.W3CConstants.LegacyRootPropertyIdKey, W3CUtilities.GetRootId(currentActivity.ParentId));
                         }
                     }
 

@@ -470,7 +470,7 @@
 
         [Event(48,
             Keywords = Keywords.Diagnostics | Keywords.UserActionable,
-            Message = "Microsoft.AspNet.TelemetryCorrelation.TelemetryCorrelationHttpModule is not first in the HTTP modules list.s",
+            Message = "Microsoft.AspNet.TelemetryCorrelation.TelemetryCorrelationHttpModule is not first in the HTTP modules list.",
             Level = EventLevel.Error)]
         public void RequestTelemetryCreatedBeforeTelemetryCorrelationModuleRuns(string appDomainName = "Incorrect")
         {

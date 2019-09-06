@@ -1,4 +1,6 @@
-﻿namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
+﻿using Microsoft.ApplicationInsights.W3C.Internal;
+
+namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
     using System.Data.SqlClient;
@@ -54,10 +56,10 @@
 
                 if (activity.Parent != null || activity.ParentSpanId != default)
                 {
-                    context.Operation.ParentId = string.Concat('|', context.Operation.Id, '.', activity.ParentSpanId.ToHexString(), '.');
+                    context.Operation.ParentId = W3CUtilities.FormatTelemetryId(context.Operation.Id, activity.ParentSpanId.ToHexString());
                 }
 
-                telemetry.Id = string.Concat('|', context.Operation.Id, '.', activity.SpanId.ToHexString(), '.');
+                telemetry.Id = W3CUtilities.FormatTelemetryId(context.Operation.Id, activity.SpanId.ToHexString());
 
                 if (activity.TraceStateString != null && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {

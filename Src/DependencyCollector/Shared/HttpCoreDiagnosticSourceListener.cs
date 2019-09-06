@@ -1,3 +1,5 @@
+using Microsoft.ApplicationInsights.W3C.Internal;
+
 namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 {
     using System;
@@ -381,11 +383,10 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 telemetry.Context.Operation.Id = traceId;
                 if (currentActivity.ParentSpanId != default)
                 {
-                    telemetry.Context.Operation.ParentId = string.Concat('|', traceId, '.',
-                        currentActivity.ParentSpanId.ToHexString(), '.');
+                    telemetry.Context.Operation.ParentId = W3CUtilities.FormatTelemetryId(traceId, currentActivity.ParentSpanId.ToHexString());
                 }
 
-                telemetry.Id = string.Concat('|', traceId, '.', currentActivity.SpanId.ToHexString(), '.');
+                telemetry.Id = W3CUtilities.FormatTelemetryId(traceId, currentActivity.SpanId.ToHexString());
             }
             else
             {
@@ -545,7 +546,8 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
             if (!requestHeaders.Contains(RequestResponseHeaders.RequestIdHeader))
             {
                 requestHeaders.Add(RequestResponseHeaders.RequestIdHeader,
-                    string.Concat('|', currentActivity.TraceId.ToHexString(), '.', currentActivity.SpanId.ToHexString(), '.'));
+                    W3CUtilities.FormatTelemetryId(currentActivity.TraceId.ToHexString(),
+                            currentActivity.SpanId.ToHexString()));
             }
         }
 
@@ -637,7 +639,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                         // Add the parent ID
                         string parentId = currentActivity.IdFormat == ActivityIdFormat.W3C ? 
-                            string.Concat('|', rootId, '.', currentActivity.SpanId.ToHexString(), '.') :
+                            W3CUtilities.FormatTelemetryId(rootId, currentActivity.SpanId.ToHexString()) :
                             currentActivity.Id;
 
                         if (!string.IsNullOrEmpty(parentId) && !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))

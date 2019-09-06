@@ -25,6 +25,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CActivityExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CConstants.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)W3C\W3COperationCorrelationTelemetryInitializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)W3C\W3CUtilities.cs" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard1.6' ">
     <Compile Include="$(MSBuildThisFileDirectory)WebHeaderCollectionExtensions.cs" />
