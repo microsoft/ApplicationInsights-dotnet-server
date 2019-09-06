@@ -12,6 +12,8 @@
     internal static class WebHeaderCollectionExtensions
     {
         private const string KeyValuePairSeparator = "=";
+        private const int CorrelationContextHeaderMaxLength = 8192;
+        private const int CorrelationContextMaxPairs = 180;
 
         /// <summary>
         /// For the given header collection, for a given header of name-value type, find the value of a particular key.
@@ -122,6 +124,64 @@
             }
 
             return null;
+        }
+
+        public static void ReadActivityBaggage(this NameValueCollection headers, Activity activity)
+        {
+            Debug.Assert(headers != null);
+            Debug.Assert(activity != null);
+
+            int itemsCount = 0;
+            var correlationContexts = headers.GetValues(RequestResponseHeaders.CorrelationContextHeader);
+            if (correlationContexts == null || correlationContexts.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var cc in correlationContexts)
+            {
+                var headerValue = cc.AsSpan();
+                int currentLength = 0;
+                int initialLength = headerValue.Length;
+                do
+                {
+                    var nextSegment = headerValue.Slice(currentLength);
+                    var nextComma = nextSegment.IndexOf(',');
+                    if (nextComma < 0)
+                    {
+                        // last one
+                        nextComma = nextSegment.Length;
+                    }
+
+                    if (nextComma == 0)
+                    {
+                        currentLength += nextComma + 1;
+                        continue;
+                    }
+
+                    if (currentLength + nextComma >= CorrelationContextHeaderMaxLength)
+                    {
+                        return;
+                    }
+
+                    ReadOnlySpan<char> kvp = nextSegment.Slice(0, nextComma).Trim();
+
+                    var separatorInd = kvp.IndexOf('=');
+                    if (separatorInd > 0 && separatorInd < kvp.Length - 1)
+                    {
+                        var separatorIndNext = kvp.Slice(separatorInd + 1).IndexOf('=');
+                        // check there is just one '=' in key-value-pair
+                        if (separatorIndNext < 0)
+                        {
+                            activity.AddBaggage(kvp.Slice(0, separatorInd).Trim().ToString(),
+                                kvp.Slice(separatorInd + 1, kvp.Length - separatorInd - 1).Trim().ToString());
+                            itemsCount += 1;
+                        }
+                    }
+
+                    currentLength += nextComma + 1;
+                } while (itemsCount < CorrelationContextMaxPairs && currentLength < initialLength);
+            }
         }
 
         private static string FormatKeyValueHeader(string key, string value)

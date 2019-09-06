@@ -1,8 +1,12 @@
 ﻿namespace Microsoft.ApplicationInsights.Tests
 {
+    using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net;
+    using System.Text;
     using Microsoft.ApplicationInsights.Common;
     using VisualStudio.TestTools.UnitTesting;
 
@@ -207,6 +211,136 @@
             Assert.AreEqual(2, values.Count);
             Assert.AreEqual("k1=v1", values.First());
             Assert.AreEqual("k2=v2", values.Last());
+        }
+
+        [Xunit.Theory]
+        [Xunit.InlineData("k1=v1,k2=v2")]
+        [Xunit.InlineData(" k1= v1 , k2 =v2 ,")]
+        [Xunit.InlineData(", , k1=v1,,k2=v2,,")]
+        [Xunit.InlineData(",123, k1=v1,,k2=v2,, 456")]
+        [Xunit.InlineData("123=,k1=v1,k2=v2,=456")]
+        [Xunit.InlineData("123= ,k1=v1,k2=v2, =456")]
+        public void ReadCorrelationContextBasicParsing(string correlationContext)
+        {
+            WebHeaderCollection headers = new WebHeaderCollection { [RequestResponseHeaders.CorrelationContextHeader] = correlationContext };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(2, baggage.Length);
+            Assert.IsNotNull(baggage.SingleOrDefault(i => i.Key == "k1" && i.Value == "v1"));
+            Assert.IsNotNull(baggage.SingleOrDefault(i => i.Key == "k2" && i.Value == "v2"));
+        }
+
+        [Xunit.Theory]
+        [Xunit.InlineData("")]
+        [Xunit.InlineData(null)]
+        [Xunit.InlineData(", , ,,")]
+        [Xunit.InlineData(",123,    , 456")]
+        [Xunit.InlineData("=,=,")]
+        public void ReadCorrelationContextBasicParsingGarbage(string correlationContext)
+        {
+            WebHeaderCollection headers = new WebHeaderCollection { [RequestResponseHeaders.CorrelationContextHeader] = correlationContext };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(0, baggage.Length);
+        }
+
+        [TestMethod]
+        public void ReadCorrelationContextMultiHeader()
+        {
+            NameValueCollection headers = new NameValueCollection
+            {
+                { RequestResponseHeaders.CorrelationContextHeader, "k1=v1" },
+                { RequestResponseHeaders.CorrelationContextHeader, "k2=v2" }
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(2, baggage.Length);
+            Assert.IsNotNull(baggage.SingleOrDefault(i => i.Key == "k1" && i.Value == "v1"));
+            Assert.IsNotNull(baggage.SingleOrDefault(i => i.Key == "k2" && i.Value == "v2"));
+        }
+
+        [TestMethod]
+        public void ReadCorrelationContextTooLong()
+        {
+            var pairs = new List<KeyValuePair<string, string>>();
+            var header = new StringBuilder();
+            while (header.Length <= 8192)
+            {
+                var pair = new KeyValuePair<string, string>(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+                
+                // last pair should be ignored
+                pairs.Add(pair);
+                header.Append($"{pair.Key}={pair.Value},");
+            }
+
+            NameValueCollection headers = new NameValueCollection
+            {
+                [RequestResponseHeaders.CorrelationContextHeader] = header.ToString()
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(pairs.Count - 1, baggage.Length);
+            for (int i = 0; i < pairs.Count - 1; i++)
+            {
+                Assert.IsNotNull(baggage.SingleOrDefault(kvp => kvp.Key == pairs[i].Key && kvp.Value == pairs[i].Value));
+            }
+        }
+
+        [TestMethod]
+        public void ReadCorrelationContextTooManyItems()
+        {
+            var pairs = new KeyValuePair<string, string>[181];
+            var header = new StringBuilder();
+            for (int i = 0; i < pairs.Length; i++)
+            {
+                var pair = new KeyValuePair<string, string>(i.ToString(), i.ToString());
+
+                // last pair should be ignored
+                pairs[i] = pair;
+                header.Append($"{pair.Key}={pair.Value},");
+            }
+
+            NameValueCollection headers = new NameValueCollection
+            {
+                [RequestResponseHeaders.CorrelationContextHeader] = header.ToString()
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(180, baggage.Length);
+            for (int i = 0; i < 180; i++)
+            {
+                Assert.IsNotNull(baggage.SingleOrDefault(kvp => kvp.Key == pairs[i].Key && kvp.Value == pairs[i].Value));
+            }
+        }
+
+        [TestMethod]
+        public void ReadCorrelationContextTooLongOneItem()
+        {
+            NameValueCollection headers = new NameValueCollection
+            {
+                [RequestResponseHeaders.CorrelationContextHeader] = new string('x', 8193)
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(0, baggage.Length);
         }
     }
 }
