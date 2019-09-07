@@ -129,7 +129,8 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestMethod]
         public void OnActivityStartInjectsW3COff()
         {
-            this.configuration.EnableW3CCorrelation = false;
+            Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+            Activity.ForceDefaultIdFormat = true;
 
             using (var listenerWithoutW3CHeaders = this.CreateHttpListener(HttpInstrumentationVersion.V2))
             {
@@ -260,7 +261,7 @@ namespace Microsoft.ApplicationInsights.Tests
         }
 
         /// <summary>
-        /// Tests that activity without parent id does not get a new W3C compatible root id.
+        /// Tests that activity wit parent id gets a new W3C compatible root id.
         /// </summary>
         [TestMethod]
         public void OnActivityWithParentId()

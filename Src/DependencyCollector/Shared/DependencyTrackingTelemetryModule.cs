@@ -60,7 +60,7 @@
         /// <summary>
         /// Gets or sets a value indicating whether to enable W3C distributed tracing headers injection.
         /// </summary>
-        [Obsolete("This field has been deprecated. Please set TelemetryConfiguration.EnableW3CCorrelation.")]
+        [Obsolete("This field has been deprecated. Please set Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical; Activity.ForceDefaultIdFormat = true;")]
         public bool EnableW3CHeadersInjection { get; set; } = false;
 
         /// <summary>

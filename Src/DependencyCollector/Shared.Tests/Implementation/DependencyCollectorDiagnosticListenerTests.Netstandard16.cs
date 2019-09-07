@@ -45,6 +45,9 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestInitialize]
         public void Initialize()
         {
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+            Activity.ForceDefaultIdFormat = false;
+
             this.telemetryChannel = new StubTelemetryChannel
             {
                 EndpointAddress = "https://endpointaddress",
