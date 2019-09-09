@@ -60,6 +60,7 @@
 
                 telemetry.Id = W3CUtilities.FormatTelemetryId(context.Operation.Id, activity.SpanId.ToHexString());
 
+                // TODO[tracestate]: remove, this is done in base SDK
                 if (activity.TraceStateString != null && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {
                     telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, activity.TraceStateString);

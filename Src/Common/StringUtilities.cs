@@ -40,7 +40,7 @@
         /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#trace-id .
         /// </summary>
         /// <returns>Random 16 bytes array encoded as hex string.</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId in Microsoft.ApplicationInsights package instead.")]
+        [Obsolete("Use System.Diagnostics.ActivityTraceId.CreateRandom().ToHexString() instead.")]
         public static string GenerateTraceId()
         {
             return ActivityTraceId.CreateRandom().ToHexString();
@@ -51,7 +51,7 @@
         /// https://github.com/w3c/distributed-tracing/blob/master/trace_context/HTTP_HEADER_FORMAT.md#span-id .
         /// </summary>
         /// <returns>Random 8 bytes array encoded as hex string.</returns>
-        [Obsolete("Use Microsoft.ApplicationInsights.Extensibility.W3C.W3CUtilities.GenerateTraceId in Microsoft.ApplicationInsights package instead.")]
+        [Obsolete("Use System.Diagnostics.ActivitySpanId.CreateRandom().ToHexString() instead.")]
         public static string GenerateSpanId()
         {
             return ActivitySpanId.CreateRandom().ToHexString();

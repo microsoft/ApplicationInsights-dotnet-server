@@ -402,7 +402,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 }
             }
 
-            // TODO move to base SDK?
+            // TODO[tracestate]: remove, this is done in base SDK
             if (!string.IsNullOrEmpty(currentActivity.TraceStateString) && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
             {
                 telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, currentActivity.TraceStateString);
@@ -459,7 +459,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
 
                 var dependency = this.client.StartOperation<DependencyTelemetry>(resourceName);
 
-                // TODO move to base SDK?
+                // TODO[tracestate]: remove, this is done in base SDK
                 var tracestate = Activity.Current?.TraceStateString;
                 if (!string.IsNullOrEmpty(tracestate) && !dependency.Telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
                 {
