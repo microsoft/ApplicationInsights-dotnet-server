@@ -44,7 +44,7 @@
                     if (ActivityHelpers.ParentOperationIdHeaderName != null &&
                         ActivityHelpers.RootOperationIdHeaderName != null)
                     {
-                        legacyRootId = StringUtilities.EnforceMaxLength(                            platformContext.Request.UnvalidatedGetHeader(ActivityHelpers.RootOperationIdHeaderName),
+                        legacyRootId = StringUtilities.EnforceMaxLength(platformContext.Request.UnvalidatedGetHeader(ActivityHelpers.RootOperationIdHeaderName),
                             InjectionGuardConstants.RequestHeaderMaxLength);
                         legacyParentId = StringUtilities.EnforceMaxLength(
                             platformContext.Request.UnvalidatedGetHeader(ActivityHelpers.ParentOperationIdHeaderName),
@@ -54,6 +54,7 @@
 
                     headers.ReadActivityBaggage(currentActivity);
                 }
+
                 currentActivity.Start();
             }
 

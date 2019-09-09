@@ -128,8 +128,8 @@
 
         public static void ReadActivityBaggage(this NameValueCollection headers, Activity activity)
         {
-            Debug.Assert(headers != null);
-            Debug.Assert(activity != null);
+            Debug.Assert(headers != null, "Headers must not be null");
+            Debug.Assert(activity != null, "Activity must not be null");
 
             int itemsCount = 0;
             var correlationContexts = headers.GetValues(RequestResponseHeaders.CorrelationContextHeader);
@@ -180,7 +180,8 @@
                     }
 
                     currentLength += nextComma + 1;
-                } while (itemsCount < CorrelationContextMaxPairs && currentLength < initialLength);
+                }
+                while (itemsCount < CorrelationContextMaxPairs && currentLength < initialLength);
             }
         }
 
