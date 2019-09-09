@@ -138,12 +138,13 @@
                 return;
             }
 
+            int overallLength = 0;
             foreach (var cc in correlationContexts)
             {
                 var headerValue = cc.AsSpan();
                 int currentLength = 0;
                 int initialLength = headerValue.Length;
-                do
+                while (itemsCount < CorrelationContextMaxPairs && currentLength < initialLength)
                 {
                     var nextSegment = headerValue.Slice(currentLength);
                     var nextComma = nextSegment.IndexOf(',');
@@ -155,11 +156,12 @@
 
                     if (nextComma == 0)
                     {
-                        currentLength += nextComma + 1;
+                        currentLength += 1;
+                        overallLength += 1;
                         continue;
                     }
 
-                    if (currentLength + nextComma >= CorrelationContextHeaderMaxLength)
+                    if (overallLength + nextComma >= CorrelationContextHeaderMaxLength)
                     {
                         return;
                     }
@@ -180,8 +182,8 @@
                     }
 
                     currentLength += nextComma + 1;
+                    overallLength += nextComma + 1;
                 }
-                while (itemsCount < CorrelationContextMaxPairs && currentLength < initialLength);
             }
         }
 

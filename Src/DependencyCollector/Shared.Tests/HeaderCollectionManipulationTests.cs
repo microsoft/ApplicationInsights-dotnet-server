@@ -351,6 +351,77 @@
         }
 
         [TestMethod]
+        public void ReadCorrelationContextMultiHeaderTooLong()
+        {
+            var pairs = new List<KeyValuePair<string, string>>();
+            var header1 = new StringBuilder();
+            while (header1.Length < 8140)
+            {
+                var pair = new KeyValuePair<string, string>(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+
+                pairs.Add(pair);
+                header1.Append($"{pair.Key}={pair.Value},");
+            }
+
+            var ignoredPair = new KeyValuePair<string, string>(Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
+
+            // last pair should be ignored
+            pairs.Add(ignoredPair);
+            string header2 = $"{ignoredPair.Key}={ignoredPair.Value}";
+
+            Assert.AreEqual(8140, header1.Length); // guid=guid, x132 times
+            Assert.IsTrue(header1.Length + header2.Length > 8192); 
+
+            NameValueCollection headers = new NameValueCollection
+            {
+                { RequestResponseHeaders.CorrelationContextHeader, header1.ToString() },
+                { RequestResponseHeaders.CorrelationContextHeader, header2 }
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(pairs.Count - 1, baggage.Length);
+            for (int i = 0; i < pairs.Count - 1; i++)
+            {
+                Assert.IsNotNull(baggage.SingleOrDefault(kvp => kvp.Key == pairs[i].Key && kvp.Value == pairs[i].Value));
+            }
+        }
+
+        [TestMethod]
+        public void ReadCorrelationContextMultiHeaderTooManyItems()
+        {
+            var pairs = new KeyValuePair<string, string>[181];
+            var header = new StringBuilder();
+            for (int i = 0; i < pairs.Length - 1; i++)
+            {
+                var pair = new KeyValuePair<string, string>(i.ToString(), i.ToString());
+
+                // last pair should be ignored
+                pairs[i] = pair;
+                header.Append($"{pair.Key}={pair.Value},");
+            }
+
+            pairs[180] = new KeyValuePair<string, string>("another", "pair");
+            NameValueCollection headers = new NameValueCollection
+            {
+                { RequestResponseHeaders.CorrelationContextHeader, header.ToString() },
+                { RequestResponseHeaders.CorrelationContextHeader, "another=pair" }
+            };
+
+            var activity = new Activity("foo");
+            headers.ReadActivityBaggage(activity);
+
+            var baggage = activity.Baggage.ToArray();
+            Assert.AreEqual(180, baggage.Length);
+            for (int i = 0; i < 180; i++)
+            {
+                Assert.IsNotNull(baggage.SingleOrDefault(kvp => kvp.Key == pairs[i].Key && kvp.Value == pairs[i].Value));
+            }
+        }
+
+        [TestMethod]
         public void ReadCorrelationContextTooManyItems()
         {
             var pairs = new KeyValuePair<string, string>[181];
