@@ -126,10 +126,17 @@
             return null;
         }
 
+        /// <summary>
+        /// Reads Correlation-Context and populates it on Activity.Baggage following https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/HttpCorrelationProtocol.md#correlation-context.
+        /// Use this method when you want force parsing Correlation-Context is absence of Request-Id or traceparent. 
+        /// </summary>
+        /// <param name="headers">Header collection.</param>
+        /// <param name="activity">Activity to populate baggage on.</param>
         public static void ReadActivityBaggage(this NameValueCollection headers, Activity activity)
         {
             Debug.Assert(headers != null, "Headers must not be null");
             Debug.Assert(activity != null, "Activity must not be null");
+            Debug.Assert(!activity.Baggage.Any(), "Baggage must be empty");
 
             int itemsCount = 0;
             var correlationContexts = headers.GetValues(RequestResponseHeaders.CorrelationContextHeader);
@@ -175,8 +182,9 @@
                         // check there is just one '=' in key-value-pair
                         if (separatorIndNext < 0)
                         {
-                            activity.AddBaggage(kvp.Slice(0, separatorInd).Trim().ToString(),
-                                kvp.Slice(separatorInd + 1, kvp.Length - separatorInd - 1).Trim().ToString());
+                            var baggageKey = kvp.Slice(0, separatorInd).Trim().ToString();
+                            var baggageValue = kvp.Slice(separatorInd + 1).Trim().ToString();
+                            activity.AddBaggage(baggageKey, baggageValue);
                             itemsCount += 1;
                         }
                     }
