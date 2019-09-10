@@ -47,5 +47,8 @@
         public const char TracestateAzureSeparator = ';';
 
         internal const string LegacyRootPropertyIdKey = "ai_legacyRootId";
+
+        // TODO[tracestate]: remove, this is done in base SDK
+        internal const string TracestatePropertyKey = "tracestate";
     }
 }
