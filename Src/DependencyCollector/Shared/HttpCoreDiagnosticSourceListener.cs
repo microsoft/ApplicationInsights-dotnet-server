@@ -402,6 +402,12 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 }
             }
 
+            // TODO[tracestate]: remove, this is done in base SDK
+            if (!string.IsNullOrEmpty(currentActivity.TraceStateString) && !telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
+            {
+                telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, currentActivity.TraceStateString);
+            }
+
             this.client.Initialize(telemetry);
 
             // If we started auxiliary Activity before to override the Id with W3C compatible one,
@@ -452,6 +458,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation
                 var resourceName = request.Method.Method + " " + requestUri.AbsolutePath;
 
                 var dependency = this.client.StartOperation<DependencyTelemetry>(resourceName);
+
+                // TODO[tracestate]: remove, this is done in base SDK
+                var tracestate = Activity.Current?.TraceStateString;
+                if (!string.IsNullOrEmpty(tracestate) && !dependency.Telemetry.Properties.ContainsKey(W3CConstants.TracestatePropertyKey))
+                {
+                    dependency.Telemetry.Properties.Add(W3CConstants.TracestatePropertyKey, tracestate);
+                }
 
                 dependency.Telemetry.Target = DependencyTargetNameHelper.GetDependencyTargetName(requestUri);
                 dependency.Telemetry.Type = RemoteDependencyConstants.HTTP;

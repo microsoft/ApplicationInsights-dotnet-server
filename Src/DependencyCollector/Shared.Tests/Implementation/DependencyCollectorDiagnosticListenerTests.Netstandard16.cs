@@ -46,7 +46,7 @@ namespace Microsoft.ApplicationInsights.Tests
         public void Initialize()
         {
             Activity.DefaultIdFormat = ActivityIdFormat.W3C;
-            Activity.ForceDefaultIdFormat = false;
+            Activity.ForceDefaultIdFormat = true;
 
             this.telemetryChannel = new StubTelemetryChannel
             {

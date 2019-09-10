@@ -44,6 +44,9 @@
         [TestInitialize]
         public void Initialize()
         {
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
+            Activity.ForceDefaultIdFormat = true;
+
             ServicePointManager.DefaultConnectionLimit = 1000;
             this.sentTelemetry = new List<ITelemetry>();
             this.channel = new StubTelemetryChannel
