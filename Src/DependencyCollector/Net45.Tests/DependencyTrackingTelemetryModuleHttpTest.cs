@@ -177,7 +177,8 @@
         [Timeout(5000)]
         public void TestDependencyCollectionW3COffDiagnosticSourceWithParentActivityAndTracestateAndCc()
         {
-            this.config.EnableW3CCorrelation = false;
+            Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+            Activity.ForceDefaultIdFormat = true;
 
             var parent = new Activity("parent").AddBaggage("k", "v").Start();
             parent.TraceStateString = "state=some";
@@ -920,7 +921,9 @@
             bool enableRequestIdInW3CMode,
             bool injectLegacyHeaders)
         {
-            this.config.EnableW3CCorrelation = enableW3C;
+            Activity.DefaultIdFormat = enableW3C ? ActivityIdFormat.W3C : ActivityIdFormat.Hierarchical;
+            Activity.ForceDefaultIdFormat = true;
+
             var module = new DependencyTrackingTelemetryModule();
 
             if (!enableDiagnosticSource)

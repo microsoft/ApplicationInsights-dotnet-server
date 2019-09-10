@@ -90,12 +90,6 @@
                     }
                 }
 
-                // TODO[tracestate]: remove, this is done in base SDK
-                if (!string.IsNullOrEmpty(currentActivity.TraceStateString))
-                {
-                    result.Properties[W3CConstants.TracestatePropertyKey] = currentActivity.TraceStateString;
-                }
-
                 result.Id = W3CUtilities.FormatTelemetryId(requestContext.Id, currentActivity.SpanId.ToHexString());
             }
             else

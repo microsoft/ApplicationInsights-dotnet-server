@@ -266,7 +266,9 @@ namespace Microsoft.ApplicationInsights.Tests
         [TestMethod]
         public void OnRequestInjectsLegacyHeadersW3COff()
         {
-            this.configuration.EnableW3CCorrelation = false;
+            Activity.DefaultIdFormat = ActivityIdFormat.Hierarchical;
+            Activity.ForceDefaultIdFormat = true;
+
             var listenerWithLegacyHeaders = new HttpCoreDiagnosticSourceListener(
                 this.configuration,
                 setComponentCorrelationHttpHeaders: true,
