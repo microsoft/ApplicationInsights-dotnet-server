@@ -46,11 +46,11 @@
 
         private readonly LinkedList<QuickPulseDataSample> collectedSamples = new LinkedList<QuickPulseDataSample>();
 
-        private readonly LinkedList<IQuickPulseTelemetryProcessor> telemetryProcessors = new LinkedList<IQuickPulseTelemetryProcessor>();
+        internal readonly LinkedList<IQuickPulseTelemetryProcessor> telemetryProcessors = new LinkedList<IQuickPulseTelemetryProcessor>();
 
         private TelemetryConfiguration config;
 
-        private IQuickPulseServiceClient serviceClient;
+        internal IQuickPulseServiceClient serviceClient;
 
         private IQuickPulseModuleSchedulerHandle collectionThread;
 

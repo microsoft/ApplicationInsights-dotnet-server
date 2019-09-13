@@ -20,7 +20,7 @@
         private readonly IQuickPulseProcessProvider processProvider;
 
         // process name => (last observation timestamp, last observation value)
-        private readonly Dictionary<string, TimeSpan> processObservations = new Dictionary<string, TimeSpan>(StringComparer.Ordinal);
+        internal readonly Dictionary<string, TimeSpan> processObservations = new Dictionary<string, TimeSpan>(StringComparer.Ordinal);
 
         private DateTimeOffset prevObservationTime;
 
