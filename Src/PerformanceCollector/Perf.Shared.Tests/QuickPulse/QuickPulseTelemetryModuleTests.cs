@@ -101,7 +101,7 @@
             module.RegisterTelemetryProcessor(telemetryProcessor);
 
             // ASSERT
-            Assert.AreEqual(telemetryProcessor, module.telemetryProcessors.Single());
+            Assert.AreEqual(telemetryProcessor, module.TelemetryProcessors.Single());
         }
 
         [TestMethod]
@@ -116,7 +116,7 @@
             module.Initialize(new TelemetryConfiguration());
 
             // ASSERT
-            Assert.IsInstanceOfType(module.serviceClient, typeof(QuickPulseServiceClient));
+            Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
         }
 
         [TestMethod]
@@ -130,8 +130,8 @@
             module.Initialize(new TelemetryConfiguration());
 
             // ASSERT
-            Assert.IsInstanceOfType(module.serviceClient, typeof(QuickPulseServiceClient));
-            Assert.AreEqual(QuickPulseDefaults.ServiceEndpoint, module.serviceClient.ServiceUri);
+            Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
+            Assert.AreEqual(QuickPulseDefaults.ServiceEndpoint, module.ServiceClient.ServiceUri);
         }
 
         [TestMethod]
@@ -363,7 +363,7 @@
             var telemetryProcessor = config.TelemetryProcessors.OfType<QuickPulseTelemetryProcessor>().SingleOrDefault();
             Assert.IsNotNull(telemetryProcessor);
 
-            Assert.AreEqual(telemetryProcessor, module.telemetryProcessors.SingleOrDefault());
+            Assert.AreEqual(telemetryProcessor, module.TelemetryProcessors.SingleOrDefault());
 
             newModule.Dispose();
         }
@@ -512,7 +512,7 @@
             int samplesWithSomeRequests = serviceClient.SnappedSamples.Count(s => s.AIRequestsPerSecond > 0);
             int samplesWithSomeDependencies = serviceClient.SnappedSamples.Count(s => s.AIDependencyCallsPerSecond > 0);
 
-            Assert.AreEqual(TelemetryProcessorCount, module.telemetryProcessors.Count);
+            Assert.AreEqual(TelemetryProcessorCount, module.TelemetryProcessors.Count);
             Assert.IsTrue(samplesWithSomeRequests > 0 && samplesWithSomeRequests <= 2);
             Assert.AreEqual(1, serviceClient.SnappedSamples.Count(s => s.AIRequestsFailedPerSecond > 0));
             Assert.IsTrue(samplesWithSomeDependencies > 0 && samplesWithSomeDependencies < 2);

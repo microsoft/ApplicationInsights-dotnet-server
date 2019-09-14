@@ -176,13 +176,13 @@
 
             // ACT
             collector.GetTopProcessesByCpu(3);
-            int itemCount1 = collector.processObservations.Count;
+            int itemCount1 = collector.ProcessObservations.Count;
 
             timeProvider.FastForward(TimeSpan.FromSeconds(1));
 
             processProvider.Processes = new List<QuickPulseProcess>() { new QuickPulseProcess("Process1", baseProcessorTime) };
             collector.GetTopProcessesByCpu(3);
-            int itemCount3 = collector.processObservations.Count;
+            int itemCount3 = collector.ProcessObservations.Count;
 
             // ASSERT
             Assert.AreEqual(5, itemCount1);
