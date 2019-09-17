@@ -49,6 +49,9 @@
 
         private IQuickPulseDataAccumulatorManager dataAccumulatorManager = null;
 
+        /// <summary>
+        /// This is set from the QuickPulseTelemetryModule and is compared against telemetry to remove our requests from customer telemetry.
+        /// </summary>
         internal Uri ServiceEndpoint { get; private set; } = QuickPulseDefaults.ServiceEndpoint;
 
         private TelemetryConfiguration config = null;
@@ -83,7 +86,7 @@
         {
             this.Next = next ?? throw new ArgumentNullException(nameof(next));
 
-            this.Register();
+            this.RegisterSelfWithQuickPulseTelemetryModule();
 
             this.globalQuotaTracker = new QuickPulseQuotaTracker(
                 timeProvider,
@@ -113,7 +116,7 @@
 
             this.EvaluateDisabledTrackingProperties = configuration.EvaluateExperimentalFeature(ExperimentalConstants.DeferRequestTrackingProperties);
 
-            this.Register();
+            this.RegisterSelfWithQuickPulseTelemetryModule();
         }
 
         void IQuickPulseTelemetryProcessor.StartCollection(
@@ -702,10 +705,15 @@
             }
         }
 
-        private void Register()
+        private void RegisterSelfWithQuickPulseTelemetryModule()
         {
             var module = TelemetryModules.Instance.Modules.OfType<QuickPulseTelemetryModule>().SingleOrDefault();
-            module?.RegisterTelemetryProcessor(this);
+
+            if (module != null)
+            {
+                module.RegisterTelemetryProcessor(this);
+                this.ServiceEndpoint = module.ServiceClient?.ServiceUri ?? QuickPulseDefaults.ServiceEndpoint;
+            }
         }
     }
 }

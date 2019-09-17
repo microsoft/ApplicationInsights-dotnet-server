@@ -128,11 +128,10 @@
             var expectedEndpoint = QuickPulseDefaults.ServiceEndpoint;
 
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
-            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
-
-            // ACT
             module.Initialize(configuration);
-
+            TelemetryModules.Instance.Modules.Add(module);
+            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+           
             // ASSERT
             Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
             Assert.AreEqual(expectedEndpoint, module.ServiceClient.ServiceUri, "module is invalid");
@@ -154,10 +153,9 @@
             };
 
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
-            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
-
-            // ACT
             module.Initialize(configuration);
+            TelemetryModules.Instance.Modules.Add(module);
+            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             // ASSERT
             Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
