@@ -52,7 +52,9 @@
         /// <summary>
         /// This is set from the QuickPulseTelemetryModule and is compared against telemetry to remove our requests from customer telemetry.
         /// </summary>
-        internal Uri ServiceEndpoint { get; private set; } = QuickPulseDefaults.ServiceEndpoint;
+        Uri IQuickPulseTelemetryProcessor.ServiceEndpoint { get { return this.serviceEndpoint; } set { this.serviceEndpoint = value; } }
+
+        private Uri serviceEndpoint = QuickPulseDefaults.ServiceEndpoint;
 
         private TelemetryConfiguration config = null;
 
@@ -131,7 +133,7 @@
             }
 
             this.dataAccumulatorManager = accumulatorManager;
-            this.ServiceEndpoint = serviceEndpoint;
+            this.serviceEndpoint = serviceEndpoint;
             this.config = configuration;
             this.isCollecting = true;
             this.disableFullTelemetryItems = disableFullTelemetryItems;
@@ -156,9 +158,9 @@
             {
                 // filter out QPS requests from dependencies even when we're not collecting (for Pings)
                 var dependency = telemetry as DependencyTelemetry;
-                if (this.ServiceEndpoint != null && !string.IsNullOrWhiteSpace(dependency?.Target))
+                if (this.serviceEndpoint != null && !string.IsNullOrWhiteSpace(dependency?.Target))
                 {
-                    if (dependency.Target.IndexOf(this.ServiceEndpoint.Host, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (dependency.Target.IndexOf(this.serviceEndpoint.Host, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         // this is an HTTP request to QuickPulse service, we don't want to let it through
                         letTelemetryThrough = false;
@@ -712,7 +714,7 @@
             if (module != null)
             {
                 module.RegisterTelemetryProcessor(this);
-                this.ServiceEndpoint = module.ServiceClient?.ServiceUri ?? QuickPulseDefaults.ServiceEndpoint;
+                this.serviceEndpoint = module.ServiceClient?.ServiceUri ?? QuickPulseDefaults.ServiceEndpoint; // TODO: THIS MAY NOT BE NEEDED
             }
         }
     }
