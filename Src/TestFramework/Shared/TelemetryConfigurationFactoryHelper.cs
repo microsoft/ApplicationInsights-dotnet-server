@@ -1,9 +1,8 @@
 ﻿namespace Microsoft.ApplicationInsights.TestFramework
 {
     using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Text;
+
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.Extensibility.Implementation;
 
@@ -85,13 +84,9 @@
 
             if (processor != null)
             {
-                // sb.AppendLine("<TelemetrySinks>");
-                // sb.AppendLine(@"<Add Name=""default"">");
                 sb.AppendLine("<TelemetryProcessors>");
                 sb.AppendLine(processor);
                 sb.AppendLine("</TelemetryProcessors>");
-                // sb.AppendLine("</Add>");
-                // sb.AppendLine("</TelemetrySinks>");
             }
 
             sb.AppendLine("</ApplicationInsights>");

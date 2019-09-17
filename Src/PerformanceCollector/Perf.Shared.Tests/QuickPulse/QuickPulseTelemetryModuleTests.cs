@@ -121,27 +121,26 @@
         }
 
         [TestMethod]
-        [TestCategory("ConnectionString")]
-        public void QuickPulseTelemetryModuleInitializesServiceClient_FromDefault()
+        [TestCategory("QuickPulseEndpoint")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_FromCode_WithDefaults()
         {
             // ARRANGE
             var configuration = new TelemetryConfiguration();
             var expectedEndpoint = QuickPulseDefaults.ServiceEndpoint;
 
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
-            module.Initialize(configuration);
             TelemetryModules.Instance.Modules.Add(module);
             var processor = (IQuickPulseTelemetryProcessor)new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
-           
+            module.Initialize(configuration);
+
             // ASSERT
             Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
             Assert.AreEqual(expectedEndpoint, module.ServiceClient.ServiceUri, "module is invalid");
             Assert.AreEqual(expectedEndpoint, processor.ServiceEndpoint, "processor is invalid");
         }
 
-
         [TestMethod]
-        [TestCategory("ConnectionString")]
+        [TestCategory("QuickPulseEndpoint")]
         public void QuickPulseTelemetryModuleInitializesServiceClient_FromConfigFile_WithDefaults()
         {
             // ARRANGE
@@ -167,20 +166,35 @@
         }
 
         [TestMethod]
-        [TestCategory("ConnectionString")]
-        public void QuickPulseTelemetryModuleInitializesServiceClient_WithConnectionString()
+        [TestCategory("QuickPulseEndpoint")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_FromCode_WithCustomEndpoint()
         {
             // ARRANGE
-            var explicitEndpoint = "https://127.0.0.1/";
-            var connectionString = $"InstrumentationKey=00000000-0000-0000-0000-000000000000;LiveEndpoint={explicitEndpoint}";
-            var expectedEndpoint = $"{explicitEndpoint}QuickPulseService.svc";
-
-            var configuration = new TelemetryConfiguration
-            {
-                ConnectionString = connectionString
-            };
+            var configuration = new TelemetryConfiguration();
+            var expectedEndpoint = "https://127.0.0.1/QuickPulseService.svc";
 
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            module.QuickPulseServiceEndpoint = expectedEndpoint;
+            TelemetryModules.Instance.Modules.Add(module);
+            var processor = (IQuickPulseTelemetryProcessor)new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+            module.Initialize(configuration);
+
+            // ASSERT
+            Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
+            Assert.AreEqual(expectedEndpoint, module.ServiceClient.ServiceUri.AbsoluteUri, "module is invalid");
+            Assert.AreEqual(expectedEndpoint, processor.ServiceEndpoint.AbsoluteUri, "processor is invalid");
+        }
+
+        [TestMethod]
+        [TestCategory("QuickPulseEndpoint")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_FromCodeReversed_WithCustomEndpoint()
+        {
+            // ARRANGE
+            var configuration = new TelemetryConfiguration();
+            var expectedEndpoint = "https://127.0.0.1/QuickPulseService.svc";
+
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            module.QuickPulseServiceEndpoint = expectedEndpoint;
             module.Initialize(configuration);
             TelemetryModules.Instance.Modules.Add(module);
             var processor = (IQuickPulseTelemetryProcessor)new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
@@ -191,22 +205,16 @@
             Assert.AreEqual(expectedEndpoint, processor.ServiceEndpoint.AbsoluteUri, "processor is invalid");
         }
 
-
         [TestMethod]
-        [TestCategory("ConnectionString")]
-        public void QuickPulseTelemetryModuleInitializesServiceClient_FromConfigFile_WithConnectionString()
+        [TestCategory("QuickPulseEndpoint")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_FromConfigFile_WithCustomEndpoint()
         {
             // ARRANGE
-
-            var explicitEndpoint = "https://127.0.0.1/";
-            var connectionString = $"InstrumentationKey=00000000-0000-0000-0000-000000000000;LiveEndpoint={explicitEndpoint}";
-            var expectedEndpoint = $"{explicitEndpoint}QuickPulseService.svc";
-
             var configuration = new TelemetryConfiguration();
+            var expectedEndpoint = "https://127.0.0.1/QuickPulseService.svc";
 
             string configFileContents = TelemetryConfigurationFactoryHelper.BuildConfiguration(
-                connectionString: connectionString,
-                module: @"<Add Type=""Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryModule, Microsoft.AI.PerfCounterCollector""/>",
+                module: @"<Add Type=""Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryModule, Microsoft.AI.PerfCounterCollector""><QuickPulseServiceEndpoint>https://127.0.0.1/QuickPulseService.svc</QuickPulseServiceEndpoint></Add>",
                 processor: @"<Add Type=""Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryProcessor, Microsoft.AI.PerfCounterCollector""/>"
                 );
             TelemetryConfigurationFactoryHelper.Initialize(configuration, TelemetryModules.Instance, configFileContents);

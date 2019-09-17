@@ -2,11 +2,9 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Threading;
-
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Common;
     using Microsoft.ApplicationInsights.Common.Internal;
@@ -50,9 +48,16 @@
         private IQuickPulseDataAccumulatorManager dataAccumulatorManager = null;
 
         /// <summary>
-        /// This is set from the QuickPulseTelemetryModule and is compared against telemetry to remove our requests from customer telemetry.
+        /// Gets or sets an endpoint that is compared against telemetry to remove our requests from customer telemetry.
         /// </summary>
-        Uri IQuickPulseTelemetryProcessor.ServiceEndpoint { get { return this.serviceEndpoint; } set { this.serviceEndpoint = value; } }
+        /// <remarks>
+        /// This is set from the QuickPulseTelemetryModule. 
+        /// </remarks>
+        Uri IQuickPulseTelemetryProcessor.ServiceEndpoint
+        {
+            get { return this.serviceEndpoint; }
+            set { this.serviceEndpoint = value; }
+        }
 
         private Uri serviceEndpoint = QuickPulseDefaults.ServiceEndpoint;
 
@@ -714,7 +719,7 @@
             if (module != null)
             {
                 module.RegisterTelemetryProcessor(this);
-                this.serviceEndpoint = module.ServiceClient?.ServiceUri ?? QuickPulseDefaults.ServiceEndpoint; // TODO: THIS MAY NOT BE NEEDED
+                this.serviceEndpoint = module.ServiceClient?.ServiceUri ?? QuickPulseDefaults.ServiceEndpoint;
             }
         }
     }
