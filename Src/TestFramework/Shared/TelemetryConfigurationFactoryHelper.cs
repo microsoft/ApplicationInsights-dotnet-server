@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.TestFramework
 {
     using System;
+    using System.Reflection;
     using System.Text;
 
     using Microsoft.ApplicationInsights.Extensibility;
