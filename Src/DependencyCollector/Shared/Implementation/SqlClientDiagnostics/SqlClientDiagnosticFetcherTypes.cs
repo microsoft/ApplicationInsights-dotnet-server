@@ -4,14 +4,22 @@
 
     internal static class SqlClientDiagnosticFetcherTypes
     {
-        //// These types map to the anonymous types defined here: System.Data.SqlClient.SqlClientDiagnosticListenerExtensions. 
+        //// These types map to the anonymous types defined here: 
+        //// System.Data.SqlClient.SqlClientDiagnosticListenerExtensions. 
+        //// and 
+        //// Microsoft.Data.SqlClient.SqlClientDiagnosticListenerExtensions. 
         //// http://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/src/System/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
+        //// https://github.com/dotnet/SqlClient/blob/master/src/Microsoft.Data.SqlClient/netcore/src/Microsoft/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
 
         /// <summary> Fetchers for execute command before event. </summary>
         internal static class CommandBefore
         {
             public static readonly PropertyFetcher OperationId = new PropertyFetcher(nameof(OperationId));
             public static readonly PropertyFetcher Command = new PropertyFetcher(nameof(Command));
+            public static readonly PropertyFetcher Connection = new PropertyFetcher(nameof(Connection));
+            public static readonly PropertyFetcher DataSource = new PropertyFetcher(nameof(DataSource));
+            public static readonly PropertyFetcher Database = new PropertyFetcher(nameof(Database));
+            public static readonly PropertyFetcher CommandType = new PropertyFetcher(nameof(CommandType));
             public static readonly PropertyFetcher Timestamp = new PropertyFetcher(nameof(Timestamp));
         }
 
