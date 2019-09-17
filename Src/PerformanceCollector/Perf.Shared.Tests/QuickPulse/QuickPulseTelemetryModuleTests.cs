@@ -120,18 +120,49 @@
         }
 
         [TestMethod]
-        public void QuickPulseTelemetryModuleInitializesServiceClientFromDefault()
+        [TestCategory("ConnectionString")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_FromDefault()
         {
             // ARRANGE
+            var configuration = new TelemetryConfiguration();
+            var expectedEndpoint = QuickPulseDefaults.ServiceEndpoint;
+
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
 
             // ACT
-            // do not provide module configuration, force default service client
-            module.Initialize(new TelemetryConfiguration());
+            module.Initialize(configuration);
 
             // ASSERT
             Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
-            Assert.AreEqual(QuickPulseDefaults.ServiceEndpoint, module.ServiceClient.ServiceUri);
+            Assert.AreEqual(expectedEndpoint, module.ServiceClient.ServiceUri, "module is invalid");
+            Assert.AreEqual(expectedEndpoint, processor.ServiceEndpoint, "processor is invalid");
+        }
+
+        [TestMethod]
+        [TestCategory("ConnectionString")]
+        public void QuickPulseTelemetryModuleInitializesServiceClient_WithConnectionString()
+        {
+            // ARRANGE
+            var explicitEndpoint = "https://127.0.0.1/";
+            var connectionString = $"InstrumentationKey=00000000-0000-0000-0000-000000000000;LiveEndpoint={explicitEndpoint}";
+            var expectedEndpoint = $"{explicitEndpoint}QuickPulseService.svc";
+
+            var configuration = new TelemetryConfiguration
+            {
+                ConnectionString = connectionString
+            };
+
+            var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
+            var processor = new QuickPulseTelemetryProcessor(new SimpleTelemetryProcessorSpy());
+
+            // ACT
+            module.Initialize(configuration);
+
+            // ASSERT
+            Assert.IsInstanceOfType(module.ServiceClient, typeof(QuickPulseServiceClient));
+            Assert.AreEqual(expectedEndpoint, module.ServiceClient.ServiceUri.AbsoluteUri, "module is invalid");
+            Assert.AreEqual(expectedEndpoint, processor.ServiceEndpoint.AbsoluteUri, "processor is invalid");
         }
 
         [TestMethod]

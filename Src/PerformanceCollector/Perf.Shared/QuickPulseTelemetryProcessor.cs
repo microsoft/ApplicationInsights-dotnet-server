@@ -49,7 +49,7 @@
 
         private IQuickPulseDataAccumulatorManager dataAccumulatorManager = null;
 
-        private Uri serviceEndpoint = QuickPulseDefaults.ServiceEndpoint;
+        internal Uri ServiceEndpoint { get; private set; } = QuickPulseDefaults.ServiceEndpoint;
 
         private TelemetryConfiguration config = null;
 
@@ -81,14 +81,9 @@
             float? maxGlobalTelemetryQuota = null,
             float? initialGlobalTelemetryQuota = null)
         {
-            if (next == null)
-            {
-                throw new ArgumentNullException(nameof(next));
-            }
+            this.Next = next ?? throw new ArgumentNullException(nameof(next));
 
             this.Register();
-
-            this.Next = next;
 
             this.globalQuotaTracker = new QuickPulseQuotaTracker(
                 timeProvider,
@@ -133,7 +128,7 @@
             }
 
             this.dataAccumulatorManager = accumulatorManager;
-            this.serviceEndpoint = serviceEndpoint;
+            this.ServiceEndpoint = serviceEndpoint;
             this.config = configuration;
             this.isCollecting = true;
             this.disableFullTelemetryItems = disableFullTelemetryItems;
@@ -158,9 +153,9 @@
             {
                 // filter out QPS requests from dependencies even when we're not collecting (for Pings)
                 var dependency = telemetry as DependencyTelemetry;
-                if (this.serviceEndpoint != null && !string.IsNullOrWhiteSpace(dependency?.Target))
+                if (this.ServiceEndpoint != null && !string.IsNullOrWhiteSpace(dependency?.Target))
                 {
-                    if (dependency.Target.IndexOf(this.serviceEndpoint.Host, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (dependency.Target.IndexOf(this.ServiceEndpoint.Host, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         // this is an HTTP request to QuickPulse service, we don't want to let it through
                         letTelemetryThrough = false;

@@ -61,20 +61,8 @@
             }
         }
 
-        public static Uri ServiceEndpoint
-        {
-            get
-            {
-                return QuickPulseServiceEndpoint;
-            }
-        }
+        public static Uri ServiceEndpoint => QuickPulseServiceEndpoint;
 
-        public static Dictionary<string, string> DefaultCounterOriginalStringMapping
-        {
-            get
-            {
-                return WebAppToStandardCounterMapping;
-            }
-        }
+        public static Dictionary<string, string> DefaultCounterOriginalStringMapping => WebAppToStandardCounterMapping;
     }
 }
