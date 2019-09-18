@@ -97,15 +97,6 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
         {
         }
 
-        private Guid FetchOperationId(KeyValuePair<string, object> evnt)
-        {
-            var operationId = (Guid)CommandBefore.OperationId.Fetch(evnt.Value);
-
-            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
-
-            return operationId;
-        }
-
         void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> evnt)
         {
             try
@@ -127,25 +118,23 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                         var operationId = (Guid)CommandBefore.OperationId.Fetch(evnt.Value);
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var command = (SqlCommand)CommandBefore.Command.Fetch(evnt.Value);
-
-                        var cmd = CommandBefore.Command.Fetch(evnt.Value);
-                        
+                        var command = CommandBefore.Command.Fetch(evnt.Value);
 
                         if (this.operationHolder.Get(command) == null)
                         {
                             var dependencyName = string.Empty;
                             var target = string.Empty;
 
+                            var commandText = (string)CommandBefore.CommandText.Fetch(command);
                             var con = CommandBefore.Connection.Fetch(command);
                             if (con != null)
                             {
                                 var dataSource = CommandBefore.DataSource.Fetch(con);
                                 var database = CommandBefore.Database.Fetch(con);
                                 target = string.Join(" | ", dataSource, database );
-
+                                
                                 var commandName = (CommandType) CommandBefore.CommandType.Fetch(command) == CommandType.StoredProcedure
-                                    ? command.CommandText
+                                    ? commandText
                                     : string.Empty;
 
                                 dependencyName = string.IsNullOrEmpty(commandName)
@@ -162,7 +151,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                                 Name = dependencyName,
                                 Type = RemoteDependencyConstants.SQL,
                                 Target = target,
-                                Data = command.CommandText,
+                                Data = commandText,
                                 Success = true,
                             }; 
 
@@ -188,7 +177,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var command = (SqlCommand)CommandAfter.Command.Fetch(evnt.Value);
+                        var command = CommandAfter.Command.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(command);
 
                         if (tuple != null)
@@ -218,7 +207,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var command = (SqlCommand)CommandError.Command.Fetch(evnt.Value);
+                        var command = CommandError.Command.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(command);
 
                         if (tuple != null)
@@ -252,19 +241,20 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
                     
-                        var connection = (SqlConnection)ConnectionBefore.Connection.Fetch(evnt.Value);
+                        var connection = ConnectionBefore.Connection.Fetch(evnt.Value);
 
                         if (this.operationHolder.Get(connection) == null)
                         {
                             var operation = (string)ConnectionBefore.Operation.Fetch(evnt.Value);
                             var timestamp = (long)ConnectionBefore.Timestamp.Fetch(evnt.Value);
-
+                            var dataSource = (string)ConnectionBefore.DataSource.Fetch(connection);
+                            var database = (string)ConnectionBefore.Database.Fetch(connection);
                             var telemetry = new DependencyTelemetry()
                             {
                                 Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", connection.DataSource, connection.Database, operation),
+                                Name = string.Join(" | ", dataSource, database, operation),
                                 Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", connection.DataSource, connection.Database),
+                                Target = string.Join(" | ", dataSource, database),
                                 Data = operation,
                                 Success = true,
                             };
@@ -288,7 +278,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)ConnectionAfter.Connection.Fetch(evnt.Value);
+                        var connection = ConnectionAfter.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)
@@ -310,7 +300,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)ConnectionError.Connection.Fetch(evnt.Value);
+                        var connection = ConnectionError.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)
@@ -351,13 +341,15 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                             var operation = (string)TransactionCommitBefore.Operation.Fetch(evnt.Value);
                             var timestamp = (long)TransactionCommitBefore.Timestamp.Fetch(evnt.Value);
                             var isolationLevel = (IsolationLevel)TransactionCommitBefore.IsolationLevel.Fetch(evnt.Value);
+                            var dataSource = (string)TransactionCommitBefore.DataSource.Fetch(connection);
+                            var database = (string)TransactionCommitBefore.Database.Fetch(connection);
 
-                            var telemetry = new DependencyTelemetry()
+                                var telemetry = new DependencyTelemetry()
                             {
                                 Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", connection.DataSource, connection.Database, operation, isolationLevel),
+                                Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
                                 Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", connection.DataSource, connection.Database),
+                                Target = string.Join(" | ", dataSource, database),
                                 Data = operation,
                                 Success = true,
                             };
@@ -381,20 +373,22 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)TransactionRollbackBefore.Connection.Fetch(evnt.Value);
+                        var connection = TransactionRollbackBefore.Connection.Fetch(evnt.Value);
 
                         if (this.operationHolder.Get(connection) == null)
                         {
                             var operation = (string)TransactionRollbackBefore.Operation.Fetch(evnt.Value);
                             var timestamp = (long)TransactionRollbackBefore.Timestamp.Fetch(evnt.Value);
                             var isolationLevel = (IsolationLevel)TransactionRollbackBefore.IsolationLevel.Fetch(evnt.Value);
+                            var dataSource = (string)TransactionRollbackBefore.DataSource.Fetch(connection);
+                            var database = (string)TransactionRollbackBefore.Database.Fetch(connection);
 
-                            var telemetry = new DependencyTelemetry()
+                                var telemetry = new DependencyTelemetry()
                             {
                                 Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", connection.DataSource, connection.Database, operation, isolationLevel),
+                                Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
                                 Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", connection.DataSource, connection.Database),
+                                Target = string.Join(" | ", dataSource, database),
                                 Data = operation,
                                 Success = true,
                             };
@@ -419,7 +413,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId,
                             evnt.Key);
 
-                        var connection = (SqlConnection)TransactionCommitAfter.Connection.Fetch(evnt.Value);
+                        var connection = TransactionCommitAfter.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)
@@ -450,7 +444,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)TransactionRollbackAfter.Connection.Fetch(evnt.Value);
+                        var connection = TransactionRollbackAfter.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)
@@ -480,7 +474,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)TransactionCommitError.Connection.Fetch(evnt.Value);
+                        var connection = TransactionCommitError.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)
@@ -514,7 +508,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)TransactionRollbackError.Connection.Fetch(evnt.Value);
+                        var connection = TransactionRollbackError.Connection.Fetch(evnt.Value);
                         var tuple = this.operationHolder.Get(connection);
 
                         if (tuple != null)

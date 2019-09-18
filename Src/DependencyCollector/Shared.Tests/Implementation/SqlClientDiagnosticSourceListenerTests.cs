@@ -227,8 +227,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.False(dependencyTelemetry.Success.Value);
         }
 
-        [Fact]
-        public void TracksCommandErrorWhenSqlException()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeExecuteCommand, SqlClientDiagnosticSourceListener.SqlErrorExecuteCommand)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeExecuteCommand, SqlClientDiagnosticSourceListener.SqlMicrosoftErrorExecuteCommand)]
+        public void TracksCommandErrorWhenSqlException(string beforeCommand, string errorCommand)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -243,7 +245,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeExecuteCommand,
+                beforeCommand,
                 beforeExecuteEventData);
 
             // Need to create SqlException via reflection because ctor is not public!
@@ -293,7 +295,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlErrorExecuteCommand,
+                errorCommand,
                 commandErrorEventData);
 
             var dependencyTelemetry = (DependencyTelemetry)this.sendItems.Single();
@@ -303,8 +305,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.Equal("42", dependencyTelemetry.ResultCode);
         }
 
-        [Fact]
-        public void TracksConnectionOpenedError()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeOpenConnection, SqlClientDiagnosticSourceListener.SqlErrorOpenConnection)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeOpenConnection, SqlClientDiagnosticSourceListener.SqlMicrosoftErrorOpenConnection)]
+        public void TracksConnectionOpenedError(string openCon, string openError)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -318,7 +322,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeOpenConnection,
+                openCon,
                 beforeOpenEventData);
 
             var errorOpenEventData = new
@@ -332,7 +336,7 @@ namespace Microsoft.ApplicationInsights.Tests
             var start = DateTimeOffset.UtcNow;
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlErrorOpenConnection,
+                openError,
                 errorOpenEventData);
 
             var dependencyTelemetry = (DependencyTelemetry)this.sendItems.Single();
@@ -350,8 +354,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.False(dependencyTelemetry.Success.Value);
         }
 
-        [Fact]
-        public void DoesNotTrackConnectionOpened()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeOpenConnection, SqlClientDiagnosticSourceListener.SqlAfterOpenConnection)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeOpenConnection, SqlClientDiagnosticSourceListener.SqlMicrosoftAfterOpenConnection)]
+        public void DoesNotTrackConnectionOpened(string beforeOpen, string afterOpen)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -365,7 +371,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeOpenConnection,
+                beforeOpen,
                 beforeOpenEventData);
 
             var afterOpenEventData = new
@@ -375,14 +381,16 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlAfterOpenConnection,
+                afterOpen,
                 afterOpenEventData);
 
             Assert.Equal(0, this.sendItems.Count);
         }
 
-        [Fact]
-        public void DoesNotTrackConnectionCloseError()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeCloseConnection, SqlClientDiagnosticSourceListener.SqlErrorCloseConnection)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeCloseConnection, SqlClientDiagnosticSourceListener.SqlMicrosoftErrorCloseConnection)]
+        public void DoesNotTrackConnectionCloseError(string beforeClose, string errorClose)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -396,7 +404,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeCloseConnection,
+                beforeClose,
                 beforeOpenEventData);
 
             var errorCloseEventData = new
@@ -408,14 +416,16 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlErrorCloseConnection,
+                errorClose,
                 errorCloseEventData);
 
             Assert.Equal(0, this.sendItems.Count);
         }
 
-        [Fact]
-        public void TracksTransactionCommitted()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeCommitTransaction, SqlClientDiagnosticSourceListener.SqlAfterCommitTransaction)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeCommitTransaction, SqlClientDiagnosticSourceListener.SqlMicrosoftAfterCommitTransaction)]
+        public void TracksTransactionCommitted(string beforeCommit, string afterCommit)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -430,7 +440,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeCommitTransaction,
+                beforeCommit,
                 beforeCommitEventData);
 
             var afterCommitEventData = new
@@ -443,7 +453,7 @@ namespace Microsoft.ApplicationInsights.Tests
             var start = DateTimeOffset.UtcNow;
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlAfterCommitTransaction,
+                afterCommit,
                 afterCommitEventData);
 
             var dependencyTelemetry = (DependencyTelemetry)this.sendItems.Single();
@@ -461,8 +471,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.True(Math.Abs((start - dependencyTelemetry.Timestamp).TotalMilliseconds) <= 16);
         }
 
-        [Fact]
-        public void TracksTransactionCommitError()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeCommitTransaction, SqlClientDiagnosticSourceListener.SqlErrorCommitTransaction)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeCommitTransaction, SqlClientDiagnosticSourceListener.SqlMicrosoftErrorCommitTransaction)]
+        public void TracksTransactionCommitError(string beforeCommit, string afterCommit)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -477,7 +489,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeCommitTransaction,
+                beforeCommit,
                 beforeCommitEventData);
 
             var errorCommitEventData = new
@@ -489,7 +501,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlErrorCommitTransaction,
+                afterCommit,
                 errorCommitEventData);
 
             var dependencyTelemetry = (DependencyTelemetry)this.sendItems.Single();
@@ -498,8 +510,10 @@ namespace Microsoft.ApplicationInsights.Tests
             Assert.False(dependencyTelemetry.Success.Value);
         }
 
-        [Fact]
-        public void TracksTransactionRolledBack()
+        [Theory]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlBeforeRollbackTransaction, SqlClientDiagnosticSourceListener.SqlAfterRollbackTransaction)]
+        [InlineData(SqlClientDiagnosticSourceListener.SqlMicrosoftBeforeRollbackTransaction, SqlClientDiagnosticSourceListener.SqlMicrosoftAfterRollbackTransaction)]
+        public void TracksTransactionRolledBack(string beforeCommit, string afterCommit)
         {
             var operationId = Guid.NewGuid();
             var sqlConnection = new SqlConnection(TestConnectionString);
@@ -515,7 +529,7 @@ namespace Microsoft.ApplicationInsights.Tests
             };
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlBeforeRollbackTransaction,
+                beforeCommit,
                 beforeRollbackEventData);
 
             var afterRollbackEventData = new
@@ -528,7 +542,7 @@ namespace Microsoft.ApplicationInsights.Tests
             var start = DateTimeOffset.UtcNow;
 
             this.fakeSqlClientDiagnosticSource.Write(
-                SqlClientDiagnosticSourceListener.SqlAfterRollbackTransaction,
+                afterCommit,
                 afterRollbackEventData);
 
             var dependencyTelemetry = (DependencyTelemetry)this.sendItems.Single();

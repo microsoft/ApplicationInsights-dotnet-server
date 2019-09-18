@@ -20,6 +20,7 @@
             public static readonly PropertyFetcher DataSource = new PropertyFetcher(nameof(DataSource));
             public static readonly PropertyFetcher Database = new PropertyFetcher(nameof(Database));
             public static readonly PropertyFetcher CommandType = new PropertyFetcher(nameof(CommandType));
+            public static readonly PropertyFetcher CommandText = new PropertyFetcher(nameof(CommandText));
             public static readonly PropertyFetcher Timestamp = new PropertyFetcher(nameof(Timestamp));
         }
 
@@ -47,6 +48,8 @@
             public static readonly PropertyFetcher Operation = new PropertyFetcher(nameof(Operation));
             public static readonly PropertyFetcher Connection = new PropertyFetcher(nameof(Connection));
             public static readonly PropertyFetcher Timestamp = new PropertyFetcher(nameof(Timestamp));
+            public static readonly PropertyFetcher DataSource = new PropertyFetcher(nameof(DataSource));
+            public static readonly PropertyFetcher Database = new PropertyFetcher(nameof(Database));
         }
 
         /// <summary> Fetchers for connection open/close after events. </summary>
@@ -72,6 +75,8 @@
             public static readonly PropertyFetcher Operation = new PropertyFetcher(nameof(Operation));
             public static readonly PropertyFetcher IsolationLevel = new PropertyFetcher(nameof(IsolationLevel));
             public static readonly PropertyFetcher Connection = new PropertyFetcher(nameof(Connection));
+            public static readonly PropertyFetcher DataSource = new PropertyFetcher(nameof(DataSource));
+            public static readonly PropertyFetcher Database = new PropertyFetcher(nameof(Database));
             public static readonly PropertyFetcher Timestamp = new PropertyFetcher(nameof(Timestamp));
         }
 
@@ -82,6 +87,8 @@
             public static readonly PropertyFetcher Operation = new PropertyFetcher(nameof(Operation));
             public static readonly PropertyFetcher IsolationLevel = new PropertyFetcher(nameof(IsolationLevel));
             public static readonly PropertyFetcher Connection = new PropertyFetcher(nameof(Connection));
+            public static readonly PropertyFetcher DataSource = new PropertyFetcher(nameof(DataSource));
+            public static readonly PropertyFetcher Database = new PropertyFetcher(nameof(Database));
             public static readonly PropertyFetcher TransactionName = new PropertyFetcher(nameof(TransactionName));
             public static readonly PropertyFetcher Timestamp = new PropertyFetcher(nameof(Timestamp));
         }
