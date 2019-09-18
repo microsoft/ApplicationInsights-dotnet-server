@@ -131,9 +131,9 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                             {
                                 var dataSource = CommandBefore.DataSource.Fetch(con);
                                 var database = CommandBefore.Database.Fetch(con);
-                                target = string.Join(" | ", dataSource, database );
+                                target = string.Join(" | ", dataSource, database);
                                 
-                                var commandName = (CommandType) CommandBefore.CommandType.Fetch(command) == CommandType.StoredProcedure
+                                var commandName = (CommandType)CommandBefore.CommandType.Fetch(command) == CommandType.StoredProcedure
                                     ? commandText
                                     : string.Empty;
 
@@ -172,7 +172,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlAfterExecuteCommand:
                     case SqlMicrosoftAfterExecuteCommand:
-                        {
+                    {
                         var operationId = (Guid)CommandAfter.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -202,7 +202,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlErrorExecuteCommand:
                     case SqlMicrosoftErrorExecuteCommand:
-                        {
+                    {
                         var operationId = (Guid)CommandError.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -236,7 +236,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                     
                     case SqlBeforeOpenConnection:
                     case SqlMicrosoftBeforeOpenConnection:
-                        {
+                    {
                         var operationId = (Guid)ConnectionBefore.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -273,7 +273,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlAfterOpenConnection:
                     case SqlMicrosoftAfterOpenConnection:
-                        {
+                    {
                         var operationId = (Guid)ConnectionAfter.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -295,7 +295,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlErrorOpenConnection:
                     case SqlMicrosoftErrorOpenConnection:
-                        {
+                    {
                         var operationId = (Guid)ConnectionError.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -329,7 +329,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlBeforeCommitTransaction:
                     case SqlMicrosoftBeforeCommitTransaction:
-                        {
+                    {
                         var operationId = (Guid)TransactionCommitBefore.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -368,7 +368,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlBeforeRollbackTransaction:
                     case SqlMicrosoftBeforeRollbackTransaction:
-                        {
+                    {
                         var operationId = (Guid)TransactionRollbackBefore.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
@@ -407,7 +407,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
                     case SqlAfterCommitTransaction:
                     case SqlMicrosoftAfterCommitTransaction:
-                        {
+                    {
                         var operationId = (Guid)TransactionCommitAfter.OperationId.Fetch(evnt.Value);
 
                         DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId,
