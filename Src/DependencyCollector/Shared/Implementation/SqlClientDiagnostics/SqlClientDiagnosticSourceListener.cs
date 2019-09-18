@@ -34,7 +34,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
         public const string SqlAfterOpenConnection = SqlClientPrefix + "WriteConnectionOpenAfter";
         public const string SqlMicrosoftAfterOpenConnection = SqlMicrosoftClientPrefix + "WriteConnectionOpenAfter";
-        
+
         public const string SqlErrorOpenConnection = SqlClientPrefix + "WriteConnectionOpenError";
         public const string SqlMicrosoftErrorOpenConnection = SqlMicrosoftClientPrefix + "WriteConnectionOpenError";
 
@@ -52,7 +52,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
 
         public const string SqlAfterCommitTransaction = SqlClientPrefix + "WriteTransactionCommitAfter";
         public const string SqlMicrosoftAfterCommitTransaction = SqlMicrosoftClientPrefix + "WriteTransactionCommitAfter";
-        
+
         public const string SqlErrorCommitTransaction = SqlClientPrefix + "WriteTransactionCommitError";
         public const string SqlMicrosoftErrorCommitTransaction = SqlMicrosoftClientPrefix + "WriteTransactionCommitError";
 
@@ -114,426 +114,426 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                 {
                     case SqlBeforeExecuteCommand:
                     case SqlMicrosoftBeforeExecuteCommand:
-                    {
-                        var operationId = (Guid)CommandBefore.OperationId.Fetch(evnt.Value);
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
-
-                        var command = CommandBefore.Command.Fetch(evnt.Value);
-
-                        if (this.operationHolder.Get(command) == null)
                         {
-                            var dependencyName = string.Empty;
-                            var target = string.Empty;
+                            var operationId = (Guid)CommandBefore.OperationId.Fetch(evnt.Value);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                            var commandText = (string)CommandBefore.CommandText.Fetch(command);
-                            var con = CommandBefore.Connection.Fetch(command);
-                            if (con != null)
+                            var command = CommandBefore.Command.Fetch(evnt.Value);
+
+                            if (this.operationHolder.Get(command) == null)
                             {
-                                var dataSource = CommandBefore.DataSource.Fetch(con);
-                                var database = CommandBefore.Database.Fetch(con);
-                                target = string.Join(" | ", dataSource, database );
-                                
-                                var commandName = (CommandType) CommandBefore.CommandType.Fetch(command) == CommandType.StoredProcedure
-                                    ? commandText
-                                    : string.Empty;
+                                var dependencyName = string.Empty;
+                                var target = string.Empty;
 
-                                dependencyName = string.IsNullOrEmpty(commandName)
-                                    ? string.Join(" | ", dataSource, database)
-                                    : string.Join(" | ", dataSource, database, commandName);
+                                var commandText = (string)CommandBefore.CommandText.Fetch(command);
+                                var con = CommandBefore.Connection.Fetch(command);
+                                if (con != null)
+                                {
+                                    var dataSource = CommandBefore.DataSource.Fetch(con);
+                                    var database = CommandBefore.Database.Fetch(con);
+                                    target = string.Join(" | ", dataSource, database);
+
+                                    var commandName = (CommandType)CommandBefore.CommandType.Fetch(command) == CommandType.StoredProcedure
+                                        ? commandText
+                                        : string.Empty;
+
+                                    dependencyName = string.IsNullOrEmpty(commandName)
+                                        ? string.Join(" | ", dataSource, database)
+                                        : string.Join(" | ", dataSource, database, commandName);
+                                }
+
+                                var timestamp = CommandBefore.Timestamp.Fetch(evnt.Value) as long?
+                                            ?? Stopwatch.GetTimestamp(); // TODO corefx#20748 - timestamp missing from event data
+
+                                var telemetry = new DependencyTelemetry()
+                                {
+                                    Id = operationId.ToStringInvariant("N"),
+                                    Name = dependencyName,
+                                    Type = RemoteDependencyConstants.SQL,
+                                    Target = target,
+                                    Data = commandText,
+                                    Success = true,
+                                };
+
+                                // Populate the operation details for initializers
+                                telemetry.SetOperationDetail(RemoteDependencyConstants.SqlCommandOperationDetailName, command);
+
+                                InitializeTelemetry(telemetry, operationId, timestamp);
+
+                                this.operationHolder.Store(command, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
                             }
 
-                            var timestamp = CommandBefore.Timestamp.Fetch(evnt.Value) as long?
-                                        ?? Stopwatch.GetTimestamp(); // TODO corefx#20748 - timestamp missing from event data
-
-                            var telemetry = new DependencyTelemetry()
-                            {
-                                Id = operationId.ToStringInvariant("N"),
-                                Name = dependencyName,
-                                Type = RemoteDependencyConstants.SQL,
-                                Target = target,
-                                Data = commandText,
-                                Success = true,
-                            }; 
-
-                            // Populate the operation details for initializers
-                            telemetry.SetOperationDetail(RemoteDependencyConstants.SqlCommandOperationDetailName, command);
-
-                            InitializeTelemetry(telemetry, operationId, timestamp);
-
-                            this.operationHolder.Store(command, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
-                        }
-
-                        break;
-                    }
 
                     case SqlAfterExecuteCommand:
                     case SqlMicrosoftAfterExecuteCommand:
                         {
-                        var operationId = (Guid)CommandAfter.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)CommandAfter.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var command = CommandAfter.Command.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(command);
+                            var command = CommandAfter.Command.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(command);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(command);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(command);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)CommandAfter.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)CommandAfter.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlErrorExecuteCommand:
                     case SqlMicrosoftErrorExecuteCommand:
                         {
-                        var operationId = (Guid)CommandError.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)CommandError.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var command = CommandError.Command.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(command);
+                            var command = CommandError.Command.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(command);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(command);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(command);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)CommandError.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)CommandError.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            var exception = (Exception)CommandError.Exception.Fetch(evnt.Value);
+                                var exception = (Exception)CommandError.Exception.Fetch(evnt.Value);
 
-                            ConfigureExceptionTelemetry(telemetry, exception);
+                                ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
 
-                        break;
-                    }
-                    
                     case SqlBeforeOpenConnection:
                     case SqlMicrosoftBeforeOpenConnection:
                         {
-                        var operationId = (Guid)ConnectionBefore.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)ConnectionBefore.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
-                    
-                        var connection = ConnectionBefore.Connection.Fetch(evnt.Value);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        if (this.operationHolder.Get(connection) == null)
-                        {
-                            var operation = (string)ConnectionBefore.Operation.Fetch(evnt.Value);
-                            var timestamp = (long)ConnectionBefore.Timestamp.Fetch(evnt.Value);
-                            var dataSource = (string)ConnectionBefore.DataSource.Fetch(connection);
-                            var database = (string)ConnectionBefore.Database.Fetch(connection);
-                            var telemetry = new DependencyTelemetry()
+                            var connection = ConnectionBefore.Connection.Fetch(evnt.Value);
+
+                            if (this.operationHolder.Get(connection) == null)
                             {
-                                Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", dataSource, database, operation),
-                                Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", dataSource, database),
-                                Data = operation,
-                                Success = true,
-                            };
+                                var operation = (string)ConnectionBefore.Operation.Fetch(evnt.Value);
+                                var timestamp = (long)ConnectionBefore.Timestamp.Fetch(evnt.Value);
+                                var dataSource = (string)ConnectionBefore.DataSource.Fetch(connection);
+                                var database = (string)ConnectionBefore.Database.Fetch(connection);
+                                var telemetry = new DependencyTelemetry()
+                                {
+                                    Id = operationId.ToStringInvariant("N"),
+                                    Name = string.Join(" | ", dataSource, database, operation),
+                                    Type = RemoteDependencyConstants.SQL,
+                                    Target = string.Join(" | ", dataSource, database),
+                                    Data = operation,
+                                    Success = true,
+                                };
 
-                            InitializeTelemetry(telemetry, operationId, timestamp);
+                                InitializeTelemetry(telemetry, operationId, timestamp);
 
-                            this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                                this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
-                        }
-
-                        break;
-                    }
 
                     case SqlAfterOpenConnection:
                     case SqlMicrosoftAfterOpenConnection:
                         {
-                        var operationId = (Guid)ConnectionAfter.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)ConnectionAfter.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = ConnectionAfter.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = ConnectionAfter.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlErrorOpenConnection:
                     case SqlMicrosoftErrorOpenConnection:
                         {
-                        var operationId = (Guid)ConnectionError.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)ConnectionError.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = ConnectionError.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = ConnectionError.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)ConnectionError.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)ConnectionError.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            var exception = (Exception)ConnectionError.Exception.Fetch(evnt.Value);
+                                var exception = (Exception)ConnectionError.Exception.Fetch(evnt.Value);
 
-                            ConfigureExceptionTelemetry(telemetry, exception);
+                                ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlBeforeCommitTransaction:
                     case SqlMicrosoftBeforeCommitTransaction:
                         {
-                        var operationId = (Guid)TransactionCommitBefore.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionCommitBefore.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = (SqlConnection)TransactionCommitBefore.Connection.Fetch(evnt.Value);
+                            var connection = (SqlConnection)TransactionCommitBefore.Connection.Fetch(evnt.Value);
 
-                        if (this.operationHolder.Get(connection) == null)
-                        {
-                            var operation = (string)TransactionCommitBefore.Operation.Fetch(evnt.Value);
-                            var timestamp = (long)TransactionCommitBefore.Timestamp.Fetch(evnt.Value);
-                            var isolationLevel = (IsolationLevel)TransactionCommitBefore.IsolationLevel.Fetch(evnt.Value);
-                            var dataSource = (string)TransactionCommitBefore.DataSource.Fetch(connection);
-                            var database = (string)TransactionCommitBefore.Database.Fetch(connection);
+                            if (this.operationHolder.Get(connection) == null)
+                            {
+                                var operation = (string)TransactionCommitBefore.Operation.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionCommitBefore.Timestamp.Fetch(evnt.Value);
+                                var isolationLevel = (IsolationLevel)TransactionCommitBefore.IsolationLevel.Fetch(evnt.Value);
+                                var dataSource = (string)TransactionCommitBefore.DataSource.Fetch(connection);
+                                var database = (string)TransactionCommitBefore.Database.Fetch(connection);
 
                                 var telemetry = new DependencyTelemetry()
+                                {
+                                    Id = operationId.ToStringInvariant("N"),
+                                    Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
+                                    Type = RemoteDependencyConstants.SQL,
+                                    Target = string.Join(" | ", dataSource, database),
+                                    Data = operation,
+                                    Success = true,
+                                };
+
+                                InitializeTelemetry(telemetry, operationId, timestamp);
+
+                                this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            }
+                            else
                             {
-                                Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
-                                Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", dataSource, database),
-                                Data = operation,
-                                Success = true,
-                            };
+                                DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
+                            }
 
-                            InitializeTelemetry(telemetry, operationId, timestamp);
-
-                            this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
-                        }
-
-                        break;
-                    }
 
                     case SqlBeforeRollbackTransaction:
                     case SqlMicrosoftBeforeRollbackTransaction:
                         {
-                        var operationId = (Guid)TransactionRollbackBefore.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionRollbackBefore.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = TransactionRollbackBefore.Connection.Fetch(evnt.Value);
+                            var connection = TransactionRollbackBefore.Connection.Fetch(evnt.Value);
 
-                        if (this.operationHolder.Get(connection) == null)
-                        {
-                            var operation = (string)TransactionRollbackBefore.Operation.Fetch(evnt.Value);
-                            var timestamp = (long)TransactionRollbackBefore.Timestamp.Fetch(evnt.Value);
-                            var isolationLevel = (IsolationLevel)TransactionRollbackBefore.IsolationLevel.Fetch(evnt.Value);
-                            var dataSource = (string)TransactionRollbackBefore.DataSource.Fetch(connection);
-                            var database = (string)TransactionRollbackBefore.Database.Fetch(connection);
+                            if (this.operationHolder.Get(connection) == null)
+                            {
+                                var operation = (string)TransactionRollbackBefore.Operation.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionRollbackBefore.Timestamp.Fetch(evnt.Value);
+                                var isolationLevel = (IsolationLevel)TransactionRollbackBefore.IsolationLevel.Fetch(evnt.Value);
+                                var dataSource = (string)TransactionRollbackBefore.DataSource.Fetch(connection);
+                                var database = (string)TransactionRollbackBefore.Database.Fetch(connection);
 
                                 var telemetry = new DependencyTelemetry()
+                                {
+                                    Id = operationId.ToStringInvariant("N"),
+                                    Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
+                                    Type = RemoteDependencyConstants.SQL,
+                                    Target = string.Join(" | ", dataSource, database),
+                                    Data = operation,
+                                    Success = true,
+                                };
+
+                                InitializeTelemetry(telemetry, operationId, timestamp);
+
+                                this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            }
+                            else
                             {
-                                Id = operationId.ToStringInvariant("N"),
-                                Name = string.Join(" | ", dataSource, database, operation, isolationLevel),
-                                Type = RemoteDependencyConstants.SQL,
-                                Target = string.Join(" | ", dataSource, database),
-                                Data = operation,
-                                Success = true,
-                            };
+                                DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
+                            }
 
-                            InitializeTelemetry(telemetry, operationId, timestamp);
-
-                            this.operationHolder.Store(connection, Tuple.Create(telemetry, /* isCustomCreated: */ false));
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.TrackingAnExistingTelemetryItemVerbose();
-                        }
-
-                        break;
-                    }
 
                     case SqlAfterCommitTransaction:
                     case SqlMicrosoftAfterCommitTransaction:
                         {
-                        var operationId = (Guid)TransactionCommitAfter.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionCommitAfter.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId,
-                            evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId,
+                                evnt.Key);
 
-                        var connection = TransactionCommitAfter.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = TransactionCommitAfter.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)TransactionCommitAfter.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionCommitAfter.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(
+                                    operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(
-                                operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlAfterRollbackTransaction:
                     case SqlMicrosoftAfterRollbackTransaction:
                         {
-                        var operationId = (Guid)TransactionRollbackAfter.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionRollbackAfter.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = TransactionRollbackAfter.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = TransactionRollbackAfter.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)TransactionRollbackAfter.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionRollbackAfter.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlErrorCommitTransaction:
                     case SqlMicrosoftErrorCommitTransaction:
                         {
-                        var operationId = (Guid)TransactionCommitError.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionCommitError.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = TransactionCommitError.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = TransactionCommitError.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)TransactionCommitError.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionCommitError.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            var exception = (Exception)TransactionCommitError.Exception.Fetch(evnt.Value);
+                                var exception = (Exception)TransactionCommitError.Exception.Fetch(evnt.Value);
 
-                            ConfigureExceptionTelemetry(telemetry, exception);
+                                ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
 
                     case SqlErrorRollbackTransaction:
                     case SqlMicrosoftErrorRollbackTransaction:
                         {
-                        var operationId = (Guid)TransactionRollbackError.OperationId.Fetch(evnt.Value);
+                            var operationId = (Guid)TransactionRollbackError.OperationId.Fetch(evnt.Value);
 
-                        DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
+                            DependencyCollectorEventSource.Log.SqlClientDiagnosticSubscriberCallbackCalled(operationId, evnt.Key);
 
-                        var connection = TransactionRollbackError.Connection.Fetch(evnt.Value);
-                        var tuple = this.operationHolder.Get(connection);
+                            var connection = TransactionRollbackError.Connection.Fetch(evnt.Value);
+                            var tuple = this.operationHolder.Get(connection);
 
-                        if (tuple != null)
-                        {
-                            this.operationHolder.Remove(connection);
+                            if (tuple != null)
+                            {
+                                this.operationHolder.Remove(connection);
 
-                            var telemetry = tuple.Item1;
+                                var telemetry = tuple.Item1;
 
-                            var timestamp = (long)TransactionRollbackError.Timestamp.Fetch(evnt.Value);
+                                var timestamp = (long)TransactionRollbackError.Timestamp.Fetch(evnt.Value);
 
-                            telemetry.Stop(timestamp);
+                                telemetry.Stop(timestamp);
 
-                            var exception = (Exception)TransactionRollbackError.Exception.Fetch(evnt.Value);
+                                var exception = (Exception)TransactionRollbackError.Exception.Fetch(evnt.Value);
 
-                            ConfigureExceptionTelemetry(telemetry, exception);
+                                ConfigureExceptionTelemetry(telemetry, exception);
 
-                            this.client.TrackDependency(telemetry);
+                                this.client.TrackDependency(telemetry);
+                            }
+                            else
+                            {
+                                DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
+                            }
+
+                            break;
                         }
-                        else
-                        {
-                            DependencyCollectorEventSource.Log.EndCallbackWithNoBegin(operationId.ToStringInvariant("N"));
-                        }
-
-                        break;
-                    }
                 }
             }
             catch (Exception ex)
