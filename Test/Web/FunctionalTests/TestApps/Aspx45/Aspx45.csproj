@@ -50,7 +50,7 @@
       <HintPath>..\..\..\..\..\..\packages\Microsoft.ApplicationInsights.2.11.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.6.0, Culture=neutral, PublicKeyToken=f23a46de0be5d6f3, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.AspNet.TelemetryCorrelation, Version=1.0.7.0, Culture=neutral, PublicKeyToken=f23a46de0be5d6f3, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\packages\Microsoft.AspNet.TelemetryCorrelation.1.0.7\lib\net45\Microsoft.AspNet.TelemetryCorrelation.dll</HintPath>
       <Private>True</Private>
     </Reference>
