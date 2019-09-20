@@ -1,6 +1,12 @@
 # Changelog
 
+## Version 2.12.0-beta1
+ - [Enhancement to how QuickPulseTelemetryModule shares its ServiceEndpoint with QuickPulseTelemetryProcessor.](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1266)
+
 ## Version 2.11.0
+ - Updated Base SDK to 2.11.0
+ - Updated Microsoft.AspNet.TelemetryCorrelation to 1.0.7
+ - Updated System.Diagnostics.DiagnosticSource to 4.6.0
 - [Fix Sql dependency tracking in .NET Core 3.0 which uses Microsoft.Data.SqlClient instead of System.Data.SqlClient](https://github.com/Microsoft/ApplicationInsights-dotnet-server/issues/1263)
 
 ## Version 2.11.0-beta2
