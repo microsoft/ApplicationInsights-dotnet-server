@@ -41,7 +41,7 @@
   <ItemGroup>
     <!--Common Dependencies-->
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.11.0" />
-    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.6" />
+    <PackageReference Include="Microsoft.AspNet.TelemetryCorrelation" Version="1.0.7" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.6.0" />
   </ItemGroup>
 
