@@ -5,7 +5,7 @@
 
     internal static class QuickPulseDefaults
     {
-        private static readonly Uri QuickPulseServiceEndpoint = new Uri("https://rt.services.visualstudio.com/QuickPulseService.svc");
+        public static readonly Uri QuickPulseServiceEndpoint = new Uri("https://rt.services.visualstudio.com/QuickPulseService.svc");
 
         /// <summary>
         /// Dictionary of performance counters to collect for standard framework.
@@ -60,8 +60,6 @@
                 }
             }
         }
-
-        public static Uri ServiceEndpoint => QuickPulseServiceEndpoint;
 
         public static Dictionary<string, string> DefaultCounterOriginalStringMapping => WebAppToStandardCounterMapping;
     }

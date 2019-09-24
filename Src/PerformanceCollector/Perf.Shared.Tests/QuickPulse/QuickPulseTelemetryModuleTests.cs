@@ -126,7 +126,7 @@
         {
             // ARRANGE
             var configuration = new TelemetryConfiguration();
-            var expectedEndpoint = QuickPulseDefaults.ServiceEndpoint;
+            var expectedEndpoint = QuickPulseDefaults.QuickPulseServiceEndpoint;
 
             var module = new QuickPulseTelemetryModule(null, null, null, null, null, null);
             TelemetryModules.Instance.Modules.Add(module);
@@ -145,7 +145,7 @@
         {
             // ARRANGE
             var configuration = new TelemetryConfiguration();
-            var expectedEndpoint = QuickPulseDefaults.ServiceEndpoint;
+            var expectedEndpoint = QuickPulseDefaults.QuickPulseServiceEndpoint;
 
             string configFileContents = TelemetryConfigurationFactoryHelper.BuildConfiguration(
                 module: @"<Add Type=""Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryModule, Microsoft.AI.PerfCounterCollector""/>",
