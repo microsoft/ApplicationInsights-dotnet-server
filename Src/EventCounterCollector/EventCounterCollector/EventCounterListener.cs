@@ -231,6 +231,7 @@
                 {
                     metricTelemetry.Properties.Add("DisplayUnits", counterDisplayUnit);
                 }
+
                 metricTelemetry.Count = actualCount;
                 this.telemetryClient.TrackMetric(metricTelemetry);
             }
