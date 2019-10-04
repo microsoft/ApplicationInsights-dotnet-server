@@ -69,6 +69,11 @@
         public bool EnableRequestIdHeaderInjectionInW3CMode { get; set; } = true;
 
         /// <summary>
+        /// Gets or sets a value indicating whether to track the SQL command text in SQL dependencies.
+        /// </summary>
+        public bool EnableSqlCommandTextInstrumentation { get; set; } = true;
+
+        /// <summary>
         /// Gets the component correlation configuration.
         /// </summary>
         public ICollection<string> ExcludeComponentCorrelationHttpHeadersOnDomains { get; } = new SanitizedHostList();
@@ -140,7 +145,7 @@
                                 this.telemetryDiagnosticSourceListener.Subscribe();
                             }
 
-                            this.sqlClientDiagnosticSourceListener = new SqlClientDiagnosticSourceListener(configuration);
+                            this.sqlClientDiagnosticSourceListener = new SqlClientDiagnosticSourceListener(configuration, EnableSqlCommandTextInstrumentation);
 
                             DependencyCollectorEventSource.Log.RemoteDependencyModuleVerbose("Initializing DependencyTrackingModule completed successfully.");
                         }
@@ -186,7 +191,7 @@
                 this.ExcludeComponentCorrelationHttpHeadersOnDomains,
                 this.EnableLegacyCorrelationHeadersInjection,
                 this.EnableRequestIdHeaderInjectionInW3CMode);
-            this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
+            this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder, EnableSqlCommandTextInstrumentation);
             this.sqlConnectionProcessing = new ProfilerSqlConnectionProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
 
             ProfilerRuntimeInstrumentation.DecorateProfilerForHttp(ref this.httpProcessing);

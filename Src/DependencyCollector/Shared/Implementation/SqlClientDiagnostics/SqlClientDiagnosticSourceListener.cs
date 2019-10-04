@@ -73,14 +73,16 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
         private readonly SqlClientDiagnosticSourceSubscriber subscriber;
 
         private readonly ObjectInstanceBasedOperationHolder operationHolder = new ObjectInstanceBasedOperationHolder();
+        private readonly bool collectCommandText;
 
-        public SqlClientDiagnosticSourceListener(TelemetryConfiguration configuration)
+        public SqlClientDiagnosticSourceListener(TelemetryConfiguration configuration, bool collectCommandText)
         {
             this.client = new TelemetryClient(configuration);
             this.client.Context.GetInternalContext().SdkVersion =
                 SdkVersionUtils.GetSdkVersion("rdd" + RddSource.DiagnosticSourceCore + ":");
 
             this.subscriber = new SqlClientDiagnosticSourceSubscriber(this);
+            this.collectCommandText = collectCommandText;
         }
 
         public void Dispose()
@@ -394,8 +396,13 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
             {
                 var dependencyName = string.Empty;
                 var target = string.Empty;
+                var commandType = (CommandType)commandTypeFetcher.Fetch(command);
+                var commandText = string.Empty;
+                if (commandType == CommandType.Text && collectCommandText)
+                {
+                    commandText = (string)commandTextFetcher.Fetch(command);
+                }
 
-                var commandText = (string)commandTextFetcher.Fetch(command);
                 var con = connectionFetcher.Fetch(command);
                 if (con != null)
                 {
@@ -403,7 +410,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                     var database = databaseFetcher.Fetch(con);
                     target = string.Join(" | ", dataSource, database);
 
-                    var commandName = (CommandType)commandTypeFetcher.Fetch(command) == CommandType.StoredProcedure
+                    var commandName = commandType == CommandType.StoredProcedure
                         ? commandText
                         : string.Empty;
 
