@@ -145,7 +145,7 @@
                                 this.telemetryDiagnosticSourceListener.Subscribe();
                             }
 
-                            this.sqlClientDiagnosticSourceListener = new SqlClientDiagnosticSourceListener(configuration, EnableSqlCommandTextInstrumentation);
+                            this.sqlClientDiagnosticSourceListener = new SqlClientDiagnosticSourceListener(configuration, this.EnableSqlCommandTextInstrumentation);
 
                             DependencyCollectorEventSource.Log.RemoteDependencyModuleVerbose("Initializing DependencyTrackingModule completed successfully.");
                         }
@@ -191,7 +191,7 @@
                 this.ExcludeComponentCorrelationHttpHeadersOnDomains,
                 this.EnableLegacyCorrelationHeadersInjection,
                 this.EnableRequestIdHeaderInjectionInW3CMode);
-            this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder, EnableSqlCommandTextInstrumentation);
+            this.sqlCommandProcessing = new ProfilerSqlCommandProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder, this.EnableSqlCommandTextInstrumentation);
             this.sqlConnectionProcessing = new ProfilerSqlConnectionProcessing(this.telemetryConfiguration, agentVersion, DependencyTableStore.Instance.SqlRequestConditionalHolder);
 
             ProfilerRuntimeInstrumentation.DecorateProfilerForHttp(ref this.httpProcessing);

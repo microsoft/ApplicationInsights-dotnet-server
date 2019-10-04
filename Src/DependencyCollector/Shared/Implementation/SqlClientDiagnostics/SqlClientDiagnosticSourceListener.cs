@@ -398,7 +398,7 @@ namespace Microsoft.ApplicationInsights.DependencyCollector.Implementation.SqlCl
                 var target = string.Empty;
                 var commandType = (CommandType)commandTypeFetcher.Fetch(command);
                 var commandText = string.Empty;
-                if (commandType == CommandType.Text && collectCommandText)
+                if (this.collectCommandText && commandType == CommandType.Text)
                 {
                     commandText = (string)commandTextFetcher.Fetch(command);
                 }

@@ -74,7 +74,7 @@
         /// <returns>Returns the command text or empty.</returns>
         internal override string GetCommandName(object thisObj)
         {
-            if (collectCommandText)
+            if (this.collectCommandText)
             {
                 SqlCommand command = thisObj as SqlCommand;
 
