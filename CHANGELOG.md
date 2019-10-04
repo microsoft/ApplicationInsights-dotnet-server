@@ -2,6 +2,7 @@
 
 ## Version 2.12.0-beta1
  - [Enhancement to how QuickPulseTelemetryModule shares its ServiceEndpoint with QuickPulseTelemetryProcessor.](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1266)
+ - [Adding a flag to DependencyTrackingTelemetryModule to enable/disable collection of SQL Command text](https://github.com/microsoft/ApplicationInsights-dotnet-server/pull/1285)
 
 ## Version 2.11.0
  - Updated Base SDK to 2.11.0
