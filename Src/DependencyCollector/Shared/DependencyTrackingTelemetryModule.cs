@@ -71,7 +71,7 @@
         /// <summary>
         /// Gets or sets a value indicating whether to track the SQL command text in SQL dependencies.
         /// </summary>
-        public bool EnableSqlCommandTextInstrumentation { get; set; } = true;
+        public bool EnableSqlCommandTextInstrumentation { get; set; } = false;
 
         /// <summary>
         /// Gets the component correlation configuration.
@@ -298,7 +298,7 @@
                 TimeSpan.FromMilliseconds(10));
 
             this.sqlEventListener = RetryPolicy.Retry<InvalidOperationException, TelemetryConfiguration, FrameworkSqlEventListener>(
-                config => new FrameworkSqlEventListener(config, DependencyTableStore.Instance.SqlRequestCacheHolder),
+                config => new FrameworkSqlEventListener(config, DependencyTableStore.Instance.SqlRequestCacheHolder, this.EnableSqlCommandTextInstrumentation),
                 this.telemetryConfiguration,
                 TimeSpan.FromMilliseconds(10));
         }
