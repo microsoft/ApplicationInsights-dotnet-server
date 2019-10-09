@@ -2,14 +2,14 @@ $directory = $PSScriptRoot;
 Write-Host "Scanning $directory";
 
 
-$oldVersion = "2.11.0"
+$oldVersion = "2.12.0-beta1-build2175"
 Write-Host "Old Version: $oldVersion";
 
 ##Use this to get the new version from MyGet##
 #$newVersion = .\NuGet.exe list "Microsoft.ApplicationInsights" -Source https://www.myget.org/F/applicationinsights -Pre -NonInteractive | Select-String -Pattern "Microsoft.ApplicationInsights " | %{$_.Line.Split(" ")} | Select -skip 1
 
 ##Use this to manually set the new version##
-$newVersion = "2.12.0-beta1-build2175" # this is package version, 2.10.0-beta4 for beta, 2.10.0 for stable
+$newVersion = "2.12.0-beta1-build4530" # this is package version, 2.10.0-beta4 for beta, 2.10.0 for stable
 Write-Host "New Version: $newVersion";
 
 $oldAssemblyVersion = "2.11.0.0"
@@ -18,13 +18,7 @@ Write-Host "Old Asembly Version: $oldAssemblyVersion";
 Write-Host "New Asembly Version: $newAssemblyVersion";
 
 
-function Replace {
-  param (
-    [string] $Filter,
-    [string] $Old,
-    [string] $New
-  )
-
+function Replace ([string] $Filter, [string] $Old, [string] $New) {
   Write-Host "";
   Write-Host "FILTER: $($Filter) REPLACE: $($Old) with $($New)";
 
