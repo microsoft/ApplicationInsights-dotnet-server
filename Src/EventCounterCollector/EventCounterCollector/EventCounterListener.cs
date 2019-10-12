@@ -207,7 +207,10 @@
                             foreach (var keyValuePairString in keyValuePairStrings)
                             {
                                 var keyValuePair = keyValuePairString.Split(':');
-                                metricTelemetry.Properties.Add(keyValuePair[0], keyValuePair[1]);
+                                if (!metricTelemetry.Properties.ContainsKey(keyValuePair[0]))
+                                {
+                                    metricTelemetry.Properties.Add(keyValuePair[0], keyValuePair[1]);
+                                }
                             }
                         }
                     }
