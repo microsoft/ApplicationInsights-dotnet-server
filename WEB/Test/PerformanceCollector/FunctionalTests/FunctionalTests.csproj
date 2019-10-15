@@ -40,32 +40,32 @@
   <ItemGroup>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\EnvDTE.8.0.1\lib\net10\EnvDTE.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\EnvDTE.8.0.1\lib\net10\EnvDTE.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="EnvDTE100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\EnvDTE100.10.0.1\lib\net20\EnvDTE100.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\EnvDTE100.10.0.1\lib\net20\EnvDTE100.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\EnvDTE80.8.0.1\lib\net10\EnvDTE80.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\EnvDTE80.8.0.1\lib\net10\EnvDTE80.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\EnvDTE90.9.0.1\lib\net10\EnvDTE90.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\EnvDTE90.9.0.1\lib\net10\EnvDTE90.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="EnvDTE90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\EnvDTE90a.9.0.1\lib\net10\EnvDTE90a.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\EnvDTE90a.9.0.1\lib\net10\EnvDTE90a.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Diagnostics.Tracing.TraceEvent, Version=1.0.41.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\lib\net40\Microsoft.Diagnostics.Tracing.TraceEvent.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\lib\net40\Microsoft.Diagnostics.Tracing.TraceEvent.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
@@ -74,7 +74,7 @@
     </Reference>
     <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
-      <HintPath>..\..\..\..\packages\stdole.7.0.3301\lib\net10\stdole.dll</HintPath>
+      <HintPath>..\..\..\..\..\packages\stdole.7.0.3301\lib\net10\stdole.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -231,8 +231,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets'))" />
   </Target>
-  <Import Project="..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets" Condition="Exists('..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" />
+  <Import Project="..\..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets" Condition="Exists('..\..\..\..\..\packages\Microsoft.Diagnostics.Tracing.TraceEvent.1.0.41\build\Microsoft.Diagnostics.Tracing.TraceEvent.targets')" />
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'Common.targets'))\Common.targets" />
 </Project>
