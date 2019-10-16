@@ -126,8 +126,13 @@
 
                 if (string.IsNullOrEmpty(roleName))
                 {
-                    // Fallback to value from ENV variable.
+                    // Fallback to last known value.
                     roleName = this.roleName;
+                }
+                else
+                {
+                    // Update to newest known value
+                    this.roleName = roleName;
                 }
 
                 telemetry.Context.Cloud.RoleName = roleName;

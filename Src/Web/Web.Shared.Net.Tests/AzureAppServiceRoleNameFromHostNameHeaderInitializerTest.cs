@@ -157,6 +157,37 @@
         }
 
         [TestMethod]
+        public void InitializeRemembersLastKnownRoleName()
+        {
+            int i = 0;
+            Func<HttpContext> nullContextAfterFirstCall = () => 
+            {         
+                if (i++ > 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    var httpContext = HttpModuleHelper.GetFakeHttpContext(new Dictionary<string, string>
+                    {
+                        { "WAS-DEFAULT-HOSTNAME", "RoleNameFromFirst" }
+                    });
+
+                    return httpContext;
+                }
+            };
+
+            var eventTelemetry = new EventTelemetry("name");
+            var source = new TestableAzureAppServiceRoleNameFromHostNameHeaderInitializer(resolveContext: nullContextAfterFirstCall);
+            source.Initialize(eventTelemetry);
+            Assert.AreEqual("RoleNameFromFirst", eventTelemetry.Context.Cloud.RoleName);
+
+            var newEventTelemetry = new EventTelemetry("name");
+            source.Initialize(newEventTelemetry);
+            Assert.AreEqual("RoleNameFromFirst", newEventTelemetry.Context.Cloud.RoleName);
+        }
+
+        [TestMethod]
         public void InitializeSetsRoleNameFromHostNameHeaderEndingInAzureWebSites()
         {
             var eventTelemetry = new EventTelemetry("name");
