@@ -14,6 +14,18 @@
     [TestClass]
     public class AzureAppServiceRoleNameFromHostNameHeaderInitializerTest
     {
+        [TestCleanup]
+        public void Cleanup()
+        {
+            Environment.SetEnvironmentVariable("WEBSITE_HOSTNAME", null);
+        }
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            Environment.SetEnvironmentVariable("WEBSITE_HOSTNAME", "SomeName");            
+        }
+
         [TestMethod]
         public void InitializeDoesNotThrowIfHttpContextIsUnavailable()
         {
@@ -240,6 +252,22 @@
             source.Initialize(requestTelemetry);
 
             Assert.AreEqual("ExistingRoleName", requestTelemetry.Context.Cloud.RoleName);
+        }
+
+        [TestMethod]
+        public void InitializeReturnsIfNonWebApp()
+        {                      
+            // This env variable is used as marker to know if running in app service or not.
+            Environment.SetEnvironmentVariable("WEBSITE_HOSTNAME", null);
+            var requestTelemetry = new RequestTelemetry();
+
+            var source = new TestableAzureAppServiceRoleNameFromHostNameHeaderInitializer(new Dictionary<string, string>
+                {
+                    { "WAS-DEFAULT-HOSTNAME", "appserviceslottest-ppe.azurewebsites.us" }
+                });
+            source.Initialize(requestTelemetry);
+
+            Assert.IsNull(requestTelemetry.Context.Cloud.RoleName);
         }
 
         private class TestableAzureAppServiceRoleNameFromHostNameHeaderInitializer : AzureAppServiceRoleNameFromHostNameHeaderInitializer

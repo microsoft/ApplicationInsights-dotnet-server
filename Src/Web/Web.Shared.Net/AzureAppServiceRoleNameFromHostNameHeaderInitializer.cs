@@ -26,6 +26,7 @@
         private const string WebAppHostNameHeaderName = "WAS-DEFAULT-HOSTNAME";
         private const string WebAppHostNameEnvironmentVariable = "WEBSITE_HOSTNAME";
         private string roleName;
+        private bool isAzureWebApp;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureAppServiceRoleNameFromHostNameHeaderInitializer" /> class.
@@ -44,6 +45,7 @@
             try
             {
                 var result = Environment.GetEnvironmentVariable(WebAppHostNameEnvironmentVariable);
+                this.isAzureWebApp = !string.IsNullOrEmpty(result);
 
                 if (!string.IsNullOrEmpty(result) && result.EndsWith(this.WebAppSuffix, StringComparison.OrdinalIgnoreCase))
                 {
@@ -80,6 +82,12 @@
         {
             try
             {
+                if (!this.isAzureWebApp)
+                {
+                    // return immediately if not azure web app.
+                    return;
+                }
+
                 if (!string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
                 {
                     // RoleName is already populated.
