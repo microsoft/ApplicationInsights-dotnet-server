@@ -30,9 +30,8 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureAppServiceRoleNameFromHostNameHeaderInitializer" /> class.
         /// </summary>
-        public AzureAppServiceRoleNameFromHostNameHeaderInitializer() : this (".azurewebsites.net")
+        public AzureAppServiceRoleNameFromHostNameHeaderInitializer() : this(".azurewebsites.net")
         {
-            
         }
 
         /// <summary>
@@ -92,7 +91,7 @@
 
                 if (context != null)
                 {
-                    var request = GetRequestFromContext(context);
+                    var request = this.GetRequestFromContext(context);
 
                     if (request != null)
                     {
