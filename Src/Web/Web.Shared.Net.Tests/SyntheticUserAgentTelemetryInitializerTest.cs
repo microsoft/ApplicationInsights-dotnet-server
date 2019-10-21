@@ -1,5 +1,6 @@
 ﻿namespace Microsoft.ApplicationInsights.Web
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Web;
@@ -105,6 +106,7 @@
             this.AssertSyntheticSourceIsSet("converacrawler 123");
             this.AssertSyntheticSourceIsSet("Sogou Pic Spider 123");
             this.AssertSyntheticSourceIsSet("Innovazion Crawler 123");
+            this.AssertSyntheticSourceIsSet(String.Empty);
         }
 
         [TestMethod]
@@ -118,7 +120,7 @@
                 {
                     { "User-Agent", userAgent }
                 });
-            source.Filters = this.botSubstrings;            
+            source.Filters = this.botSubstrings;
             source.Initialize(eventTelemetry1);
             source.Initialize(eventTelemetry2);
             Assert.AreEqual("Bot", eventTelemetry2.Context.Operation.SyntheticSource, "Incorrect result for " + userAgent);

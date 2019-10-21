@@ -15,7 +15,8 @@
         private const string SyntheticSourceNameKey = "Microsoft.ApplicationInsights.RequestTelemetry.SyntheticSource";
         private const string SyntheticSourceName = "Bot";
         private string filters = string.Empty;
-        private string[] filterPatterns;        
+        private Boolean markEmptyUserAgentAsSynthetic = true;
+        private string[] filterPatterns;
 
         /// <summary>
         /// Gets or sets the configured patterns for matching synthetic traffic filters through user agent string.
@@ -41,6 +42,21 @@
         }
 
         /// <summary>
+        /// Gets or sets whether an empty user agent string should be treated as synthetic
+        /// </summary>
+        public Boolean MarkEmptyUserAgentAsSynthetic
+        {
+            get
+            {
+                return markEmptyUserAgentAsSynthetic;
+            }
+            set
+            {
+                markEmptyUserAgentAsSynthetic = value;
+            }
+        }
+
+        /// <summary>
         /// Implements initialization logic.
         /// </summary>
         /// <param name="platformContext">Http context.</param>
@@ -62,7 +78,7 @@
                         var request = platformContext.GetRequest();
                         string userAgent = request?.UserAgent;
                         if (!string.IsNullOrEmpty(userAgent))
-                        { 
+                        {
                             // We expect customers to configure telemetry initializer before they add it to active configuration
                             // So we will not protect filterPatterns array with locks (to improve perf)                            
                             for (int i = 0; i < this.filterPatterns.Length; i++)
@@ -74,6 +90,11 @@
                                     return;
                                 }
                             }
+                        }
+                        else if (markEmptyUserAgentAsSynthetic)
+                        {
+                            telemetry.Context.Operation.SyntheticSource = SyntheticSourceName;
+                            platformContext.Items.Add(SyntheticSourceNameKey, SyntheticSourceName);
                         }
                     }
                 }
