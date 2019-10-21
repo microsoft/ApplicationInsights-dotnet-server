@@ -15,7 +15,7 @@
         private const string SyntheticSourceNameKey = "Microsoft.ApplicationInsights.RequestTelemetry.SyntheticSource";
         private const string SyntheticSourceName = "Bot";
         private string filters = string.Empty;
-        private Boolean markEmptyUserAgentAsSynthetic = true;
+        private Boolean markEmptyUserAgentAsSynthetic = false;
         private string[] filterPatterns;
 
         /// <summary>

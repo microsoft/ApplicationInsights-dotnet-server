@@ -14,6 +14,7 @@
     public class SyntheticUserAgentTelemetryInitializerTest
     {
         private string botSubstrings = "search|spider|crawl|Bot|Monitor|AlwaysOn";
+        private Boolean? markEmptyUserAgentAsSynthetic = null;
 
         [TestCleanup]
         public void Cleanup()
@@ -106,6 +107,13 @@
             this.AssertSyntheticSourceIsSet("converacrawler 123");
             this.AssertSyntheticSourceIsSet("Sogou Pic Spider 123");
             this.AssertSyntheticSourceIsSet("Innovazion Crawler 123");
+            
+            this.AssertSyntheticSourceIsNotSet(String.Empty);
+
+            this.markEmptyUserAgentAsSynthetic = false;
+            this.AssertSyntheticSourceIsNotSet(String.Empty);
+
+            this.markEmptyUserAgentAsSynthetic = true;
             this.AssertSyntheticSourceIsSet(String.Empty);
         }
 
@@ -136,10 +144,33 @@
                 });
 
             source.Filters = this.botSubstrings;
+            if (this.markEmptyUserAgentAsSynthetic.HasValue)
+            {
+                source.MarkEmptyUserAgentAsSynthetic = this.markEmptyUserAgentAsSynthetic.Value;
+            }
 
             source.Initialize(eventTelemetry);
 
             Assert.AreEqual("Bot", eventTelemetry.Context.Operation.SyntheticSource, "Incorrect result for " + userAgent);
+        }
+
+        private void AssertSyntheticSourceIsNotSet(string userAgent)
+        {
+            var eventTelemetry = new EventTelemetry("name");
+            var source = new TestableSyntheticUserAgentTelemetryInitializer(new Dictionary<string, string>
+                {
+                    { "User-Agent", userAgent }
+                });
+
+            source.Filters = this.botSubstrings;
+            if (this.markEmptyUserAgentAsSynthetic.HasValue)
+            {
+                source.MarkEmptyUserAgentAsSynthetic = this.markEmptyUserAgentAsSynthetic.Value;
+            }
+
+            source.Initialize(eventTelemetry);
+
+            Assert.AreNotEqual("Bot", eventTelemetry.Context.Operation.SyntheticSource, "Incorrect result for " + userAgent);
         }
 
         private class TestableSyntheticUserAgentTelemetryInitializer : SyntheticUserAgentTelemetryInitializer
